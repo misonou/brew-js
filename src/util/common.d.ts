@@ -16,7 +16,7 @@ export function cookie(name: string, expiry?: number): {
 
 export function api(options: Brew.APIOptions): Brew.API;
 
-export function api(method: Brew.APIMethod, options?: Brew.APIOptions): Brew.APIMethod;
+export function api(method: Brew.HTTPMethod, options?: Brew.APIOptions): Brew.APIMethod;
 
 export function getJSON(path: string): Promise<Zeta.Dictionary>;
 
