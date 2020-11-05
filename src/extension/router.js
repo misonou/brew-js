@@ -170,6 +170,7 @@ watchable(Route.prototype);
 function configureRouter(app, options) {
     var initialPath = app.path || options.initialPath || (options.queryParam && getQueryParam(options.queryParam)) || location.pathname.substr(options.baseUrl.length) || '/';
     var route = new Route(app, options.routes, initialPath);
+    var currentPath = '';
     var lockedPath;
     var navigated = 0;
 
@@ -209,8 +210,12 @@ function configureRouter(app, options) {
         app.path = path.substr(baseUrl.length) || '/';
     }
 
-    function processPageChange(path, oldPath, newActiveElements) {
+    function processPageChange(path, newActiveElements) {
+        if (app.path !== path) {
+            return;
+        }
         var preload = new Map();
+        var oldPath = currentPath;
         var eventSource = dom.eventSource;
         var previousActiveElements = activeElements.slice(0);
 
@@ -220,46 +225,49 @@ function configureRouter(app, options) {
         }
         navigated++;
         activeElements = newActiveElements;
+        currentPath = path;
 
-        groupLog(eventSource, ['pageenter', path], function () {
-            matchByPathElements.forEach(function (element) {
-                var matched = activeElements.indexOf(element) >= 0;
-                if (matched === (previousActiveElements.indexOf(element) < 0)) {
-                    if (matched) {
-                        resetVar(element, false);
-                        setVar(element, null);
-                        setTimeout(function () {
-                            // animation and pageenter event of inner scope
-                            // must be after those of parent scope
-                            var dependencies = preload.get($(element).parents('[match-path]')[0]);
-                            var promises = preloadHandlers.map(function (v) {
-                                return v(element, path);
-                            });
-                            promises.push(dependencies);
-                            preload.set(element, resolveAll(promises, function () {
-                                if (activeElements.indexOf(element) >= 0) {
-                                    setClass(element, 'hidden', false);
-                                    animateIn(element, 'show', '[match-path]');
-                                    dom.emit('pageenter', element, { pathname: path }, true);
-                                }
-                            }));
-                        });
-                    } else {
-                        dom.emit('pageleave', element, { pathname: oldPath }, true);
-                        animateOut(element, 'show', '[match-path]').then(function () {
-                            if (activeElements.indexOf(element) < 0) {
-                                groupLog(eventSource, ['pageleave', oldPath], function () {
-                                    setClass(element, 'hidden', true);
-                                    resetVar(element, true);
+        batch(true, function () {
+            groupLog(eventSource, ['pageenter', path], function () {
+                matchByPathElements.forEach(function (element) {
+                    var matched = activeElements.indexOf(element) >= 0;
+                    if (matched === (previousActiveElements.indexOf(element) < 0)) {
+                        if (matched) {
+                            resetVar(element, false);
+                            setVar(element, null);
+                            setTimeout(function () {
+                                // animation and pageenter event of inner scope
+                                // must be after those of parent scope
+                                var dependencies = preload.get($(element).parents('[match-path]')[0]);
+                                var promises = preloadHandlers.map(function (v) {
+                                    return v(element, path);
                                 });
-                            }
-                        });
+                                promises.push(dependencies);
+                                preload.set(element, resolveAll(promises, function () {
+                                    if (activeElements.indexOf(element) >= 0) {
+                                        setClass(element, 'hidden', false);
+                                        animateIn(element, 'show', '[match-path]');
+                                        dom.emit('pageenter', element, { pathname: path }, true);
+                                    }
+                                }));
+                            });
+                        } else {
+                            dom.emit('pageleave', element, { pathname: oldPath }, true);
+                            animateOut(element, 'show', '[match-path]').then(function () {
+                                if (activeElements.indexOf(element) < 0) {
+                                    groupLog(eventSource, ['pageleave', oldPath], function () {
+                                        setClass(element, 'hidden', true);
+                                        resetVar(element, true);
+                                    });
+                                }
+                            });
+                        }
                     }
-                }
+                });
             });
-        });
-        each(preload, function (element, promise) {
-            handleAsync(promise, element);
+            each(preload, function (element, promise) {
+                handleAsync(promise, element);
+            });
         });
     }
 
@@ -286,6 +294,9 @@ function configureRouter(app, options) {
             return;
         }
         path = resolvePath(path, oldPath);
+        if (path === currentPath) {
+            return;
+        }
         console.log('Nagivate', path);
         route.set(path);
 
@@ -342,16 +353,18 @@ function configureRouter(app, options) {
             return;
         }
 
-        batch(true, function () {
-            app.emit('navigate', {
-                pathname: path,
-                oldPathname: oldPath,
-                route: Object.freeze(extend({}, route))
-            });
-            if (app.path === path) {
-                processPageChange(path, oldPath, newActiveElements);
-            }
+        promise = app.emit('navigate', {
+            pathname: path,
+            oldPathname: oldPath,
+            route: Object.freeze(extend({}, route))
         });
+        if (promise) {
+            handleAsync(promise).then(function () {
+                processPageChange(path, newActiveElements);
+            });
+        } else {
+            processPageChange(path, newActiveElements);
+        }
     });
 
     app.beforeInit(function () {
