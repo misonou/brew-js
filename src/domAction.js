@@ -1,9 +1,9 @@
-import { $, Map } from "./include/zeta/shim.js";
+import { $, Map, Promise } from "./include/zeta/shim.js";
 import waterpipe from "./include/waterpipe.js"
 import { runCSSTransition } from "./include/zeta/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys } from "./include/zeta/util.js";
+import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -54,7 +54,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     var container = source || dom.root;
     var element = selector ? selectClosestRelative(selector, container) : $(container).closest('[is-flyout]')[0];
     if (!element) {
-        return Promise.reject();
+        return reject();
     }
     var prev = flyoutStates.get(element);
     if (prev) {

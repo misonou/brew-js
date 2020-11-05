@@ -1,4 +1,4 @@
-import { $, Map } from "./include/zeta/shim.js";
+import { $, Map, Promise } from "./include/zeta/shim.js";
 import { selectIncludeSelf, isVisible } from "./include/zeta/domUtil.js";
 import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta/util.js";
 import { runCSSTransition } from "./include/zeta/cssUtil.js";

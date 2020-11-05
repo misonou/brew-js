@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { $ } from "../include/zeta/shim.js";
+import { $, Promise } from "../include/zeta/shim.js";
 import { isCssUrlValue } from "../include/zeta/cssUtil.js";
 import { createNodeIterator, is, iterateNode } from "../include/zeta/domUtil.js";
 import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, keys, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta/util.js";
@@ -11,7 +11,7 @@ const preloadImagesCache = {};
 const loadScriptCache = {};
 
 /**
- * @param {HTMLFormElement} form 
+ * @param {HTMLFormElement} form
  */
 export function getFormValues(form) {
     var values = {};
@@ -27,23 +27,23 @@ export function getFormValues(form) {
 }
 
 /**
- * @param {string} name 
+ * @param {string} name
  */
 export function getQueryParam(name) {
     return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(location.search) && decodeURIComponent(RegExp.$1);
 }
 
 /**
- * @param {string} name 
+ * @param {string} name
  */
 export function getCookie(name) {
     return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;
 }
 
 /**
- * @param {string} name 
- * @param {string} value 
- * @param {number=} expiry 
+ * @param {string} name
+ * @param {string} value
+ * @param {number=} expiry
  */
 export function setCookie(name, value, expiry) {
     document.cookie = name + '=' + value + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
@@ -51,15 +51,15 @@ export function setCookie(name, value, expiry) {
 }
 
 /**
- * @param {string} name 
+ * @param {string} name
  */
 export function deleteCookie(name) {
     document.cookie = name + '=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
 }
 
 /**
- * @param {string} name 
- * @param {number=} expiry 
+ * @param {string} name
+ * @param {number=} expiry
  */
 export function cookie(name, expiry) {
     return {
@@ -76,8 +76,8 @@ export function cookie(name, expiry) {
 }
 
 /**
- * @param {Brew.APIMethod | Brew.APIOptions} options 
- * @param {=} extra 
+ * @param {Brew.APIMethod | Brew.APIOptions} options
+ * @param {=} extra
  */
 export function api(options, extra) {
     var httpMethods = 'get post delete';
@@ -133,15 +133,15 @@ export function api(options, extra) {
 }
 
 /**
- * @param {string} path 
+ * @param {string} path
  */
 export function getJSON(path) {
     return $.getJSON(withBaseUrl(path));
 }
 
 /**
- * @param {string | string[]} url 
- * @param {{ nomodule?: boolean; module?: boolean }=} options 
+ * @param {string | string[]} url
+ * @param {{ nomodule?: boolean; module?: boolean }=} options
  */
 export function loadScript(url, options) {
     if (isArray(url)) {
@@ -179,8 +179,8 @@ export function loadScript(url, options) {
 }
 
 /**
- * @param {string} url 
- * @param {string=} media 
+ * @param {string} url
+ * @param {string=} media
  */
 export function addStyleSheet(url, media) {
     var link = document.createElement('link');
@@ -193,8 +193,8 @@ export function addStyleSheet(url, media) {
 }
 
 /**
- * @param {string[]|Element} urls 
- * @param {number=} ms 
+ * @param {string[]|Element} urls
+ * @param {number=} ms
  */
 export function preloadImages(urls, ms) {
     if (!isArray(urls)) {
