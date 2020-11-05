@@ -18,6 +18,7 @@ install('formVar', function (app) {
         var update = function () {
             setVar(form, varname ? kv(varname, extend({}, values)) : values);
         };
+        dom.watchAttributes(form, 'value', update);
         dom.watchElements(form, ':input', function (addedInputs, removedInputs) {
             $(addedInputs).on('change', update);
             $(removedInputs).off('change', update);
@@ -45,7 +46,7 @@ install('formVar', function (app) {
         $(':input', form).on('change', update);
         update();
     });
-    
+
     app.on('pageenter', function (e) {
         $(selectIncludeSelf('form[form-var]', e.target)).each(function (i, v) {
             $(':input:eq(0)', v).trigger('change');
