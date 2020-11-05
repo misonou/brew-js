@@ -17,20 +17,17 @@ function formatMessage(eventSource, message) {
 }
 
 /**
- * @param {string} eventSource 
+ * @param {string} eventSource
  * @param {string | Element | Record<any, any> | any[]} message
  */
 export function writeLog(eventSource, message) {
-    message = makeArray(message).map(function (v) {
-        return is(v, Element) ? toElementTag(v) + ':' : v && typeof v === 'object' ? truncateJSON(JSON.stringify(v)) : v;
-    }).join(' ');
-    return '[' + eventSource + '] ' + message;
+    console.log(formatMessage(eventSource, message));
 }
 
 /**
- * @param {string} eventSource 
+ * @param {string} eventSource
  * @param {string | Element | Record<any, any> | any[]} message
- * @param {(console: Console) => void} callback 
+ * @param {(console: Console) => void} callback
  */
 export function groupLog(eventSource, message, callback) {
     var close;
