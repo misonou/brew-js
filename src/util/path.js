@@ -27,7 +27,10 @@ export function combinePath(a, b) {
  * @param {string} path 
  */
 export function normalizePath(path) {
-    path = path.replace(/\/+$/, '') || '/';
+    if (path === undefined || path === null) {
+        return '/';
+    }
+    path = String(path).replace(/\/+$/, '') || '/';
     return path.indexOf('://') >= 0 || path[0] === '/' ? path : '/' + path;
 }
 
