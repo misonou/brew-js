@@ -39,7 +39,8 @@ function createRouteState(route, segments, params) {
     params = extend({}, params);
     delete params.remainingSegments;
     return {
-        path: normalizePath(segments.slice(0, route.length).join('/')),
+        minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
+        maxPath: normalizePath(segments.slice(0, route.length).join('/')),
         route: route,
         params: params
     };
@@ -50,13 +51,18 @@ function Route(app, routes, initialPath) {
     var state = _(self, {});
     state.routes = routes.map(function (path) {
         var tokens = [];
+        var minLength;
         // @ts-ignore: no side effect to not return
-        String(path).replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c) {
-            tokens.push(b ? { name: b, pattern: c ? new RegExp('^' + c + '$', 'i') : /./ } : a.toLowerCase());
+        String(path).replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
+            if (c && !minLength) {
+                minLength = tokens.length;
+            }
+            tokens.push(b ? { name: b, pattern: d ? new RegExp('^' + d + '$', 'i') : /./ } : a.toLowerCase());
             self[b || 'remainingSegments'] = null;
         });
         defineHiddenProperty(tokens, 'value', path);
         defineHiddenProperty(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
+        defineHiddenProperty(tokens, 'minLength', minLength || tokens.length);
         defineHiddenProperty(tokens, 'names', map(tokens, function (v) {
             return v.name;
         }));
@@ -88,7 +94,7 @@ function Route(app, routes, initialPath) {
                 segments.length = 0;
                 for (i = 0, len = tokens.length; i < len; i++) {
                     var varname = tokens[i].name;
-                    if (varname && !tokens[i].pattern.test(self[varname])) {
+                    if (varname && i < tokens.minLength && !tokens[i].pattern.test(self[varname] || '')) {
                         return false;
                     }
                     segments[i] = varname ? self[varname] : tokens[i];
@@ -123,12 +129,12 @@ definePrototype(Route, {
 
         var matched = any(state.routes, function (tokens) {
             params = {};
-            if (segments.length < tokens.length) {
+            if (segments.length < tokens.minLength) {
                 return false;
             }
             for (var i = 0, len = tokens.length; i < len; i++) {
                 var varname = tokens[i].name;
-                if (!(varname ? tokens[i].pattern.test(segments[i]) : iequal(segments[i], tokens[i]))) {
+                if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : iequal(segments[i], tokens[i]))) {
                     return false;
                 }
                 if (varname) {
@@ -158,7 +164,7 @@ definePrototype(Route, {
     },
     toString: function () {
         // @ts-ignore: unable to infer this
-        return combinePath(_(this).current.path || '/', this.remainingSegments);
+        return combinePath(_(this).current.maxPath || '/', this.remainingSegments);
     }
 });
 watchable(Route.prototype);
@@ -182,7 +188,7 @@ function configureRouter(app, options) {
         currentPath = currentPath || app.path;
         if (path[0] === '~') {
             var parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
-            path = combinePath(parsedState.path, path.slice(1));
+            path = combinePath(parsedState.minPath, path.slice(1));
         } else if (path[0] !== '/') {
             path = combinePath(currentPath, path);
         }
@@ -353,7 +359,7 @@ function configureRouter(app, options) {
             setImmediateOnce(handlePathChange);
         }
         return currentPath;
-            });
+    });
 
     setBaseUrl(options.baseUrl || '');
     app.define({
