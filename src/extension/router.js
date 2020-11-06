@@ -178,8 +178,8 @@ function configureRouter(app, options) {
         path = decodeURI(path);
         currentPath = currentPath || app.path;
         if (path[0] === '~') {
-            var extra = (iequal(currentPath, app.path) ? route : route.parse(currentPath)).remainingSegments;
-            path = combinePath(extra === '/' ? currentPath : currentPath.slice(0, -extra.length), path.slice(1));
+            var parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+            path = combinePath(parsedState.path, path.slice(1));
         } else if (path[0] !== '/') {
             path = combinePath(currentPath, path);
         }
