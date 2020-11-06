@@ -183,19 +183,7 @@ function configureRouter(app, options) {
         } else if (path[0] !== '/') {
             path = combinePath(currentPath, path);
         }
-        if (path.indexOf('./') >= 0) {
-            var segments = path.split('/');
-            for (var j = 1; j < segments.length;) {
-                if (segments[j] === '.') {
-                    segments.splice(j, 1);
-                } else if (segments[j] === '..') {
-                    segments.splice(--j, 2);
-                } else {
-                    j++;
-                }
-            }
-            path = normalizePath(segments.join('/'));
-        }
+        path = normalizePath(path, true);
         if (path.indexOf('{') < 0) {
             return path;
         }

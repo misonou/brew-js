@@ -23,8 +23,9 @@ export function combinePath(path: string, child: string): string;
  * Returns a path that always starts with a slash but without a trailing slash.
  * For empty path, the result is always a single slash (`/`).
  * @param path An input path.
+ * @param resolveDotDir If specified `true`, relative directory segments (`.` and `..`) will also be resolved.
  */
-export function normalizePath(path: string): string;
+export function normalizePath(path: string, resolveDotDir?: boolean): string;
 
 /**
  * Prepends the base URL if the given url does not start with the base URL.

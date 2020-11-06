@@ -1,15 +1,15 @@
 export var baseUrl = '';
 
 /**
- * @param {string} b 
+ * @param {string} b
  */
 export function setBaseUrl(b) {
     baseUrl = b;
 }
 
 /**
- * @param {string} a 
- * @param {string} b 
+ * @param {string} a
+ * @param {string} b
  */
 export function combinePath(a, b) {
     a = normalizePath(a);
@@ -24,18 +24,37 @@ export function combinePath(a, b) {
 }
 
 /**
- * @param {string} path 
+ * @param {string} path
+ * @param {boolean=} resolveDotDir
  */
-export function normalizePath(path) {
+export function normalizePath(path, resolveDotDir) {
     if (path === undefined || path === null) {
         return '/';
     }
-    path = String(path).replace(/\/+$/, '') || '/';
-    return path.indexOf('://') >= 0 || path[0] === '/' ? path : '/' + path;
+    if (/:\/\/|\?|#/.test(path)) {
+        var a = document.createElement('a');
+        a.href = path;
+        return a.origin + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+    }
+    path = String(path).replace(/\/+(\/|$)/, '$1');
+    if (resolveDotDir && path.indexOf('./') >= 0) {
+        var segments = path.split('/');
+        for (var j = 1; j < segments.length;) {
+            if (segments[j] === '.') {
+                segments.splice(j, 1);
+            } else if (segments[j] === '..') {
+                segments.splice(--j, 2);
+            } else {
+                j++;
+            }
+        }
+        path = segments.join('/');
+    }
+    return path[0] === '/' ? path : '/' + path;
 }
 
 /**
- * @param {string} url 
+ * @param {string} url
  */
 export function withBaseUrl(url) {
     url = normalizePath(url);
@@ -43,22 +62,22 @@ export function withBaseUrl(url) {
 }
 
 /**
- * @param {string} url 
+ * @param {string} url
  */
 export function toAbsoluteUrl(url) {
     return location.origin + withBaseUrl(url);
 }
 
 /**
- * @param {string} url 
+ * @param {string} url
  */
 export function toRelativeUrl(url) {
     return url.substr(0, location.origin.length) === location.origin ? url.substr(location.origin.length) : url;
 }
 
 /**
- * @param {string} a 
- * @param {string} b 
+ * @param {string} a
+ * @param {string} b
  */
 export function isSubPathOf(a, b) {
     return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
