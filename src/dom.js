@@ -3,7 +3,7 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, defineHiddenProperty, kv, defineOwnProperty, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction } from "./include/zeta/util.js";
+import { each, extend, makeArray, defineHiddenProperty, kv, defineOwnProperty, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -57,8 +57,8 @@ function addPendingDOMUpdates(element, props) {
 }
 
 /**
- * @param {string} target 
- * @param {Zeta.Dictionary} handlers 
+ * @param {string} target
+ * @param {Zeta.Dictionary} handlers
  */
 export function addSelectHandlers(target, handlers) {
     selectorHandlers.push({
@@ -68,25 +68,29 @@ export function addSelectHandlers(target, handlers) {
 }
 
 /**
- * @param {string} selector 
- * @param {(ele: Element) => void} handler 
+ * @param {string} selector
+ * @param {(ele: Element) => void} handler
  */
 export function matchElement(selector, handler) {
     matchElementHandlers.push({ selector, handler });
 }
 
 /**
- * @param {(domChanges: Map<Element, Brew.DOMUpdateState>) => Brew.PromiseOrEmpty} callback 
+ * @param {(domChanges: Map<Element, Brew.DOMUpdateState>) => Brew.PromiseOrEmpty} callback
  */
 export function hookBeforeUpdate(callback) {
     preupdateHandlers.push(throwNotFunction(callback));
 }
 
 /**
- * @param {Promise<any>} promise 
- * @param {Element=} element 
+ * @param {Promise<any>} promise
+ * @param {Element=} element
+ * @param {() => any=} callback
  */
-export function handleAsync(promise, element) {
+export function handleAsync(promise, element, callback) {
+    if (!isThenable(promise)) {
+        return resolve((callback || noop)());
+    }
     if (element || dom.eventSource !== 'script') {
         element = element || dom.activeElement;
         var state = getVar(element);
@@ -105,18 +109,18 @@ export function handleAsync(promise, element) {
             setVar(s2.element, { error: '' + (e.message || e) });
         });
     }
-    return promise;
+    return promise.then(callback || null);
 }
 
 /**
- * @param {Element} element 
+ * @param {Element} element
  */
 export function markUpdated(element) {
     updatedElements.add(element);
 }
 
 /**
- * @param {boolean=} suppressAnim 
+ * @param {boolean=} suppressAnim
  */
 export function processStateChange(suppressAnim) {
     if (batchCounter) {
@@ -344,9 +348,9 @@ export function processStateChange(suppressAnim) {
 }
 
 /**
- * 
- * @param {true|(()=>void)} suppressAnim 
- * @param {()=>void=} callback 
+ *
+ * @param {true|(()=>void)} suppressAnim
+ * @param {()=>void=} callback
  */
 export function batch(suppressAnim, callback) {
     var doUpdate = true;
@@ -364,7 +368,7 @@ export function batch(suppressAnim, callback) {
 }
 
 /**
- * @param {Element} element 
+ * @param {Element} element
  */
 export function mountElement(element) {
     // ensure mounted event is correctly fired on the newly mounted element
@@ -400,7 +404,7 @@ export function mountElement(element) {
 }
 
 /**
- * @param {boolean=} suppressPrompt 
+ * @param {boolean=} suppressPrompt
  */
 export function preventLeave(suppressPrompt) {
     var element = any($('[prevent-leave]').get(), function (v) {
