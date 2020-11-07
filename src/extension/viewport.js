@@ -9,7 +9,7 @@ import defaults from "../defaults.js";
 defaults.viewport = true;
 
 install('viewport', function (app) {
-    var setOrientation = defineObservableProperty(app, 'orientation', '');
+    var setOrientation = defineObservableProperty(app, 'orientation', '', true);
     var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
     var availWidth = screen.availWidth;
     var availHeight = screen.availHeight;

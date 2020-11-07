@@ -3,7 +3,7 @@ import waterpipe from "./include/waterpipe.js"
 import { runCSSTransition } from "./include/zeta/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject } from "./include/zeta/util.js";
+import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject, isThenable } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -102,7 +102,7 @@ addAsyncAction('validate', function (e) {
         if (!valid) {
             e.stopImmediatePropagation();
             e.preventDefault();
-        } else if (isFunction(valid.then)) {
+        } else if (isThenable(valid)) {
             return valid.then(function (valid) {
                 if (!valid) {
                     throw 'validation-failed';
@@ -173,7 +173,7 @@ dom.ready.then(function () {
             executed.push(callback);
             // @ts-ignore: type inference issue
             var returnValue = callback.call(element, e);
-            if (returnValue && isFunction(returnValue.then) && !e.isImmediatePropagationStopped()) {
+            if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
                 handleAsync(returnValue).then(function () {

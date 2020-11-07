@@ -16,7 +16,7 @@ install('login', function (app, options) {
     }, options);
 
     var authCookie = cookie(options.cookie, options.expiry);
-    var setLoggedIn = defineObservableProperty(app, 'loggedIn', false);
+    var setLoggedIn = defineObservableProperty(app, 'loggedIn', false, true);
 
     function handleLogin(response) {
         setLoggedIn(true);
