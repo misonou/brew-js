@@ -1,6 +1,6 @@
 import History from "../include/history.js";
 import { $, Map } from "../include/zeta/shim.js";
-import { selectIncludeSelf, setClass } from "../include/zeta/domUtil.js";
+import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
 import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce } from "../include/zeta/util.js";
 import { appReady, install } from "../app.js";
@@ -9,7 +9,7 @@ import { animateIn, animateOut } from "../anim.js";
 import { groupLog } from "../util/console.js";
 import { getQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, withBaseUrl, isSubPathOf, baseUrl, setBaseUrl } from "../util/path.js";
-import { resetVar, setVar } from "../var.js";
+import { evalAttr, resetVar, setVar } from "../var.js";
 
 const _ = createPrivateStore();
 const matchByPathElements = new Map();
@@ -17,6 +17,7 @@ const preloadHandlers = [];
 
 /** @type {Element[]} */
 var activeElements = [dom.root];
+var pageTitleElement;
 
 /**
  * @param {Element} v
@@ -214,14 +215,18 @@ function configureRouter(app, options) {
         var preload = new Map();
         var eventSource = dom.eventSource;
         var previousActiveElements = activeElements.slice(0);
+        activeElements = newActiveElements;
+        pageTitleElement = $(newActiveElements).filter('[page-title]')[0];
+        redirectSource = {};
 
+        // assign document title from matched active elements and
         // synchronize path in address bar if navigation is triggered by script
+        var pageTitle = evalAttr(pageTitleElement, 'page-title', true);
         if (location.pathname.substr(baseUrl.length) !== path) {
-            History[navigated ? 'pushState' : 'replaceState']({}, document.title, withBaseUrl(path));
+            History[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
         }
         navigated++;
-        activeElements = newActiveElements;
-        redirectSource = {};
+        document.title = pageTitle;
 
         batch(true, function () {
             groupLog(eventSource, ['pageenter', path], function () {
@@ -298,7 +303,7 @@ function configureRouter(app, options) {
                 var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
                 var matched = $('[switch=""]', v)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath;
                 if (matched) {
-                    newActiveElements.push(v);
+                    newActiveElements.unshift(v);
                     if (!v.parentNode) {
                         $(placeholder).replaceWith(v);
                         markUpdated(v);
@@ -436,6 +441,12 @@ function configureRouter(app, options) {
                 v.reset();
             }
         });
+    });
+
+    app.on('statechange', function (e) {
+        if (containsOrEquals(e.target, pageTitleElement)) {
+            document.title = evalAttr(pageTitleElement, 'page-title', true);
+        }
     });
 }
 
