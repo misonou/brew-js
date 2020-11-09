@@ -231,49 +231,44 @@ export function processStateChange(suppressAnim) {
             groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
                 console.log(v === root ? document : v);
                 $(selectIncludeSelf('[' + TEMPLATE_ATTRS.join('],[') + ']', v)).not(visited).each(function (i, element) {
-                    visited.push(element);
-                    if (element.attributes.template || element.attributes['set-style']) {
+                    var props = mapGet(domUpdates, element, Object);
+                    if (element.attributes.template) {
                         var state = getVar(element);
+                        var templates = state.__template || {};
                         if (!state.__template) {
-                            defineHiddenProperty(state, '__template', {});
-                            if (element.attributes['set-style']) {
-                                state.__template.style = element.getAttribute('set-style');
-                            }
+                            defineHiddenProperty(state, '__template', templates);
                             if (element.attributes.template) {
                                 each(element.attributes, function (i, w) {
                                     if (w.value.indexOf('{{') >= 0) {
-                                        state.__template[w.name] = w.value;
+                                        templates[w.name] = w.value;
                                     }
                                 });
                                 if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
-                                    state.__template.$$text = element.textContent;
+                                    templates.$$text = element.textContent;
                                 }
                             }
                         }
-                        each(state.__template, function (i, w) {
-                            var value = evaluate(w, state, element, i, false);
+                        each(templates, function (i, w) {
+                            var value = evaluate(w, state, element, i, true);
                             if (domUpdates.get(element) || (i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
-                                var props = mapGet(domUpdates, element, Object);
-                                if (i === 'style') {
-                                    var styles = parseCSS(value);
-                                    props[i] = styles;
-                                    each(IMAGE_STYLE_PROPS, function (i, v) {
-                                        var imageUrl = isCssUrlValue(styles[v]);
-                                        if (imageUrl) {
-                                            styles[v] = 'url("' + withBaseUrl(imageUrl) + '")';
-                                        }
-                                    });
-                                } else {
-                                    props[i] = value;
-                                }
+                                props[i] = value;
+                            }
+                        });
+                    }
+                    if (element.attributes['set-style']) {
+                        var styles = parseCSS(evalAttr(element, 'set-style', true));
+                        props.style = styles;
+                        each(IMAGE_STYLE_PROPS, function (i, v) {
+                            var imageUrl = isCssUrlValue(styles[v]);
+                            if (imageUrl) {
+                                styles[v] = 'url("' + withBaseUrl(imageUrl) + '")';
                             }
                         });
                     }
                     if (element.attributes['set-class']) {
-                        var newStates = evalAttr(element, 'set-class');
-                        var props = mapGet(domUpdates, element, Object);
-                        props.$$class = extend(props.$$class || {}, newStates);
+                        props.$$class = evalAttr(element, 'set-class');
                     }
+                    visited.push(element);
                 });
             });
         });

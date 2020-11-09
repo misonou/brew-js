@@ -60,7 +60,7 @@ export function setVar(element, newStates, suppressEvent) {
         });
     } else {
         var state = getVar(element);
-        each(newStates || evalAttr(element, 'set-var', state), function (i, v) {
+        each(newStates || evalAttr(element, 'set-var'), function (i, v) {
             if (state[i] !== v) {
                 var s = getVarObjWithProperty(state, i);
                 s.__oldValues[i] = s[i];
@@ -166,11 +166,11 @@ export function getVar(element) {
  * @param {any} context
  * @param {Element} element
  * @param {string} attrName
- * @param {boolean=} returnAsIs
+ * @param {boolean=} templateMode
  */
-export function evaluate(template, context, element, attrName, returnAsIs) {
+export function evaluate(template, context, element, attrName, templateMode) {
     var options = { globals: { app: app } };
-    var result = returnAsIs ? waterpipe.eval(template, extend({}, context), options) : htmlDecode(waterpipe(template, extend({}, context), options));
+    var result = templateMode ? htmlDecode(waterpipe(template, extend({}, context), options)) : waterpipe.eval(template, extend({}, context), options);
     if (DEBUG_EVAL) {
         groupLog('eval', [element, attrName, '→', result], function (console) {
             console.log('%c%s%c', 'background-color:azure;color:darkblue;font-weight:bold', template, '', '→', result);
@@ -184,13 +184,12 @@ export function evaluate(template, context, element, attrName, returnAsIs) {
 /**
  * @param {Element} element
  * @param {string} attrName
- * @param {any=} context
+ * @param {boolean=} templateMode
  */
-export function evalAttr(element, attrName, context) {
+export function evalAttr(element, attrName, templateMode) {
     var str = element.getAttribute(attrName);
     if (!str) {
-        return {};
+        return templateMode ? '' : {};
     }
-    context = context || getVar(element);
-    return evaluate(str, context, element, attrName, true);
+    return evaluate(str, getVar(element), element, attrName, templateMode);
 }

@@ -1,8 +1,10 @@
 /**
- * @param state
- * @param varname
+ * Gets the state object of which the specified variable is declared on.
+ * If the variable is not declared on the inheritance chain, the same state object is returned.
+ * @param state A state object.
+ * @param varname Variable name to search.
  */
-export function getVarObjWithProperty(state: any, varname: string): any;
+export function getVarObjWithProperty(state: Brew.VarState, varname: string): Brew.VarState;
 
 /**
  * Sets template variables on the specified element.
@@ -13,14 +15,16 @@ export function getVarObjWithProperty(state: any, varname: string): any;
 export function setVar(element: Element | string, newStates?: (Zeta.Dictionary | null), suppressEvent?: boolean): boolean;
 
 /**
- * @param element
- * @param resetToNull
+ * Resets all variables declared on an element to their initial values or `null`.
+ * @param element A DOM element.
+ * @param resetToNull When specified to `true`, reset the variables to `null` instead of their initial values in `var` and `auto-var` expression.
  */
 export function resetVar(element: Element, resetToNull?: boolean): void;
 
 /**
- * @param element
- * @param resetToNull
+ * Gets a dictionary of variables and their associated values declared on an element.
+ * @param element A DOM element.
+ * @param resetToNull When specified to `true`, set all entries to `null` on the returned dictionary.
  */
 export function getDeclaredVar(element: Element, resetToNull?: boolean): Zeta.Dictionary;
 
@@ -31,17 +35,19 @@ export function getDeclaredVar(element: Element, resetToNull?: boolean): Zeta.Di
 export function getVar(element: Element): Brew.VarState;
 
 /**
- * @param template
- * @param context
- * @param element
- * @param attrName
- * @param returnAsIs
+ * Evaluates template or expression.
+ * @param template A string representing a template or an expression.
+ * @param context Context object of which the template or expression is evaluated against.
+ * @param element Source element for debug use.
+ * @param attrName Source attribute name for debug use.
+ * @param templateMode When specified to `true`, the attribute is evaluated as a template instead of an expression.
  */
-export function evaluate(template: string, context: any, element: Element, attrName: string, returnAsIs?: boolean): any;
+export function evaluate(template: string, context: any, element: Element, attrName: string, templateMode?: boolean): any;
 
 /**
- * @param element
- * @param attrName
- * @param context
+ * Evaluates attribute value of an element as a template or an expression.
+ * @param element A DOM element.
+ * @param attrName Name of the attribute which to be evaluated.
+ * @param templateMode When specified to `true`, the attribute is evaluated as a template instead of an expression.
  */
-export function evalAttr(element: Element, attrName: string, context?: any): any;
+export function evalAttr(element: Element, attrName: string, templateMode?: boolean): any;
