@@ -248,12 +248,12 @@ function configureRouter(app, options) {
                                     if (activeElements.indexOf(element) >= 0) {
                                         setClass(element, 'hidden', false);
                                         animateIn(element, 'show', '[match-path]');
-                                        dom.emit('pageenter', element, { pathname: path }, true);
+                                        app.emit('pageenter', element, { pathname: path }, true);
                                     }
                                 }));
                             });
                         } else {
-                            dom.emit('pageleave', element, { pathname: oldPath }, true);
+                            app.emit('pageleave', element, { pathname: oldPath }, true);
                             animateOut(element, 'show', '[match-path]').then(function () {
                                 if (activeElements.indexOf(element) < 0) {
                                     groupLog(eventSource, ['pageleave', oldPath], function () {
