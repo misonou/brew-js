@@ -1,14 +1,35 @@
 // @ts-nocheck
-import { $, Promise } from "../include/zeta/shim.js";
+import { $, Map, Promise, Set } from "../include/zeta/shim.js";
 import { isCssUrlValue } from "../include/zeta/cssUtil.js";
 import { createNodeIterator, is, iterateNode } from "../include/zeta/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, keys, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta/util.js";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, keys, matchWord, resolve, resolveAll, setPromiseTimeout, single, values, watchOnce } from "../include/zeta/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
 
 /** @type {Zeta.Dictionary<Promise<void>>} */
 const preloadImagesCache = {};
 /** @type {Zeta.Dictionary<Promise<Zeta.Dictionary>>} */
 const loadScriptCache = {};
+
+const compareFn = [
+    function (b, v, i) { return b[i] !== v; },
+    function (b, v, i) { return b.get(i) !== v; },
+    function (b, v, i) { return !b.has(v); }
+];
+
+/**
+ * @param {any[] | Map | Set | Record<string, any>} a
+ * @param {any[] | Map | Set | Record<string, any>} b
+ */
+export function compareObject(a, b) {
+    if (typeof a !== 'object' || !b || a.constructor !== b.constructor) {
+        return a === b;
+    }
+    var type = (is(a, Map) << 0) || (is(a, Set) << 1) || (isArray(a) << 2);
+    if (a.length !== b.length || a.size !== b.size || (!type && keys(a).length !== keys(b).length)) {
+        return false;
+    }
+    return !single(a, (compareFn[type] || compareFn[0]).bind(0, b));
+}
 
 /**
  * @param {HTMLFormElement} form
