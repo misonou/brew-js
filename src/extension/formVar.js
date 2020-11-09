@@ -5,7 +5,7 @@ import dom from "../include/zeta/dom.js";
 import { getVar, getVarObjWithProperty, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
-import { getFormValues } from "../util/common.js";
+import { compareObject, getFormValues } from "../util/common.js";
 import defaults from "../defaults.js";
 
 defaults.formVar = true;
@@ -16,7 +16,9 @@ install('formVar', function (app) {
         // @ts-ignore: form must be HTMLFormElement
         var values = getFormValues(form);
         var update = function () {
-            setVar(form, varname ? kv(varname, extend({}, values)) : values);
+            if (!varname || !compareObject(values, getVar(form)[varname])) {
+                setVar(form, varname ? kv(varname, extend({}, values)) : values);
+            }
         };
         dom.watchAttributes(form, 'value', update);
         dom.watchElements(form, ':input', function (addedInputs, removedInputs) {
