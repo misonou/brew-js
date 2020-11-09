@@ -65,7 +65,7 @@ export function withBaseUrl(url) {
  * @param {string} url
  */
 export function toAbsoluteUrl(url) {
-    return location.origin + withBaseUrl(url);
+    return url.indexOf('://') > 0 ? url : location.origin + withBaseUrl(url);
 }
 
 /**
