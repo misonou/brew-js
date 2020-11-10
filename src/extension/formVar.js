@@ -1,6 +1,6 @@
 import { $ } from "../include/zeta/shim.js";
-import { each, extend, kv } from "../include/zeta/util.js";
-import { selectIncludeSelf } from "../include/zeta/domUtil.js";
+import { each, extend, kv, setImmediateOnce } from "../include/zeta/util.js";
+import { bindUntil, selectIncludeSelf } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
 import { getVar, getVarObjWithProperty, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
@@ -13,21 +13,26 @@ defaults.formVar = true;
 install('formVar', function (app) {
     app.matchElement('form[form-var]', function (form) {
         var varname = form.getAttribute('form-var');
-        // @ts-ignore: form must be HTMLFormElement
-        var values = getFormValues(form);
+        var values = {};
         var update = function () {
             if (!varname || !compareObject(values, getVar(form)[varname])) {
                 setVar(form, varname ? kv(varname, extend({}, values)) : values);
             }
         };
-        dom.watchAttributes(form, 'value', update);
-        dom.watchElements(form, ':input', function (addedInputs, removedInputs) {
-            $(addedInputs).on('change', update);
-            $(removedInputs).off('change', update);
+        dom.watchAttributes(form, 'value', function () {
+            setImmediateOnce(update);
+        });
+        dom.watchElements(form, ':input', function (addedInputs) {
+            each(addedInputs, function (i, v) {
+                bindUntil(dom.elementDetached(v), v, 'change', function () {
+                    setImmediateOnce(update);
+                });
+            });
             // @ts-ignore: form must be HTMLFormElement
             values = getFormValues(form);
             update();
-        });
+        }, true);
+
         app.on(form, 'reset', function () {
             var state = getVar(form);
             if (varname) {
@@ -45,8 +50,6 @@ install('formVar', function (app) {
             }
             return true;
         });
-        $(':input', form).on('change', update);
-        update();
     });
 
     app.on('pageenter', function (e) {
