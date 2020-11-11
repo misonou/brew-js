@@ -1,5 +1,13 @@
 export function compareObject<T extends any[] | Map | Set | Record<string, any>>(a: T, b: T): boolean;
 
+export function getAttrValues(element: Element): Zeta.Dictionary<string>;
+
+export function setAttr(element: Element, name: string, value: string): void;
+
+export function setAttr(element: Element, values: Zeta.Dictionary<string>): void;
+
+export function copyAttr(src: Element, dst: Element): void;
+
 export function getFormValues(form: HTMLFormElement): Zeta.Dictionary;
 
 export function getQueryParam(name: string): string;

@@ -2,7 +2,7 @@
 import { $, Map, Promise, Set } from "../include/zeta/shim.js";
 import { isCssUrlValue } from "../include/zeta/cssUtil.js";
 import { createNodeIterator, is, iterateNode } from "../include/zeta/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, keys, matchWord, resolve, resolveAll, setPromiseTimeout, single, values, watchOnce } from "../include/zeta/util.js";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, single, values, watchOnce } from "../include/zeta/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
 
 /** @type {Zeta.Dictionary<Promise<void>>} */
@@ -29,6 +29,26 @@ export function compareObject(a, b) {
         return false;
     }
     return !single(a, (compareFn[type] || compareFn[0]).bind(0, b));
+}
+
+export function getAttrValues(element) {
+    var values = {};
+    each(element.attributes, function (i, v) {
+        values[v.name] = v.value;
+    });
+    return values;
+}
+
+export function setAttr(element, name, value) {
+    each(isPlainObject(name) || kv(name, value), function (i, v) {
+        element.setAttribute(i, v);
+    });
+}
+
+export function copyAttr(src, dst) {
+    each(src.attributes, function (i, v) {
+        dst.setAttribute(v.name, v.value);
+    });
 }
 
 /**
