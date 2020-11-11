@@ -60,6 +60,9 @@ export function setVar(element, newStates, suppressEvent) {
         });
     } else {
         var state = getVar(element);
+        if (!element.attributes.var) {
+            element.setAttribute('var', '');
+        }
         each(newStates || evalAttr(element, 'set-var'), function (i, v) {
             if (state[i] !== v) {
                 var s = getVarObjWithProperty(state, i);
