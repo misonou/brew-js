@@ -157,6 +157,7 @@ export function processStateChange(suppressAnim) {
                             if (w.nodeType === 1) {
                                 $(element).append(w);
                                 setVar(w, kv('foreach', v), true);
+                                mountElement(w);
                             }
                         });
                         newChildren.push.apply(newChildren, parts);

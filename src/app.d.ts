@@ -40,3 +40,10 @@ export function install(name: string, callback: (this: Brew.AppInstance<Zeta.Dic
  * @param callback A callback to perform the detection and return the result.
  */
 export function addDetect(name: string, callback: () => boolean | Promise<boolean>): void;
+
+/**
+ * Adds a named template that is later applied to element with `apply-template` attribute.
+ * @param name Name of the template.
+ * @param template A DOM node or a valid HTML string. It should not be a DocumentFragment, nor an HTML string containing multiple root elements.
+ */
+export function addTemplate(name: string, template: Node | JQuery.htmlString): void;
