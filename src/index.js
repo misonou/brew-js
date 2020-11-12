@@ -1,4 +1,4 @@
-import brew from "./brew.js";
+import brew from "./core.js";
 
 import _lib1 from "./extension/config.js";
 import _lib2 from "./extension/formVar.js";
