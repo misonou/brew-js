@@ -1,17 +1,15 @@
 import { $ } from "./include/zeta/shim.js";
 import dom from "./include/zeta/dom.js";
 import { is, selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { resolveAll, each, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, makeArray } from "./include/zeta/util.js";
+import { resolveAll, each, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta/util.js";
 import defaults from "./defaults.js";
-import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
+import { addSelectHandlers, addTemplate, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter } from "./extension/router.js";
-import { evalAttr, getVar } from "./var.js";
+import { getVar } from "./var.js";
 import { withBaseUrl } from "./util/path.js";
-import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const _ = createPrivateStore();
 const root = dom.root;
-const templates = {};
 const featureDetections = {};
 
 /** @type {Brew.AppInstance} */
@@ -35,48 +33,11 @@ function exactTargetWrapper(handler) {
     };
 }
 
-function applyTemplate(element) {
-    var templateName = element.getAttribute('apply-template');
-    var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
-    var state = _(element) || _(element, {
-        template: null,
-        attributes: getAttrValues(element),
-        childNodes: makeArray(element.childNodes),
-        isStatic: !!templates[templateName] || app.on(element, 'statechange', applyTemplate.bind(0, element))
-    });
-    var currentTemplate = state.template;
-
-    if (template && template !== currentTemplate) {
-        state.template = template;
-        template = template.cloneNode(true);
-
-        // reset attributes on the apply-template element
-        // before applying new attributes
-        if (currentTemplate) {
-            each(currentTemplate.attributes, function (i, v) {
-                element.removeAttribute(v.name);
-            });
-        }
-        setAttr(element, state.attributes);
-        copyAttr(template, element);
-
-        var $contents = $(state.childNodes).detach();
-        $(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
-        $(selectIncludeSelf('content[for]', template)).each(function (i, v) {
-            $(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
-        });
-        $(element).empty().append(template.childNodes);
-    }
-}
-
 /**
  * @param {Zeta.ZetaEvent} e
  */
 function onElementMounted(e) {
     var element = e.target;
-    $(selectIncludeSelf('[apply-template]', element)).each(function (i, v) {
-        applyTemplate(v);
-    });
     $(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
         // @ts-ignore: known element type
         v.src = withBaseUrl(v.getAttribute('src'));
@@ -209,7 +170,7 @@ watchable(App.prototype);
 
 dom.ready.then(function () {
     $('[brew-template]').each(function (i, v) {
-        templates[v.getAttribute('brew-template')] = v.cloneNode(true);
+        addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
     });
 });
 
@@ -247,8 +208,4 @@ export function install(name, callback) {
 
 export function addDetect(name, callback) {
     featureDetections[name] = throwNotFunction(callback);
-}
-
-export function addTemplate(name, template) {
-    templates[name] = $(template)[0];
 }

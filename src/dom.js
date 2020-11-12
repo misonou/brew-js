@@ -3,13 +3,14 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, defineHiddenProperty, kv, defineOwnProperty, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable } from "./include/zeta/util.js";
+import { each, extend, makeArray, defineHiddenProperty, kv, defineOwnProperty, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, getVarObjWithProperty } from "./var.js";
+import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const TEMPLATE_ATTRS = 'template set-class set-style'.split(' ');
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
@@ -17,12 +18,14 @@ const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const getOwnPropertyNames = Object.getOwnPropertyNames;
 
+const _ = createPrivateStore();
 const root = dom.root;
 const updatedElements = new Set();
 const pendingDOMUpdates = new Map();
 const preupdateHandlers = [];
 const matchElementHandlers = [];
 const selectorHandlers = [];
+const templates = {};
 
 var batchCounter = 0;
 
@@ -54,6 +57,40 @@ function addPendingDOMUpdates(element, props) {
             dict[j] = v;
         }
     });
+}
+
+function applyTemplate(element) {
+    var templateName = element.getAttribute('apply-template');
+    var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
+    var state = _(element) || _(element, {
+        template: null,
+        attributes: getAttrValues(element),
+        childNodes: makeArray(element.childNodes),
+        isStatic: !!templates[templateName] || app.on(element, 'statechange', applyTemplate.bind(0, element))
+    });
+    var currentTemplate = state.template;
+
+    if (template && template !== currentTemplate) {
+        state.template = template;
+        template = template.cloneNode(true);
+
+        // reset attributes on the apply-template element
+        // before applying new attributes
+        if (currentTemplate) {
+            each(currentTemplate.attributes, function (i, v) {
+                element.removeAttribute(v.name);
+            });
+        }
+        setAttr(element, state.attributes);
+        copyAttr(template, element);
+
+        var $contents = $(state.childNodes).detach();
+        $(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
+        $(selectIncludeSelf('content[for]', template)).each(function (i, v) {
+            $(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
+        });
+        $(element).empty().append(template.childNodes);
+    }
 }
 
 /**
@@ -370,6 +407,11 @@ export function mountElement(element) {
     // ensure mounted event is correctly fired on the newly mounted element
     dom.on(element, '__brew_handler__', noop);
 
+    // apply templates before element mounted
+    $(selectIncludeSelf('[apply-template]', element)).each(function (i, v) {
+        applyTemplate(v);
+    });
+
     var mountedElements = [element];
     var firedOnRoot = element === root;
     var index = -1, index2 = 0;
@@ -425,4 +467,8 @@ export function preventLeave(suppressPrompt) {
         });
     }
     return !!element;
+}
+
+export function addTemplate(name, template) {
+    templates[name] = $(template)[0];
 }
