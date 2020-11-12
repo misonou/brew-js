@@ -14,7 +14,11 @@ install('formVar', function (app) {
     app.matchElement('form[form-var]', function (form) {
         var varname = form.getAttribute('form-var');
         var values = {};
-        var update = function () {
+        var update = function (updateField) {
+            if (updateField) {
+                // @ts-ignore: form must be HTMLFormElement
+                values = getFormValues(form);
+            }
             if (!varname || !compareObject(values, getVar(form)[varname])) {
                 setVar(form, varname ? kv(varname, extend({}, values)) : values);
             }
@@ -24,13 +28,13 @@ install('formVar', function (app) {
         });
         dom.watchElements(form, ':input', function (addedInputs) {
             each(addedInputs, function (i, v) {
-                bindUntil(dom.elementDetached(v), v, 'change', function () {
+                var afterDetached = dom.afterDetached(v, form);
+                bindUntil(afterDetached, v, 'change', function () {
                     setImmediateOnce(update);
                 });
+                afterDetached.then(update.bind(null, true));
             });
-            // @ts-ignore: form must be HTMLFormElement
-            values = getFormValues(form);
-            update();
+            update(true);
         }, true);
 
         app.on(form, 'reset', function () {
