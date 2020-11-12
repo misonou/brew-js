@@ -3,7 +3,7 @@ import * as path from "./util/path.js";
 import * as commonUtil from "./util/common.js";
 import * as animation from "./anim.js";
 import { evalAttr, getVar, setVar } from "./var.js";
-import { handleAsync, preventLeave } from "./dom.js";
+import { addTemplate, handleAsync, preventLeave } from "./dom.js";
 import { isElementActive } from "./extension/router.js";
 import * as domAction from "./domAction.js";
 import brew, { addDetect, install } from "./app.js";
@@ -23,7 +23,8 @@ define(brew, {
     handleAsync,
     preventLeave,
     install,
-    addDetect
+    addDetect,
+    addTemplate
 });
 
 export default brew;

@@ -1,5 +1,5 @@
 export { evalAttr, getVar, setVar } from "./var";
-export { handleAsync, preventLeave } from "./dom";
+export { addTemplate, handleAsync, preventLeave } from "./dom";
 export { isElementActive } from "./extension/router";
 export { addDetect, install } from "./app";
 export { defaults } from "./defaults";
