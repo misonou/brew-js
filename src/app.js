@@ -3,7 +3,7 @@ import dom from "./include/zeta/dom.js";
 import { is, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import { resolveAll, each, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta/util.js";
 import defaults from "./defaults.js";
-import { addSelectHandlers, addTemplate, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
+import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter } from "./extension/router.js";
 import { getVar } from "./var.js";
 import { withBaseUrl } from "./util/path.js";
@@ -167,12 +167,6 @@ definePrototype(App, {
     beforePageEnter: hookBeforePageEnter
 });
 watchable(App.prototype);
-
-dom.ready.then(function () {
-    $('[brew-template]').each(function (i, v) {
-        addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
-    });
-});
 
 export default function (callback) {
     if (appInited) {

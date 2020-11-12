@@ -2,10 +2,14 @@ import { $ } from "./include/zeta/shim.js";
 import { each } from "./include/zeta/util.js";
 import { isCssUrlValue } from "./include/zeta/cssUtil.js";
 import dom from "./include/zeta/dom.js";
-import { preventLeave } from "./dom.js";
+import { addTemplate, preventLeave } from "./dom.js";
 import { withBaseUrl } from "./util/path.js";
 
 dom.ready.then(function () {
+    $('[brew-template]').each(function (i, v) {
+        addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
+    });
+
     $('apply-attributes').each(function (i, v) {
         var $target = $(v.getAttribute('elements') || '', v.parentNode || dom.root);
         each(v.attributes, function (i, v) {
