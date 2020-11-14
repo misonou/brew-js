@@ -1,5 +1,3 @@
-export function compareObject<T extends any[] | Map | Set | Record<string, any>>(a: T, b: T): boolean;
-
 export function getAttrValues(element: Element): Zeta.Dictionary<string>;
 
 export function setAttr(element: Element, name: string, value: string): void;

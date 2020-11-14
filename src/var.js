@@ -1,7 +1,7 @@
 import { $ } from "./include/zeta/shim.js";
 import waterpipe from "./include/waterpipe.js"
 import { containsOrEquals, selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { createPrivateStore, defineGetterProperty, defineHiddenProperty, defineOwnProperty, each, extend, htmlDecode, keys } from "./include/zeta/util.js";
+import { createPrivateStore, defineGetterProperty, defineHiddenProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, keys } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
@@ -11,7 +11,6 @@ const DEBUG_EVAL = /localhost:?/i.test(location.host);
 const VAR_SCOPE_ATTRS = 'var switch auto-var error-scope'.split(' ');
 
 const root = dom.root;
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const setPrototypeOf = Object.setPrototypeOf;
 const stateStore = createPrivateStore();
 
@@ -37,7 +36,7 @@ waterpipe_.pipes['{'].varargs = true;
  */
 export function getVarObjWithProperty(state, varname) {
     for (var s = state; s !== null; s = Object.getPrototypeOf(s)) {
-        if (hasOwnProperty.call(s, varname)) {
+        if (hasOwnProperty(s, varname)) {
             return s;
         }
     }
@@ -154,7 +153,7 @@ export function getVar(element) {
             });
         }
     }
-    if (!hasOwnProperty.call(state, '__init')) {
+    if (!hasOwnProperty(state, '__init')) {
         defineHiddenProperty(state, '__init', true);
         var newStates = getDeclaredVar(element, !containsOrEquals(root, element) || !!$(element).parents('[match-path]')[0]);
         for (var i in newStates) {

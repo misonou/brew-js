@@ -1,11 +1,11 @@
 import { $ } from "../include/zeta/shim.js";
-import { each, extend, kv, setImmediateOnce } from "../include/zeta/util.js";
+import { each, equal, extend, kv, setImmediateOnce } from "../include/zeta/util.js";
 import { bindUntil, selectIncludeSelf } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
 import { getVar, getVarObjWithProperty, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
-import { compareObject, getFormValues } from "../util/common.js";
+import { getFormValues } from "../util/common.js";
 import defaults from "../defaults.js";
 
 defaults.formVar = true;
@@ -19,7 +19,7 @@ install('formVar', function (app) {
                 // @ts-ignore: form must be HTMLFormElement
                 values = getFormValues(form);
             }
-            if (!varname || !compareObject(values, getVar(form)[varname])) {
+            if (!varname || !equal(values, getVar(form)[varname])) {
                 setVar(form, varname ? kv(varname, extend({}, values)) : values);
             }
         };
