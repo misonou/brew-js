@@ -169,6 +169,9 @@ export function processStateChange(suppressAnim) {
     // compute auto variables and evaluates DOM changes from templates
     groupLog(dom.eventSource, 'statechange', function () {
         var arr = makeArray(updatedElements);
+        each(selectIncludeSelf('[apply-template]', arr), function (i, element) {
+            applyTemplate(element);
+        });
         each(selectIncludeSelf('[foreach]', arr), function (i, element) {
             var state = getVar(element);
             if (!state.__foreach) {
