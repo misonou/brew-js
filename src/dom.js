@@ -236,12 +236,14 @@ export function processStateChange(suppressAnim) {
                     return false;
                 }
             });
-            matched = matched || $target.filter('[default]')[0] || $target[0];
+            matched = matched || $target.filter('[default]')[0] || $target[0] || null;
             if (!state.matched || state.matched.element !== matched) {
                 groupLog('switch', [element, varname, '→', matchValue], function (console) {
-                    console.log('Matched: ', matched);
-                    setVar(matched, null, true);
-                    setVar(element, { matched: getVar(matched) }, true);
+                    console.log('Matched: ', matched || '(none)');
+                    if (matched) {
+                        setVar(matched, null, true);
+                    }
+                    setVar(element, { matched: matched && getVar(matched) }, true);
                     $target.each(function (i, v) {
                         var props = mapGet(domUpdates, v, Object);
                         props.$$class = { active: v === matched };
