@@ -401,7 +401,8 @@ addTransformer('foreach', function (element, state) {
         var newChildren = map(newItems, function (v) {
             var currentIndex = oldItems.indexOf(v);
             if (currentIndex >= 0) {
-                return currentNodes.slice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
+                oldItems.splice(currentIndex, 1);
+                return currentNodes.splice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
             }
             var parts = $(templateNodes).clone().get();
             each(parts, function (i, w) {
@@ -416,7 +417,7 @@ addTransformer('foreach', function (element, state) {
         });
         extend(state, {
             nodes: newChildren,
-            data: newItems
+            data: newItems.slice()
         });
         $(currentNodes).detach();
         $(element).append(newChildren);
