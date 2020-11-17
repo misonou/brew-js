@@ -19,8 +19,19 @@ install('formVar', function (app) {
                 // @ts-ignore: form must be HTMLFormElement
                 values = getFormValues(form);
             }
-            if (!varname || !equal(values, getVar(form)[varname])) {
-                setVar(form, varname ? kv(varname, extend({}, values)) : values);
+            if (!varname) {
+                setVar(form, values);
+            } else {
+                var currentValues = getVar(form)[varname];
+                var tmp = extend({}, currentValues);
+                for (var i in tmp) {
+                    if (!(i in values)) {
+                        delete tmp[i];
+                    }
+                }
+                if (!equal(tmp, values)) {
+                    setVar(form, kv(varname, extend({}, currentValues, values)));
+                }
             }
         };
         dom.watchAttributes(form, 'value', function () {
