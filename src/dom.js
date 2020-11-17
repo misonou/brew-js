@@ -407,6 +407,7 @@ addTransformer('foreach', function (element, state) {
             each(parts, function (i, w) {
                 if (w.nodeType === 1) {
                     $(element).append(w);
+                    defineOwnProperty(getVar(w), 'foreach', null);
                     setVar(w, kv('foreach', v), true);
                     mountElement(w);
                 }
