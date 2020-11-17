@@ -9,13 +9,11 @@ import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { withBaseUrl } from "./util/path.js";
-import { getVar, evalAttr, setVar, evaluate, getVarObjWithProperty } from "./var.js";
+import { getVar, evalAttr, setVar, evaluate, getVarScope } from "./var.js";
 import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const TEMPLATE_ATTRS = 'template set-class set-style'.split(' ');
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
-
-const getOwnPropertyNames = Object.getOwnPropertyNames;
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -27,6 +25,25 @@ const selectorHandlers = [];
 const templates = {};
 
 var batchCounter = 0;
+
+function getComponentState(element, ns, init) {
+    var obj = _(element) || _(element, {});
+    if (!hasOwnProperty(obj, ns)) {
+        obj[ns] = {};
+        (init || noop)(obj[ns]);
+    }
+    return obj[ns];
+}
+
+function diffObject(currentValues, oldValues) {
+    var newValues = {};
+    each(currentValues, function (i, v) {
+        if (v !== oldValues[i]) {
+            newValues[i] = v;
+        }
+    });
+    return newValues;
+}
 
 function updateDOM(element, props) {
     each(props, function (j, v) {
@@ -56,11 +73,12 @@ function mergeDOMUpdates(dict, props) {
 function applyTemplate(element) {
     var templateName = element.getAttribute('apply-template');
     var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
-    var state = _(element) || _(element, {
-        template: null,
-        attributes: getAttrValues(element),
-        childNodes: makeArray(element.childNodes),
-        isStatic: !!templates[templateName] || app.on(element, 'statechange', applyTemplate.bind(0, element))
+    var state = getComponentState(element, 'applyTemplate', function (state) {
+        extend(state, {
+            template: null,
+            attributes: getAttrValues(element),
+            childNodes: makeArray(element.childNodes)
+        });
     });
     var currentTemplate = state.template;
 
@@ -124,20 +142,17 @@ export function handleAsync(promise, element, callback) {
     }
     if (element || dom.eventSource !== 'script') {
         element = element || dom.activeElement;
-        var state = getVar(element);
-        var s1 = getVarObjWithProperty(state, 'loading');
-        var s2 = getVarObjWithProperty(state, 'error');
-        if (!hasOwnProperty(s1, '__counter')) {
-            defineHiddenProperty(s1, '__counter', 0);
-        }
-        s1.__counter++;
-        setVar(s1.element, { loading: s1.loading || true });
-        setVar(s2.element, { error: null });
+        var elm1 = getVarScope('loading', element);
+        var elm2 = getVarScope('error', element);
+        var counter = getComponentState(elm1, 'handleAsync');
+        setVar(elm1, { loading: getVar(elm1).loading || true });
+        setVar(elm2, { error: null });
+        counter.value = (counter.value || 0) + 1
         promise.then(function () {
-            setVar(s1.element, { loading: !!--s1.__counter });
+            setVar(elm1, { loading: !!--counter.value });
         }, function (e) {
-            setVar(s1.element, { loading: !!--s1.__counter });
-            setVar(s2.element, { error: '' + (e.message || e) });
+            setVar(elm1, { loading: !!--counter.value });
+            setVar(elm2, { error: '' + (e.message || e) });
         });
     }
     return promise.then(callback || null);
@@ -256,11 +271,13 @@ export function processStateChange(suppressAnim) {
 
         arr = $.uniqueSort(makeArray(updatedElements));
         each(arr, function (i, v) {
-            var state = getVar(v);
+            var currentValues = getVar(v);
+            var oldValues = getComponentState(v, 'oldValues');
             updatedProps.set(v, {
-                newValues: extend({}, state.__newValues),
-                oldValues: extend({}, state.__oldValues)
+                oldValues: extend({}, oldValues),
+                newValues: diffObject(currentValues, oldValues)
             });
+            extend(oldValues, currentValues);
         });
 
         var visited = [];
@@ -364,18 +381,6 @@ export function processStateChange(suppressAnim) {
         });
     });
 
-    // reset variable state objects for next cycle
-    each(updatedElements, function (i, v) {
-        var state = getVar(v);
-        var newValues = state.__newValues;
-        var oldValues = state.__oldValues;
-        getOwnPropertyNames(newValues).forEach(function (v) {
-            delete newValues[v];
-        });
-        getOwnPropertyNames(oldValues).forEach(function (v) {
-            delete oldValues[v];
-        });
-    });
     updatedElements.clear();
 }
 
@@ -445,12 +450,12 @@ export function mountElement(element) {
  */
 export function preventLeave(suppressPrompt) {
     var element = any($('[prevent-leave]').get(), function (v) {
-        var state = getVar(v);
-        var allowLeave = Object.hasOwnProperty.call(state, '__allowLeave');
+        var state = getComponentState(v, 'preventLeave');
+        var allowLeave = state.allowLeave;
         if (isElementActive(v) || allowLeave) {
             var preventLeave = evalAttr(v, 'prevent-leave');
             if (!preventLeave && allowLeave) {
-                delete state.__allowLeave;
+                delete state.allowLeave;
             }
             return preventLeave && !allowLeave;
         }
@@ -458,8 +463,8 @@ export function preventLeave(suppressPrompt) {
     if (element && !suppressPrompt) {
         return resolveAll(dom.emit('preventLeave', element, null, true), function (result) {
             if (result) {
-                // @ts-ignore: element checked for truthiness
-                defineHiddenProperty(getVar(element), '__allowLeave', true);
+                var state = getComponentState(element, 'preventLeave');
+                state.allowLeave = true;
             } else {
                 throw 'user_rejected';
             }
