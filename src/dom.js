@@ -3,7 +3,7 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, defineHiddenProperty, kv, defineOwnProperty, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore } from "./include/zeta/util.js";
+import { each, extend, makeArray, defineHiddenProperty, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, hasOwnProperty, mapRemove, defineOwnProperty } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -15,7 +15,6 @@ import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 const TEMPLATE_ATTRS = 'template set-class set-style'.split(' ');
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const getOwnPropertyNames = Object.getOwnPropertyNames;
 
 const _ = createPrivateStore();
@@ -44,12 +43,7 @@ function updateDOM(element, props) {
     dom.emit('domchange', element);
 }
 
-function addPendingDOMUpdates(element, props) {
-    var dict = pendingDOMUpdates.get(element);
-    if (!dict) {
-        dict = {};
-        pendingDOMUpdates.set(element, dict);
-    }
+function mergeDOMUpdates(dict, props) {
     each(props, function (j, v) {
         if (j === '$$class' || j === 'style') {
             dict[j] = extend({}, dict[j], v);
@@ -133,7 +127,7 @@ export function handleAsync(promise, element, callback) {
         var state = getVar(element);
         var s1 = getVarObjWithProperty(state, 'loading');
         var s2 = getVarObjWithProperty(state, 'error');
-        if (!hasOwnProperty.call(s1, '__counter')) {
+        if (!hasOwnProperty(s1, '__counter')) {
             defineHiddenProperty(s1, '__counter', 0);
         }
         s1.__counter++;
@@ -218,7 +212,7 @@ export function processStateChange(suppressAnim) {
         });
         each(selectIncludeSelf('[switch][switch!=""]', arr), function (i, element) {
             var state = getVar(element);
-            if (!hasOwnProperty.call(state, 'matched')) {
+            if (!hasOwnProperty(state, 'matched')) {
                 defineOwnProperty(state, 'matched');
             }
             if (!isElementActive(element)) {
@@ -345,18 +339,18 @@ export function processStateChange(suppressAnim) {
                     setImmediate(function () {
                         animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
                             each(groupElements, function (i, v) {
-                                updateDOM(v, pendingDOMUpdates.get(v));
-                                pendingDOMUpdates.delete(v);
+                                updateDOM(v, mapRemove(pendingDOMUpdates, v));
                             });
                             animateIn(animParent, 'statechange', '[match-path]', filter);
                         });
                     });
                     animScopes.set(animParent, groupElements);
                 }
-                addPendingDOMUpdates(element, props);
+                var dict = mapGet(pendingDOMUpdates, element, Object);
+                mergeDOMUpdates(dict, props);
                 groupElements.push(element);
             } else if (pendingDOMUpdates.has(element)) {
-                addPendingDOMUpdates(element, props);
+                mergeDOMUpdates(pendingDOMUpdates.get(element), props);
             } else {
                 updateDOM(element, props);
             }
