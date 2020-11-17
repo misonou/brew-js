@@ -3,7 +3,7 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, defineHiddenProperty, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, hasOwnProperty, mapRemove, defineOwnProperty, grep } from "./include/zeta/util.js";
+import { each, extend, makeArray, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -12,7 +12,6 @@ import { withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, getVarScope } from "./var.js";
 import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
-const TEMPLATE_ATTRS = 'template set-class set-style'.split(' ');
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 const BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
@@ -23,17 +22,17 @@ const pendingDOMUpdates = new Map();
 const preupdateHandlers = [];
 const matchElementHandlers = [];
 const selectorHandlers = [];
+/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+const transformationHandlers = {};
+/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+const renderHandlers = {};
 const templates = {};
 
 var batchCounter = 0;
 
-function getComponentState(element, ns, init) {
+function getComponentState(element, ns) {
     var obj = _(element) || _(element, {});
-    if (!hasOwnProperty(obj, ns)) {
-        obj[ns] = {};
-        (init || noop)(obj[ns]);
-    }
-    return obj[ns];
+    return obj[ns] || (obj[ns] = {});
 }
 
 function diffObject(currentValues, oldValues) {
@@ -76,15 +75,15 @@ function mergeDOMUpdates(dict, props) {
 function applyTemplate(element) {
     var templateName = element.getAttribute('apply-template');
     var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
-    var state = getComponentState(element, 'applyTemplate', function (state) {
+    var state = getComponentState(element, 'applyTemplate');
+    var currentTemplate = state.template;
+
+    if (!state.attributes) {
         extend(state, {
-            template: null,
             attributes: getAttrValues(element),
             childNodes: makeArray(element.childNodes)
         });
-    });
-    var currentTemplate = state.template;
-
+    }
     if (template && template !== currentTemplate) {
         state.template = template;
         template = template.cloneNode(true);
@@ -177,100 +176,25 @@ export function processStateChange(suppressAnim) {
     }
     var updatedProps = new Map();
     var domUpdates = new Map();
+    var registerUpdates = function (element, props) {
+        var dict = mapGet(domUpdates, element, Object);
+        mergeDOMUpdates(dict, props);
+    };
 
-    // compute auto variables and evaluates DOM changes from templates
     groupLog(dom.eventSource, 'statechange', function () {
+        // recursively perform transformation until there is no new element produced
         var arr = makeArray(updatedElements);
-        each(selectIncludeSelf('[apply-template]', arr), function (i, element) {
-            applyTemplate(element);
-        });
-        each(selectIncludeSelf('[foreach]', arr), function (i, element) {
-            var state = getVar(element);
-            if (!state.__foreach) {
-                defineHiddenProperty(state, '__foreach', {
-                    // @ts-ignore: type inference issue
-                    template: $(element).contents().detach().filter(function (i, v) { return v.nodeType === 1 || /\S/.test(v.data || ''); }).get(),
-                    nodes: [],
-                    data: []
+        var transformed = new Set();
+        var exclude;
+        do {
+            exclude = makeArray(transformed);
+            each(transformationHandlers, function (i, v) {
+                $(selectIncludeSelf('[' + i + ']', arr)).not(exclude).each(function (j, element) {
+                    v(element, getComponentState(element, i), registerUpdates);
+                    transformed.add(element);
                 });
-            }
-            var templateNodes = state.__foreach.template;
-            var currentNodes = state.__foreach.nodes;
-            var oldItems = state.__foreach.data;
-            var newItems = makeArray(evalAttr(element, 'foreach'));
-
-            if (newItems.length !== oldItems.length || newItems.some(function (v, i) { return oldItems[i] !== v; })) {
-                var newChildren = [];
-                each(newItems, function (i, v) {
-                    var currentIndex = oldItems.indexOf(v);
-                    if (currentIndex < 0) {
-                        var parts = $(templateNodes).clone().get();
-                        each(parts, function (i, w) {
-                            if (w.nodeType === 1) {
-                                $(element).append(w);
-                                setVar(w, kv('foreach', v), true);
-                                mountElement(w);
-                            }
-                        });
-                        newChildren.push.apply(newChildren, parts);
-                    } else {
-                        newChildren.push.apply(newChildren, currentNodes.slice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length));
-                    }
-                });
-                extend(state.__foreach, {
-                    nodes: newChildren,
-                    data: newItems
-                });
-                $(currentNodes).detach();
-                $(element).append(newChildren);
-            }
-        });
-        each(selectIncludeSelf('[auto-var]', arr), function (i, element) {
-            setVar(element, evalAttr(element, 'auto-var'), true);
-        });
-        each(selectIncludeSelf('[switch][switch!=""]', arr), function (i, element) {
-            var state = getVar(element);
-            if (!hasOwnProperty(state, 'matched')) {
-                defineOwnProperty(state, 'matched');
-            }
-            if (!isElementActive(element)) {
-                return;
-            }
-            var varname = element.getAttribute('switch') || '';
-            var matchValue = waterpipe.eval(varname, extend({}, state));
-            var $target = $('[match-' + varname + ']', element).filter(function (i, w) {
-                return $(w).parents('[switch]')[0] === element;
             });
-            var matched;
-            var itemValues = new Map();
-            $target.each(function (i, v) {
-                var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), extend({}, getVar(v)));
-                itemValues.set(v, thisValue);
-                if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
-                    matched = v;
-                    return false;
-                }
-            });
-            matched = matched || $target.filter('[default]')[0] || $target[0] || null;
-            if (!state.matched || state.matched.element !== matched) {
-                groupLog('switch', [element, varname, '→', matchValue], function (console) {
-                    console.log('Matched: ', matched || '(none)');
-                    if (matched) {
-                        setVar(matched, null, true);
-                    }
-                    setVar(element, { matched: matched && getVar(matched) }, true);
-                    $target.each(function (i, v) {
-                        var props = mapGet(domUpdates, v, Object);
-                        props.$$class = { active: v === matched };
-                    });
-                });
-            } else {
-                writeLog('switch', [element, varname, '→', matchValue, '(unchanged)']);
-                if (varname in state && itemValues.get(matched) !== undefined) {
-                    setVar(element, kv(varname, itemValues.get(matched)), true);
-                }
-            }
-        });
+        } while (exclude.length !== transformed.size);
 
         // trigger statechange events and perform DOM updates only on attached elements
         // leave detached elements in future rounds
@@ -291,44 +215,12 @@ export function processStateChange(suppressAnim) {
         each(arr.reverse(), function (i, v) {
             groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
                 console.log(v === root ? document : v);
-                $(selectIncludeSelf('[' + TEMPLATE_ATTRS.join('],[') + ']', v)).not(visited).each(function (i, element) {
-                    var props = mapGet(domUpdates, element, Object);
-                    if (element.attributes.template) {
-                        var state = getVar(element);
-                        var templates = state.__template || {};
-                        if (!state.__template) {
-                            defineHiddenProperty(state, '__template', templates);
-                            if (element.attributes.template) {
-                                each(element.attributes, function (i, w) {
-                                    if (w.value.indexOf('{{') >= 0) {
-                                        templates[w.name] = w.value;
-                                    }
-                                });
-                                if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
-                                    templates.$$text = element.textContent;
-                                }
-                            }
+                $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+                    each(renderHandlers, function (i, v) {
+                        if (element.attributes[i]) {
+                            v(element, getComponentState(element, i), registerUpdates);
                         }
-                        each(templates, function (i, w) {
-                            var value = evaluate(w, state, element, i, true);
-                            if (domUpdates.get(element) || (i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
-                                props[i] = value;
-                            }
-                        });
-                    }
-                    if (element.attributes['set-style']) {
-                        var styles = parseCSS(evalAttr(element, 'set-style', true));
-                        props.style = styles;
-                        each(IMAGE_STYLE_PROPS, function (i, v) {
-                            var imageUrl = isCssUrlValue(styles[v]);
-                            if (imageUrl) {
-                                styles[v] = 'url("' + withBaseUrl(imageUrl) + '")';
-                            }
-                        });
-                    }
-                    if (element.attributes['set-class']) {
-                        props.$$class = evalAttr(element, 'set-class');
-                    }
+                    });
                     visited.push(element);
                 });
             });
@@ -481,3 +373,135 @@ export function preventLeave(suppressPrompt) {
 export function addTemplate(name, template) {
     templates[name] = $(template)[0];
 }
+
+export function addTransformer(name, callback) {
+    transformationHandlers[name] = throwNotFunction(callback);
+}
+
+export function addRenderer(name, callback) {
+    renderHandlers[name] = throwNotFunction(callback);
+}
+
+
+/* --------------------------------------
+ * Built-in transformers and renderers
+ * -------------------------------------- */
+
+addTransformer('apply-template', function (element) {
+    applyTemplate(element);
+});
+
+addTransformer('foreach', function (element, state) {
+    var templateNodes = state.template || (state.template = $(element).contents().detach().filter(function (i, v) { return v.nodeType === 1 || /\S/.test(v.data || ''); }).get());
+    var currentNodes = state.nodes || [];
+    var oldItems = state.data || [];
+    var newItems = makeArray(evalAttr(element, 'foreach'));
+
+    if (newItems.length !== oldItems.length || newItems.some(function (v, i) { return oldItems[i] !== v; })) {
+        var newChildren = map(newItems, function (v) {
+            var currentIndex = oldItems.indexOf(v);
+            if (currentIndex >= 0) {
+                return currentNodes.slice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
+            }
+            var parts = $(templateNodes).clone().get();
+            each(parts, function (i, w) {
+                if (w.nodeType === 1) {
+                    $(element).append(w);
+                    setVar(w, kv('foreach', v), true);
+                    mountElement(w);
+                }
+            });
+            return parts;
+        });
+        extend(state, {
+            nodes: newChildren,
+            data: newItems
+        });
+        $(currentNodes).detach();
+        $(element).append(newChildren);
+    }
+});
+
+addTransformer('auto-var', function (element) {
+    setVar(element, evalAttr(element, 'auto-var'), true);
+});
+
+addTransformer('switch', function (element, state, applyDOMUpdates) {
+    var varname = element.getAttribute('switch') || '';
+    if (!isElementActive(element) || !varname) {
+        return;
+    }
+    var context = getVar(element);
+    var matchValue = waterpipe.eval(varname, extend({}, context));
+    var $target = $('[match-' + varname + ']', element).filter(function (i, w) {
+        return $(w).parents('[switch]')[0] === element;
+    });
+    var matched;
+    var itemValues = new Map();
+    $target.each(function (i, v) {
+        var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), extend({}, getVar(v)));
+        itemValues.set(v, thisValue);
+        if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
+            matched = v;
+            return false;
+        }
+    });
+    matched = matched || $target.filter('[default]')[0] || $target[0] || null;
+    if (!context.matched || context.matched.element !== matched) {
+        groupLog('switch', [element, varname, '→', matchValue], function (console) {
+            console.log('Matched: ', matched || '(none)');
+            if (matched) {
+                setVar(matched, null, true);
+            }
+            setVar(element, { matched: matched && getVar(matched) }, true);
+            $target.each(function (i, v) {
+                applyDOMUpdates(v, { $$class: { active: v === matched } });
+            });
+        });
+    } else {
+        writeLog('switch', [element, varname, '→', matchValue, '(unchanged)']);
+        if (varname in context && itemValues.get(matched) !== undefined) {
+            setVar(element, kv(varname, itemValues.get(matched)), true);
+        }
+    }
+});
+
+addRenderer('template', function (element, state, applyDOMUpdates) {
+    var templates = state.templates;
+    if (!templates) {
+        templates = {};
+        each(element.attributes, function (i, w) {
+            if (w.value.indexOf('{{') >= 0) {
+                templates[w.name] = w.value;
+            }
+        });
+        if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
+            templates.$$text = element.textContent;
+        }
+        state.templates = templates;
+    }
+    var context = getVar(element);
+    var props = {};
+    each(templates, function (i, w) {
+        var value = evaluate(w, context, element, i, true);
+        if ((i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
+            props[i] = value;
+        }
+    });
+    applyDOMUpdates(element, props);
+});
+
+addRenderer('set-style', function (element, state, applyDOMUpdates) {
+    var style = parseCSS(evalAttr(element, 'set-style', true));
+    each(IMAGE_STYLE_PROPS, function (i, v) {
+        var imageUrl = isCssUrlValue(style[v]);
+        if (imageUrl) {
+            style[v] = 'url("' + withBaseUrl(imageUrl) + '")';
+        }
+    });
+    applyDOMUpdates(element, { style });
+});
+
+addRenderer('set-class', function (element, state, applyDOMUpdates) {
+    applyDOMUpdates(element, { $$class: evalAttr(element, 'set-class') });
+});
