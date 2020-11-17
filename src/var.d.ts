@@ -1,4 +1,11 @@
 /**
+ * Gets the element of which the specified variable is declared on.
+ * @param element A string containing the variable name.
+ * @param element A DOM element.
+ */
+export function getVarScope(varname: string, element: Element): Element;
+
+/**
  * Gets the state object of which the specified variable is declared on.
  * If the variable is not declared on the inheritance chain, the same state object is returned.
  * @param state A state object.

@@ -2,7 +2,7 @@ import { $ } from "../include/zeta/shim.js";
 import { each, equal, extend, kv, setImmediateOnce } from "../include/zeta/util.js";
 import { bindUntil, selectIncludeSelf } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
-import { getVar, getVarObjWithProperty, setVar } from "../var.js";
+import { getVar, getVarScope, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
 import { getFormValues } from "../util/common.js";
@@ -38,17 +38,16 @@ install('formVar', function (app) {
         }, true);
 
         app.on(form, 'reset', function () {
-            var state = getVar(form);
             if (varname) {
-                if (!isElementActive(getVarObjWithProperty(state, varname).element)) {
+                if (!isElementActive(getVarScope(varname, form))) {
                     // @ts-ignore: form must be HTMLFormElement
                     form.reset();
                 }
             } else {
                 // @ts-ignore: form must be HTMLFormElement
                 each(form.elements, function (i, v) {
-                    if (!isElementActive(getVarObjWithProperty(state, v.name).element)) {
-                        v.reset();
+                    if (!isElementActive(getVarScope(v.name, form))) {
+                        v.value = null;
                     }
                 });
             }

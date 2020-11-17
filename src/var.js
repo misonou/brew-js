@@ -15,6 +15,20 @@ const setPrototypeOf = Object.setPrototypeOf;
 const stateStore = createPrivateStore();
 
 /**
+ * @param {string} varname
+ * @param {Element} element
+ */
+export function getVarScope(varname, element) {
+    for (var s = getVar(element); s !== null; s = Object.getPrototypeOf(s)) {
+        if (hasOwnProperty(s, varname)) {
+            return s.element;
+        }
+    }
+    console.warn('Undeclared state: %s', varname, { element: element });
+    return element;
+}
+
+/**
  * @param {Brew.VarState} state
  * @param {string} varname
  */
