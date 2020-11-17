@@ -2,6 +2,7 @@ import { $ } from "../include/zeta/shim.js";
 import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta/util.js";
 import { IS_TOUCH } from "../include/zeta/index.js";
 import dom from "../include/zeta/dom.js";
+import { scrollIntoView } from "../include/zeta/domUtil.js";
 import { animateIn } from "../anim.js";
 import { install } from "../app.js";
 import defaults from "../defaults.js";
@@ -29,7 +30,7 @@ install('viewport', function (app) {
         var bodyHeight = $('body').height() || 0;
         var htmlHeight = $('html').height() || 0;
         if (htmlHeight < bodyHeight && $(dom.activeElement).is(':text')) {
-            dom.scrollIntoView(dom.activeElement);
+            scrollIntoView(dom.activeElement);
         }
         var previousAspectRatio = aspectRatio;
         viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
