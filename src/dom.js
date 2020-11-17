@@ -45,7 +45,7 @@ function diffObject(currentValues, oldValues) {
     return newValues;
 }
 
-function updateDOM(element, props) {
+function updateDOM(element, props, suppressEvent) {
     each(props, function (j, v) {
         if (j === '$$class') {
             setClass(element, v);
@@ -59,7 +59,9 @@ function updateDOM(element, props) {
             element.setAttribute(j, v);
         }
     });
-    dom.emit('domchange', element);
+    if (!suppressEvent) {
+        dom.emit('domchange', element);
+    }
 }
 
 function mergeDOMUpdates(dict, props) {
@@ -72,39 +74,19 @@ function mergeDOMUpdates(dict, props) {
     });
 }
 
-function applyTemplate(element) {
-    var templateName = element.getAttribute('apply-template');
-    var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
-    var state = getComponentState(element, 'applyTemplate');
-    var currentTemplate = state.template;
-
-    if (!state.attributes) {
-        extend(state, {
-            attributes: getAttrValues(element),
-            childNodes: makeArray(element.childNodes)
-        });
-    }
-    if (template && template !== currentTemplate) {
-        state.template = template;
-        template = template.cloneNode(true);
-
-        // reset attributes on the apply-template element
-        // before applying new attributes
-        if (currentTemplate) {
-            each(currentTemplate.attributes, function (i, v) {
-                element.removeAttribute(v.name);
+function processTransform(elements, applyDOMUpdates) {
+    var transformed = new Set();
+    var exclude;
+    do {
+        elements = makeArray(elements);
+        exclude = makeArray(transformed);
+        each(transformationHandlers, function (i, v) {
+            $(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
+                v(element, getComponentState(element, i), applyDOMUpdates);
+                transformed.add(element);
             });
-        }
-        setAttr(element, state.attributes);
-        copyAttr(template, element);
-
-        var $contents = $(state.childNodes).detach();
-        $(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
-        $(selectIncludeSelf('content[for]', template)).each(function (i, v) {
-            $(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
         });
-        $(element).empty().append(template.childNodes);
-    }
+    } while (exclude.length !== transformed.size);
 }
 
 /**
@@ -176,29 +158,18 @@ export function processStateChange(suppressAnim) {
     }
     var updatedProps = new Map();
     var domUpdates = new Map();
-    var registerUpdates = function (element, props) {
+    var applyDOMUpdates = function (element, props) {
         var dict = mapGet(domUpdates, element, Object);
         mergeDOMUpdates(dict, props);
     };
 
     groupLog(dom.eventSource, 'statechange', function () {
         // recursively perform transformation until there is no new element produced
-        var arr = makeArray(updatedElements);
-        var transformed = new Set();
-        var exclude;
-        do {
-            exclude = makeArray(transformed);
-            each(transformationHandlers, function (i, v) {
-                $(selectIncludeSelf('[' + i + ']', arr)).not(exclude).each(function (j, element) {
-                    v(element, getComponentState(element, i), registerUpdates);
-                    transformed.add(element);
-                });
-            });
-        } while (exclude.length !== transformed.size);
+        processTransform(updatedElements, applyDOMUpdates);
 
         // trigger statechange events and perform DOM updates only on attached elements
         // leave detached elements in future rounds
-        arr = $.uniqueSort(grep(updatedElements, function (v) {
+        var arr = $.uniqueSort(grep(updatedElements, function (v) {
             return containsOrEquals(root, v) && updatedElements.delete(v);
         }));
         each(arr, function (i, v) {
@@ -218,7 +189,7 @@ export function processStateChange(suppressAnim) {
                 $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
                     each(renderHandlers, function (i, v) {
                         if (element.attributes[i]) {
-                            v(element, getComponentState(element, i), registerUpdates);
+                            v(element, getComponentState(element, i), applyDOMUpdates);
                         }
                     });
                     visited.push(element);
@@ -308,9 +279,10 @@ export function mountElement(element) {
     // ensure mounted event is correctly fired on the newly mounted element
     dom.on(element, '__brew_handler__', noop);
 
-    // apply templates before element mounted
-    $(selectIncludeSelf('[apply-template]', element)).each(function (i, v) {
-        applyTemplate(v);
+    // apply transforms before element mounted
+    // suppress domchange event before element is mounted
+    processTransform(element, function (element, props) {
+        updateDOM(element, props, true);
     });
 
     var mountedElements = [element];
@@ -387,8 +359,38 @@ export function addRenderer(name, callback) {
  * Built-in transformers and renderers
  * -------------------------------------- */
 
-addTransformer('apply-template', function (element) {
-    applyTemplate(element);
+addTransformer('apply-template', function (element, state) {
+    var templateName = element.getAttribute('apply-template');
+    var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
+    var currentTemplate = state.template;
+
+    if (!state.attributes) {
+        extend(state, {
+            attributes: getAttrValues(element),
+            childNodes: makeArray(element.childNodes)
+        });
+    }
+    if (template && template !== currentTemplate) {
+        state.template = template;
+        template = template.cloneNode(true);
+
+        // reset attributes on the apply-template element
+        // before applying new attributes
+        if (currentTemplate) {
+            each(currentTemplate.attributes, function (i, v) {
+                element.removeAttribute(v.name);
+            });
+        }
+        setAttr(element, state.attributes);
+        copyAttr(template, element);
+
+        var $contents = $(state.childNodes).detach();
+        $(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
+        $(selectIncludeSelf('content[for]', template)).each(function (i, v) {
+            $(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
+        });
+        $(element).empty().append(template.childNodes);
+    }
 });
 
 addTransformer('foreach', function (element, state) {
