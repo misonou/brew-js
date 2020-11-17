@@ -5,7 +5,7 @@ import { resolveAll, each, isFunction, camel, defineOwnProperty, define, defineP
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter } from "./extension/router.js";
-import { getVar } from "./var.js";
+import { setVar } from "./var.js";
 import { withBaseUrl } from "./util/path.js";
 
 const _ = createPrivateStore();
@@ -183,7 +183,7 @@ export default function (callback) {
     extend(window, { app });
 
     appInited = true;
-    defineOwnProperty(getVar(root), 'loading', 'initial');
+    setVar(root, { loading: 'initial' });
     handleAsync(resolveAll([dom.ready, processUntilEmpty(_(app).init)], function () {
         appReady = true;
         mountElement(root);
