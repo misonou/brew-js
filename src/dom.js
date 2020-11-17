@@ -3,7 +3,7 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta/util.js";
+import { each, extend, makeArray, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, defineOwnProperty } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
