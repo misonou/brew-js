@@ -472,7 +472,7 @@ addRenderer('template', function (element, state, applyDOMUpdates) {
         templates = {};
         each(element.attributes, function (i, w) {
             if (w.value.indexOf('{{') >= 0) {
-                templates[w.name] = w.value;
+                templates[w.name] = matchWord(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
             }
         });
         if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
