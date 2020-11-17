@@ -483,7 +483,7 @@ addRenderer('template', function (element, state, applyDOMUpdates) {
     var context = getVar(element);
     var props = {};
     each(templates, function (i, w) {
-        var value = evaluate(w, context, element, i, true);
+        var value = evaluate(w, context, element, i, !matchWord(i, BOOL_ATTRS));
         if ((i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
             props[i] = value;
         }
