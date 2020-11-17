@@ -14,6 +14,7 @@ import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const TEMPLATE_ATTRS = 'template set-class set-style'.split(' ');
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
+const BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -53,6 +54,8 @@ function updateDOM(element, props) {
             element.textContent = v;
         } else if (j === 'style') {
             $(element).css(v);
+        } else if (matchWord(j, BOOL_ATTRS)) {
+            element[j] = !!v;
         } else {
             element.setAttribute(j, v);
         }
