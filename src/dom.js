@@ -1,9 +1,9 @@
 import waterpipe from "./include/waterpipe.js"
 import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
-import { setClass, selectIncludeSelf } from "./include/zeta/domUtil.js";
+import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, defineHiddenProperty, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, hasOwnProperty, mapRemove, defineOwnProperty } from "./include/zeta/util.js";
+import { each, extend, makeArray, defineHiddenProperty, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, hasOwnProperty, mapRemove, defineOwnProperty, grep } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -269,7 +269,11 @@ export function processStateChange(suppressAnim) {
             }
         });
 
-        arr = $.uniqueSort(makeArray(updatedElements));
+        // trigger statechange events and perform DOM updates only on attached elements
+        // leave detached elements in future rounds
+        arr = $.uniqueSort(grep(updatedElements, function (v) {
+            return containsOrEquals(root, v) && updatedElements.delete(v);
+        }));
         each(arr, function (i, v) {
             var currentValues = getVar(v);
             var oldValues = getComponentState(v, 'oldValues');
@@ -380,8 +384,6 @@ export function processStateChange(suppressAnim) {
             }, true);
         });
     });
-
-    updatedElements.clear();
 }
 
 /**
