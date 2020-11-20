@@ -1,18 +1,63 @@
 import { $ } from "./include/zeta/shim.js";
 import waterpipe from "./include/waterpipe.js"
-import { containsOrEquals, selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { createPrivateStore, defineGetterProperty, defineHiddenProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, keys } from "./include/zeta/util.js";
+import { selectIncludeSelf } from "./include/zeta/domUtil.js";
+import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { groupLog } from "./util/console.js";
+import { InheritedNodeTree } from "./include/zeta/tree.js";
 
 const DEBUG_EVAL = /localhost:?/i.test(location.host);
-const VAR_SCOPE_ATTRS = 'var switch auto-var error-scope'.split(' ');
 
 const root = dom.root;
-const setPrototypeOf = Object.setPrototypeOf;
-const stateStore = createPrivateStore();
+const varAttrs = {
+    'var': true,
+    'auto-var': true,
+    'switch': { matched: null },
+    'error-scope': { error: null }
+};
+const tree = new InheritedNodeTree(root, VarContext);
+
+/**
+ * @class
+ * @this {Brew.VarContext}
+ */
+function VarContext() {
+    var self = this;
+    var element = self.element;
+    if (!element.attributes.var) {
+        element.setAttribute('var', '');
+    }
+    // @ts-ignore: does not throw error when property dataset does not exist
+    each(element.dataset, function (i, v) {
+        defineOwnProperty(self, i, waterpipe.eval('`' + v));
+    });
+    each(getDeclaredVar(element, true, self), function (i, v) {
+        defineOwnProperty(self, i, v);
+    });
+    if (element === root) {
+        self.loading = null;
+        self.error = null;
+    }
+}
+
+function getDeclaredVar(element, resetToNull, state) {
+    var initValues = {};
+    each(varAttrs, function (i, v) {
+        if (v === true) {
+            extend(initValues, evalAttr(element, i, false, state));
+        } else if (isPlainObject(v) && element.attributes[i]) {
+            extend(initValues, v);
+        }
+    });
+    if (resetToNull) {
+        for (var i in initValues) {
+            initValues[i] = null;
+        }
+    }
+    return initValues;
+}
 
 /**
  * @param {string} varname
@@ -29,20 +74,6 @@ export function getVarScope(varname, element) {
 }
 
 /**
- * @param {Brew.VarState} state
- * @param {string} varname
- */
-export function getVarObjWithProperty(state, varname) {
-    for (var s = state; s !== null; s = Object.getPrototypeOf(s)) {
-        if (hasOwnProperty(s, varname)) {
-            return s;
-        }
-    }
-    console.warn('Undeclared state: %s', varname, { element: state.element });
-    return state;
-}
-
-/**
  * @param {Element | string} element
  * @param {Zeta.Dictionary | null=} newStates
  * @param {boolean=} suppressEvent
@@ -56,18 +87,12 @@ export function setVar(element, newStates, suppressEvent) {
             }
         });
     } else {
-        var state = getVar(element);
-        if (!element.attributes.var) {
-            element.setAttribute('var', '');
-        }
+        var state = tree.setNode(element);
         each(newStates || evalAttr(element, 'set-var'), function (i, v) {
             if (state[i] !== v) {
-                var s = getVarObjWithProperty(state, i);
-                s.__oldValues[i] = s[i];
-                s.__newValues[i] = v;
-                s[i] = v;
+                state[i] = v;
                 hasUpdated = true;
-                markUpdated(s.element);
+                markUpdated(getVarScope(i, element));
             }
         });
         if (hasUpdated && !suppressEvent && appReady) {
@@ -86,79 +111,16 @@ export function resetVar(element, resetToNull) {
         each(selectIncludeSelf('[var]', element), function (i, v) {
             setVar(v, getDeclaredVar(v, resetToNull));
         });
-        if (resetToNull) {
-            each(selectIncludeSelf('[switch][switch!=""]', element), function (i, v) {
-                setVar(v, { matched: null });
-            });
-        }
     });
 }
 
 /**
  * @param {Element} element
- * @param {boolean=} resetToNull
- * @returns {Zeta.Dictionary}
- */
-export function getDeclaredVar(element, resetToNull) {
-    var initValues = {};
-    if (element.attributes['error-scope']) {
-        initValues.error = null;
-    }
-    extend(initValues, evalAttr(element, 'var'), evalAttr(element, 'auto-var'));
-    if (resetToNull) {
-        for (var i in initValues) {
-            initValues[i] = null;
-        }
-    }
-    return initValues;
-}
-
-/**
- * @param {Element} element
- * @returns {Brew.VarState}
+ * @returns {Brew.VarContext}
  */
 export function getVar(element) {
-    if (!containsOrEquals(root, element)) {
-        console.error('State should not be accessed when element is detached.', { element: element });
-    }
-    var state = stateStore(element);
-    if (!state) {
-        state = stateStore(element, {});
-        defineHiddenProperty(state, 'element', element);
-        defineHiddenProperty(state, '__newValues', {});
-        defineHiddenProperty(state, '__oldValues', {});
-        // @ts-ignore: dataset can be on Element
-        if (keys(element.dataset)[0]) {
-            // @ts-ignore: dataset can be on Element
-            var dataset = extend({}, element.dataset);
-            each(dataset, function (i, v) {
-                dataset[i] = waterpipe.eval('"' + v + '"');
-            });
-            extend(state, dataset);
-        }
-        var parent = $(element).parents('[' + VAR_SCOPE_ATTRS.join('],[') + ']')[0] || root;
-        if (parent !== element) {
-            var parentState = getVar(parent);
-            setPrototypeOf(state, parentState);
-            setPrototypeOf(state.__newValues, parentState.__newValues);
-            setPrototypeOf(state.__oldValues, parentState.__oldValues);
-        } else {
-            setPrototypeOf(state, function () { }.prototype);
-        }
-        if (!element.childElementCount) {
-            defineGetterProperty(state, 'textContent', function () {
-                return element.textContent;
-            });
-        }
-    }
-    if (!hasOwnProperty(state, '__init')) {
-        defineHiddenProperty(state, '__init', true);
-        var newStates = getDeclaredVar(element, !containsOrEquals(root, element) || !!$(element).parents('[match-path]')[0]);
-        for (var i in newStates) {
-            defineOwnProperty(state, i, newStates[i]);
-        }
-    }
-    return state;
+    // @ts-ignore
+    return tree.getNode(element);
 }
 
 /**
@@ -185,11 +147,24 @@ export function evaluate(template, context, element, attrName, templateMode) {
  * @param {Element} element
  * @param {string} attrName
  * @param {boolean=} templateMode
+ * @param {VarContext=} context
  */
-export function evalAttr(element, attrName, templateMode) {
+export function evalAttr(element, attrName, templateMode, context) {
     var str = element.getAttribute(attrName);
     if (!str) {
-        return templateMode ? '' : {};
+        return templateMode ? '' : null;
     }
-    return evaluate(str, getVar(element), element, attrName, templateMode);
+    return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
+
+dom.watchAttributes(root, keys(varAttrs), function (elements) {
+    each(elements, function (i, v) {
+        tree.setNode(v);
+    });
+}, true);
+
+tree.on('update', function (e) {
+    each(e.updatedNodes, function (i, v) {
+        markUpdated(v.element);
+    });
+});

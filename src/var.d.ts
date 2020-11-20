@@ -6,14 +6,6 @@
 export function getVarScope(varname: string, element: Element): Element;
 
 /**
- * Gets the state object of which the specified variable is declared on.
- * If the variable is not declared on the inheritance chain, the same state object is returned.
- * @param state A state object.
- * @param varname Variable name to search.
- */
-export function getVarObjWithProperty(state: Brew.VarState, varname: string): Brew.VarState;
-
-/**
  * Sets template variables on the specified element.
  * @param element A DOM element or a valid CSS selector.
  * @param newStates A simple object containing variables to set.
@@ -29,17 +21,10 @@ export function setVar(element: Element | string, newStates?: (Zeta.Dictionary |
 export function resetVar(element: Element, resetToNull?: boolean): void;
 
 /**
- * Gets a dictionary of variables and their associated values declared on an element.
- * @param element A DOM element.
- * @param resetToNull When specified to `true`, set all entries to `null` on the returned dictionary.
- */
-export function getDeclaredVar(element: Element, resetToNull?: boolean): Zeta.Dictionary;
-
-/**
  * Gets template variables defined on the specified element.
  * @param element A DOM element.
  */
-export function getVar(element: Element): Brew.VarState;
+export function getVar(element: Element): Brew.VarContext;
 
 /**
  * Evaluates template or expression.

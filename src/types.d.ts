@@ -1,9 +1,9 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */
     type HTTPMethod = 'get' | 'post' | 'delete';
-    type EventHandler<E extends string, M> = Zeta.ZetaEventHandler<Zeta.ZetaEventType<E, M>, Element>;
+    type EventHandler<E extends string, M> = Zeta.ZetaEventHandler<E, M>;
     type EventHandlers<T extends string, M> = { [E in T]: EventHandler<E, M> }
     type AppInstance<T = {}> = App<T> & T & Brew.EventDispatcher;
     type PromiseOrEmpty<T = any> = Promise<T> | void;
@@ -24,11 +24,8 @@ declare namespace Brew {
         $$text?: string;
     }
 
-    interface VarState extends Zeta.Dictionary {
-        /**
-         * Gets the DOM element this state object belongs to.
-         */
-        readonly element: Element;
+    interface VarContext extends Zeta.InheritedNode {
+        [s: string]: any;
     }
 
     interface EventDispatcher<T extends string = string, M = any> {
@@ -124,7 +121,7 @@ declare namespace Brew {
         readonly delete?: APIMethod;
     }
 
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * App
      * ------------------------------------------------------------- */
     type BrewEventName = 'ready' | 'animationstart' | 'domchange' | 'statechange' | 'preventLeave' | 'mounted' | 'validate' | 'reset';
@@ -161,14 +158,14 @@ declare namespace Brew {
 
         /**
          * Defines properties and methods on the app instance.
-         * @param props 
+         * @param props
          */
         define(props: Partial<T>): void;
 
         /**
          * Performs feature detections before the app starts.
          * @param names Names of feature.
-         * @param callback 
+         * @param callback
          */
         detect(names: string | string[], callback?: (result: Zeta.Dictionary<boolean>) => void): void;
 
