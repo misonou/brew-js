@@ -65,6 +65,12 @@ module.exports = {
             amd: ['zeta-dom', 'css'],
             root:  ['zeta', 'css']
         },
+        'zeta-dom/src/tree.js': {
+            commonjs: ['zeta-dom'],
+            commonjs2:  ['zeta-dom'],
+            amd: ['zeta-dom'],
+            root:  ['zeta']
+        },
         'zeta-dom/src/dom.js': {
             commonjs: ['zeta-dom', 'dom'],
             commonjs2:  ['zeta-dom', 'dom'],
