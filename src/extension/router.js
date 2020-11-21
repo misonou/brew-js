@@ -2,7 +2,7 @@ import History from "../include/history.js";
 import { $, Map } from "../include/zeta/shim.js";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
-import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce } from "../include/zeta/util.js";
+import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal } from "../include/zeta/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -78,16 +78,12 @@ function Route(app, routes, initialPath) {
         defineObservableProperty(self, prop);
     });
     watch(self, function () {
-        var compareState = function (input) {
-            return any(input.params, function (v, i) {
-                return v !== self[i];
-            }) === false;
-        };
+        var current = exclude(self, ['remainingSegments']);
         var paramChanged = false;
-        var routeChanged = !compareState(state.current);
+        var routeChanged = !equal(current, state.current.params);
         if (routeChanged && state.lastMatch) {
             state.current = state.lastMatch;
-            routeChanged = !compareState(state.current);
+            routeChanged = !equal(current, state.current.params);
         }
         if (routeChanged) {
             var segments = [], i, len;
@@ -235,7 +231,7 @@ function configureRouter(app, options) {
                     if (matched === (previousActiveElements.indexOf(element) < 0)) {
                         if (matched) {
                             resetVar(element, false);
-                            setVar(element, null);
+                            setVar(element);
                             setTimeout(function () {
                                 // animation and pageenter event of inner scope
                                 // must be after those of parent scope

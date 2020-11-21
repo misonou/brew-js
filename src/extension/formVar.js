@@ -1,5 +1,5 @@
 import { $ } from "../include/zeta/shim.js";
-import { each, equal, extend, kv, setImmediateOnce } from "../include/zeta/util.js";
+import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/zeta/util.js";
 import { bindUntil, selectIncludeSelf } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
 import { getVar, getVarScope, setVar } from "../var.js";
@@ -22,15 +22,9 @@ install('formVar', function (app) {
             if (!varname) {
                 setVar(form, values);
             } else {
-                var currentValues = getVar(form)[varname];
-                var tmp = extend({}, currentValues);
-                for (var i in tmp) {
-                    if (!(i in values)) {
-                        delete tmp[i];
-                    }
-                }
-                if (!equal(tmp, values)) {
-                    setVar(form, kv(varname, extend({}, currentValues, values)));
+                var currentValues = getVar(form, varname) || {};
+                if (!equal(values, pick(currentValues, keys(values)))) {
+                    setVar(form, varname, extend(currentValues, values));
                 }
             }
         };

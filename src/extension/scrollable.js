@@ -79,7 +79,7 @@ install('scrollable', function (app) {
                     needRefresh = true;
                 } else {
                     needRefresh = false;
-                    scrollTo(getVar(container)[varname]);
+                    scrollTo(getVar(container, varname));
                 }
             }
         }
@@ -171,4 +171,4 @@ install('scrollable', function (app) {
     });
 });
 
-export default null; 
+export default null;
