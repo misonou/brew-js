@@ -1,2 +1,2 @@
-import dom from "zeta-dom/src/dom.js";
+import dom from "zeta-dom/dom.js";
 export default dom;

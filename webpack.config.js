@@ -49,43 +49,43 @@ module.exports = {
             amd: 'historyjs',
             root: 'History'
         },
-        'zeta-dom/src/index.js': {
+        'zeta-dom/index.js': {
             commonjs: 'zeta-dom',
             commonjs2: 'zeta-dom',
             amd: 'zeta-dom',
             root: 'zeta'
         },
-        'zeta-dom/src/shim.js': {
+        'zeta-dom/shim.js': {
             commonjs: ['zeta-dom', 'shim'],
             commonjs2:  ['zeta-dom', 'shim'],
             amd: ['zeta-dom', 'shim'],
             root:  ['zeta', 'shim']
         },
-        'zeta-dom/src/util.js': {
+        'zeta-dom/util.js': {
             commonjs: ['zeta-dom', 'util'],
             commonjs2:  ['zeta-dom', 'util'],
             amd: ['zeta-dom', 'util'],
             root:  ['zeta', 'util']
         },
-        'zeta-dom/src/domUtil.js': {
+        'zeta-dom/domUtil.js': {
             commonjs: ['zeta-dom', 'util'],
             commonjs2:  ['zeta-dom', 'util'],
             amd: ['zeta-dom', 'util'],
             root:  ['zeta', 'util']
         },
-        'zeta-dom/src/cssUtil.js': {
+        'zeta-dom/cssUtil.js': {
             commonjs: ['zeta-dom', 'css'],
             commonjs2:  ['zeta-dom', 'css'],
             amd: ['zeta-dom', 'css'],
             root:  ['zeta', 'css']
         },
-        'zeta-dom/src/tree.js': {
+        'zeta-dom/tree.js': {
             commonjs: ['zeta-dom'],
             commonjs2:  ['zeta-dom'],
             amd: ['zeta-dom'],
             root:  ['zeta']
         },
-        'zeta-dom/src/dom.js': {
+        'zeta-dom/dom.js': {
             commonjs: ['zeta-dom', 'dom'],
             commonjs2:  ['zeta-dom', 'dom'],
             amd: ['zeta-dom', 'dom'],

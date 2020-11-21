@@ -1,1 +1,1 @@
-export * from "zeta-dom/src/cssUtil.js";
+export * from "zeta-dom/cssUtil.js";

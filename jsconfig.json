@@ -9,7 +9,7 @@
         "noImplicitReturns": false,
         "baseUrl": ".",
         "paths": {
-            "zeta-dom": ["../zeta-dom", "node_modules/zeta-dom"]
+            "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"]
         }
     }
 }

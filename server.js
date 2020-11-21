@@ -7,7 +7,7 @@ const basepath = __dirname;
 
 server.use('/node_modules', express.static('node_modules'));
 try {
-    const peerIncludePath = path.resolve(basepath, '../zeta-dom');
+    const peerIncludePath = path.resolve(basepath, '../zeta-dom/src');
     fs.lstatSync(peerIncludePath);
     server.use('/zeta-dom', express.static(peerIncludePath));
 } catch (e) {

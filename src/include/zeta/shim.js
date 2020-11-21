@@ -1,1 +1,1 @@
-export * from "zeta-dom/src/shim.js";
+export * from "zeta-dom/shim.js";

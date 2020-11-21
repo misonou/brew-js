@@ -1,4 +1,4 @@
-import index from "zeta-dom/src/index.js";
+import index from "zeta-dom/index.js";
 export default index;
 
-export * from "zeta-dom/src/index.js";
+export * from "zeta-dom/index.js";
