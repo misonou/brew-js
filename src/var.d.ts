@@ -6,12 +6,45 @@
 export function getVarScope(varname: string, element: Element): Element;
 
 /**
- * Sets template variables on the specified element.
+ * Sets template variables on the specified element base on its `set-var` attribute.
+ * If any variables are declared on parent elements, values will be set on those parent elements.
  * @param element A DOM element or a valid CSS selector.
- * @param newStates A simple object containing variables to set.
- * @param suppressEvent A boolean value specifying whether to suppress statechange event and DOM updates.
  */
-export function setVar(element: Element | string, newStates?: (Zeta.Dictionary | null), suppressEvent?: boolean): boolean;
+export function setVar(element: Element | string): boolean;
+
+/**
+ * Sets template variables on the specified element.
+ * If any variables are declared on parent elements, values will be set on those parent elements.
+ * @param element A DOM element or a valid CSS selector.
+ * @param values A dictionary containing variables to set.
+ */
+export function setVar(element: Element | string, values: Zeta.Dictionary): boolean;
+
+/**
+ * Sets a single template variable on the specified element.
+ * If such variable is declared on parent element, value will be set on that parent element.
+ * @param element A DOM element or a valid CSS selector.
+ * @param name Name of the variable.
+ * @param value New value to be set on the specified variable.
+ */
+export function setVar(element: Element | string, name: string, value: any): boolean;
+
+/**
+ * Declares template variables on the specified element.
+ * Values will be set on this element regardless if such variables are already declared on parent elements.
+ * @param element A DOM element.
+ * @param values A dictionary containing variables to set.
+ */
+export function declareVar(element: Element, values: Zeta.Dictionary): boolean;
+
+/**
+ * Declares a single template variables on the specified element.
+ * Value will be set on this element regardless if such variable is already declared on parent element.
+ * @param element A DOM element.
+ * @param name Name of the variable.
+ * @param value New value to be set on the specified variable.
+ */
+export function declareVar(element: Element, name: string, value: any): boolean;
 
 /**
  * Resets all variables declared on an element to their initial values or `null`.
@@ -24,7 +57,14 @@ export function resetVar(element: Element, resetToNull?: boolean): void;
  * Gets template variables defined on the specified element.
  * @param element A DOM element.
  */
-export function getVar(element: Element): Brew.VarContext;
+export function getVar(element: Element): Zeta.Dictionary;
+
+/**
+ * Gets the value of a single template variable on the specified element.
+ * @param element A DOM element.
+ * @param name Name of the variable.
+ */
+export function getVar(element: Element, name: string): any;
 
 /**
  * Evaluates template or expression.

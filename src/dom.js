@@ -3,13 +3,13 @@ import { $, Map, Set } from "./include/zeta/shim.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, kv, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, defineOwnProperty } from "./include/zeta/util.js";
+import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, defineOwnProperty } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { withBaseUrl } from "./util/path.js";
-import { getVar, evalAttr, setVar, evaluate, getVarScope } from "./var.js";
+import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar } from "./var.js";
 import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
@@ -29,6 +29,7 @@ const renderHandlers = {};
 const templates = {};
 
 var batchCounter = 0;
+var stateChangeLock = false;
 
 function getComponentState(element, ns) {
     var obj = _(element) || _(element, {});
@@ -129,7 +130,7 @@ export function handleAsync(promise, element, callback) {
         var elm1 = getVarScope('loading', element);
         var elm2 = getVarScope('error', element);
         var counter = getComponentState(elm1, 'handleAsync');
-        setVar(elm1, { loading: getVar(elm1).loading || true });
+        setVar(elm1, { loading: getVar(elm1, 'loading') || true });
         setVar(elm2, { error: null });
         counter.value = (counter.value || 0) + 1
         promise.then(function () {
@@ -153,7 +154,7 @@ export function markUpdated(element) {
  * @param {boolean=} suppressAnim
  */
 export function processStateChange(suppressAnim) {
-    if (batchCounter) {
+    if (batchCounter || stateChangeLock) {
         return;
     }
     var updatedProps = new Map();
@@ -162,94 +163,98 @@ export function processStateChange(suppressAnim) {
         var dict = mapGet(domUpdates, element, Object);
         mergeDOMUpdates(dict, props);
     };
+    stateChangeLock = true;
+    try {
+        groupLog(dom.eventSource, 'statechange', function () {
+            // recursively perform transformation until there is no new element produced
+            processTransform(updatedElements, applyDOMUpdates);
 
-    groupLog(dom.eventSource, 'statechange', function () {
-        // recursively perform transformation until there is no new element produced
-        processTransform(updatedElements, applyDOMUpdates);
-
-        // trigger statechange events and perform DOM updates only on attached elements
-        // leave detached elements in future rounds
-        var arr = $.uniqueSort(grep(updatedElements, function (v) {
-            return containsOrEquals(root, v) && updatedElements.delete(v);
-        }));
-        each(arr, function (i, v) {
-            var currentValues = getVar(v);
-            var oldValues = getComponentState(v, 'oldValues');
-            updatedProps.set(v, {
-                oldValues: extend({}, oldValues),
-                newValues: diffObject(currentValues, oldValues)
+            // trigger statechange events and perform DOM updates only on attached elements
+            // leave detached elements in future rounds
+            var arr = $.uniqueSort(grep(updatedElements, function (v) {
+                return containsOrEquals(root, v) && updatedElements.delete(v);
+            }));
+            each(arr, function (i, v) {
+                var currentValues = getVar(v);
+                var oldValues = getComponentState(v, 'oldValues');
+                updatedProps.set(v, {
+                    oldValues: extend({}, oldValues),
+                    newValues: diffObject(currentValues, oldValues)
+                });
+                extend(oldValues, currentValues);
             });
-            extend(oldValues, currentValues);
-        });
 
-        var visited = [];
-        each(arr.reverse(), function (i, v) {
-            groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
-                console.log(v === root ? document : v);
-                $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
-                    each(renderHandlers, function (i, v) {
-                        if (element.attributes[i]) {
-                            v(element, getComponentState(element, i), applyDOMUpdates);
-                        }
+            var visited = [];
+            each(arr.reverse(), function (i, v) {
+                groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
+                    console.log(v === root ? document : v);
+                    $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+                        each(renderHandlers, function (i, v) {
+                            if (element.attributes[i]) {
+                                v(element, getComponentState(element, i), applyDOMUpdates);
+                            }
+                        });
+                        visited.push(element);
                     });
-                    visited.push(element);
                 });
             });
         });
-    });
 
-    // perform any async task that is related or required by the DOM changes
-    var preupdatePromise = resolveAll(preupdateHandlers.map(function (v) {
-        return v(domUpdates);
-    }));
+        // perform any async task that is related or required by the DOM changes
+        var preupdatePromise = resolveAll(preupdateHandlers.map(function (v) {
+            return v(domUpdates);
+        }));
 
-    // perform DOM updates, or add to pending updates if previous update is not completed
-    // also wait for animation completed if suppressAnim is off
-    preupdatePromise.then(function () {
-        var animScopes = new Map();
-        each(domUpdates, function (element, props) {
-            if (!suppressAnim) {
-                var animParent = $(element).filter('[match-path]')[0] || $(element).parents('[match-path]')[0] || root;
-                var groupElements = animScopes.get(animParent);
-                if (!groupElements) {
-                    var filter = function (v) {
-                        var haystack = v.getAttribute('animate-on-statechange');
-                        if (!haystack) {
-                            return true;
-                        }
-                        for (var cur; v && !(cur = updatedProps.get(v)); v = v.parentNode);
-                        return cur && any(haystack, function (v) {
-                            return v in cur.newValues;
-                        });
-                    };
-                    groupElements = [];
-                    setImmediate(function () {
-                        animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
-                            each(groupElements, function (i, v) {
-                                updateDOM(v, mapRemove(pendingDOMUpdates, v));
+        // perform DOM updates, or add to pending updates if previous update is not completed
+        // also wait for animation completed if suppressAnim is off
+        preupdatePromise.then(function () {
+            var animScopes = new Map();
+            each(domUpdates, function (element, props) {
+                if (!suppressAnim) {
+                    var animParent = $(element).filter('[match-path]')[0] || $(element).parents('[match-path]')[0] || root;
+                    var groupElements = animScopes.get(animParent);
+                    if (!groupElements) {
+                        var filter = function (v) {
+                            var haystack = v.getAttribute('animate-on-statechange');
+                            if (!haystack) {
+                                return true;
+                            }
+                            for (var cur; v && !(cur = updatedProps.get(v)); v = v.parentNode);
+                            return cur && any(haystack, function (v) {
+                                return v in cur.newValues;
                             });
-                            animateIn(animParent, 'statechange', '[match-path]', filter);
+                        };
+                        groupElements = [];
+                        setImmediate(function () {
+                            animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
+                                each(groupElements, function (i, v) {
+                                    updateDOM(v, mapRemove(pendingDOMUpdates, v));
+                                });
+                                animateIn(animParent, 'statechange', '[match-path]', filter);
+                            });
                         });
-                    });
-                    animScopes.set(animParent, groupElements);
+                        animScopes.set(animParent, groupElements);
+                    }
+                    var dict = mapGet(pendingDOMUpdates, element, Object);
+                    mergeDOMUpdates(dict, props);
+                    groupElements.push(element);
+                } else if (pendingDOMUpdates.has(element)) {
+                    mergeDOMUpdates(pendingDOMUpdates.get(element), props);
+                } else {
+                    updateDOM(element, props);
                 }
-                var dict = mapGet(pendingDOMUpdates, element, Object);
-                mergeDOMUpdates(dict, props);
-                groupElements.push(element);
-            } else if (pendingDOMUpdates.has(element)) {
-                mergeDOMUpdates(pendingDOMUpdates.get(element), props);
-            } else {
-                updateDOM(element, props);
-            }
+            });
+            each(updatedProps, function (i, v) {
+                dom.emit('statechange', i, {
+                    data: getVar(i),
+                    newValues: v.newValues,
+                    oldValues: v.oldValues
+                }, true);
+            });
         });
-        each(updatedProps, function (i, v) {
-            dom.emit('statechange', i, {
-                data: extend({}, getVar(i)),
-                newValues: v.newValues,
-                oldValues: v.oldValues
-            }, true);
-        });
-    });
+    } finally {
+        stateChangeLock = false;
+    }
 }
 
 /**
@@ -276,14 +281,17 @@ export function batch(suppressAnim, callback) {
  * @param {Element} element
  */
 export function mountElement(element) {
-    // ensure mounted event is correctly fired on the newly mounted element
-    dom.on(element, '__brew_handler__', noop);
-
     // apply transforms before element mounted
     // suppress domchange event before element is mounted
-    processTransform(element, function (element, props) {
-        updateDOM(element, props, true);
-    });
+    var prevStateChangeLock = stateChangeLock;
+    stateChangeLock = true;
+    try {
+        processTransform(element, function (element, props) {
+            updateDOM(element, props, true);
+        });
+    } finally {
+        stateChangeLock = prevStateChangeLock;
+    }
 
     var mountedElements = [element];
     var firedOnRoot = element === root;
@@ -410,8 +418,7 @@ addTransformer('foreach', function (element, state) {
             each(parts, function (i, w) {
                 if (w.nodeType === 1) {
                     $(element).append(w);
-                    defineOwnProperty(getVar(w), 'foreach', null);
-                    setVar(w, kv('foreach', v), true);
+                    declareVar(w, { foreach: v });
                     mountElement(w);
                 }
             });
@@ -427,7 +434,7 @@ addTransformer('foreach', function (element, state) {
 });
 
 addTransformer('auto-var', function (element) {
-    setVar(element, evalAttr(element, 'auto-var'), true);
+    setVar(element, evalAttr(element, 'auto-var'));
 });
 
 addTransformer('switch', function (element, state, applyDOMUpdates) {
@@ -436,14 +443,14 @@ addTransformer('switch', function (element, state, applyDOMUpdates) {
         return;
     }
     var context = getVar(element);
-    var matchValue = waterpipe.eval(varname, extend({}, context));
+    var matchValue = waterpipe.eval(varname, context);
     var $target = $('[match-' + varname + ']', element).filter(function (i, w) {
         return $(w).parents('[switch]')[0] === element;
     });
     var matched;
     var itemValues = new Map();
     $target.each(function (i, v) {
-        var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), extend({}, getVar(v)));
+        var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), getVar(v));
         itemValues.set(v, thisValue);
         if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
             matched = v;
@@ -455,9 +462,9 @@ addTransformer('switch', function (element, state, applyDOMUpdates) {
         groupLog('switch', [element, varname, '→', matchValue], function (console) {
             console.log('Matched: ', matched || '(none)');
             if (matched) {
-                setVar(matched, null, true);
+                setVar(matched);
             }
-            setVar(element, { matched: matched && getVar(matched) }, true);
+            setVar(element, { matched: matched && getVar(matched) });
             $target.each(function (i, v) {
                 applyDOMUpdates(v, { $$class: { active: v === matched } });
             });
@@ -465,7 +472,7 @@ addTransformer('switch', function (element, state, applyDOMUpdates) {
     } else {
         writeLog('switch', [element, varname, '→', matchValue, '(unchanged)']);
         if (varname in context && itemValues.get(matched) !== undefined) {
-            setVar(element, kv(varname, itemValues.get(matched)), true);
+            setVar(element, varname, itemValues.get(matched));
         }
     }
 });

@@ -1,7 +1,7 @@
 import { $ } from "./include/zeta/shim.js";
 import waterpipe from "./include/waterpipe.js"
 import { selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys } from "./include/zeta/util.js";
+import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
@@ -64,7 +64,7 @@ function getDeclaredVar(element, resetToNull, state) {
  * @param {Element} element
  */
 export function getVarScope(varname, element) {
-    for (var s = getVar(element); s !== null; s = Object.getPrototypeOf(s)) {
+    for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
         if (hasOwnProperty(s, varname)) {
             return s.element;
         }
@@ -75,31 +75,49 @@ export function getVarScope(varname, element) {
 
 /**
  * @param {Element | string} element
- * @param {Zeta.Dictionary | null=} newStates
- * @param {boolean=} suppressEvent
+ * @param {any} name
+ * @param {any=} value
  */
-export function setVar(element, newStates, suppressEvent) {
+export function setVar(element, name, value) {
+    var values = name && (isPlainObject(name) || kv(name, value));
     var hasUpdated = false;
     if (typeof element === 'string') {
-        $(element).each(function (i, v) {
-            if (setVar(v, newStates, suppressEvent)) {
-                hasUpdated = true;
-            }
+        batch(function () {
+            $(element).each(function (i, v) {
+                // @ts-ignore: boolean arithmetics
+                hasUpdated |= setVar(v, values);
+            });
         });
     } else {
         var state = tree.setNode(element);
-        each(newStates || evalAttr(element, 'set-var'), function (i, v) {
+        each(values || evalAttr(element, 'set-var'), function (i, v) {
             if (state[i] !== v) {
                 state[i] = v;
                 hasUpdated = true;
                 markUpdated(getVarScope(i, element));
             }
         });
-        if (hasUpdated && !suppressEvent && appReady) {
+        if (hasUpdated && appReady) {
             processStateChange();
         }
     }
     return !!hasUpdated;
+}
+
+/**
+ * @param {Element} element
+ * @param {any} name
+ * @param {any=} value
+ */
+export function declareVar(element, name, value) {
+    var values = isPlainObject(name) || kv(name, value);
+    var context = tree.setNode(element);
+    for (var i in values) {
+        if (!hasOwnProperty(values, i)) {
+            defineOwnProperty(context, i, null);
+        }
+    }
+    return setVar(element, values);
 }
 
 /**
@@ -116,11 +134,11 @@ export function resetVar(element, resetToNull) {
 
 /**
  * @param {Element} element
- * @returns {Brew.VarContext}
+ * @param {string=} name
  */
-export function getVar(element) {
-    // @ts-ignore
-    return tree.getNode(element);
+export function getVar(element, name) {
+    var values = tree.getNode(element) || {};
+    return name ? values[name] : extend({}, values);
 }
 
 /**
