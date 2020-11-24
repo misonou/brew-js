@@ -12,6 +12,7 @@ module.exports = {
         filename: '[name].js',
         library: 'brew',
         libraryTarget: 'umd',
+        libraryExport: 'default',
         umdNamedDefine: true
     },
     module: {
