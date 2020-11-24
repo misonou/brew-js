@@ -1,5 +1,5 @@
 import waterpipe from "./include/waterpipe.js"
-import { $, Map, Set } from "./include/zeta/shim.js";
+import $ from "./include/jquery.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
@@ -127,8 +127,8 @@ export function handleAsync(promise, element, callback) {
     }
     if (element || dom.eventSource !== 'script') {
         element = element || dom.activeElement;
-        var elm1 = getVarScope('loading', element);
-        var elm2 = getVarScope('error', element);
+        var elm1 = getVarScope('loading', element || root);
+        var elm2 = getVarScope('error', element || root);
         var counter = getComponentState(elm1, 'handleAsync');
         setVar(elm1, { loading: getVar(elm1, 'loading') || true });
         setVar(elm2, { error: null });

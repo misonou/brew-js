@@ -1,4 +1,4 @@
-import { $ } from "./include/zeta/shim.js";
+import $ from "./include/jquery.js";
 import { each } from "./include/zeta/util.js";
 import { isCssUrlValue } from "./include/zeta/cssUtil.js";
 import dom from "./include/zeta/dom.js";

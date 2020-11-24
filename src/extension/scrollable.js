@@ -1,4 +1,4 @@
-import { $ } from "../include/zeta/shim.js";
+import $ from "../include/jquery.js";
 import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta/util.js";
 import { getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";

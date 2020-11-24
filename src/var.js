@@ -1,4 +1,4 @@
-import { $ } from "./include/zeta/shim.js";
+import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
 import { selectIncludeSelf } from "./include/zeta/domUtil.js";
 import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv } from "./include/zeta/util.js";

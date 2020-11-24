@@ -1,4 +1,5 @@
-import { $, Map, Promise } from "./include/zeta/shim.js";
+import Promise from "./include/promise-polyfill.js";
+import $ from "./include/jquery.js";
 import { selectIncludeSelf, isVisible } from "./include/zeta/domUtil.js";
 import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta/util.js";
 import { runCSSTransition } from "./include/zeta/cssUtil.js";
@@ -138,6 +139,7 @@ export function animateOut(element, trigger, scope, filterCallback, excludeSelf)
     var elements = [];
     var promises = [];
 
+    // @ts-ignore: type inference issue
     var $target = $((excludeSelf ? $ : selectIncludeSelf)('[animate-out]', element)).filter(filter);
     $target.each(function (i, v) {
         // @ts-ignore: filterCallback must be function
@@ -148,6 +150,7 @@ export function animateOut(element, trigger, scope, filterCallback, excludeSelf)
     });
     return handleAnimation(element, elements, promises, trigger).then(function () {
         // reset animation state after outro animation has finished
+        // @ts-ignore: type inference issue
         var $target = $((excludeSelf ? $ : selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
         if (trigger !== 'show') {
             $target = $target.filter(filter);

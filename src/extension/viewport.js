@@ -1,4 +1,4 @@
-import { $ } from "../include/zeta/shim.js";
+import $ from "../include/jquery.js";
 import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta/util.js";
 import { IS_TOUCH } from "../include/zeta/index.js";
 import dom from "../include/zeta/dom.js";
