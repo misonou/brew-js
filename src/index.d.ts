@@ -6,9 +6,5 @@
 /// <reference path="./extension/withScrollable.d.ts" />
 /// <reference path="./extension/withViewport.d.ts" />
 
-import * as methods from "./core";
-import { AppInit } from "./app";
-
-const brew: AppInit & typeof methods;
-export default brew;
+export { default } from "./core";
 export as namespace brew;

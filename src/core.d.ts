@@ -1,10 +1,32 @@
-export { evalAttr, getVar, setVar } from "./var";
-export { addTemplate, handleAsync, preventLeave } from "./dom";
-export { isElementActive } from "./extension/router";
-export { addDetect, install } from "./app";
-export { defaults } from "./defaults";
+import { evalAttr, getVar, setVar } from "./var";
+import { addTemplate, handleAsync, preventLeave } from "./dom";
+import { isElementActive } from "./extension/router";
+import { addDetect, install } from "./app";
+import defaults from "./defaults";
 
-export * from "./util/path";
-export * from "./util/common";
-export * from "./util/anim";
-export * from "./util/domAction";
+import * as path from "./util/path";
+import * as commonUtil from "./util/common";
+import * as animation from "./anim";
+import * as domAction from "./domAction";
+
+import { AppInit } from "./app";
+
+const method = {
+    defaults,
+    ...commonUtil,
+    ...path,
+    ...animation,
+    ...domAction,
+    getVar,
+    setVar,
+    evalAttr,
+    isElementActive,
+    handleAsync,
+    preventLeave,
+    install,
+    addDetect,
+    addTemplate
+};
+const brew: AppInit & typeof method;
+export default brew;
+export as namespace brew;
