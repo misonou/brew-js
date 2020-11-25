@@ -1,15 +1,20 @@
 {
   "name": "brew-js",
-  "version": "1.0.0",
+  "version": "0.1.0-beta",
   "description": "",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "version": "npm run build && git add -A dist",
+    "release": "node ./npm-publish.js"
   },
-  "author": "",
+  "author": "misonou",
   "license": "ISC",
+  "homepage": "http://hackmd.io/@misonou/brew-js",
+  "repository": "github:misonou/brew-js",
   "dependencies": {
+    "zeta-dom": "^0.1.0",
     "jquery": "^3.0.0",
     "historyjs": "^1.8.0-b2",
     "waterpipe": "^2.4.0"
@@ -18,6 +23,7 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "babel-loader": "^8.2.1",
+    "ncp": "^2.0.0",
     "webpack": "^5.3.0",
     "webpack-cli": "^4.1.0"
   },
@@ -28,5 +34,13 @@
     "> 1%",
     "not dead",
     "ie >= 11"
+  ],
+  "keywords": [
+    "html",
+    "dom",
+    "ui",
+    "router",
+    "render",
+    "scaffolding"
   ]
 }
