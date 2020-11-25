@@ -1,4 +1,4 @@
-import { evalAttr, getVar, setVar } from "./var";
+import { declareVar, evalAttr, getVar, setVar } from "./var";
 import { addTemplate, handleAsync, preventLeave } from "./dom";
 import { isElementActive } from "./extension/router";
 import { addDetect, install } from "./app";
@@ -19,6 +19,7 @@ const method = {
     ...domAction,
     getVar,
     setVar,
+    declareVar,
     evalAttr,
     isElementActive,
     handleAsync,

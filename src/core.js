@@ -2,7 +2,7 @@ import { define } from "./include/zeta/util.js";
 import * as path from "./util/path.js";
 import * as commonUtil from "./util/common.js";
 import * as animation from "./anim.js";
-import { evalAttr, getVar, setVar } from "./var.js";
+import { declareVar, evalAttr, getVar, setVar } from "./var.js";
 import { addTemplate, handleAsync, preventLeave } from "./dom.js";
 import { isElementActive } from "./extension/router.js";
 import * as domAction from "./domAction.js";
@@ -18,6 +18,7 @@ define(brew, {
     ...domAction,
     getVar,
     setVar,
+    declareVar,
     evalAttr,
     isElementActive,
     handleAsync,
