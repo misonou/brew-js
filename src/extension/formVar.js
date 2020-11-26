@@ -24,7 +24,7 @@ install('formVar', function (app) {
             } else {
                 var currentValues = getVar(form, varname) || {};
                 if (!equal(values, pick(currentValues, keys(values)))) {
-                    setVar(form, varname, extend(currentValues, values));
+                    setVar(form, varname, extend({}, currentValues, values));
                 }
             }
         };
