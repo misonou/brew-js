@@ -117,7 +117,7 @@ export function declareVar(element, name, value) {
     var values = isPlainObject(name) || kv(name, value);
     var context = tree.setNode(element);
     for (var i in values) {
-        if (!hasOwnProperty(values, i)) {
+        if (!hasOwnProperty(context, i)) {
             defineOwnProperty(context, i, null);
         }
     }
