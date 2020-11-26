@@ -59,18 +59,24 @@ function getDeclaredVar(element, resetToNull, state) {
     return initValues;
 }
 
+function findVarContext(varname, element) {
+    element = element || root;
+    for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
+        if (hasOwnProperty(s, varname)) {
+            return s;
+        }
+    }
+    console.warn('Undeclared state: %s', varname, { element: element });
+    return tree.setNode(element);
+}
+
 /**
  * @param {string} varname
  * @param {Element} element
  */
 export function getVarScope(varname, element) {
-    for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
-        if (hasOwnProperty(s, varname)) {
-            return s.element;
-        }
-    }
-    console.warn('Undeclared state: %s', varname, { element: element });
-    return element;
+    var context = findVarContext(varname, element);
+    return context.element;
 }
 
 /**
@@ -92,9 +98,10 @@ export function setVar(element, name, value) {
         var state = tree.setNode(element);
         each(values || evalAttr(element, 'set-var'), function (i, v) {
             if (state[i] !== v) {
-                state[i] = v;
+                var node = findVarContext(i, element);
+                node[i] = v;
                 hasUpdated = true;
-                markUpdated(getVarScope(i, element));
+                markUpdated(node.element);
             }
         });
         if (hasUpdated && appReady) {
