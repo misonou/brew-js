@@ -1,12 +1,12 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
-import { selectIncludeSelf } from "./include/zeta/domUtil.js";
+import { containsOrEquals, iterateNode } from "./include/zeta/domUtil.js";
 import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { groupLog } from "./util/console.js";
-import { InheritedNodeTree } from "./include/zeta/tree.js";
+import { InheritedNodeTree, TreeWalker } from "./include/zeta/tree.js";
 
 const DEBUG_EVAL = /localhost:?/i.test(location.host);
 
@@ -26,9 +26,6 @@ const tree = new InheritedNodeTree(root, VarContext);
 function VarContext() {
     var self = this;
     var element = self.element;
-    if (!element.attributes.var) {
-        element.setAttribute('var', '');
-    }
     // @ts-ignore: does not throw error when property dataset does not exist
     each(element.dataset, function (i, v) {
         defineOwnProperty(self, i, waterpipe.eval('`' + v));
@@ -133,8 +130,11 @@ export function declareVar(element, name, value) {
  */
 export function resetVar(element, resetToNull) {
     batch(function () {
-        each(selectIncludeSelf('[var]', element), function (i, v) {
-            setVar(v, getDeclaredVar(v, resetToNull));
+        var node = tree.getNode(element);
+        iterateNode(new TreeWalker(node), function (v) {
+            if (containsOrEquals(element, v)) {
+                setVar(v.element, getDeclaredVar(v.element, resetToNull));
+            }
         });
     });
 }
