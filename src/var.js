@@ -1,7 +1,7 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
 import { selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv } from "./include/zeta/util.js";
+import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
@@ -98,7 +98,7 @@ export function setVar(element, name, value) {
             }
         });
         if (hasUpdated && appReady) {
-            processStateChange();
+            setImmediateOnce(processStateChange);
         }
     }
     return !!hasUpdated;
