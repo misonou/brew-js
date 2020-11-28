@@ -7,6 +7,7 @@ declare namespace Brew {
     type EventHandlers<T extends string, M> = { [E in T]: EventHandler<E, M> }
     type AppInstance<T = {}> = App<T> & T & Brew.EventDispatcher;
     type PromiseOrEmpty<T = any> = Promise<T> | void;
+    type DOMProcessorCallback = (element: Element, getState: (element: Element) => Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void;
 
     interface DOMUpdateState extends Zeta.Dictionary {
         /**

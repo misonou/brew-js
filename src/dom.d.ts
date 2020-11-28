@@ -68,6 +68,6 @@ export function preventLeave(suppressPrompt?: boolean): Brew.PromiseOrEmpty;
  */
 export function addTemplate(name: string, template: Node | JQuery.htmlString): void;
 
-export function addTransformer(name: string, callback: (element: Element, state: Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void): void;
+export function addTransformer(name: string, callback: Brew.DOMProcessorCallback): void;
 
-export function addRenderer(name: string, callback: (element: Element, state: Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void): void;
+export function addRenderer(name: string, callback: Brew.DOMProcessorCallback): void;

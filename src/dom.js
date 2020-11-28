@@ -3,7 +3,7 @@ import $ from "./include/jquery.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
 import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, defineOwnProperty } from "./include/zeta/util.js";
+import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -22,16 +22,16 @@ const pendingDOMUpdates = new Map();
 const preupdateHandlers = [];
 const matchElementHandlers = [];
 const selectorHandlers = [];
-/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+/** @type {Zeta.Dictionary<Brew.DOMProcessorCallback>} */
 const transformationHandlers = {};
-/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+/** @type {Zeta.Dictionary<Brew.DOMProcessorCallback>} */
 const renderHandlers = {};
 const templates = {};
 
 var batchCounter = 0;
 var stateChangeLock = false;
 
-function getComponentState(element, ns) {
+function getComponentState(ns, element) {
     var obj = _(element) || _(element, {});
     return obj[ns] || (obj[ns] = {});
 }
@@ -83,7 +83,7 @@ function processTransform(elements, applyDOMUpdates) {
         exclude = makeArray(transformed);
         each(transformationHandlers, function (i, v) {
             $(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
-                v(element, getComponentState(element, i), applyDOMUpdates);
+                v(element, getComponentState.bind(0, i), applyDOMUpdates);
                 transformed.add(element);
             });
         });
@@ -129,7 +129,7 @@ export function handleAsync(promise, element, callback) {
         element = element || dom.activeElement;
         var elm1 = getVarScope('loading', element || root);
         var elm2 = getVarScope('error', element || root);
-        var counter = getComponentState(elm1, 'handleAsync');
+        var counter = getComponentState('handleAsync', elm1);
         setVar(elm1, { loading: getVar(elm1, 'loading') || true });
         setVar(elm2, { error: null });
         counter.value = (counter.value || 0) + 1
@@ -176,7 +176,7 @@ export function processStateChange(suppressAnim) {
             }));
             each(arr, function (i, v) {
                 var currentValues = getVar(v);
-                var oldValues = getComponentState(v, 'oldValues');
+                var oldValues = getComponentState('oldValues', v);
                 updatedProps.set(v, {
                     oldValues: extend({}, oldValues),
                     newValues: diffObject(currentValues, oldValues)
@@ -191,7 +191,7 @@ export function processStateChange(suppressAnim) {
                     $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
                         each(renderHandlers, function (i, v) {
                             if (element.attributes[i]) {
-                                v(element, getComponentState(element, i), applyDOMUpdates);
+                                v(element, getComponentState.bind(0, i), applyDOMUpdates);
                             }
                         });
                         visited.push(element);
@@ -327,7 +327,7 @@ export function mountElement(element) {
  */
 export function preventLeave(suppressPrompt) {
     var element = any($('[prevent-leave]').get(), function (v) {
-        var state = getComponentState(v, 'preventLeave');
+        var state = getComponentState('preventLeave', v);
         var allowLeave = state.allowLeave;
         if (isElementActive(v) || allowLeave) {
             var preventLeave = evalAttr(v, 'prevent-leave');
@@ -340,7 +340,7 @@ export function preventLeave(suppressPrompt) {
     if (element && !suppressPrompt) {
         return resolveAll(dom.emit('preventLeave', element, null, true), function (result) {
             if (result) {
-                var state = getComponentState(element, 'preventLeave');
+                var state = getComponentState('preventLeave', element);
                 state.allowLeave = true;
             } else {
                 throw 'user_rejected';
@@ -367,7 +367,8 @@ export function addRenderer(name, callback) {
  * Built-in transformers and renderers
  * -------------------------------------- */
 
-addTransformer('apply-template', function (element, state) {
+addTransformer('apply-template', function (element, getState) {
+    var state = getState(element);
     var templateName = element.getAttribute('apply-template');
     var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
     var currentTemplate = state.template;
@@ -401,7 +402,8 @@ addTransformer('apply-template', function (element, state) {
     }
 });
 
-addTransformer('foreach', function (element, state) {
+addTransformer('foreach', function (element, getState) {
+    var state = getState(element);
     var templateNodes = state.template || (state.template = $(element).contents().detach().filter(function (i, v) { return v.nodeType === 1 || /\S/.test(v.data || ''); }).get());
     var currentNodes = state.nodes || [];
     var oldItems = state.data || [];
@@ -417,6 +419,8 @@ addTransformer('foreach', function (element, state) {
             var parts = $(templateNodes).clone().get();
             each(parts, function (i, w) {
                 if (w.nodeType === 1) {
+                    var myState = getState(w);
+                    myState.template = getState(templateNodes[i]).template;
                     $(element).append(w);
                     declareVar(w, { foreach: v });
                     mountElement(w);
@@ -437,7 +441,7 @@ addTransformer('auto-var', function (element) {
     setVar(element, evalAttr(element, 'auto-var'));
 });
 
-addTransformer('switch', function (element, state, applyDOMUpdates) {
+addTransformer('switch', function (element, getState, applyDOMUpdates) {
     var varname = element.getAttribute('switch') || '';
     if (!isElementActive(element) || !varname) {
         return;
@@ -477,7 +481,8 @@ addTransformer('switch', function (element, state, applyDOMUpdates) {
     }
 });
 
-addRenderer('template', function (element, state, applyDOMUpdates) {
+addRenderer('template', function (element, getState, applyDOMUpdates) {
+    var state = getState(element);
     var templates = state.templates;
     if (!templates) {
         templates = {};
@@ -502,7 +507,7 @@ addRenderer('template', function (element, state, applyDOMUpdates) {
     applyDOMUpdates(element, props);
 });
 
-addRenderer('set-style', function (element, state, applyDOMUpdates) {
+addRenderer('set-style', function (element, getState, applyDOMUpdates) {
     var style = parseCSS(evalAttr(element, 'set-style', true));
     each(IMAGE_STYLE_PROPS, function (i, v) {
         var imageUrl = isCssUrlValue(style[v]);
@@ -513,6 +518,6 @@ addRenderer('set-style', function (element, state, applyDOMUpdates) {
     applyDOMUpdates(element, { style });
 });
 
-addRenderer('set-class', function (element, state, applyDOMUpdates) {
+addRenderer('set-class', function (element, getState, applyDOMUpdates) {
     applyDOMUpdates(element, { $$class: evalAttr(element, 'set-class') });
 });
