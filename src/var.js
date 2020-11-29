@@ -1,12 +1,11 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
-import { containsOrEquals, iterateNode } from "./include/zeta/domUtil.js";
 import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta/util.js";
 import dom from "./include/zeta/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { groupLog } from "./util/console.js";
-import { InheritedNodeTree, TreeWalker } from "./include/zeta/tree.js";
+import { InheritedNodeTree } from "./include/zeta/tree.js";
 
 const DEBUG_EVAL = /localhost:?/i.test(location.host);
 
@@ -130,11 +129,8 @@ export function declareVar(element, name, value) {
  */
 export function resetVar(element, resetToNull) {
     batch(function () {
-        var node = tree.getNode(element);
-        iterateNode(new TreeWalker(node), function (v) {
-            if (containsOrEquals(element, v)) {
-                setVar(v.element, getDeclaredVar(v.element, resetToNull));
-            }
+        each(tree.descendants(element), function (i, v) {
+            setVar(v.element, getDeclaredVar(v.element, resetToNull));
         });
     });
 }
