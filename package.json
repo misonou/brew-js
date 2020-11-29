@@ -2,22 +2,23 @@
   "name": "brew-js",
   "version": "0.1.0",
   "description": "",
+  "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "scripts": {
     "build": "webpack",
     "version": "npm run build && git add -A dist",
-    "release": "node ./npm-publish.js"
+    "release": "node ./npm-publish.cjs"
   },
   "author": "misonou",
   "license": "ISC",
   "homepage": "http://hackmd.io/@misonou/brew-js",
   "repository": "github:misonou/brew-js",
   "dependencies": {
-    "zeta-dom": "^0.1.0",
-    "jquery": "^3.0.0",
     "historyjs": "^1.8.0-b2",
-    "waterpipe": "^2.4.0"
+    "jquery": "^3.0.0",
+    "waterpipe": "^2.4.0",
+    "zeta-dom": "^0.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
