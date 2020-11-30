@@ -1,19 +1,19 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
+		module.exports = factory(require("zeta-dom")["util"], require("zeta-dom")["css"], require("zeta-dom")["dom"], require("zeta-dom"), require("zeta-dom"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", [["zeta-dom","util"], "jQuery", "promise-polyfill", ["zeta-dom","css"], ["zeta-dom","dom"], "waterpipe", "historyjs", ["zeta-dom"], "zeta-dom"], factory);
+		define("brew", [["zeta-dom","util"], ["zeta-dom","css"], ["zeta-dom","dom"], ["zeta-dom"], "zeta-dom"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
+		exports["brew"] = factory(require("zeta-dom")["util"], require("zeta-dom")["css"], require("zeta-dom")["dom"], require("zeta-dom"), require("zeta-dom"));
 	else
-		root["brew"] = factory(root["zeta"]["util"], root["jQuery"], root["promise-polyfill"], root["zeta"]["css"], root["zeta"]["dom"], root["waterpipe"], root["History"], root["zeta"], root["zeta"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__990__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__260__, __WEBPACK_EXTERNAL_MODULE__50__, __WEBPACK_EXTERNAL_MODULE__160__, __WEBPACK_EXTERNAL_MODULE__229__, __WEBPACK_EXTERNAL_MODULE__668__, __WEBPACK_EXTERNAL_MODULE__163__) {
+		root["brew"] = factory(root["zeta"]["util"], root["zeta"]["css"], root["zeta"]["dom"], root["zeta"], root["zeta"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__990__, __WEBPACK_EXTERNAL_MODULE__260__, __WEBPACK_EXTERNAL_MODULE__50__, __WEBPACK_EXTERNAL_MODULE__668__, __WEBPACK_EXTERNAL_MODULE__163__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 828:
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 
 // EXPORTS
@@ -176,14 +176,14 @@ function isSubPathOf(a, b) {
 // @ts-nocheck
 
 /** @type {JQueryStatic} */
-var jQuery = window.jQuery || __webpack_require__(609);
+var jQuery = window.jQuery || require('jquery');
 
 /* harmony default export */ const jquery = (jQuery);
 // CONCATENATED MODULE: ./src/include/promise-polyfill.js
 // @ts-nocheck
 
 /** @type {PromiseConstructor} */
-var Promise = window.Promise || __webpack_require__(804).default;
+var Promise = window.Promise || require('promise-polyfill').default;
 
 /* harmony default export */ const promise_polyfill = (Promise);
 // EXTERNAL MODULE: external {"commonjs":["zeta-dom","css"],"commonjs2":["zeta-dom","css"],"amd":["zeta-dom","css"],"root":["zeta","css"]}
@@ -208,18 +208,18 @@ var preloadImagesCache = {};
 var loadScriptCache = {};
 function getAttrValues(element) {
   var values = {};
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(element.attributes, function (i, v) {
+  /* non-default import from default-exporting module */undefined(element.attributes, function (i, v) {
     values[v.name] = v.value;
   });
   return values;
 }
 function setAttr(element, name, value) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isPlainObject)(name) || (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.kv)(name, value), function (i, v) {
+  /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value), function (i, v) {
     element.setAttribute(i, v);
   });
 }
 function copyAttr(src, dst) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(src.attributes, function (i, v) {
+  /* non-default import from default-exporting module */undefined(src.attributes, function (i, v) {
     dst.setAttribute(v.name, v.value);
   });
 }
@@ -229,10 +229,10 @@ function copyAttr(src, dst) {
 
 function getFormValues(form) {
   var values = {};
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(form.elements, function (i, v) {
+  /* non-default import from default-exporting module */undefined(form.elements, function (i, v) {
     if (v.name && !(v.name in values)) {
       var item = form.elements[v.name];
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineGetterProperty)(values, v.name, function () {
+      /* non-default import from default-exporting module */undefined(values, v.name, function () {
         return item.type === 'checkbox' ? item.checked : item.value;
       });
     }
@@ -296,8 +296,8 @@ function cookie(name, expiry) {
 function api(options, extra) {
   var httpMethods = 'get post delete';
 
-  if (typeof options === 'string' && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(options, httpMethods)) {
-    extra = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, typeof extra === 'string' ? {
+  if (typeof options === 'string' && /* non-default import from default-exporting module */undefined(options, httpMethods)) {
+    extra = /* non-default import from default-exporting module */undefined({}, typeof extra === 'string' ? {
       baseUrl: extra
     } : extra, {
       methods: options
@@ -305,16 +305,16 @@ function api(options, extra) {
     return api(extra)[options];
   }
 
-  options = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, options);
+  options = /* non-default import from default-exporting module */undefined({}, options);
   var obj = {
     baseUrl: options.baseUrl,
     token: options.token
   };
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(options.methods || httpMethods, function (i, v) {
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(v, httpMethods)) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineHiddenProperty)(obj, v, function request(method, data) {
+  /* non-default import from default-exporting module */undefined(options.methods || httpMethods, function (i, v) {
+    if (/* non-default import from default-exporting module */undefined(v, httpMethods)) {
+      /* non-default import from default-exporting module */undefined(obj, v, function request(method, data) {
         if (!obj.baseUrl) {
-          return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watchOnce)(obj, 'baseUrl', function () {
+          return /* non-default import from default-exporting module */undefined(obj, 'baseUrl', function () {
             return request(method, data);
           });
         }
@@ -334,7 +334,7 @@ function api(options, extra) {
           dataType: 'json',
           data: JSON.stringify(data || {}),
           success: function success(response) {
-            if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(options.getTokenFromResponse)) {
+            if (/* non-default import from default-exporting module */undefined(options.getTokenFromResponse)) {
               obj.token = options.getTokenFromResponse(response, obj.token);
             }
           }
@@ -353,8 +353,8 @@ function api(options, extra) {
           throw e.statusText;
         });
       });
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineAliasProperty)(obj[v], 'baseUrl', obj);
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineAliasProperty)(obj[v], 'token', obj);
+      /* non-default import from default-exporting module */undefined(obj[v], 'baseUrl', obj);
+      /* non-default import from default-exporting module */undefined(obj[v], 'token', obj);
     }
   });
   return obj;
@@ -372,12 +372,12 @@ function getJSON(path) {
  */
 
 function loadScript(url, options) {
-  if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isArray)(url)) {
+  if (/* non-default import from default-exporting module */undefined(url)) {
     return url.reduce(function (v, a) {
       return v.then(function () {
         return loadScript(a, options);
       });
-    }, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)());
+    }, /* non-default import from default-exporting module */undefined());
   }
 
   if (!loadScriptCache[url]) {
@@ -433,17 +433,17 @@ function addStyleSheet(url, media) {
  */
 
 function preloadImages(urls, ms) {
-  if (!(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isArray)(urls)) {
+  if (!/* non-default import from default-exporting module */undefined(urls)) {
     var map = {};
 
     var testValue = function testValue(value) {
-      if ((0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.isCssUrlValue)(value)) {
+      if (/* non-default import from default-exporting module */undefined(value)) {
         map[RegExp.$1 || RegExp.$2 || RegExp.$3] = true;
       }
     };
 
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.iterateNode)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.createNodeIterator)(urls, 1), function (node) {
-      if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.is)(node, 'img') && node.src) {
+    /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(urls, 1), function (node) {
+      if (/* non-default import from default-exporting module */undefined(node, 'img') && node.src) {
         map[node.src] = true;
       }
 
@@ -451,7 +451,7 @@ function preloadImages(urls, ms) {
       testValue(getComputedStyle(node, '::before').backgroundImage);
       testValue(getComputedStyle(node, '::after').backgroundImage);
     });
-    urls = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(map);
+    urls = /* non-default import from default-exporting module */undefined(map);
   }
 
   var promises = [];
@@ -469,7 +469,7 @@ function preloadImages(urls, ms) {
   if (!promises.length || promises.every(function (v) {
     return v === true;
   })) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)();
+    return /* non-default import from default-exporting module */undefined();
   }
 
   if (preloadUrls.length) {
@@ -478,14 +478,13 @@ function preloadImages(urls, ms) {
     });
   }
 
-  return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setPromiseTimeout)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.values)(preloadImagesCache)), ms, true);
+  return /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(preloadImagesCache)), ms, true);
 }
 // EXTERNAL MODULE: external {"commonjs":["zeta-dom","dom"],"commonjs2":["zeta-dom","dom"],"amd":["zeta-dom","dom"],"root":["zeta","dom"]}
 var external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_ = __webpack_require__(50);
-var external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_default = /*#__PURE__*/__webpack_require__.n(external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_);
 // CONCATENATED MODULE: ./src/include/zeta/dom.js
 
-/* harmony default export */ const dom = ((external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_default()));
+/* harmony default export */ const dom = (external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_);
 // CONCATENATED MODULE: ./src/anim.js
 
 
@@ -500,17 +499,17 @@ var nextId = 0;
 
 function handleAnimation(element, elements, promises, trigger) {
   if (!promises.length) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)();
+    return /* non-default import from default-exporting module */undefined();
   }
 
   var id = ++nextId;
   var timeout, timeoutReject, timeoutResolve;
   promises = promises.map(function (v) {
-    return v instanceof promise_polyfill ? (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.catchAsync)(v) : new promise_polyfill(function (resolve) {
+    return v instanceof promise_polyfill ? /* non-default import from default-exporting module */undefined(v) : new promise_polyfill(function (resolve) {
       v.then(resolve, resolve);
     });
   });
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.catchAsync)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(promises, function () {
+  /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(promises, function () {
     clearTimeout(timeout);
     timeoutResolve();
     animatingElements.delete(element);
@@ -525,7 +524,7 @@ function handleAnimation(element, elements, promises, trigger) {
     console.log('Animation #%i might take longer than expected', id, promises);
     animatingElements.delete(element);
   }, 1500);
-  var promise = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.catchAsync)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(promises));
+  var promise = /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(promises));
   console.log('Animation #%i triggered on %s', id, trigger, {
     elements: elements
   });
@@ -534,19 +533,19 @@ function handleAnimation(element, elements, promises, trigger) {
 }
 
 function animateElement(element, cssClass, eventName, customAnimation) {
-  var promises = [(0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.runCSSTransition)(element, cssClass), dom.emit(eventName, element)];
+  var promises = [/* non-default import from default-exporting module */undefined(element, cssClass), dom.emit(eventName, element)];
   var delay = parseFloat(jquery(element).css('transition-delay'));
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(customAnimation, function (i, v) {
+  /* non-default import from default-exporting module */undefined(customAnimation, function (i, v) {
     if (element.attributes[i]) {
       var attrValue = element.getAttribute(i);
       promises.push(new promise_polyfill(function (resolve, reject) {
         setTimeout(function () {
-          (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(v(element, attrValue)).then(resolve, reject);
+          /* non-default import from default-exporting module */undefined(v(element, attrValue)).then(resolve, reject);
         }, delay * 1000);
       }));
     }
   });
-  return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(promises, function () {
+  return /* non-default import from default-exporting module */undefined(promises, function () {
     return element;
   });
 }
@@ -577,16 +576,16 @@ function animateIn(element, trigger, scope, filterCallback) {
   var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
   var elements = [];
   var promises = [];
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[animate-in]', element)).filter(filter).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('[animate-in]', element)).filter(filter).each(function (i, v) {
     // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isVisible)(v)) {
+    if (!$innerScope.find(v)[0] && filterCallback(v) && /* non-default import from default-exporting module */undefined(v)) {
       elements.push(v);
       promises.push(animateElement(v, 'tweening-in', 'animatein', customAnimateIn));
     }
   });
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[animate-sequence]', element)).filter(filter).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('[animate-sequence]', element)).filter(filter).each(function (i, v) {
     // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isVisible)(v)) {
+    if (!$innerScope.find(v)[0] && filterCallback(v) && /* non-default import from default-exporting module */undefined(v)) {
       var selector = v.getAttribute('animate-sequence') || '';
       var type = v.getAttribute('animate-sequence-type') || '';
       var $elements = jquery(v).find(selector[0] === '>' ? selector : jquery(selector));
@@ -646,7 +645,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
   var elements = [];
   var promises = []; // @ts-ignore: type inference issue
 
-  var $target = jquery((excludeSelf ? jquery : external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[animate-out]', element)).filter(filter);
+  var $target = jquery((excludeSelf ? jquery : /* non-default import from default-exporting module */undefined)('[animate-out]', element)).filter(filter);
   $target.each(function (i, v) {
     // @ts-ignore: filterCallback must be function
     if (!$innerScope.find(v)[0] && filterCallback(v)) {
@@ -657,7 +656,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
   return handleAnimation(element, elements, promises, trigger).then(function () {
     // reset animation state after outro animation has finished
     // @ts-ignore: type inference issue
-    var $target = jquery((excludeSelf ? jquery : external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
+    var $target = jquery((excludeSelf ? jquery : /* non-default import from default-exporting module */undefined)('[animate-out], .tweening-in, .tweening-out', element));
 
     if (trigger !== 'show') {
       $target = $target.filter(filter);
@@ -681,7 +680,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
  */
 
 function addAnimateIn(name, callback) {
-  customAnimateIn[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  customAnimateIn[name] = /* non-default import from default-exporting module */undefined(callback);
 }
 /**
  * @param {string} name
@@ -689,13 +688,13 @@ function addAnimateIn(name, callback) {
  */
 
 function addAnimateOut(name, callback) {
-  customAnimateOut[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  customAnimateOut[name] = /* non-default import from default-exporting module */undefined(callback);
 }
 // CONCATENATED MODULE: ./src/include/waterpipe.js
 // @ts-nocheck
 
 /** @type {Waterpipe} */
-var waterpipe = window.waterpipe || __webpack_require__(160);
+var waterpipe = window.waterpipe || require('waterpipe');
 
 /* harmony default export */ const include_waterpipe = (waterpipe); // assign to a new variable to avoid incompatble declaration issue by typescript compiler
 
@@ -728,9 +727,9 @@ var defaults = {};
 var History = window.History;
 
 if (!History || !History.Adapter) {
-  window.jQuery = __webpack_require__(609);
+  window.jQuery = require('jquery');
 
-  __webpack_require__(229);
+  require('historyjs/scripts/bundled-uncompressed/html5/jquery.history.js');
 
   History = window.History;
 }
@@ -751,8 +750,8 @@ function truncateJSON(json) {
 }
 
 function formatMessage(eventSource, message) {
-  message = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.makeArray)(message).map(function (v) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.is)(v, Element) ? toElementTag(v) + ':' : v && _typeof(v) === 'object' ? truncateJSON(JSON.stringify(v)) : v;
+  message = /* non-default import from default-exporting module */undefined(message).map(function (v) {
+    return /* non-default import from default-exporting module */undefined(v, Element) ? toElementTag(v) + ':' : v && _typeof(v) === 'object' ? truncateJSON(JSON.stringify(v)) : v;
   }).join(' ');
   return '[' + eventSource + '] ' + message;
 }
@@ -803,7 +802,7 @@ function groupLog(eventSource, message, callback) {
 
 
 
-var _ = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.createPrivateStore)();
+var _ = /* non-default import from default-exporting module */undefined();
 
 var matchByPathElements = new Map();
 var preloadHandlers = [];
@@ -825,12 +824,12 @@ function isElementActive(v, arr) {
  */
 
 function hookBeforePageEnter(callback) {
-  preloadHandlers.push((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback));
+  preloadHandlers.push(/* non-default import from default-exporting module */undefined(callback));
 }
 
 function createRouteState(route, segments, params) {
   route = route || [];
-  params = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, params);
+  params = /* non-default import from default-exporting module */undefined({}, params);
   delete params.remainingSegments;
   return {
     minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
@@ -860,36 +859,36 @@ function Route(app, routes, initialPath) {
       } : a.toLowerCase());
       self[b || 'remainingSegments'] = null;
     });
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineHiddenProperty)(tokens, 'value', path);
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineHiddenProperty)(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineHiddenProperty)(tokens, 'minLength', minLength || tokens.length);
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineHiddenProperty)(tokens, 'names', (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.map)(tokens, function (v) {
+    /* non-default import from default-exporting module */undefined(tokens, 'value', path);
+    /* non-default import from default-exporting module */undefined(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
+    /* non-default import from default-exporting module */undefined(tokens, 'minLength', minLength || tokens.length);
+    /* non-default import from default-exporting module */undefined(tokens, 'names', /* non-default import from default-exporting module */undefined(tokens, function (v) {
       return v.name;
     }));
     return tokens;
   });
   Object.preventExtensions(self);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(self, self.parse(initialPath));
+  /* non-default import from default-exporting module */undefined(self, self.parse(initialPath));
   state.current = state.lastMatch;
-  state.handleChanges = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watch)(self, true);
+  state.handleChanges = /* non-default import from default-exporting module */undefined(self, true);
   Object.getOwnPropertyNames(self).forEach(function (prop) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineObservableProperty)(self, prop);
+    /* non-default import from default-exporting module */undefined(self, prop);
   });
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watch)(self, function () {
-    var current = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.exclude)(self, ['remainingSegments']);
+  /* non-default import from default-exporting module */undefined(self, function () {
+    var current = /* non-default import from default-exporting module */undefined(self, ['remainingSegments']);
     var paramChanged = false;
-    var routeChanged = !(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.equal)(current, state.current.params);
+    var routeChanged = !/* non-default import from default-exporting module */undefined(current, state.current.params);
 
     if (routeChanged && state.lastMatch) {
       state.current = state.lastMatch;
-      routeChanged = !(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.equal)(current, state.current.params);
+      routeChanged = !/* non-default import from default-exporting module */undefined(current, state.current.params);
     }
 
     if (routeChanged) {
       var segments = [],
           i,
           len;
-      var matched = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.any)(state.routes, function (tokens) {
+      var matched = /* non-default import from default-exporting module */undefined(state.routes, function (tokens) {
         segments.length = 0;
 
         for (i = 0, len = tokens.length; i < len; i++) {
@@ -927,7 +926,7 @@ function Route(app, routes, initialPath) {
   });
 }
 
-(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.definePrototype)(Route, {
+/* non-default import from default-exporting module */undefined(Route, {
   parse: function parse(path) {
     var self = this;
 
@@ -935,7 +934,7 @@ function Route(app, routes, initialPath) {
 
     var segments = normalizePath(path).slice(1).split('/');
     var params = {};
-    var matched = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.any)(state.routes, function (tokens) {
+    var matched = /* non-default import from default-exporting module */undefined(state.routes, function (tokens) {
       params = {};
 
       if (segments.length < tokens.minLength) {
@@ -945,7 +944,7 @@ function Route(app, routes, initialPath) {
       for (var i = 0, len = tokens.length; i < len; i++) {
         var varname = tokens[i].name;
 
-        if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.iequal)(segments[i], tokens[i]))) {
+        if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : /* non-default import from default-exporting module */undefined(segments[i], tokens[i]))) {
           return false;
         }
 
@@ -969,7 +968,7 @@ function Route(app, routes, initialPath) {
     var self = this;
 
     if (typeof params === 'string') {
-      if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.iequal)(params, self.toString())) {
+      if (/* non-default import from default-exporting module */undefined(params, self.toString())) {
         return;
       }
 
@@ -977,7 +976,7 @@ function Route(app, routes, initialPath) {
     }
 
     _(self).handleChanges(function () {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(self, params);
+      /* non-default import from default-exporting module */undefined(self, params);
     });
   },
   toString: function toString() {
@@ -985,7 +984,7 @@ function Route(app, routes, initialPath) {
     return combinePath(_(this).current.maxPath || '/', this.remainingSegments);
   }
 });
-(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watchable)(Route.prototype);
+/* non-default import from default-exporting module */undefined(Route.prototype);
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
  * @param {Record<string, any>} options
@@ -1006,7 +1005,7 @@ function configureRouter(app, options) {
     currentPath = currentPath || app.path;
 
     if (path[0] === '~') {
-      var parsedState = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.iequal)(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+      var parsedState = /* non-default import from default-exporting module */undefined(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
       path = combinePath(parsedState.minPath, path.slice(1));
     } else if (path[0] !== '/') {
       path = combinePath(currentPath, path);
@@ -1067,9 +1066,9 @@ function configureRouter(app, options) {
                   return v(element, path);
                 });
                 promises.push(dependencies);
-                preload.set(element, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(promises, function () {
+                preload.set(element, /* non-default import from default-exporting module */undefined(promises, function () {
                   if (activeElements.indexOf(element) >= 0) {
-                    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(element, 'hidden', false);
+                    /* non-default import from default-exporting module */undefined(element, 'hidden', false);
                     animateIn(element, 'show', '[match-path]');
                     app.emit('pageenter', element, {
                       pathname: path
@@ -1084,7 +1083,7 @@ function configureRouter(app, options) {
               animateOut(element, 'show', '[match-path]').then(function () {
                 if (activeElements.indexOf(element) < 0) {
                   groupLog(eventSource, ['pageleave', oldPath], function () {
-                    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(element, 'hidden', true);
+                    /* non-default import from default-exporting module */undefined(element, 'hidden', true);
                     resetVar(element, true);
                   });
                 }
@@ -1093,7 +1092,7 @@ function configureRouter(app, options) {
           }
         });
       });
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(preload, function (element, promise) {
+      /* non-default import from default-exporting module */undefined(preload, function (element, promise) {
         handleAsync(promise, element);
       });
     });
@@ -1116,7 +1115,7 @@ function configureRouter(app, options) {
     if (promise) {
       lockedPath = currentPath;
       navigate(currentPath, true);
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)(promise).then(function () {
+      /* non-default import from default-exporting module */undefined(promise).then(function () {
         navigate(newPath, true);
       });
       return;
@@ -1180,15 +1179,15 @@ function configureRouter(app, options) {
     promise = app.emit('navigate', {
       pathname: newPath,
       oldPathname: oldPath,
-      route: Object.freeze((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, route))
+      route: Object.freeze(/* non-default import from default-exporting module */undefined({}, route))
     });
     handleAsync(promise, dom.root, function () {
       processPageChange(newPath, oldPath, newActiveElements);
     });
   }
 
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watch)(observable, true);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineObservableProperty)(observable, 'path', '', function (newValue) {
+  /* non-default import from default-exporting module */undefined(observable, true);
+  /* non-default import from default-exporting module */undefined(observable, 'path', '', function (newValue) {
     if (!appReady) {
       return currentPath;
     }
@@ -1196,7 +1195,7 @@ function configureRouter(app, options) {
     newPath = resolvePath(newValue, currentPath);
 
     if (newPath !== currentPath) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setImmediateOnce)(handlePathChange);
+      /* non-default import from default-exporting module */undefined(handlePathChange);
     }
 
     return currentPath;
@@ -1214,9 +1213,9 @@ function configureRouter(app, options) {
       }
     }
   });
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(app, 'initialPath', initialPath, true);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(app, 'route', route, true);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineAliasProperty)(app, 'path', observable);
+  /* non-default import from default-exporting module */undefined(app, 'initialPath', initialPath, true);
+  /* non-default import from default-exporting module */undefined(app, 'route', route, true);
+  /* non-default import from default-exporting module */undefined(app, 'path', observable);
   app.beforeInit(function () {
     dom.ready.then(function () {
       // detach elements which its visibility is controlled by current path
@@ -1243,7 +1242,7 @@ function configureRouter(app, options) {
     app.path = initialPath;
   });
   app.on('mounted', function (e) {
-    var $autoplay = jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('video[autoplay], audio[autoplay]', e.target));
+    var $autoplay = jquery(/* non-default import from default-exporting module */undefined('video[autoplay], audio[autoplay]', e.target));
 
     if ($autoplay[0]) {
       $autoplay.removeAttr('autoplay');
@@ -1270,7 +1269,7 @@ function configureRouter(app, options) {
     }
   });
   app.on('pageleave', function (e) {
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('form', e.target)).each(function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined('form', e.target)).each(function (i, v) {
       if (!app.emit('reset', v, null, false)) {
         // @ts-ignore: known element type
         v.reset();
@@ -1278,7 +1277,7 @@ function configureRouter(app, options) {
     });
   });
   app.on('statechange', function (e) {
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.containsOrEquals)(e.target, pageTitleElement)) {
+    if (/* non-default import from default-exporting module */undefined(e.target, pageTitleElement)) {
       document.title = evalAttr(pageTitleElement, 'page-title', true);
     }
   });
@@ -1305,7 +1304,7 @@ install('router', function (app, options) {
 var IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
-var dom_ = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.createPrivateStore)();
+var dom_ = /* non-default import from default-exporting module */undefined();
 
 var root = dom.root;
 var updatedElements = new Set();
@@ -1313,17 +1312,17 @@ var pendingDOMUpdates = new Map();
 var preupdateHandlers = [];
 var matchElementHandlers = [];
 var selectorHandlers = [];
-/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+/** @type {Zeta.Dictionary<Brew.DOMProcessorCallback>} */
 
 var transformationHandlers = {};
-/** @type {Zeta.Dictionary<(elm: Element, attrValue: string, applyDOMUpdates: Zeta.AnyFunction) => any>} */
+/** @type {Zeta.Dictionary<Brew.DOMProcessorCallback>} */
 
 var renderHandlers = {};
 var templates = {};
 var batchCounter = 0;
 var stateChangeLock = false;
 
-function getComponentState(element, ns) {
+function getComponentState(ns, element) {
   var obj = dom_(element) || dom_(element, {});
 
   return obj[ns] || (obj[ns] = {});
@@ -1331,7 +1330,7 @@ function getComponentState(element, ns) {
 
 function diffObject(currentValues, oldValues) {
   var newValues = {};
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(currentValues, function (i, v) {
+  /* non-default import from default-exporting module */undefined(currentValues, function (i, v) {
     if (v !== oldValues[i]) {
       newValues[i] = v;
     }
@@ -1340,14 +1339,14 @@ function diffObject(currentValues, oldValues) {
 }
 
 function updateDOM(element, props, suppressEvent) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(props, function (j, v) {
+  /* non-default import from default-exporting module */undefined(props, function (j, v) {
     if (j === '$$class') {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(element, v);
+      /* non-default import from default-exporting module */undefined(element, v);
     } else if (j === '$$text') {
       element.textContent = v;
     } else if (j === 'style') {
       jquery(element).css(v);
-    } else if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(j, BOOL_ATTRS)) {
+    } else if (/* non-default import from default-exporting module */undefined(j, BOOL_ATTRS)) {
       element[j] = !!v;
     } else {
       element.setAttribute(j, v);
@@ -1360,9 +1359,9 @@ function updateDOM(element, props, suppressEvent) {
 }
 
 function mergeDOMUpdates(dict, props) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(props, function (j, v) {
+  /* non-default import from default-exporting module */undefined(props, function (j, v) {
     if (j === '$$class' || j === 'style') {
-      dict[j] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, dict[j], v);
+      dict[j] = /* non-default import from default-exporting module */undefined({}, dict[j], v);
     } else {
       dict[j] = v;
     }
@@ -1374,11 +1373,11 @@ function processTransform(elements, applyDOMUpdates) {
   var exclude;
 
   do {
-    elements = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.makeArray)(elements);
-    exclude = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.makeArray)(transformed);
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(transformationHandlers, function (i, v) {
-      jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[' + i + ']', elements)).not(exclude).each(function (j, element) {
-        v(element, getComponentState(element, i), applyDOMUpdates);
+    elements = /* non-default import from default-exporting module */undefined(elements);
+    exclude = /* non-default import from default-exporting module */undefined(transformed);
+    /* non-default import from default-exporting module */undefined(transformationHandlers, function (i, v) {
+      jquery(/* non-default import from default-exporting module */undefined('[' + i + ']', elements)).not(exclude).each(function (j, element) {
+        v(element, getComponentState.bind(0, i), applyDOMUpdates);
         transformed.add(element);
       });
     });
@@ -1412,7 +1411,7 @@ function matchElement(selector, handler) {
  */
 
 function hookBeforeUpdate(callback) {
-  preupdateHandlers.push((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback));
+  preupdateHandlers.push(/* non-default import from default-exporting module */undefined(callback));
 }
 /**
  * @param {Promise<any>} promise
@@ -1421,15 +1420,15 @@ function hookBeforeUpdate(callback) {
  */
 
 function handleAsync(promise, element, callback) {
-  if (!(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isThenable)(promise)) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)((callback || external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.noop)());
+  if (!/* non-default import from default-exporting module */undefined(promise)) {
+    return /* non-default import from default-exporting module */undefined((callback || /* non-default import from default-exporting module */undefined)());
   }
 
   if (element || dom.eventSource !== 'script') {
     element = element || dom.activeElement;
     var elm1 = getVarScope('loading', element || root);
     var elm2 = getVarScope('error', element || root);
-    var counter = getComponentState(elm1, 'handleAsync');
+    var counter = getComponentState('handleAsync', elm1);
     setVar(elm1, {
       loading: getVar(elm1, 'loading') || true
     });
@@ -1473,7 +1472,7 @@ function processStateChange(suppressAnim) {
   var domUpdates = new Map();
 
   var applyDOMUpdates = function applyDOMUpdates(element, props) {
-    var dict = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.mapGet)(domUpdates, element, Object);
+    var dict = /* non-default import from default-exporting module */undefined(domUpdates, element, Object);
     mergeDOMUpdates(dict, props);
   };
 
@@ -1485,26 +1484,26 @@ function processStateChange(suppressAnim) {
       processTransform(updatedElements, applyDOMUpdates); // trigger statechange events and perform DOM updates only on attached elements
       // leave detached elements in future rounds
 
-      var arr = jquery.uniqueSort((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.grep)(updatedElements, function (v) {
-        return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.containsOrEquals)(root, v) && updatedElements.delete(v);
+      var arr = jquery.uniqueSort(/* non-default import from default-exporting module */undefined(updatedElements, function (v) {
+        return /* non-default import from default-exporting module */undefined(root, v) && updatedElements.delete(v);
       }));
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(arr, function (i, v) {
+      /* non-default import from default-exporting module */undefined(arr, function (i, v) {
         var currentValues = getVar(v);
-        var oldValues = getComponentState(v, 'oldValues');
+        var oldValues = getComponentState('oldValues', v);
         updatedProps.set(v, {
-          oldValues: (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, oldValues),
+          oldValues: /* non-default import from default-exporting module */undefined({}, oldValues),
           newValues: diffObject(currentValues, oldValues)
         });
-        (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(oldValues, currentValues);
+        /* non-default import from default-exporting module */undefined(oldValues, currentValues);
       });
       var visited = [];
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(arr.reverse(), function (i, v) {
+      /* non-default import from default-exporting module */undefined(arr.reverse(), function (i, v) {
         groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
           console.log(v === root ? document : v);
-          jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[' + (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
-            (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(renderHandlers, function (i, v) {
+          jquery(/* non-default import from default-exporting module */undefined('[' + /* non-default import from default-exporting module */undefined(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+            /* non-default import from default-exporting module */undefined(renderHandlers, function (i, v) {
               if (element.attributes[i]) {
-                v(element, getComponentState(element, i), applyDOMUpdates);
+                v(element, getComponentState.bind(0, i), applyDOMUpdates);
               }
             });
             visited.push(element);
@@ -1513,14 +1512,14 @@ function processStateChange(suppressAnim) {
       });
     }); // perform any async task that is related or required by the DOM changes
 
-    var preupdatePromise = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(preupdateHandlers.map(function (v) {
+    var preupdatePromise = /* non-default import from default-exporting module */undefined(preupdateHandlers.map(function (v) {
       return v(domUpdates);
     })); // perform DOM updates, or add to pending updates if previous update is not completed
     // also wait for animation completed if suppressAnim is off
 
     preupdatePromise.then(function () {
       var animScopes = new Map();
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(domUpdates, function (element, props) {
+      /* non-default import from default-exporting module */undefined(domUpdates, function (element, props) {
         if (!suppressAnim) {
           var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || root;
           var groupElements = animScopes.get(animParent);
@@ -1537,16 +1536,16 @@ function processStateChange(suppressAnim) {
                 ;
               }
 
-              return cur && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.any)(haystack, function (v) {
+              return cur && /* non-default import from default-exporting module */undefined(haystack, function (v) {
                 return v in cur.newValues;
               });
             };
 
             groupElements = [];
-            (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setImmediate)(function () {
+            /* non-default import from default-exporting module */undefined(function () {
               animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
-                (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(groupElements, function (i, v) {
-                  updateDOM(v, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.mapRemove)(pendingDOMUpdates, v));
+                /* non-default import from default-exporting module */undefined(groupElements, function (i, v) {
+                  updateDOM(v, /* non-default import from default-exporting module */undefined(pendingDOMUpdates, v));
                 });
                 animateIn(animParent, 'statechange', '[match-path]', filter);
               });
@@ -1554,7 +1553,7 @@ function processStateChange(suppressAnim) {
             animScopes.set(animParent, groupElements);
           }
 
-          var dict = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.mapGet)(pendingDOMUpdates, element, Object);
+          var dict = /* non-default import from default-exporting module */undefined(pendingDOMUpdates, element, Object);
           mergeDOMUpdates(dict, props);
           groupElements.push(element);
         } else if (pendingDOMUpdates.has(element)) {
@@ -1563,7 +1562,7 @@ function processStateChange(suppressAnim) {
           updateDOM(element, props);
         }
       });
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(updatedProps, function (i, v) {
+      /* non-default import from default-exporting module */undefined(updatedProps, function (i, v) {
         dom.emit('statechange', i, {
           data: getVar(i),
           newValues: v.newValues,
@@ -1586,7 +1585,7 @@ function batch(suppressAnim, callback) {
 
   try {
     batchCounter = (batchCounter || 0) + 1;
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback || suppressAnim)();
+    /* non-default import from default-exporting module */undefined(callback || suppressAnim)();
   } catch (e) {
     doUpdate = false;
     throw e;
@@ -1620,8 +1619,8 @@ function mountElement(element) {
       index2 = 0;
 
   while (index < selectorHandlers.length) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
-      jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)(v.target, element)).each(function (i, w) {
+    /* non-default import from default-exporting module */undefined(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
+      jquery(/* non-default import from default-exporting module */undefined(v.target, element)).each(function (i, w) {
         app.on(w, v.handlers);
 
         if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
@@ -1630,7 +1629,7 @@ function mountElement(element) {
       });
     });
     index = selectorHandlers.length;
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
+    /* non-default import from default-exporting module */undefined(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
       dom.emit('mounted', v);
     });
 
@@ -1644,8 +1643,8 @@ function mountElement(element) {
     index2 = mountedElements.length;
   }
 
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(matchElementHandlers, function (i, v) {
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)(v.selector, element)).each(function (i, w) {
+  /* non-default import from default-exporting module */undefined(matchElementHandlers, function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined(v.selector, element)).each(function (i, w) {
       v.handler.call(w, w);
     });
   });
@@ -1655,8 +1654,8 @@ function mountElement(element) {
  */
 
 function preventLeave(suppressPrompt) {
-  var element = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.any)(jquery('[prevent-leave]').get(), function (v) {
-    var state = getComponentState(v, 'preventLeave');
+  var element = /* non-default import from default-exporting module */undefined(jquery('[prevent-leave]').get(), function (v) {
+    var state = getComponentState('preventLeave', v);
     var allowLeave = state.allowLeave;
 
     if (isElementActive(v) || allowLeave) {
@@ -1671,9 +1670,9 @@ function preventLeave(suppressPrompt) {
   });
 
   if (element && !suppressPrompt) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(dom.emit('preventLeave', element, null, true), function (result) {
+    return /* non-default import from default-exporting module */undefined(dom.emit('preventLeave', element, null, true), function (result) {
       if (result) {
-        var state = getComponentState(element, 'preventLeave');
+        var state = getComponentState('preventLeave', element);
         state.allowLeave = true;
       } else {
         throw 'user_rejected';
@@ -1687,24 +1686,25 @@ function addTemplate(name, template) {
   templates[name] = jquery(template)[0];
 }
 function addTransformer(name, callback) {
-  transformationHandlers[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  transformationHandlers[name] = /* non-default import from default-exporting module */undefined(callback);
 }
 function addRenderer(name, callback) {
-  renderHandlers[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  renderHandlers[name] = /* non-default import from default-exporting module */undefined(callback);
 }
 /* --------------------------------------
  * Built-in transformers and renderers
  * -------------------------------------- */
 
-addTransformer('apply-template', function (element, state) {
+addTransformer('apply-template', function (element, getState) {
+  var state = getState(element);
   var templateName = element.getAttribute('apply-template');
   var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
   var currentTemplate = state.template;
 
   if (!state.attributes) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(state, {
+    /* non-default import from default-exporting module */undefined(state, {
       attributes: getAttrValues(element),
-      childNodes: (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.makeArray)(element.childNodes)
+      childNodes: /* non-default import from default-exporting module */undefined(element.childNodes)
     });
   }
 
@@ -1714,7 +1714,7 @@ addTransformer('apply-template', function (element, state) {
     // before applying new attributes
 
     if (currentTemplate) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(currentTemplate.attributes, function (i, v) {
+      /* non-default import from default-exporting module */undefined(currentTemplate.attributes, function (i, v) {
         element.removeAttribute(v.name);
       });
     }
@@ -1722,25 +1722,26 @@ addTransformer('apply-template', function (element, state) {
     setAttr(element, state.attributes);
     copyAttr(template, element);
     var $contents = jquery(state.childNodes).detach();
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('content:not([for])', template)).replaceWith($contents);
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('content[for]', template)).each(function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined('content:not([for])', template)).replaceWith($contents);
+    jquery(/* non-default import from default-exporting module */undefined('content[for]', template)).each(function (i, v) {
       jquery(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
     });
     jquery(element).empty().append(template.childNodes);
   }
 });
-addTransformer('foreach', function (element, state) {
+addTransformer('foreach', function (element, getState) {
+  var state = getState(element);
   var templateNodes = state.template || (state.template = jquery(element).contents().detach().filter(function (i, v) {
     return v.nodeType === 1 || /\S/.test(v.data || '');
   }).get());
   var currentNodes = state.nodes || [];
   var oldItems = state.data || [];
-  var newItems = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.makeArray)(evalAttr(element, 'foreach'));
+  var newItems = /* non-default import from default-exporting module */undefined(evalAttr(element, 'foreach'));
 
   if (newItems.length !== oldItems.length || newItems.some(function (v, i) {
     return oldItems[i] !== v;
   })) {
-    var newChildren = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.map)(newItems, function (v) {
+    var newChildren = /* non-default import from default-exporting module */undefined(newItems, function (v) {
       var currentIndex = oldItems.indexOf(v);
 
       if (currentIndex >= 0) {
@@ -1749,8 +1750,10 @@ addTransformer('foreach', function (element, state) {
       }
 
       var parts = jquery(templateNodes).clone().get();
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(parts, function (i, w) {
+      /* non-default import from default-exporting module */undefined(parts, function (i, w) {
         if (w.nodeType === 1) {
+          var myState = getState(w);
+          myState.template = getState(templateNodes[i]).template;
           jquery(element).append(w);
           declareVar(w, {
             foreach: v
@@ -1760,7 +1763,7 @@ addTransformer('foreach', function (element, state) {
       });
       return parts;
     });
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(state, {
+    /* non-default import from default-exporting module */undefined(state, {
       nodes: newChildren,
       data: newItems.slice()
     });
@@ -1771,7 +1774,7 @@ addTransformer('foreach', function (element, state) {
 addTransformer('auto-var', function (element) {
   setVar(element, evalAttr(element, 'auto-var'));
 });
-addTransformer('switch', function (element, state, applyDOMUpdates) {
+addTransformer('switch', function (element, getState, applyDOMUpdates) {
   var varname = element.getAttribute('switch') || '';
 
   if (!isElementActive(element) || !varname) {
@@ -1823,14 +1826,15 @@ addTransformer('switch', function (element, state, applyDOMUpdates) {
     }
   }
 });
-addRenderer('template', function (element, state, applyDOMUpdates) {
+addRenderer('template', function (element, getState, applyDOMUpdates) {
+  var state = getState(element);
   var templates = state.templates;
 
   if (!templates) {
     templates = {};
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(element.attributes, function (i, w) {
+    /* non-default import from default-exporting module */undefined(element.attributes, function (i, w) {
       if (w.value.indexOf('{{') >= 0) {
-        templates[w.name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
+        templates[w.name] = /* non-default import from default-exporting module */undefined(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
       }
     });
 
@@ -1843,8 +1847,8 @@ addRenderer('template', function (element, state, applyDOMUpdates) {
 
   var context = getVar(element);
   var props = {};
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(templates, function (i, w) {
-    var value = evaluate(w, context, element, i, !(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(i, BOOL_ATTRS));
+  /* non-default import from default-exporting module */undefined(templates, function (i, w) {
+    var value = evaluate(w, context, element, i, !/* non-default import from default-exporting module */undefined(i, BOOL_ATTRS));
 
     if ((i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
       props[i] = value;
@@ -1852,10 +1856,10 @@ addRenderer('template', function (element, state, applyDOMUpdates) {
   });
   applyDOMUpdates(element, props);
 });
-addRenderer('set-style', function (element, state, applyDOMUpdates) {
-  var style = (0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.parseCSS)(evalAttr(element, 'set-style', true));
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(IMAGE_STYLE_PROPS, function (i, v) {
-    var imageUrl = (0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.isCssUrlValue)(style[v]);
+addRenderer('set-style', function (element, getState, applyDOMUpdates) {
+  var style = /* non-default import from default-exporting module */undefined(evalAttr(element, 'set-style', true));
+  /* non-default import from default-exporting module */undefined(IMAGE_STYLE_PROPS, function (i, v) {
+    var imageUrl = /* non-default import from default-exporting module */undefined(style[v]);
 
     if (imageUrl) {
       style[v] = 'url("' + withBaseUrl(imageUrl) + '")';
@@ -1865,7 +1869,7 @@ addRenderer('set-style', function (element, state, applyDOMUpdates) {
     style: style
   });
 });
-addRenderer('set-class', function (element, state, applyDOMUpdates) {
+addRenderer('set-class', function (element, getState, applyDOMUpdates) {
   applyDOMUpdates(element, {
     $$class: evalAttr(element, 'set-class')
   });
@@ -1881,7 +1885,7 @@ addRenderer('set-class', function (element, state, applyDOMUpdates) {
 
 
 
-var app_ = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.createPrivateStore)();
+var app_ = /* non-default import from default-exporting module */undefined();
 
 var app_root = dom.root;
 var featureDetections = {};
@@ -1896,7 +1900,7 @@ var appReady;
 var appInited;
 
 function processUntilEmpty(arr) {
-  return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(arr.splice(0), function () {
+  return /* non-default import from default-exporting module */undefined(arr.splice(0), function () {
     return arr.length && processUntilEmpty(arr);
   });
 }
@@ -1915,25 +1919,25 @@ function exactTargetWrapper(handler) {
 
 function onElementMounted(e) {
   var element = e.target;
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.src = withBaseUrl(v.getAttribute('src'));
   });
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('a[href^="/"]', element)).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('a[href^="/"]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.href = withBaseUrl(v.getAttribute('href'));
   });
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[data-src]', element)).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('[data-src]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.src = withBaseUrl(v.dataset.src);
     v.removeAttribute('data-src');
   });
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[data-bg-src]', element)).each(function (i, v) {
+  jquery(/* non-default import from default-exporting module */undefined('[data-bg-src]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
     v.removeAttribute('data-bg-src');
   });
-  jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('form', element)).on('submit', function (e) {
+  jquery(/* non-default import from default-exporting module */undefined('form', element)).on('submit', function (e) {
     e.preventDefault();
   });
 }
@@ -1946,13 +1950,13 @@ function App() {
     options: {}
   });
 
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(self, 'element', app_root, true);
+  /* non-default import from default-exporting module */undefined(self, 'element', app_root, true);
   self.on('mounted', onElementMounted);
 }
 
-(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.definePrototype)(App, {
+/* non-default import from default-exporting module */undefined(App, {
   emit: function emit(event, element, data, bubbles) {
-    if (!(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.is)(element, Node)) {
+    if (!/* non-default import from default-exporting module */undefined(element, Node)) {
       bubbles = data;
       data = element;
       element = this.element;
@@ -1961,10 +1965,10 @@ function App() {
     return dom.emit(event, element, data, bubbles);
   },
   define: function define(props) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.define)(this, props);
+    /* non-default import from default-exporting module */undefined(this, props);
   },
   beforeInit: function beforeInit(promise) {
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(promise)) {
+    if (/* non-default import from default-exporting module */undefined(promise)) {
       promise = promise.call(this);
     }
 
@@ -1973,26 +1977,26 @@ function App() {
   detect: function detect(names, callback) {
     var app = this;
     var supports = {};
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(names, function (i, v) {
+    /* non-default import from default-exporting module */undefined(names, function (i, v) {
       if (featureDetections[v]) {
-        supports[v] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(featureDetections[v]) ? featureDetections[v] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(featureDetections[v]()).catch(function (e) {
+        supports[v] = /* non-default import from default-exporting module */undefined(featureDetections[v]) ? featureDetections[v] = /* non-default import from default-exporting module */undefined(featureDetections[v]()).catch(function (e) {
           console.warn('Detection for ' + v + ' has thrown exception:', e);
           return false;
         }) : featureDetections[v];
       }
     });
-    this.beforeInit((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(supports, function (supports) {
-      supports = Object.freeze((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(app.supports || {}, supports));
+    this.beforeInit(/* non-default import from default-exporting module */undefined(supports, function (supports) {
+      supports = Object.freeze(/* non-default import from default-exporting module */undefined(app.supports || {}, supports));
 
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.define)(app, {
+      /* non-default import from default-exporting module */undefined(app, {
         supports: supports
       });
 
-      return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(callback) && callback(supports);
+      return /* non-default import from default-exporting module */undefined(callback) && callback(supports);
     }));
   },
   when: function when(value, callback) {
-    this.beforeInit((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(value, function (value) {
+    this.beforeInit(/* non-default import from default-exporting module */undefined(value, function (value) {
       if (value) {
         return callback();
       }
@@ -2001,7 +2005,7 @@ function App() {
   on: function on(target, event, handler, noChildren) {
     noChildren = (noChildren || handler) === true;
 
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(event)) {
+    if (/* non-default import from default-exporting module */undefined(event)) {
       handler = event;
       event = target;
       target = app_root;
@@ -2016,11 +2020,11 @@ function App() {
 
       if (event.indexOf(' ') >= 0) {
         handlers = {};
-        (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(event, function (i, v) {
+        /* non-default import from default-exporting module */undefined(event, function (i, v) {
           handlers[v] = handler;
         });
       } else {
-        handlers = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.kv)(event, handler);
+        handlers = /* non-default import from default-exporting module */undefined(event, handler);
       }
     } else if (noChildren) {
       for (var i in event) {
@@ -2040,12 +2044,12 @@ function App() {
       target = [target];
     }
 
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(target, function (i, v) {
+    /* non-default import from default-exporting module */undefined(target, function (i, v) {
       dom.on(v, handlers);
     });
   },
   matchPath: function matchPath(path, selector, handler) {
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(selector)) {
+    if (/* non-default import from default-exporting module */undefined(selector)) {
       handler = selector;
       selector = null;
     }
@@ -2060,52 +2064,51 @@ function App() {
   beforeUpdate: hookBeforeUpdate,
   beforePageEnter: hookBeforePageEnter
 });
-(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watchable)(App.prototype);
+/* non-default import from default-exporting module */undefined(App.prototype);
 /* harmony default export */ function src_app(callback) {
   if (appInited) {
     throw new Error('brew() can only be called once');
   }
 
   app = new App();
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(src_defaults, function (i, v) {
-    var fn = v && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(app[(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.camel)('use-' + i)]);
+  /* non-default import from default-exporting module */undefined(src_defaults, function (i, v) {
+    var fn = v && /* non-default import from default-exporting module */undefined(app[/* non-default import from default-exporting module */undefined('use-' + i)]);
 
     if (fn) {
       fn.call(app, v);
     }
   });
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback)(app);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(window, {
+  /* non-default import from default-exporting module */undefined(callback)(app);
+  /* non-default import from default-exporting module */undefined(window, {
     app: app
   });
   appInited = true;
   setVar(app_root, {
     loading: 'initial'
   });
-  handleAsync((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)([dom.ready, processUntilEmpty(app_(app).init)], function () {
+  handleAsync(/* non-default import from default-exporting module */undefined([dom.ready, processUntilEmpty(app_(app).init)], function () {
     appReady = true;
     mountElement(app_root);
     app.emit('ready');
   }), app_root);
 }
 function install(name, callback) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.definePrototype)(App, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.kv)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.camel)('use-' + name), function (options) {
+  /* non-default import from default-exporting module */undefined(callback);
+  /* non-default import from default-exporting module */undefined(App, /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined('use-' + name), function (options) {
     var state = app_(this);
 
-    state.options[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(state.options[name] || {}, options);
+    state.options[name] = /* non-default import from default-exporting module */undefined(state.options[name] || {}, options);
     callback(this, state.options[name]);
   }));
 }
 function addDetect(name, callback) {
-  featureDetections[name] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  featureDetections[name] = /* non-default import from default-exporting module */undefined(callback);
 }
 // EXTERNAL MODULE: external {"commonjs":["zeta-dom"],"commonjs2":["zeta-dom"],"amd":["zeta-dom"],"root":["zeta"]}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(668);
 // CONCATENATED MODULE: ./src/include/zeta/tree.js
 
 // CONCATENATED MODULE: ./src/var.js
-
 
 
 
@@ -2126,7 +2129,7 @@ var varAttrs = {
     error: null
   }
 };
-var tree = new external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.InheritedNodeTree(var_root, VarContext);
+var tree = new /* non-default import from default-exporting module */undefined(var_root, VarContext);
 /**
  * @class
  * @this {Brew.VarContext}
@@ -2134,18 +2137,13 @@ var tree = new external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
 
 function VarContext() {
   var self = this;
-  var element = self.element;
+  var element = self.element; // @ts-ignore: does not throw error when property dataset does not exist
 
-  if (!element.attributes.var) {
-    element.setAttribute('var', '');
-  } // @ts-ignore: does not throw error when property dataset does not exist
-
-
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(element.dataset, function (i, v) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(self, i, include_waterpipe.eval('`' + v));
+  /* non-default import from default-exporting module */undefined(element.dataset, function (i, v) {
+    /* non-default import from default-exporting module */undefined(self, i, include_waterpipe.eval('`' + v));
   });
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(getDeclaredVar(element, true, self), function (i, v) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(self, i, v);
+  /* non-default import from default-exporting module */undefined(getDeclaredVar(element, true, self), function (i, v) {
+    /* non-default import from default-exporting module */undefined(self, i, v);
   });
 
   if (element === var_root) {
@@ -2156,11 +2154,11 @@ function VarContext() {
 
 function getDeclaredVar(element, resetToNull, state) {
   var initValues = {};
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(varAttrs, function (i, v) {
+  /* non-default import from default-exporting module */undefined(varAttrs, function (i, v) {
     if (v === true) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(initValues, evalAttr(element, i, false, state));
-    } else if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isPlainObject)(v) && element.attributes[i]) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(initValues, v);
+      /* non-default import from default-exporting module */undefined(initValues, evalAttr(element, i, false, state));
+    } else if (/* non-default import from default-exporting module */undefined(v) && element.attributes[i]) {
+      /* non-default import from default-exporting module */undefined(initValues, v);
     }
   });
 
@@ -2172,6 +2170,21 @@ function getDeclaredVar(element, resetToNull, state) {
 
   return initValues;
 }
+
+function findVarContext(varname, element) {
+  element = element || var_root;
+
+  for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
+    if (/* non-default import from default-exporting module */undefined(s, varname)) {
+      return s;
+    }
+  }
+
+  console.warn('Undeclared state: %s', varname, {
+    element: element
+  });
+  return tree.setNode(element);
+}
 /**
  * @param {string} varname
  * @param {Element} element
@@ -2179,16 +2192,8 @@ function getDeclaredVar(element, resetToNull, state) {
 
 
 function getVarScope(varname, element) {
-  for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.hasOwnProperty)(s, varname)) {
-      return s.element;
-    }
-  }
-
-  console.warn('Undeclared state: %s', varname, {
-    element: element
-  });
-  return element;
+  var context = findVarContext(varname, element);
+  return context.element;
 }
 /**
  * @param {Element | string} element
@@ -2197,7 +2202,7 @@ function getVarScope(varname, element) {
  */
 
 function setVar(element, name, value) {
-  var values = name && ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isPlainObject)(name) || (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.kv)(name, value));
+  var values = name && (/* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value));
   var hasUpdated = false;
 
   if (typeof element === 'string') {
@@ -2209,16 +2214,17 @@ function setVar(element, name, value) {
     });
   } else {
     var state = tree.setNode(element);
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(values || evalAttr(element, 'set-var'), function (i, v) {
+    /* non-default import from default-exporting module */undefined(values || evalAttr(element, 'set-var'), function (i, v) {
       if (state[i] !== v) {
-        state[i] = v;
+        var node = findVarContext(i, element);
+        node[i] = v;
         hasUpdated = true;
-        markUpdated(getVarScope(i, element));
+        markUpdated(node.element);
       }
     });
 
     if (hasUpdated && appReady) {
-      processStateChange();
+      /* non-default import from default-exporting module */undefined(processStateChange);
     }
   }
 
@@ -2231,12 +2237,12 @@ function setVar(element, name, value) {
  */
 
 function declareVar(element, name, value) {
-  var values = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isPlainObject)(name) || (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.kv)(name, value);
+  var values = /* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value);
   var context = tree.setNode(element);
 
   for (var i in values) {
-    if (!(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.hasOwnProperty)(values, i)) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineOwnProperty)(context, i, null);
+    if (!/* non-default import from default-exporting module */undefined(context, i)) {
+      /* non-default import from default-exporting module */undefined(context, i, null);
     }
   }
 
@@ -2249,8 +2255,8 @@ function declareVar(element, name, value) {
 
 function resetVar(element, resetToNull) {
   batch(function () {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[var]', element), function (i, v) {
-      setVar(v, getDeclaredVar(v, resetToNull));
+    /* non-default import from default-exporting module */undefined(tree.descendants(element), function (i, v) {
+      setVar(v.element, getDeclaredVar(v.element, resetToNull));
     });
   });
 }
@@ -2261,7 +2267,7 @@ function resetVar(element, resetToNull) {
 
 function getVar(element, name) {
   var values = tree.getNode(element) || {};
-  return name ? values[name] : (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, values);
+  return name ? values[name] : /* non-default import from default-exporting module */undefined({}, values);
 }
 /**
  * @param {string} template
@@ -2277,12 +2283,12 @@ function evaluate(template, context, element, attrName, templateMode) {
       app: app
     }
   };
-  var result = templateMode ? (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.htmlDecode)(include_waterpipe(template, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, context), options)) : include_waterpipe.eval(template, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, context), options);
+  var result = templateMode ? /* non-default import from default-exporting module */undefined(include_waterpipe(template, /* non-default import from default-exporting module */undefined({}, context), options)) : include_waterpipe.eval(template, /* non-default import from default-exporting module */undefined({}, context), options);
 
   if (DEBUG_EVAL) {
     groupLog('eval', [element, attrName, '→', result], function (console) {
       console.log('%c%s%c', 'background-color:azure;color:darkblue;font-weight:bold', template, '', '→', result);
-      console.log('Context:', (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({}, context));
+      console.log('Context:', /* non-default import from default-exporting module */undefined({}, context));
       console.log('Element:', element === var_root ? document : element);
     });
   }
@@ -2305,13 +2311,13 @@ function evalAttr(element, attrName, templateMode, context) {
 
   return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-dom.watchAttributes(var_root, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(varAttrs), function (elements) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(elements, function (i, v) {
+dom.watchAttributes(var_root, /* non-default import from default-exporting module */undefined(varAttrs), function (elements) {
+  /* non-default import from default-exporting module */undefined(elements, function (i, v) {
     tree.setNode(v);
   });
 }, true);
 tree.on('update', function (e) {
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(e.updatedNodes, function (i, v) {
+  /* non-default import from default-exporting module */undefined(e.updatedNodes, function (i, v) {
     markUpdated(v.element);
   });
 });
@@ -2339,7 +2345,7 @@ var asyncActions = {};
  */
 
 function addAsyncAction(attr, callback) {
-  asyncActions[attr] = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.throwNotFunction)(callback);
+  asyncActions[attr] = /* non-default import from default-exporting module */undefined(callback);
 }
 /**
  * @param {Element | string=} flyout
@@ -2356,12 +2362,12 @@ function closeFlyout(flyout, value) {
       state.resolve(value);
 
       if (state.source) {
-        (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(state.source, 'target-opened', false);
+        /* non-default import from default-exporting module */undefined(state.source, 'target-opened', false);
       }
     }
 
     animateOut(v, 'show').then(function () {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(v, 'open', false);
+      /* non-default import from default-exporting module */undefined(v, 'open', false);
     });
   });
 }
@@ -2374,10 +2380,10 @@ function closeFlyout(flyout, value) {
 
 function openFlyout(selector, states, source, closeIfOpened) {
   var container = source || dom.root;
-  var element = selector ? (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectClosestRelative)(selector, container) : jquery(container).closest('[is-flyout]')[0];
+  var element = selector ? /* non-default import from default-exporting module */undefined(selector, container) : jquery(container).closest('[is-flyout]')[0];
 
   if (!element) {
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.reject)();
+    return /* non-default import from default-exporting module */undefined();
   }
 
   var prev = flyoutStates.get(element);
@@ -2407,14 +2413,14 @@ function openFlyout(selector, states, source, closeIfOpened) {
   });
 
   if (source) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(source, 'target-opened', true);
+    /* non-default import from default-exporting module */undefined(source, 'target-opened', true);
   }
 
   if (states) {
     setVar(element, states);
   }
 
-  (0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.runCSSTransition)(element, 'open', function () {
+  /* non-default import from default-exporting module */undefined(element, 'open', function () {
     dom.focus(element);
   });
   animateIn(element, 'open');
@@ -2426,7 +2432,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
   return promise;
 }
 addAsyncAction('validate', function (e) {
-  var target = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectClosestRelative)(this.getAttribute('validate') || '', e.target);
+  var target = /* non-default import from default-exporting module */undefined(this.getAttribute('validate') || '', e.target);
 
   if (target) {
     // @ts-ignore: type inference issue
@@ -2435,7 +2441,7 @@ addAsyncAction('validate', function (e) {
     if (!valid) {
       e.stopImmediatePropagation();
       e.preventDefault();
-    } else if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isThenable)(valid)) {
+    } else if (/* non-default import from default-exporting module */undefined(valid)) {
       return valid.then(function (valid) {
         if (!valid) {
           throw 'validation-failed';
@@ -2446,23 +2452,23 @@ addAsyncAction('validate', function (e) {
 });
 addAsyncAction('context-method', function (e) {
   var self = e.currentTarget;
-  var method = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.camel)(self.getAttribute('context-method') || '');
+  var method = /* non-default import from default-exporting module */undefined(self.getAttribute('context-method') || '');
 
-  if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(app[method])) {
+  if (/* non-default import from default-exporting module */undefined(app[method])) {
     var formSelector = self.getAttribute('context-form'); // @ts-ignore: acceptable if self.form is undefined
 
-    var form = formSelector ? (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectClosestRelative)(formSelector, self) : self.form;
+    var form = formSelector ? /* non-default import from default-exporting module */undefined(formSelector, self) : self.form;
     var params = {};
     var valid = true;
 
     if (form) {
       valid = dom.emit('validate', form) || form.checkValidity();
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(params, getFormValues(form));
+      /* non-default import from default-exporting module */undefined(params, getFormValues(form));
     } else {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(params, self.dataset);
+      /* non-default import from default-exporting module */undefined(params, self.dataset);
     }
 
-    return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(valid, function (valid) {
+    return /* non-default import from default-exporting module */undefined(valid, function (valid) {
       if (!valid) {
         throw 'validation-failed';
       }
@@ -2473,7 +2479,7 @@ addAsyncAction('context-method', function (e) {
 });
 dom.ready.then(function () {
   app.on('mounted', function (e) {
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[' + (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
+    jquery(/* non-default import from default-exporting module */undefined('[' + /* non-default import from default-exporting module */undefined(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
   });
   app.on('navigate', function () {
     setTimeout(function () {
@@ -2491,9 +2497,9 @@ dom.ready.then(function () {
   });
   jquery('body').on('click', '[async-action]', function (e) {
     var element = e.currentTarget;
-    var executed = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.mapGet)(executedAsyncActions, element, Array);
+    var executed = /* non-default import from default-exporting module */undefined(executedAsyncActions, element, Array);
     var callback = null;
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(asyncActions, function (i, v) {
+    /* non-default import from default-exporting module */undefined(asyncActions, function (i, v) {
       if (element.attributes[i] && executed.indexOf(v) < 0) {
         callback = v;
         return false;
@@ -2507,11 +2513,11 @@ dom.ready.then(function () {
 
       var returnValue = callback.call(element, e);
 
-      if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isThenable)(returnValue) && !e.isImmediatePropagationStopped()) {
+      if (/* non-default import from default-exporting module */undefined(returnValue) && !e.isImmediatePropagationStopped()) {
         e.stopImmediatePropagation();
         e.preventDefault();
         handleAsync(returnValue).then(function () {
-          (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.dispatchDOMMouseEvent)(e);
+          /* non-default import from default-exporting module */undefined(e);
         }, function (e) {
           executedAsyncActions.delete(element);
           console.warn('Action threw an error:', e);
@@ -2559,9 +2565,9 @@ dom.ready.then(function () {
     e.stopPropagation();
     var self = e.currentTarget;
     var selector = self.getAttribute('toggle-class-for');
-    var target = selector ? (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectClosestRelative)(selector, self) : e.currentTarget;
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(self.getAttribute('toggle-class'), function (i, v) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setClass)(target, v.slice(1), v[0] === '+');
+    var target = selector ? /* non-default import from default-exporting module */undefined(selector, self) : e.currentTarget;
+    /* non-default import from default-exporting module */undefined(self.getAttribute('toggle-class'), function (i, v) {
+      /* non-default import from default-exporting module */undefined(target, v.slice(1), v[0] === '+');
     });
   });
   jquery('body').on('click', function () {
@@ -2581,7 +2587,7 @@ dom.ready.then(function () {
   });
   jquery('apply-attributes').each(function (i, v) {
     var $target = jquery(v.getAttribute('elements') || '', v.parentNode || dom.root);
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(v.attributes, function (i, v) {
+    /* non-default import from default-exporting module */undefined(v.attributes, function (i, v) {
       if (v.name !== 'elements') {
         $target.attr(v.name, v.value);
       }
@@ -2589,7 +2595,7 @@ dom.ready.then(function () {
   }).remove(); // replace inline background-image to prevent browser to load unneccessary images
 
   jquery('[style]').each(function (i, v) {
-    var backgroundImage = (0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.isCssUrlValue)(v.style.backgroundImage);
+    var backgroundImage = /* non-default import from default-exporting module */undefined(v.style.backgroundImage);
 
     if (backgroundImage) {
       v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(backgroundImage)));
@@ -2623,7 +2629,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.define)(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+/* non-default import from default-exporting module */undefined(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   defaults: src_defaults
 }, common_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getVar: getVar,
@@ -2643,15 +2649,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 install('config', function (app, options) {
-  var config = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.watchable)();
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.define)(app, {
+  var config = /* non-default import from default-exporting module */undefined();
+  /* non-default import from default-exporting module */undefined(app, {
     config: config
   });
-  app.beforeInit(getJSON(options.path).catch((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(options.fallback) || null).then(function (d) {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(config, d);
+  app.beforeInit(getJSON(options.path).catch(/* non-default import from default-exporting module */undefined(options.fallback) || null).then(function (d) {
+    /* non-default import from default-exporting module */undefined(config, d);
 
     if (options.freeze) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.deepFreeze)(config);
+      /* non-default import from default-exporting module */undefined(config);
     }
   }));
 });
@@ -2683,20 +2689,20 @@ install('formVar', function (app) {
       } else {
         var currentValues = getVar(form, varname) || {};
 
-        if (!(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.equal)(values, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.pick)(currentValues, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(values)))) {
-          setVar(form, varname, (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)(currentValues, values));
+        if (!/* non-default import from default-exporting module */undefined(values, /* non-default import from default-exporting module */undefined(currentValues, /* non-default import from default-exporting module */undefined(values)))) {
+          setVar(form, varname, /* non-default import from default-exporting module */undefined({}, currentValues, values));
         }
       }
     };
 
     dom.watchAttributes(form, 'value', function () {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setImmediateOnce)(update);
+      /* non-default import from default-exporting module */undefined(update);
     });
     dom.watchElements(form, ':input', function (addedInputs) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(addedInputs, function (i, v) {
+      /* non-default import from default-exporting module */undefined(addedInputs, function (i, v) {
         var afterDetached = dom.afterDetached(v, form);
-        (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.bindUntil)(afterDetached, v, 'change', function () {
-          (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setImmediateOnce)(update);
+        /* non-default import from default-exporting module */undefined(afterDetached, v, 'change', function () {
+          /* non-default import from default-exporting module */undefined(update);
         });
         afterDetached.then(update.bind(null, true));
       });
@@ -2710,7 +2716,7 @@ install('formVar', function (app) {
         }
       } else {
         // @ts-ignore: form must be HTMLFormElement
-        (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(form.elements, function (i, v) {
+        /* non-default import from default-exporting module */undefined(form.elements, function (i, v) {
           if (!isElementActive(getVarScope(v.name, form))) {
             v.value = null;
           }
@@ -2721,7 +2727,7 @@ install('formVar', function (app) {
     });
   });
   app.on('pageenter', function (e) {
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('form[form-var]', e.target)).each(function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined('form[form-var]', e.target)).each(function (i, v) {
       jquery(':input:eq(0)', v).trigger('change');
     });
   });
@@ -2733,7 +2739,7 @@ install('formVar', function (app) {
 
 function detectLanguage(languages, defaultLanguage) {
   var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(userLanguages, function (i, v) {
+  /* non-default import from default-exporting module */undefined(userLanguages, function (i, v) {
     if (v.indexOf('-') > 0) {
       var invariant = v.split('-')[0];
 
@@ -2747,7 +2753,7 @@ function detectLanguage(languages, defaultLanguage) {
     }
   });
   languages = languages || userLanguages;
-  return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.any)(userLanguages, function (v) {
+  return /* non-default import from default-exporting module */undefined(userLanguages, function (v) {
     return languages.indexOf(v) >= 0;
   }) || defaultLanguage || languages[0];
 }
@@ -2802,7 +2808,7 @@ install('i18n', function (app, options) {
 
 
 install('login', function (app, options) {
-  options = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.extend)({
+  options = /* non-default import from default-exporting module */undefined({
     loginPagePath: '',
     defaultRedirectPath: '',
     cookie: '',
@@ -2813,12 +2819,12 @@ install('login', function (app, options) {
     getTokenFromResponse: null
   }, options);
   var authCookie = cookie(options.cookie, options.expiry);
-  var setLoggedIn = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineObservableProperty)(app, 'loggedIn', false, true);
+  var setLoggedIn = /* non-default import from default-exporting module */undefined(app, 'loggedIn', false, true);
 
   function handleLogin(response) {
     setLoggedIn(true);
 
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(options.getTokenFromResponse)) {
+    if (/* non-default import from default-exporting module */undefined(options.getTokenFromResponse)) {
       authCookie.set(options.getTokenFromResponse(response));
     }
 
@@ -2836,15 +2842,15 @@ install('login', function (app, options) {
   var redirectPath = app.initialPath;
   var previousToken = authCookie.get();
 
-  if (previousToken && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(options.tokenLogin)) {
-    app.beforeInit((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.catchAsync)((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(options.tokenLogin(previousToken), handleLogin)));
+  if (previousToken && /* non-default import from default-exporting module */undefined(options.tokenLogin)) {
+    app.beforeInit(/* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(options.tokenLogin(previousToken), handleLogin)));
   }
 
   app.define({
     login: function login(params, nextPath, callback) {
-      callback = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(callback || nextPath);
+      callback = /* non-default import from default-exporting module */undefined(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolveAll)(options.login(params)).then(function (d) {
+      return /* non-default import from default-exporting module */undefined(options.login(params)).then(function (d) {
         handleLogin(d);
         return callback && callback();
       }, function (e) {
@@ -2861,12 +2867,12 @@ install('login', function (app, options) {
     },
     logout: function logout(nextPath, callback) {
       if (!app.loggedIn) {
-        return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)();
+        return /* non-default import from default-exporting module */undefined();
       }
 
-      callback = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isFunction)(callback || nextPath);
+      callback = /* non-default import from default-exporting module */undefined(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.resolve)(preventLeave()).then(function () {
+      return /* non-default import from default-exporting module */undefined(preventLeave()).then(function () {
         return options.logout();
       }).then(function () {
         handleLogout();
@@ -2879,7 +2885,7 @@ install('login', function (app, options) {
   app.on('navigate', function (e) {
     var loginPagePath = app.resolvePath(options.loginPagePath);
 
-    if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.either)(app.loggedIn, e.pathname !== loginPagePath)) {
+    if (/* non-default import from default-exporting module */undefined(app.loggedIn, e.pathname !== loginPagePath)) {
       if (app.loggedIn) {
         app.navigate(options.defaultRedirectPath);
       } else {
@@ -2903,16 +2909,16 @@ src_defaults.preloadImage = true;
 install('preloadImage', function (app) {
   app.beforeUpdate(function (domUpdates) {
     var urls = {};
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(domUpdates, function (element, props) {
+    /* non-default import from default-exporting module */undefined(domUpdates, function (element, props) {
       if ((props.src || props.style) && isElementActive(element)) {
         if (props.src) {
           urls[toAbsoluteUrl(props.src)] = true;
         }
 
         if (props.style) {
-          (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.each)(preloadImage_IMAGE_STYLE_PROPS, function (i, v) {
+          /* non-default import from default-exporting module */undefined(preloadImage_IMAGE_STYLE_PROPS, function (i, v) {
             // @ts-ignore: props.style checked for truthiness
-            var imageUrl = (0,external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_.isCssUrlValue)(props.style[v]);
+            var imageUrl = /* non-default import from default-exporting module */undefined(props.style[v]);
 
             if (imageUrl) {
               urls[toAbsoluteUrl(imageUrl)] = true;
@@ -2921,7 +2927,7 @@ install('preloadImage', function (app) {
         }
       }
     });
-    return preloadImages((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.keys)(urls), 200);
+    return preloadImages(/* non-default import from default-exporting module */undefined(urls), 200);
   });
   app.beforePageEnter(function (element) {
     return preloadImages(element, 1000);
@@ -2940,7 +2946,7 @@ install('preloadImage', function (app) {
 install('scrollable', function (app) {
   // @ts-ignore: non-standard member
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-  var store = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.createPrivateStore)();
+  var store = /* non-default import from default-exporting module */undefined();
   var id = 0;
 
   function getState(container) {
@@ -2961,9 +2967,9 @@ install('scrollable', function (app) {
 
     jquery(container).scrollable({
       bounce: false,
-      handle: (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(dir, 'auto scrollbar content') || 'content',
-      hScroll: !(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(dir, 'y-only'),
-      vScroll: !(0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.matchWord)(dir, 'x-only'),
+      handle: /* non-default import from default-exporting module */undefined(dir, 'auto scrollbar content') || 'content',
+      hScroll: !/* non-default import from default-exporting module */undefined(dir, 'y-only'),
+      vScroll: !/* non-default import from default-exporting module */undefined(dir, 'x-only'),
       content: '.' + getState(container).childClass + ':visible:not(.disabled)',
       pageItem: selector,
       snapToPage: paged === 'always' || paged === app.orientation,
@@ -2990,7 +2996,7 @@ install('scrollable', function (app) {
     function scrollTo(index, align) {
       align = align || 'center top';
 
-      if (!scrolling && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isVisible)(container)) {
+      if (!scrolling && /* non-default import from default-exporting module */undefined(container)) {
         scrolling = true;
         isControlledScroll = true;
         setState(index);
@@ -3004,7 +3010,7 @@ install('scrollable', function (app) {
     function refresh() {
       var isPaged = paged === 'always' || paged === app.orientation;
 
-      if (isPaged && (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.isVisible)(container)) {
+      if (isPaged && /* non-default import from default-exporting module */undefined(container)) {
         if (scrolling) {
           needRefresh = true;
         } else {
@@ -3029,7 +3035,7 @@ install('scrollable', function (app) {
             var newIndex = e.data[varname];
 
             if (!scrolling) {
-              if (((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.getRect)(items[newIndex]).width | 0) > ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.getRect)().width | 0)) {
+              if ((/* non-default import from default-exporting module */undefined(items[newIndex]).width | 0) > (/* non-default import from default-exporting module */undefined().width | 0)) {
                 scrollTo(newIndex, 'left center');
               } else {
                 scrollTo(newIndex);
@@ -3062,11 +3068,11 @@ install('scrollable', function (app) {
   }
 
   app.on('mounted', function (e) {
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[scrollable-target]', e.target)).each(function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined('[scrollable-target]', e.target)).each(function (i, v) {
       var scrollable = jquery(v).closest('[scrollable]')[0];
       jquery(v).addClass(getState(scrollable).childClass);
     });
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[scrollable]', e.target)).each(function (i, v) {
+    jquery(/* non-default import from default-exporting module */undefined('[scrollable]', e.target)).each(function (i, v) {
       initScrollable(v);
     });
   }); // update scroller on events other than window resize
@@ -3076,11 +3082,11 @@ install('scrollable', function (app) {
   }
 
   app.on('statechange orientationchange animationcomplete', function () {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setTimeoutOnce)(refresh);
+    /* non-default import from default-exporting module */undefined(refresh);
   });
   app.on('pageenter', function (e) {
-    var $scrollables = jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[scrollable]', e.target)).add(jquery(e.target).parents('[scrollable]'));
-    jquery((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.selectIncludeSelf)('[scrollable-target]', e.target)).each(function (i, v) {
+    var $scrollables = jquery(/* non-default import from default-exporting module */undefined('[scrollable]', e.target)).add(jquery(e.target).parents('[scrollable]'));
+    jquery(/* non-default import from default-exporting module */undefined('[scrollable-target]', e.target)).each(function (i, v) {
       jquery(v).toggleClass('disabled', !isElementActive(v));
     });
     $scrollables.scrollable('refresh');
@@ -3090,17 +3096,17 @@ install('scrollable', function (app) {
   function updateScrollIntoView() {
     jquery('[animate-on~="scroll-into-view"]:not(.tweening-in):visible').each(function (i, v) {
       var m = new DOMMatrix(getComputedStyle(v).transform);
-      var rootRect = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.getRect)(dom.root);
-      var thisRect = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.getRect)(v);
+      var rootRect = /* non-default import from default-exporting module */undefined(dom.root);
+      var thisRect = /* non-default import from default-exporting module */undefined(v);
 
-      if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.rectIntersects)(rootRect, thisRect.translate(-m.e || 0, 0)) || (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.rectIntersects)(rootRect, thisRect.translate(0, -m.f || 0))) {
+      if (/* non-default import from default-exporting module */undefined(rootRect, thisRect.translate(-m.e || 0, 0)) || /* non-default import from default-exporting module */undefined(rootRect, thisRect.translate(0, -m.f || 0))) {
         animateIn(v, 'scroll-into-view');
       }
     });
   }
 
   app.on('resize pageenter statechange scrollMove orientationchange', function () {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setTimeoutOnce)(updateScrollIntoView);
+    /* non-default import from default-exporting module */undefined(updateScrollIntoView);
   });
 });
 /* harmony default export */ const scrollable = (null);
@@ -3121,14 +3127,14 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_0 = __w
 
 src_defaults.viewport = true;
 install('viewport', function (app) {
-  var setOrientation = (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.defineObservableProperty)(app, 'orientation', '', true);
-  var useAvailOrInner = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_0.IS_TOUCH && navigator.platform !== 'MacIntel';
+  var setOrientation = /* non-default import from default-exporting module */undefined(app, 'orientation', '', true);
+  var useAvailOrInner = /* non-default import from default-exporting module */undefined && navigator.platform !== 'MacIntel';
   var availWidth = screen.availWidth;
   var availHeight = screen.availHeight;
   var aspectRatio, viewportWidth, viewportHeight;
 
   function checkViewportSize(triggerEvent) {
-    if (external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_0.IS_TOUCH && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
+    if (/* non-default import from default-exporting module */undefined && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
       // set min-height on body container so that page size is correct when virtual keyboard pops out
       jquery('body').css('min-height', jquery('body').height() + 'px');
     } else {
@@ -3142,7 +3148,7 @@ install('viewport', function (app) {
     var htmlHeight = jquery('html').height() || 0;
 
     if (htmlHeight < bodyHeight && jquery(dom.activeElement).is(':text')) {
-      (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.scrollIntoView)(dom.activeElement);
+      /* non-default import from default-exporting module */undefined(dom.activeElement);
     }
 
     var previousAspectRatio = aspectRatio;
@@ -3158,7 +3164,7 @@ install('viewport', function (app) {
         viewportHeight: viewportHeight
       });
 
-      if ((0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.either)(aspectRatio >= 1, previousAspectRatio >= 1)) {
+      if (/* non-default import from default-exporting module */undefined(aspectRatio >= 1, previousAspectRatio >= 1)) {
         app.emit('orientationchange', {
           orientation: app.orientation
         });
@@ -3166,7 +3172,7 @@ install('viewport', function (app) {
     }
   }
 
-  (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.define)(app, {
+  /* non-default import from default-exporting module */undefined(app, {
     get aspectRatio() {
       return aspectRatio;
     },
@@ -3184,7 +3190,7 @@ install('viewport', function (app) {
     animateIn(dom.root, 'orientationchange');
   });
   jquery(window).on('resize', function () {
-    (0,external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_.setTimeoutOnce)(checkViewportSize);
+    /* non-default import from default-exporting module */undefined(checkViewportSize);
   });
   jquery(function () {
     checkViewportSize(false);
@@ -3201,34 +3207,6 @@ install('viewport', function (app) {
 
 
 /* harmony default export */ const src = (core);
-
-/***/ }),
-
-/***/ 609:
-/***/ (function(module) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__609__;
-
-/***/ }),
-
-/***/ 804:
-/***/ (function(module) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__804__;
-
-/***/ }),
-
-/***/ 160:
-/***/ (function(module) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__160__;
-
-/***/ }),
-
-/***/ 229:
-/***/ (function(module) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__229__;
 
 /***/ }),
 
@@ -3293,18 +3271,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__668__;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	!function() {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = function(module) {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				function() { return module['default']; } :
-/******/ 				function() { return module; };
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	}();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
