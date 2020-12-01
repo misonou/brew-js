@@ -2,4 +2,4 @@
 
 /** @type {JQueryStatic} */
 const jQuery = window.jQuery || require('jquery');
-export default jQuery;
+module.exports = jQuery;

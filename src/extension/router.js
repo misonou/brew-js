@@ -1,5 +1,5 @@
-import History from "../include/history.js";
-import $ from "../include/jquery.js";
+import History from "../include/history.cjs";
+import $ from "../include/jquery.cjs";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta/domUtil.js";
 import dom from "../include/zeta/dom.js";
 import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal } from "../include/zeta/util.js";

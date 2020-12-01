@@ -6,4 +6,4 @@ if (!History || !History.Adapter) {
     require('historyjs/scripts/bundled-uncompressed/html5/jquery.history.js');
     History = window.History;
 }
-export default History;
+module.exports = History;

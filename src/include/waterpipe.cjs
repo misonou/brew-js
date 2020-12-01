@@ -2,7 +2,7 @@
 
 /** @type {Waterpipe} */
 const waterpipe = window.waterpipe || require('waterpipe');
-export default waterpipe;
+module.exports = waterpipe;
 
 // assign to a new variable to avoid incompatble declaration issue by typescript compiler
 const waterpipe_ = waterpipe;
