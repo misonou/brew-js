@@ -1,20 +1,20 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom")["util"], require("zeta-dom")["css"], require("zeta-dom")["dom"], require("zeta-dom"), require("zeta-dom"));
+		module.exports = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", [["zeta-dom","util"], ["zeta-dom","css"], ["zeta-dom","dom"], ["zeta-dom"], "zeta-dom"], factory);
+		define("brew", [["zeta-dom","util"], "jQuery", "promise-polyfill", ["zeta-dom","css"], ["zeta-dom","dom"], "waterpipe", "historyjs", ["zeta-dom"], "zeta-dom"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom")["util"], require("zeta-dom")["css"], require("zeta-dom")["dom"], require("zeta-dom"), require("zeta-dom"));
+		exports["brew"] = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
 	else
-		root["brew"] = factory(root["zeta"]["util"], root["zeta"]["css"], root["zeta"]["dom"], root["zeta"], root["zeta"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__990__, __WEBPACK_EXTERNAL_MODULE__260__, __WEBPACK_EXTERNAL_MODULE__50__, __WEBPACK_EXTERNAL_MODULE__668__, __WEBPACK_EXTERNAL_MODULE__163__) {
+		root["brew"] = factory(root["zeta"]["util"], root["jQuery"], root["promise-polyfill"], root["zeta"]["css"], root["zeta"]["dom"], root["waterpipe"], root["History"], root["zeta"], root["zeta"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__990__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__260__, __WEBPACK_EXTERNAL_MODULE__50__, __WEBPACK_EXTERNAL_MODULE__160__, __WEBPACK_EXTERNAL_MODULE__229__, __WEBPACK_EXTERNAL_MODULE__668__, __WEBPACK_EXTERNAL_MODULE__163__) {
 return /******/ (function() { // webpackBootstrap
-/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 828:
+/***/ 304:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
+"use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
@@ -172,20 +172,10 @@ function toRelativeUrl(url) {
 function isSubPathOf(a, b) {
   return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
 }
-// CONCATENATED MODULE: ./src/include/jquery.js
-// @ts-nocheck
-
-/** @type {JQueryStatic} */
-var jQuery = window.jQuery || require('jquery');
-
-/* harmony default export */ const jquery = (jQuery);
-// CONCATENATED MODULE: ./src/include/promise-polyfill.js
-// @ts-nocheck
-
-/** @type {PromiseConstructor} */
-var Promise = window.Promise || require('promise-polyfill').default;
-
-/* harmony default export */ const promise_polyfill = (Promise);
+// EXTERNAL MODULE: ./src/include/jquery.cjs
+var jquery = __webpack_require__(889);
+// EXTERNAL MODULE: ./src/include/promise-polyfill.cjs
+var promise_polyfill = __webpack_require__(511);
 // EXTERNAL MODULE: external {"commonjs":["zeta-dom","css"],"commonjs2":["zeta-dom","css"],"amd":["zeta-dom","css"],"root":["zeta","css"]}
 var external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_ = __webpack_require__(260);
 // CONCATENATED MODULE: ./src/include/zeta/cssUtil.js
@@ -690,51 +680,14 @@ function addAnimateIn(name, callback) {
 function addAnimateOut(name, callback) {
   customAnimateOut[name] = /* non-default import from default-exporting module */undefined(callback);
 }
-// CONCATENATED MODULE: ./src/include/waterpipe.js
-// @ts-nocheck
-
-/** @type {Waterpipe} */
-var waterpipe = window.waterpipe || require('waterpipe');
-
-/* harmony default export */ const include_waterpipe = (waterpipe); // assign to a new variable to avoid incompatble declaration issue by typescript compiler
-
-var waterpipe_ = waterpipe;
-
-waterpipe_.pipes['{'] = function (_, varargs) {
-  var o = {};
-
-  while (varargs.hasArgs()) {
-    var key = varargs.raw();
-
-    if (key === '}') {
-      break;
-    }
-
-    o[String(key).replace(/:$/, '')] = varargs.next();
-  }
-
-  return o;
-}; // @ts-ignore: add member to function
-
-
-waterpipe_.pipes['{'].varargs = true;
+// EXTERNAL MODULE: ./src/include/waterpipe.cjs
+var waterpipe = __webpack_require__(203);
 // CONCATENATED MODULE: ./src/defaults.js
 /** @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ const src_defaults = (defaults);
-// CONCATENATED MODULE: ./src/include/history.js
-// @ts-nocheck
-var History = window.History;
-
-if (!History || !History.Adapter) {
-  window.jQuery = require('jquery');
-
-  require('historyjs/scripts/bundled-uncompressed/html5/jquery.history.js');
-
-  History = window.History;
-}
-
-/* harmony default export */ const include_history = (History);
+// EXTERNAL MODULE: ./src/include/history.cjs
+var include_history = __webpack_require__(715);
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -1782,17 +1735,17 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
   }
 
   var context = getVar(element);
-  var matchValue = include_waterpipe.eval(varname, context);
+  var matchValue = waterpipe.eval(varname, context);
   var $target = jquery('[match-' + varname + ']', element).filter(function (i, w) {
     return jquery(w).parents('[switch]')[0] === element;
   });
   var matched;
   var itemValues = new Map();
   $target.each(function (i, v) {
-    var thisValue = include_waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), getVar(v));
+    var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), getVar(v));
     itemValues.set(v, thisValue);
 
-    if (include_waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
+    if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
       matched = v;
       return false;
     }
@@ -2140,7 +2093,7 @@ function VarContext() {
   var element = self.element; // @ts-ignore: does not throw error when property dataset does not exist
 
   /* non-default import from default-exporting module */undefined(element.dataset, function (i, v) {
-    /* non-default import from default-exporting module */undefined(self, i, include_waterpipe.eval('`' + v));
+    /* non-default import from default-exporting module */undefined(self, i, waterpipe.eval('`' + v));
   });
   /* non-default import from default-exporting module */undefined(getDeclaredVar(element, true, self), function (i, v) {
     /* non-default import from default-exporting module */undefined(self, i, v);
@@ -2283,7 +2236,7 @@ function evaluate(template, context, element, attrName, templateMode) {
       app: app
     }
   };
-  var result = templateMode ? /* non-default import from default-exporting module */undefined(include_waterpipe(template, /* non-default import from default-exporting module */undefined({}, context), options)) : include_waterpipe.eval(template, /* non-default import from default-exporting module */undefined({}, context), options);
+  var result = templateMode ? /* non-default import from default-exporting module */undefined(waterpipe(template, /* non-default import from default-exporting module */undefined({}, context), options)) : waterpipe.eval(template, /* non-default import from default-exporting module */undefined({}, context), options);
 
   if (DEBUG_EVAL) {
     groupLog('eval', [element, attrName, '→', result], function (console) {
@@ -2391,7 +2344,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
   if (prev) {
     if (closeIfOpened) {
       // @ts-ignore: can accept if no such property
-      closeFlyout(element, source && include_waterpipe.eval('`' + source.value));
+      closeFlyout(element, source && waterpipe.eval('`' + source.value));
     } else {
       // @ts-ignore: extended app property
       prev.path = app.path;
@@ -3210,9 +3163,110 @@ install('viewport', function (app) {
 
 /***/ }),
 
+/***/ 715:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+var History = window.History;
+if (!History || !History.Adapter) {
+    window.jQuery = __webpack_require__(609);
+    __webpack_require__(229);
+    History = window.History;
+}
+module.exports = History;
+
+
+/***/ }),
+
+/***/ 889:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {JQueryStatic} */
+const jQuery = window.jQuery || __webpack_require__(609);
+module.exports = jQuery;
+
+
+/***/ }),
+
+/***/ 511:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {PromiseConstructor} */
+const Promise = window.Promise || __webpack_require__(804).default;
+module.exports = Promise;
+
+
+/***/ }),
+
+/***/ 203:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {Waterpipe} */
+const waterpipe = window.waterpipe || __webpack_require__(160);
+module.exports = waterpipe;
+
+// assign to a new variable to avoid incompatble declaration issue by typescript compiler
+const waterpipe_ = waterpipe;
+waterpipe_.pipes['{'] = function (_, varargs) {
+    var o = {};
+    while (varargs.hasArgs()) {
+        var key = varargs.raw();
+        if (key === '}') {
+            break;
+        }
+        o[String(key).replace(/:$/, '')] = varargs.next();
+    }
+    return o;
+};
+// @ts-ignore: add member to function
+waterpipe_.pipes['{'].varargs = true;
+
+
+/***/ }),
+
+/***/ 609:
+/***/ (function(module) {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__609__;
+
+/***/ }),
+
+/***/ 804:
+/***/ (function(module) {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__804__;
+
+/***/ }),
+
+/***/ 160:
+/***/ (function(module) {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__160__;
+
+/***/ }),
+
+/***/ 229:
+/***/ (function(module) {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__229__;
+
+/***/ }),
+
 /***/ 163:
 /***/ (function(module) {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 
 /***/ }),
@@ -3220,6 +3274,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /***/ 260:
 /***/ (function(module) {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__260__;
 
 /***/ }),
@@ -3227,6 +3282,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__260__;
 /***/ 50:
 /***/ (function(module) {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__50__;
 
 /***/ }),
@@ -3234,6 +3290,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__50__;
 /***/ 990:
 /***/ (function(module) {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__990__;
 
 /***/ }),
@@ -3241,6 +3298,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__990__;
 /***/ 668:
 /***/ (function(module) {
 
+"use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__668__;
 
 /***/ })
@@ -3303,7 +3361,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__668__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(828);
+/******/ 	return __webpack_require__(304);
 /******/ })()
 .default;
 });
