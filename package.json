@@ -7,6 +7,7 @@
   "types": "src/index.d.ts",
   "scripts": {
     "build": "webpack",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
     "version": "npm run build && git add -A dist",
     "release": "node ./npm-publish.cjs"
   },
@@ -17,20 +18,22 @@
   "dependencies": {
     "historyjs": "^1.8.0-b2",
     "jquery": "^3.0.0",
+    "promise-polyfill": "^8.2.0",
     "waterpipe": "^2.4.0",
     "zeta-dom": "^0.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
+    "@jest/globals": "^26.6.2",
+    "@types/jest": "^26.0.15",
     "babel-loader": "^8.2.1",
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^6.3.2",
+    "cross-env": "^7.0.2",
+    "jest": "^26.6.3",
     "webpack": "^5.3.0",
     "webpack-cli": "^4.1.0"
-  },
-  "peerDependencies": {
-    "promise-polyfill": "^8.2.0"
   },
   "browserslist": [
     "> 1%",

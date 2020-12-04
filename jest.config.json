@@ -1,0 +1,14 @@
+{
+    "testEnvironment": "jsdom",
+    "transform": {},
+    "setupFilesAfterEnv": [
+        "<rootDir>/tests/setup.cjs"
+    ],
+    "modulePathIgnorePatterns": [
+        "<rootDir>/build/"
+    ],
+    "moduleNameMapper": {
+        "^src/(.*)$": "<rootDir>/src/$1",
+        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1"
+    }
+}
