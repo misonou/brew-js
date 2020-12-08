@@ -1,12 +1,12 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * useLogin
      * ------------------------------------------------------------- */
     type LoginEventMap<T = any> = {
         login: LoginEvent<T>
     }
 
-    interface LoginEvent<T> extends Zeta.ZetaEvent {
+    interface LoginEvent<T> extends Zeta.ZetaEventBase {
         /**
          * Gets the response from `LoginOptions<T>.login` callback.
          */

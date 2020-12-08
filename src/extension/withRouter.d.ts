@@ -5,13 +5,13 @@ declare namespace Brew {
         pageleave: PageEvent;
     }
 
-    interface NavigateEvent extends Zeta.ZetaEvent {
+    interface NavigateEvent extends Zeta.ZetaEventBase {
         readonly pathname: string;
         readonly oldPathname: string;
         readonly route: Readonly<RouteParam>;
     }
 
-    interface PageEvent extends Zeta.ZetaEvent {
+    interface PageEvent extends Zeta.ZetaEventBase {
         readonly pathname: string;
     }
 
@@ -42,7 +42,7 @@ declare namespace Brew {
         /**
          * Resolves given path by substituting current route parameters.
          * @param path A relative or absolute path that may contains route parameters.
-         * @description Path starting with `~/` is resolved against the current route, 
+         * @description Path starting with `~/` is resolved against the current route,
          * without the trailing part matched by wildcard.
          * Path containing any relative path segment (`.` or `..`) will also be correctly resolved.
          * However, it will never resolve to path that is parent to the app's base path.
@@ -50,7 +50,7 @@ declare namespace Brew {
         resolvePath(path: string): string;
         /**
          * Configures router.
-         * @param options 
+         * @param options
          */
         useRouter(options: RouterOptions): void;
     }

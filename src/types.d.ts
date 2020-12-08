@@ -131,9 +131,10 @@ declare namespace Brew {
         animationstart: AnimationEvent;
         animationcomplete: AnimationEvent;
         statechange: StateChangeEvent;
+        validate: ValidateEvent;
     }
 
-    interface AnimationEvent extends Zeta.ZetaEvent {
+    interface AnimationEvent extends Zeta.ZetaEventBase {
         /**
          * Gets whether the animation is intro or outro.
          */
@@ -145,10 +146,13 @@ declare namespace Brew {
         readonly animationTrigger: string;
     }
 
-    interface StateChangeEvent extends Zeta.ZetaEvent {
+    interface StateChangeEvent extends Zeta.ZetaEventBase {
         readonly data: Zeta.Dictionary;
         readonly oldValues: Zeta.Dictionary;
         readonly newValues: Zeta.Dictionary;
+    }
+
+    interface ValidateEvent extends Zeta.ZetaAsyncHandleableEvent<boolean> {
     }
 
     interface App<T = {}> extends EventDispatcher<BrewEventName, BrewEventMap>, Zeta.Watchable<AppInstance<T>> {

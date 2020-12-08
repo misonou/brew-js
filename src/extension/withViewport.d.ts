@@ -1,5 +1,5 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * useViewport
      * ------------------------------------------------------------- */
     type ViewportEventMap = {
@@ -7,13 +7,13 @@ declare namespace Brew {
         resize: ResizeEvent;
     }
 
-    interface OrientationChangeEvent extends Zeta.ZetaEvent {
+    interface OrientationChangeEvent extends Zeta.ZetaEventBase {
         readonly aspectRatio: number;
         readonly viewportHeight: number;
         readonly viewportWidth: number;
     }
 
-    interface ResizeEvent extends Zeta.ZetaEvent {
+    interface ResizeEvent extends Zeta.ZetaEventBase {
         readonly orientation: 'portrait' | 'landscape';
     }
 

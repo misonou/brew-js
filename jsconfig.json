@@ -11,5 +11,6 @@
         "paths": {
             "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"]
         }
-    }
+    },
+    "exclude": ["build"]
 }
