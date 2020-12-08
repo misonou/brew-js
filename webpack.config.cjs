@@ -86,17 +86,11 @@ module.exports = {
             amd: 'historyjs',
             root: 'History'
         },
-        'zeta-dom/index.js': {
+        'zeta-dom/env.js': {
             commonjs: 'zeta-dom',
             commonjs2: 'zeta-dom',
             amd: 'zeta-dom',
             root: 'zeta'
-        },
-        'zeta-dom/shim.js': {
-            commonjs: ['zeta-dom', 'shim'],
-            commonjs2: ['zeta-dom', 'shim'],
-            amd: ['zeta-dom', 'shim'],
-            root: ['zeta', 'shim']
         },
         'zeta-dom/util.js': {
             commonjs: ['zeta-dom', 'util'],
