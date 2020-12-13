@@ -1,7 +1,7 @@
 import $ from "./include/jquery.cjs";
 import dom from "./include/zeta/dom.js";
-import { is, selectIncludeSelf } from "./include/zeta/domUtil.js";
-import { resolveAll, each, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta/util.js";
+import { selectIncludeSelf } from "./include/zeta/domUtil.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter } from "./extension/router.js";

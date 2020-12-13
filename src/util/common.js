@@ -2,7 +2,7 @@
 import $ from "../include/jquery.cjs";
 import Promise from "../include/promise-polyfill.cjs";
 import { isCssUrlValue } from "../include/zeta/cssUtil.js";
-import { createNodeIterator, is, iterateNode } from "../include/zeta/domUtil.js";
+import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta/domUtil.js";
 import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
 
@@ -226,7 +226,7 @@ export function preloadImages(urls, ms) {
             }
         };
         iterateNode(createNodeIterator(urls, 1), function (node) {
-            if (is(node, 'img') && node.src) {
+            if (matchSelector(node, 'img') && node.src) {
                 map[node.src] = true;
             }
             testValue(getComputedStyle(node).backgroundImage);
