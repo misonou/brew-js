@@ -32,7 +32,7 @@ server.get('/src/include/zeta/*', function (req, res) {
         } else {
             res.contentType(mime.lookup(req.path) || 'application/octet-stream');
             if (req.path.substr(0, 4) === '/src') {
-                res.send(data.toString().replace(/from "zeta-dom/g, 'from "/zeta-dom'));
+                res.send(data.toString().replace(/from "zeta-dom\/(\w+)"/g, 'from "/zeta-dom/$1.js"'));
             } else {
                 res.send(data);
             }

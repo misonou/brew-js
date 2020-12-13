@@ -1,1 +1,1 @@
-export * from "zeta-dom/util.js";
+export * from "zeta-dom/util";

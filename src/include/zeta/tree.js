@@ -1,1 +1,1 @@
-export * from "zeta-dom/tree.js";
+export * from "zeta-dom/tree";
