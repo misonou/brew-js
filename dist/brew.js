@@ -1,17 +1,17 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
+		module.exports = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"), require("historyjs"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", [["zeta-dom","util"], "jQuery", "promise-polyfill", ["zeta-dom","css"], ["zeta-dom","dom"], "waterpipe", "historyjs", ["zeta-dom"], "zeta-dom"], factory);
+		define("brew", ["zeta-dom", "jQuery", "promise-polyfill", "waterpipe", "historyjs"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom")["util"], require("jQuery"), require("promise-polyfill"), require("zeta-dom")["css"], require("zeta-dom")["dom"], require("waterpipe"), require("historyjs"), require("zeta-dom"), require("zeta-dom"));
+		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"), require("historyjs"));
 	else
-		root["brew"] = factory(root["zeta"]["util"], root["jQuery"], root["promise-polyfill"], root["zeta"]["css"], root["zeta"]["dom"], root["waterpipe"], root["History"], root["zeta"], root["zeta"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__990__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__260__, __WEBPACK_EXTERNAL_MODULE__50__, __WEBPACK_EXTERNAL_MODULE__160__, __WEBPACK_EXTERNAL_MODULE__229__, __WEBPACK_EXTERNAL_MODULE__668__, __WEBPACK_EXTERNAL_MODULE__163__) {
+		root["brew"] = factory(root["zeta"], root["jQuery"], root["promise-polyfill"], root["waterpipe"], root["History"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__, __WEBPACK_EXTERNAL_MODULE__229__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 304:
+/***/ 65:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -74,8 +74,72 @@ __webpack_require__.d(domAction_namespaceObject, {
   "openFlyout": function() { return openFlyout; }
 });
 
-// EXTERNAL MODULE: external {"commonjs":["zeta-dom","util"],"commonjs2":["zeta-dom","util"],"amd":["zeta-dom","util"],"root":["zeta","util"]}
-var external_commonjs_zeta_dom_util_commonjs2_zeta_dom_util_amd_zeta_dom_util_root_zeta_util_ = __webpack_require__(990);
+// EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
+var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(163);
+// CONCATENATED MODULE: ./tmp/util.js
+
+var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    noop = _zeta$util.noop,
+    either = _zeta$util.either,
+    is = _zeta$util.is,
+    isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
+    isArray = _zeta$util.isArray,
+    isFunction = _zeta$util.isFunction,
+    isThenable = _zeta$util.isThenable,
+    isPlainObject = _zeta$util.isPlainObject,
+    isArrayLike = _zeta$util.isArrayLike,
+    makeArray = _zeta$util.makeArray,
+    extend = _zeta$util.extend,
+    each = _zeta$util.each,
+    map = _zeta$util.map,
+    grep = _zeta$util.grep,
+    splice = _zeta$util.splice,
+    any = _zeta$util.any,
+    single = _zeta$util.single,
+    kv = _zeta$util.kv,
+    pick = _zeta$util.pick,
+    exclude = _zeta$util.exclude,
+    mapGet = _zeta$util.mapGet,
+    mapRemove = _zeta$util.mapRemove,
+    equal = _zeta$util.equal,
+    createPrivateStore = _zeta$util.createPrivateStore,
+    setTimeoutOnce = _zeta$util.setTimeoutOnce,
+    setImmediate = _zeta$util.setImmediate,
+    setImmediateOnce = _zeta$util.setImmediateOnce,
+    throwNotFunction = _zeta$util.throwNotFunction,
+    keys = _zeta$util.keys,
+    values = _zeta$util.values,
+    util_hasOwnProperty = _zeta$util.hasOwnProperty,
+    getOwnPropertyDescriptors = _zeta$util.getOwnPropertyDescriptors,
+    util_define = _zeta$util.define,
+    definePrototype = _zeta$util.definePrototype,
+    defineOwnProperty = _zeta$util.defineOwnProperty,
+    defineGetterProperty = _zeta$util.defineGetterProperty,
+    defineHiddenProperty = _zeta$util.defineHiddenProperty,
+    defineAliasProperty = _zeta$util.defineAliasProperty,
+    defineObservableProperty = _zeta$util.defineObservableProperty,
+    watch = _zeta$util.watch,
+    watchOnce = _zeta$util.watchOnce,
+    watchable = _zeta$util.watchable,
+    inherit = _zeta$util.inherit,
+    deepFreeze = _zeta$util.deepFreeze,
+    iequal = _zeta$util.iequal,
+    randomId = _zeta$util.randomId,
+    repeat = _zeta$util.repeat,
+    camel = _zeta$util.camel,
+    hyphenate = _zeta$util.hyphenate,
+    ucfirst = _zeta$util.ucfirst,
+    lcfirst = _zeta$util.lcfirst,
+    trim = _zeta$util.trim,
+    matchWord = _zeta$util.matchWord,
+    htmlDecode = _zeta$util.htmlDecode,
+    resolve = _zeta$util.resolve,
+    reject = _zeta$util.reject,
+    always = _zeta$util.always,
+    resolveAll = _zeta$util.resolveAll,
+    catchAsync = _zeta$util.catchAsync,
+    setPromiseTimeout = _zeta$util.setPromiseTimeout;
+
 // CONCATENATED MODULE: ./src/include/zeta/util.js
 
 // CONCATENATED MODULE: ./src/util/path.js
@@ -173,12 +237,65 @@ function isSubPathOf(a, b) {
   return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
 }
 // EXTERNAL MODULE: ./src/include/jquery.cjs
-var jquery = __webpack_require__(889);
+var jquery = __webpack_require__(304);
 // EXTERNAL MODULE: ./src/include/promise-polyfill.cjs
 var promise_polyfill = __webpack_require__(511);
-// EXTERNAL MODULE: external {"commonjs":["zeta-dom","css"],"commonjs2":["zeta-dom","css"],"amd":["zeta-dom","css"],"root":["zeta","css"]}
-var external_commonjs_zeta_dom_css_commonjs2_zeta_dom_css_amd_zeta_dom_css_root_zeta_css_ = __webpack_require__(260);
+// CONCATENATED MODULE: ./tmp/cssUtil.js
+
+var _zeta$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.css,
+    parseCSS = _zeta$css.parseCSS,
+    isCssUrlValue = _zeta$css.isCssUrlValue,
+    runCSSTransition = _zeta$css.runCSSTransition;
+
 // CONCATENATED MODULE: ./src/include/zeta/cssUtil.js
+
+// CONCATENATED MODULE: ./tmp/domUtil.js
+
+var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    domReady = domUtil_zeta$util.domReady,
+    tagName = domUtil_zeta$util.tagName,
+    domUtil_is = domUtil_zeta$util.is,
+    isVisible = domUtil_zeta$util.isVisible,
+    matchSelector = domUtil_zeta$util.matchSelector,
+    comparePosition = domUtil_zeta$util.comparePosition,
+    connected = domUtil_zeta$util.connected,
+    containsOrEquals = domUtil_zeta$util.containsOrEquals,
+    acceptNode = domUtil_zeta$util.acceptNode,
+    combineNodeFilters = domUtil_zeta$util.combineNodeFilters,
+    iterateNode = domUtil_zeta$util.iterateNode,
+    iterateNodeToArray = domUtil_zeta$util.iterateNodeToArray,
+    getCommonAncestor = domUtil_zeta$util.getCommonAncestor,
+    parentsAndSelf = domUtil_zeta$util.parentsAndSelf,
+    selectIncludeSelf = domUtil_zeta$util.selectIncludeSelf,
+    selectClosestRelative = domUtil_zeta$util.selectClosestRelative,
+    createNodeIterator = domUtil_zeta$util.createNodeIterator,
+    createTreeWalker = domUtil_zeta$util.createTreeWalker,
+    bind = domUtil_zeta$util.bind,
+    bindUntil = domUtil_zeta$util.bindUntil,
+    dispatchDOMMouseEvent = domUtil_zeta$util.dispatchDOMMouseEvent,
+    removeNode = domUtil_zeta$util.removeNode,
+    getClass = domUtil_zeta$util.getClass,
+    setClass = domUtil_zeta$util.setClass,
+    getScrollOffset = domUtil_zeta$util.getScrollOffset,
+    getScrollParent = domUtil_zeta$util.getScrollParent,
+    getContentRect = domUtil_zeta$util.getContentRect,
+    scrollBy = domUtil_zeta$util.scrollBy,
+    scrollIntoView = domUtil_zeta$util.scrollIntoView,
+    createRange = domUtil_zeta$util.createRange,
+    rangeIntersects = domUtil_zeta$util.rangeIntersects,
+    rangeEquals = domUtil_zeta$util.rangeEquals,
+    rangeCovers = domUtil_zeta$util.rangeCovers,
+    compareRangePosition = domUtil_zeta$util.compareRangePosition,
+    makeSelection = domUtil_zeta$util.makeSelection,
+    getRect = domUtil_zeta$util.getRect,
+    getRects = domUtil_zeta$util.getRects,
+    toPlainRect = domUtil_zeta$util.toPlainRect,
+    rectEquals = domUtil_zeta$util.rectEquals,
+    rectCovers = domUtil_zeta$util.rectCovers,
+    rectIntersects = domUtil_zeta$util.rectIntersects,
+    pointInRect = domUtil_zeta$util.pointInRect,
+    mergeRect = domUtil_zeta$util.mergeRect,
+    elementFromPoint = domUtil_zeta$util.elementFromPoint;
 
 // CONCATENATED MODULE: ./src/include/zeta/domUtil.js
 
@@ -198,18 +315,18 @@ var preloadImagesCache = {};
 var loadScriptCache = {};
 function getAttrValues(element) {
   var values = {};
-  /* non-default import from default-exporting module */undefined(element.attributes, function (i, v) {
+  each(element.attributes, function (i, v) {
     values[v.name] = v.value;
   });
   return values;
 }
 function setAttr(element, name, value) {
-  /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value), function (i, v) {
+  each(isPlainObject(name) || kv(name, value), function (i, v) {
     element.setAttribute(i, v);
   });
 }
 function copyAttr(src, dst) {
-  /* non-default import from default-exporting module */undefined(src.attributes, function (i, v) {
+  each(src.attributes, function (i, v) {
     dst.setAttribute(v.name, v.value);
   });
 }
@@ -219,10 +336,10 @@ function copyAttr(src, dst) {
 
 function getFormValues(form) {
   var values = {};
-  /* non-default import from default-exporting module */undefined(form.elements, function (i, v) {
+  each(form.elements, function (i, v) {
     if (v.name && !(v.name in values)) {
       var item = form.elements[v.name];
-      /* non-default import from default-exporting module */undefined(values, v.name, function () {
+      defineGetterProperty(values, v.name, function () {
         return item.type === 'checkbox' ? item.checked : item.value;
       });
     }
@@ -286,8 +403,8 @@ function cookie(name, expiry) {
 function api(options, extra) {
   var httpMethods = 'get post delete';
 
-  if (typeof options === 'string' && /* non-default import from default-exporting module */undefined(options, httpMethods)) {
-    extra = /* non-default import from default-exporting module */undefined({}, typeof extra === 'string' ? {
+  if (typeof options === 'string' && matchWord(options, httpMethods)) {
+    extra = extend({}, typeof extra === 'string' ? {
       baseUrl: extra
     } : extra, {
       methods: options
@@ -295,16 +412,16 @@ function api(options, extra) {
     return api(extra)[options];
   }
 
-  options = /* non-default import from default-exporting module */undefined({}, options);
+  options = extend({}, options);
   var obj = {
     baseUrl: options.baseUrl,
     token: options.token
   };
-  /* non-default import from default-exporting module */undefined(options.methods || httpMethods, function (i, v) {
-    if (/* non-default import from default-exporting module */undefined(v, httpMethods)) {
-      /* non-default import from default-exporting module */undefined(obj, v, function request(method, data) {
+  each(options.methods || httpMethods, function (i, v) {
+    if (matchWord(v, httpMethods)) {
+      defineHiddenProperty(obj, v, function request(method, data) {
         if (!obj.baseUrl) {
-          return /* non-default import from default-exporting module */undefined(obj, 'baseUrl', function () {
+          return watchOnce(obj, 'baseUrl', function () {
             return request(method, data);
           });
         }
@@ -324,7 +441,7 @@ function api(options, extra) {
           dataType: 'json',
           data: JSON.stringify(data || {}),
           success: function success(response) {
-            if (/* non-default import from default-exporting module */undefined(options.getTokenFromResponse)) {
+            if (isFunction(options.getTokenFromResponse)) {
               obj.token = options.getTokenFromResponse(response, obj.token);
             }
           }
@@ -343,8 +460,8 @@ function api(options, extra) {
           throw e.statusText;
         });
       });
-      /* non-default import from default-exporting module */undefined(obj[v], 'baseUrl', obj);
-      /* non-default import from default-exporting module */undefined(obj[v], 'token', obj);
+      defineAliasProperty(obj[v], 'baseUrl', obj);
+      defineAliasProperty(obj[v], 'token', obj);
     }
   });
   return obj;
@@ -362,12 +479,12 @@ function getJSON(path) {
  */
 
 function loadScript(url, options) {
-  if (/* non-default import from default-exporting module */undefined(url)) {
+  if (isArray(url)) {
     return url.reduce(function (v, a) {
       return v.then(function () {
         return loadScript(a, options);
       });
-    }, /* non-default import from default-exporting module */undefined());
+    }, resolve());
   }
 
   if (!loadScriptCache[url]) {
@@ -423,17 +540,17 @@ function addStyleSheet(url, media) {
  */
 
 function preloadImages(urls, ms) {
-  if (!/* non-default import from default-exporting module */undefined(urls)) {
+  if (!isArray(urls)) {
     var map = {};
 
     var testValue = function testValue(value) {
-      if (/* non-default import from default-exporting module */undefined(value)) {
+      if (isCssUrlValue(value)) {
         map[RegExp.$1 || RegExp.$2 || RegExp.$3] = true;
       }
     };
 
-    /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(urls, 1), function (node) {
-      if (/* non-default import from default-exporting module */undefined(node, 'img') && node.src) {
+    iterateNode(createNodeIterator(urls, 1), function (node) {
+      if (matchSelector(node, 'img') && node.src) {
         map[node.src] = true;
       }
 
@@ -441,7 +558,7 @@ function preloadImages(urls, ms) {
       testValue(getComputedStyle(node, '::before').backgroundImage);
       testValue(getComputedStyle(node, '::after').backgroundImage);
     });
-    urls = /* non-default import from default-exporting module */undefined(map);
+    urls = keys(map);
   }
 
   var promises = [];
@@ -459,7 +576,7 @@ function preloadImages(urls, ms) {
   if (!promises.length || promises.every(function (v) {
     return v === true;
   })) {
-    return /* non-default import from default-exporting module */undefined();
+    return resolve();
   }
 
   if (preloadUrls.length) {
@@ -468,13 +585,29 @@ function preloadImages(urls, ms) {
     });
   }
 
-  return /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(preloadImagesCache)), ms, true);
+  return setPromiseTimeout(resolveAll(values(preloadImagesCache)), ms, true);
 }
-// EXTERNAL MODULE: external {"commonjs":["zeta-dom","dom"],"commonjs2":["zeta-dom","dom"],"amd":["zeta-dom","dom"],"root":["zeta","dom"]}
-var external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_ = __webpack_require__(50);
+// CONCATENATED MODULE: ./tmp/dom.js
+
+var dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
+/* harmony default export */ const tmp_dom = (dom);
+var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    textInputAllowed = _zeta$dom.textInputAllowed,
+    beginDrag = _zeta$dom.beginDrag,
+    beginPinchZoom = _zeta$dom.beginPinchZoom,
+    getShortcut = _zeta$dom.getShortcut,
+    setShortcut = _zeta$dom.setShortcut,
+    focusable = _zeta$dom.focusable,
+    focused = _zeta$dom.focused,
+    setModal = _zeta$dom.setModal,
+    retainFocus = _zeta$dom.retainFocus,
+    releaseFocus = _zeta$dom.releaseFocus,
+    dom_focus = _zeta$dom.focus;
+
 // CONCATENATED MODULE: ./src/include/zeta/dom.js
 
-/* harmony default export */ const dom = (external_commonjs_zeta_dom_dom_commonjs2_zeta_dom_dom_amd_zeta_dom_dom_root_zeta_dom_);
+
+/* harmony default export */ const zeta_dom = (tmp_dom);
 // CONCATENATED MODULE: ./src/anim.js
 
 
@@ -489,17 +622,17 @@ var nextId = 0;
 
 function handleAnimation(element, elements, promises, trigger) {
   if (!promises.length) {
-    return /* non-default import from default-exporting module */undefined();
+    return resolve();
   }
 
   var id = ++nextId;
   var timeout, timeoutReject, timeoutResolve;
   promises = promises.map(function (v) {
-    return v instanceof promise_polyfill ? /* non-default import from default-exporting module */undefined(v) : new promise_polyfill(function (resolve) {
+    return v instanceof promise_polyfill ? catchAsync(v) : new promise_polyfill(function (resolve) {
       v.then(resolve, resolve);
     });
   });
-  /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(promises, function () {
+  catchAsync(resolveAll(promises, function () {
     clearTimeout(timeout);
     timeoutResolve();
     animatingElements.delete(element);
@@ -514,7 +647,7 @@ function handleAnimation(element, elements, promises, trigger) {
     console.log('Animation #%i might take longer than expected', id, promises);
     animatingElements.delete(element);
   }, 1500);
-  var promise = /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(promises));
+  var promise = catchAsync(resolveAll(promises));
   console.log('Animation #%i triggered on %s', id, trigger, {
     elements: elements
   });
@@ -523,19 +656,19 @@ function handleAnimation(element, elements, promises, trigger) {
 }
 
 function animateElement(element, cssClass, eventName, customAnimation) {
-  var promises = [/* non-default import from default-exporting module */undefined(element, cssClass), dom.emit(eventName, element)];
+  var promises = [runCSSTransition(element, cssClass), zeta_dom.emit(eventName, element)];
   var delay = parseFloat(jquery(element).css('transition-delay'));
-  /* non-default import from default-exporting module */undefined(customAnimation, function (i, v) {
+  each(customAnimation, function (i, v) {
     if (element.attributes[i]) {
       var attrValue = element.getAttribute(i);
       promises.push(new promise_polyfill(function (resolve, reject) {
         setTimeout(function () {
-          /* non-default import from default-exporting module */undefined(v(element, attrValue)).then(resolve, reject);
+          resolveAll(v(element, attrValue)).then(resolve, reject);
         }, delay * 1000);
       }));
     }
   });
-  return /* non-default import from default-exporting module */undefined(promises, function () {
+  return resolveAll(promises, function () {
     return element;
   });
 }
@@ -558,7 +691,7 @@ function animateIn(element, trigger, scope, filterCallback) {
     return true;
   };
 
-  dom.emit('animationstart', element, {
+  zeta_dom.emit('animationstart', element, {
     animationType: 'in',
     animationTrigger: trigger
   }, true);
@@ -566,16 +699,16 @@ function animateIn(element, trigger, scope, filterCallback) {
   var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
   var elements = [];
   var promises = [];
-  jquery(/* non-default import from default-exporting module */undefined('[animate-in]', element)).filter(filter).each(function (i, v) {
+  jquery(selectIncludeSelf('[animate-in]', element)).filter(filter).each(function (i, v) {
     // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && /* non-default import from default-exporting module */undefined(v)) {
+    if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
       elements.push(v);
       promises.push(animateElement(v, 'tweening-in', 'animatein', customAnimateIn));
     }
   });
-  jquery(/* non-default import from default-exporting module */undefined('[animate-sequence]', element)).filter(filter).each(function (i, v) {
+  jquery(selectIncludeSelf('[animate-sequence]', element)).filter(filter).each(function (i, v) {
     // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && /* non-default import from default-exporting module */undefined(v)) {
+    if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
       var selector = v.getAttribute('animate-sequence') || '';
       var type = v.getAttribute('animate-sequence-type') || '';
       var $elements = jquery(v).find(selector[0] === '>' ? selector : jquery(selector));
@@ -607,7 +740,7 @@ function animateIn(element, trigger, scope, filterCallback) {
     }
   });
   return handleAnimation(element, elements, promises, trigger).then(function () {
-    dom.emit('animationcomplete', element, {
+    zeta_dom.emit('animationcomplete', element, {
       animationType: 'in',
       animationTrigger: trigger
     }, true);
@@ -626,7 +759,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
     return true;
   };
 
-  dom.emit('animationstart', element, {
+  zeta_dom.emit('animationstart', element, {
     animationType: 'out',
     animationTrigger: trigger
   }, true);
@@ -635,7 +768,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
   var elements = [];
   var promises = []; // @ts-ignore: type inference issue
 
-  var $target = jquery((excludeSelf ? jquery : /* non-default import from default-exporting module */undefined)('[animate-out]', element)).filter(filter);
+  var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out]', element)).filter(filter);
   $target.each(function (i, v) {
     // @ts-ignore: filterCallback must be function
     if (!$innerScope.find(v)[0] && filterCallback(v)) {
@@ -646,7 +779,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
   return handleAnimation(element, elements, promises, trigger).then(function () {
     // reset animation state after outro animation has finished
     // @ts-ignore: type inference issue
-    var $target = jquery((excludeSelf ? jquery : /* non-default import from default-exporting module */undefined)('[animate-out], .tweening-in, .tweening-out', element));
+    var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
 
     if (trigger !== 'show') {
       $target = $target.filter(filter);
@@ -658,7 +791,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
     });
     $target.removeClass('tweening-in tweening-out');
     $target.find('[is-animate-sequence]').removeAttr('animate-in').removeClass('tweening-in tweening-out');
-    dom.emit('animationcomplete', element, {
+    zeta_dom.emit('animationcomplete', element, {
       animationType: 'out',
       animationTrigger: trigger
     }, true);
@@ -670,7 +803,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
  */
 
 function addAnimateIn(name, callback) {
-  customAnimateIn[name] = /* non-default import from default-exporting module */undefined(callback);
+  customAnimateIn[name] = throwNotFunction(callback);
 }
 /**
  * @param {string} name
@@ -678,7 +811,7 @@ function addAnimateIn(name, callback) {
  */
 
 function addAnimateOut(name, callback) {
-  customAnimateOut[name] = /* non-default import from default-exporting module */undefined(callback);
+  customAnimateOut[name] = throwNotFunction(callback);
 }
 // EXTERNAL MODULE: ./src/include/waterpipe.cjs
 var waterpipe = __webpack_require__(203);
@@ -693,7 +826,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
 
-
 function toElementTag(element) {
   return element.tagName.toLowerCase() + (element.id ? '#' + element.id : element.className.trim() && element.className.replace(/^\s*|\s+(?=\S)/g, '.'));
 }
@@ -703,8 +835,8 @@ function truncateJSON(json) {
 }
 
 function formatMessage(eventSource, message) {
-  message = /* non-default import from default-exporting module */undefined(message).map(function (v) {
-    return /* non-default import from default-exporting module */undefined(v, Element) ? toElementTag(v) + ':' : v && _typeof(v) === 'object' ? truncateJSON(JSON.stringify(v)) : v;
+  message = makeArray(message).map(function (v) {
+    return is(v, Element) ? toElementTag(v) + ':' : v && _typeof(v) === 'object' ? truncateJSON(JSON.stringify(v)) : v;
   }).join(' ');
   return '[' + eventSource + '] ' + message;
 }
@@ -755,13 +887,13 @@ function groupLog(eventSource, message, callback) {
 
 
 
-var _ = /* non-default import from default-exporting module */undefined();
+var _ = createPrivateStore();
 
 var matchByPathElements = new Map();
 var preloadHandlers = [];
 /** @type {Element[]} */
 
-var activeElements = [dom.root];
+var activeElements = [zeta_dom.root];
 var pageTitleElement;
 /**
  * @param {Element} v
@@ -777,12 +909,12 @@ function isElementActive(v, arr) {
  */
 
 function hookBeforePageEnter(callback) {
-  preloadHandlers.push(/* non-default import from default-exporting module */undefined(callback));
+  preloadHandlers.push(throwNotFunction(callback));
 }
 
 function createRouteState(route, segments, params) {
   route = route || [];
-  params = /* non-default import from default-exporting module */undefined({}, params);
+  params = extend({}, params);
   delete params.remainingSegments;
   return {
     minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
@@ -812,36 +944,36 @@ function Route(app, routes, initialPath) {
       } : a.toLowerCase());
       self[b || 'remainingSegments'] = null;
     });
-    /* non-default import from default-exporting module */undefined(tokens, 'value', path);
-    /* non-default import from default-exporting module */undefined(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
-    /* non-default import from default-exporting module */undefined(tokens, 'minLength', minLength || tokens.length);
-    /* non-default import from default-exporting module */undefined(tokens, 'names', /* non-default import from default-exporting module */undefined(tokens, function (v) {
+    defineHiddenProperty(tokens, 'value', path);
+    defineHiddenProperty(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
+    defineHiddenProperty(tokens, 'minLength', minLength || tokens.length);
+    defineHiddenProperty(tokens, 'names', map(tokens, function (v) {
       return v.name;
     }));
     return tokens;
   });
   Object.preventExtensions(self);
-  /* non-default import from default-exporting module */undefined(self, self.parse(initialPath));
+  extend(self, self.parse(initialPath));
   state.current = state.lastMatch;
-  state.handleChanges = /* non-default import from default-exporting module */undefined(self, true);
+  state.handleChanges = watch(self, true);
   Object.getOwnPropertyNames(self).forEach(function (prop) {
-    /* non-default import from default-exporting module */undefined(self, prop);
+    defineObservableProperty(self, prop);
   });
-  /* non-default import from default-exporting module */undefined(self, function () {
-    var current = /* non-default import from default-exporting module */undefined(self, ['remainingSegments']);
+  watch(self, function () {
+    var current = exclude(self, ['remainingSegments']);
     var paramChanged = false;
-    var routeChanged = !/* non-default import from default-exporting module */undefined(current, state.current.params);
+    var routeChanged = !equal(current, state.current.params);
 
     if (routeChanged && state.lastMatch) {
       state.current = state.lastMatch;
-      routeChanged = !/* non-default import from default-exporting module */undefined(current, state.current.params);
+      routeChanged = !equal(current, state.current.params);
     }
 
     if (routeChanged) {
       var segments = [],
           i,
           len;
-      var matched = /* non-default import from default-exporting module */undefined(state.routes, function (tokens) {
+      var matched = any(state.routes, function (tokens) {
         segments.length = 0;
 
         for (i = 0, len = tokens.length; i < len; i++) {
@@ -879,7 +1011,7 @@ function Route(app, routes, initialPath) {
   });
 }
 
-/* non-default import from default-exporting module */undefined(Route, {
+definePrototype(Route, {
   parse: function parse(path) {
     var self = this;
 
@@ -887,7 +1019,7 @@ function Route(app, routes, initialPath) {
 
     var segments = normalizePath(path).slice(1).split('/');
     var params = {};
-    var matched = /* non-default import from default-exporting module */undefined(state.routes, function (tokens) {
+    var matched = any(state.routes, function (tokens) {
       params = {};
 
       if (segments.length < tokens.minLength) {
@@ -897,7 +1029,7 @@ function Route(app, routes, initialPath) {
       for (var i = 0, len = tokens.length; i < len; i++) {
         var varname = tokens[i].name;
 
-        if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : /* non-default import from default-exporting module */undefined(segments[i], tokens[i]))) {
+        if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : iequal(segments[i], tokens[i]))) {
           return false;
         }
 
@@ -921,7 +1053,7 @@ function Route(app, routes, initialPath) {
     var self = this;
 
     if (typeof params === 'string') {
-      if (/* non-default import from default-exporting module */undefined(params, self.toString())) {
+      if (iequal(params, self.toString())) {
         return;
       }
 
@@ -929,7 +1061,7 @@ function Route(app, routes, initialPath) {
     }
 
     _(self).handleChanges(function () {
-      /* non-default import from default-exporting module */undefined(self, params);
+      extend(self, params);
     });
   },
   toString: function toString() {
@@ -937,7 +1069,7 @@ function Route(app, routes, initialPath) {
     return combinePath(_(this).current.maxPath || '/', this.remainingSegments);
   }
 });
-/* non-default import from default-exporting module */undefined(Route.prototype);
+watchable(Route.prototype);
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
  * @param {Record<string, any>} options
@@ -958,7 +1090,7 @@ function configureRouter(app, options) {
     currentPath = currentPath || app.path;
 
     if (path[0] === '~') {
-      var parsedState = /* non-default import from default-exporting module */undefined(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+      var parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
       path = combinePath(parsedState.minPath, path.slice(1));
     } else if (path[0] !== '/') {
       path = combinePath(currentPath, path);
@@ -987,7 +1119,7 @@ function configureRouter(app, options) {
     }
 
     var preload = new Map();
-    var eventSource = dom.eventSource;
+    var eventSource = zeta_dom.eventSource;
     var previousActiveElements = activeElements.slice(0);
     activeElements = newActiveElements;
     pageTitleElement = jquery(newActiveElements).filter('[page-title]')[0];
@@ -1019,9 +1151,9 @@ function configureRouter(app, options) {
                   return v(element, path);
                 });
                 promises.push(dependencies);
-                preload.set(element, /* non-default import from default-exporting module */undefined(promises, function () {
+                preload.set(element, resolveAll(promises, function () {
                   if (activeElements.indexOf(element) >= 0) {
-                    /* non-default import from default-exporting module */undefined(element, 'hidden', false);
+                    setClass(element, 'hidden', false);
                     animateIn(element, 'show', '[match-path]');
                     app.emit('pageenter', element, {
                       pathname: path
@@ -1036,7 +1168,7 @@ function configureRouter(app, options) {
               animateOut(element, 'show', '[match-path]').then(function () {
                 if (activeElements.indexOf(element) < 0) {
                   groupLog(eventSource, ['pageleave', oldPath], function () {
-                    /* non-default import from default-exporting module */undefined(element, 'hidden', true);
+                    setClass(element, 'hidden', true);
                     resetVar(element, true);
                   });
                 }
@@ -1045,7 +1177,7 @@ function configureRouter(app, options) {
           }
         });
       });
-      /* non-default import from default-exporting module */undefined(preload, function (element, promise) {
+      each(preload, function (element, promise) {
         handleAsync(promise, element);
       });
     });
@@ -1057,7 +1189,7 @@ function configureRouter(app, options) {
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
 
-    if (dom.locked(dom.activeElement, true)) {
+    if (zeta_dom.locked(zeta_dom.activeElement, true)) {
       lockedPath = newPath === lockedPath ? null : currentPath;
       navigate(lockedPath || newPath, true);
       return;
@@ -1068,7 +1200,7 @@ function configureRouter(app, options) {
     if (promise) {
       lockedPath = currentPath;
       navigate(currentPath, true);
-      /* non-default import from default-exporting module */undefined(promise).then(function () {
+      resolve(promise).then(function () {
         navigate(newPath, true);
       });
       return;
@@ -1078,7 +1210,7 @@ function configureRouter(app, options) {
 
     /** @type {HTMLElement[]} */
 
-    var newActiveElements = [dom.root];
+    var newActiveElements = [zeta_dom.root];
     var oldPath = currentPath;
     var redirectPath;
     batch(true, function () {
@@ -1132,15 +1264,15 @@ function configureRouter(app, options) {
     promise = app.emit('navigate', {
       pathname: newPath,
       oldPathname: oldPath,
-      route: Object.freeze(/* non-default import from default-exporting module */undefined({}, route))
+      route: Object.freeze(extend({}, route))
     });
-    handleAsync(promise, dom.root, function () {
+    handleAsync(promise, zeta_dom.root, function () {
       processPageChange(newPath, oldPath, newActiveElements);
     });
   }
 
-  /* non-default import from default-exporting module */undefined(observable, true);
-  /* non-default import from default-exporting module */undefined(observable, 'path', '', function (newValue) {
+  watch(observable, true);
+  defineObservableProperty(observable, 'path', '', function (newValue) {
     if (!appReady) {
       return currentPath;
     }
@@ -1148,7 +1280,7 @@ function configureRouter(app, options) {
     newPath = resolvePath(newValue, currentPath);
 
     if (newPath !== currentPath) {
-      /* non-default import from default-exporting module */undefined(handlePathChange);
+      setImmediateOnce(handlePathChange);
     }
 
     return currentPath;
@@ -1166,11 +1298,11 @@ function configureRouter(app, options) {
       }
     }
   });
-  /* non-default import from default-exporting module */undefined(app, 'initialPath', initialPath, true);
-  /* non-default import from default-exporting module */undefined(app, 'route', route, true);
-  /* non-default import from default-exporting module */undefined(app, 'path', observable);
+  defineOwnProperty(app, 'initialPath', initialPath, true);
+  defineOwnProperty(app, 'route', route, true);
+  defineAliasProperty(app, 'path', observable);
   app.beforeInit(function () {
-    dom.ready.then(function () {
+    zeta_dom.ready.then(function () {
       // detach elements which its visibility is controlled by current path
       jquery('[match-path]').addClass('hidden').each(function (i, v) {
         var placeholder = document.createElement('div');
@@ -1195,7 +1327,7 @@ function configureRouter(app, options) {
     app.path = initialPath;
   });
   app.on('mounted', function (e) {
-    var $autoplay = jquery(/* non-default import from default-exporting module */undefined('video[autoplay], audio[autoplay]', e.target));
+    var $autoplay = jquery(selectIncludeSelf('video[autoplay], audio[autoplay]', e.target));
 
     if ($autoplay[0]) {
       $autoplay.removeAttr('autoplay');
@@ -1222,7 +1354,7 @@ function configureRouter(app, options) {
     }
   });
   app.on('pageleave', function (e) {
-    jquery(/* non-default import from default-exporting module */undefined('form', e.target)).each(function (i, v) {
+    jquery(selectIncludeSelf('form', e.target)).each(function (i, v) {
       if (!app.emit('reset', v, null, false)) {
         // @ts-ignore: known element type
         v.reset();
@@ -1230,7 +1362,7 @@ function configureRouter(app, options) {
     });
   });
   app.on('statechange', function (e) {
-    if (/* non-default import from default-exporting module */undefined(e.target, pageTitleElement)) {
+    if (containsOrEquals(e.target, pageTitleElement)) {
       document.title = evalAttr(pageTitleElement, 'page-title', true);
     }
   });
@@ -1257,9 +1389,9 @@ install('router', function (app, options) {
 var IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
-var dom_ = /* non-default import from default-exporting module */undefined();
+var dom_ = createPrivateStore();
 
-var root = dom.root;
+var root = zeta_dom.root;
 var updatedElements = new Set();
 var pendingDOMUpdates = new Map();
 var preupdateHandlers = [];
@@ -1283,7 +1415,7 @@ function getComponentState(ns, element) {
 
 function diffObject(currentValues, oldValues) {
   var newValues = {};
-  /* non-default import from default-exporting module */undefined(currentValues, function (i, v) {
+  each(currentValues, function (i, v) {
     if (v !== oldValues[i]) {
       newValues[i] = v;
     }
@@ -1292,14 +1424,14 @@ function diffObject(currentValues, oldValues) {
 }
 
 function updateDOM(element, props, suppressEvent) {
-  /* non-default import from default-exporting module */undefined(props, function (j, v) {
+  each(props, function (j, v) {
     if (j === '$$class') {
-      /* non-default import from default-exporting module */undefined(element, v);
+      setClass(element, v);
     } else if (j === '$$text') {
       element.textContent = v;
     } else if (j === 'style') {
       jquery(element).css(v);
-    } else if (/* non-default import from default-exporting module */undefined(j, BOOL_ATTRS)) {
+    } else if (matchWord(j, BOOL_ATTRS)) {
       element[j] = !!v;
     } else {
       element.setAttribute(j, v);
@@ -1307,14 +1439,14 @@ function updateDOM(element, props, suppressEvent) {
   });
 
   if (!suppressEvent) {
-    dom.emit('domchange', element);
+    zeta_dom.emit('domchange', element);
   }
 }
 
 function mergeDOMUpdates(dict, props) {
-  /* non-default import from default-exporting module */undefined(props, function (j, v) {
+  each(props, function (j, v) {
     if (j === '$$class' || j === 'style') {
-      dict[j] = /* non-default import from default-exporting module */undefined({}, dict[j], v);
+      dict[j] = extend({}, dict[j], v);
     } else {
       dict[j] = v;
     }
@@ -1326,10 +1458,10 @@ function processTransform(elements, applyDOMUpdates) {
   var exclude;
 
   do {
-    elements = /* non-default import from default-exporting module */undefined(elements);
-    exclude = /* non-default import from default-exporting module */undefined(transformed);
-    /* non-default import from default-exporting module */undefined(transformationHandlers, function (i, v) {
-      jquery(/* non-default import from default-exporting module */undefined('[' + i + ']', elements)).not(exclude).each(function (j, element) {
+    elements = makeArray(elements);
+    exclude = makeArray(transformed);
+    each(transformationHandlers, function (i, v) {
+      jquery(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
         v(element, getComponentState.bind(0, i), applyDOMUpdates);
         transformed.add(element);
       });
@@ -1364,7 +1496,7 @@ function matchElement(selector, handler) {
  */
 
 function hookBeforeUpdate(callback) {
-  preupdateHandlers.push(/* non-default import from default-exporting module */undefined(callback));
+  preupdateHandlers.push(throwNotFunction(callback));
 }
 /**
  * @param {Promise<any>} promise
@@ -1373,12 +1505,12 @@ function hookBeforeUpdate(callback) {
  */
 
 function handleAsync(promise, element, callback) {
-  if (!/* non-default import from default-exporting module */undefined(promise)) {
-    return /* non-default import from default-exporting module */undefined((callback || /* non-default import from default-exporting module */undefined)());
+  if (!isThenable(promise)) {
+    return resolve((callback || noop)());
   }
 
-  if (element || dom.eventSource !== 'script') {
-    element = element || dom.activeElement;
+  if (element || zeta_dom.eventSource !== 'script') {
+    element = element || zeta_dom.activeElement;
     var elm1 = getVarScope('loading', element || root);
     var elm2 = getVarScope('error', element || root);
     var counter = getComponentState('handleAsync', elm1);
@@ -1425,36 +1557,36 @@ function processStateChange(suppressAnim) {
   var domUpdates = new Map();
 
   var applyDOMUpdates = function applyDOMUpdates(element, props) {
-    var dict = /* non-default import from default-exporting module */undefined(domUpdates, element, Object);
+    var dict = mapGet(domUpdates, element, Object);
     mergeDOMUpdates(dict, props);
   };
 
   stateChangeLock = true;
 
   try {
-    groupLog(dom.eventSource, 'statechange', function () {
+    groupLog(zeta_dom.eventSource, 'statechange', function () {
       // recursively perform transformation until there is no new element produced
       processTransform(updatedElements, applyDOMUpdates); // trigger statechange events and perform DOM updates only on attached elements
       // leave detached elements in future rounds
 
-      var arr = jquery.uniqueSort(/* non-default import from default-exporting module */undefined(updatedElements, function (v) {
-        return /* non-default import from default-exporting module */undefined(root, v) && updatedElements.delete(v);
+      var arr = jquery.uniqueSort(grep(updatedElements, function (v) {
+        return containsOrEquals(root, v) && updatedElements.delete(v);
       }));
-      /* non-default import from default-exporting module */undefined(arr, function (i, v) {
+      each(arr, function (i, v) {
         var currentValues = getVar(v);
         var oldValues = getComponentState('oldValues', v);
         updatedProps.set(v, {
-          oldValues: /* non-default import from default-exporting module */undefined({}, oldValues),
+          oldValues: extend({}, oldValues),
           newValues: diffObject(currentValues, oldValues)
         });
-        /* non-default import from default-exporting module */undefined(oldValues, currentValues);
+        extend(oldValues, currentValues);
       });
       var visited = [];
-      /* non-default import from default-exporting module */undefined(arr.reverse(), function (i, v) {
+      each(arr.reverse(), function (i, v) {
         groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
           console.log(v === root ? document : v);
-          jquery(/* non-default import from default-exporting module */undefined('[' + /* non-default import from default-exporting module */undefined(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
-            /* non-default import from default-exporting module */undefined(renderHandlers, function (i, v) {
+          jquery(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+            each(renderHandlers, function (i, v) {
               if (element.attributes[i]) {
                 v(element, getComponentState.bind(0, i), applyDOMUpdates);
               }
@@ -1465,14 +1597,14 @@ function processStateChange(suppressAnim) {
       });
     }); // perform any async task that is related or required by the DOM changes
 
-    var preupdatePromise = /* non-default import from default-exporting module */undefined(preupdateHandlers.map(function (v) {
+    var preupdatePromise = resolveAll(preupdateHandlers.map(function (v) {
       return v(domUpdates);
     })); // perform DOM updates, or add to pending updates if previous update is not completed
     // also wait for animation completed if suppressAnim is off
 
     preupdatePromise.then(function () {
       var animScopes = new Map();
-      /* non-default import from default-exporting module */undefined(domUpdates, function (element, props) {
+      each(domUpdates, function (element, props) {
         if (!suppressAnim) {
           var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || root;
           var groupElements = animScopes.get(animParent);
@@ -1489,16 +1621,16 @@ function processStateChange(suppressAnim) {
                 ;
               }
 
-              return cur && /* non-default import from default-exporting module */undefined(haystack, function (v) {
+              return cur && any(haystack, function (v) {
                 return v in cur.newValues;
               });
             };
 
             groupElements = [];
-            /* non-default import from default-exporting module */undefined(function () {
+            setImmediate(function () {
               animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
-                /* non-default import from default-exporting module */undefined(groupElements, function (i, v) {
-                  updateDOM(v, /* non-default import from default-exporting module */undefined(pendingDOMUpdates, v));
+                each(groupElements, function (i, v) {
+                  updateDOM(v, mapRemove(pendingDOMUpdates, v));
                 });
                 animateIn(animParent, 'statechange', '[match-path]', filter);
               });
@@ -1506,7 +1638,7 @@ function processStateChange(suppressAnim) {
             animScopes.set(animParent, groupElements);
           }
 
-          var dict = /* non-default import from default-exporting module */undefined(pendingDOMUpdates, element, Object);
+          var dict = mapGet(pendingDOMUpdates, element, Object);
           mergeDOMUpdates(dict, props);
           groupElements.push(element);
         } else if (pendingDOMUpdates.has(element)) {
@@ -1515,8 +1647,8 @@ function processStateChange(suppressAnim) {
           updateDOM(element, props);
         }
       });
-      /* non-default import from default-exporting module */undefined(updatedProps, function (i, v) {
-        dom.emit('statechange', i, {
+      each(updatedProps, function (i, v) {
+        zeta_dom.emit('statechange', i, {
           data: getVar(i),
           newValues: v.newValues,
           oldValues: v.oldValues
@@ -1538,7 +1670,7 @@ function batch(suppressAnim, callback) {
 
   try {
     batchCounter = (batchCounter || 0) + 1;
-    /* non-default import from default-exporting module */undefined(callback || suppressAnim)();
+    throwNotFunction(callback || suppressAnim)();
   } catch (e) {
     doUpdate = false;
     throw e;
@@ -1572,8 +1704,8 @@ function mountElement(element) {
       index2 = 0;
 
   while (index < selectorHandlers.length) {
-    /* non-default import from default-exporting module */undefined(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
-      jquery(/* non-default import from default-exporting module */undefined(v.target, element)).each(function (i, w) {
+    each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
+      jquery(selectIncludeSelf(v.target, element)).each(function (i, w) {
         app.on(w, v.handlers);
 
         if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
@@ -1582,13 +1714,13 @@ function mountElement(element) {
       });
     });
     index = selectorHandlers.length;
-    /* non-default import from default-exporting module */undefined(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
-      dom.emit('mounted', v);
+    each(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
+      zeta_dom.emit('mounted', v);
     });
 
     if (!firedOnRoot) {
       firedOnRoot = true;
-      dom.emit('mounted', root, {
+      zeta_dom.emit('mounted', root, {
         target: element
       });
     }
@@ -1596,8 +1728,8 @@ function mountElement(element) {
     index2 = mountedElements.length;
   }
 
-  /* non-default import from default-exporting module */undefined(matchElementHandlers, function (i, v) {
-    jquery(/* non-default import from default-exporting module */undefined(v.selector, element)).each(function (i, w) {
+  each(matchElementHandlers, function (i, v) {
+    jquery(selectIncludeSelf(v.selector, element)).each(function (i, w) {
       v.handler.call(w, w);
     });
   });
@@ -1607,7 +1739,7 @@ function mountElement(element) {
  */
 
 function preventLeave(suppressPrompt) {
-  var element = /* non-default import from default-exporting module */undefined(jquery('[prevent-leave]').get(), function (v) {
+  var element = any(jquery('[prevent-leave]').get(), function (v) {
     var state = getComponentState('preventLeave', v);
     var allowLeave = state.allowLeave;
 
@@ -1623,7 +1755,7 @@ function preventLeave(suppressPrompt) {
   });
 
   if (element && !suppressPrompt) {
-    return /* non-default import from default-exporting module */undefined(dom.emit('preventLeave', element, null, true), function (result) {
+    return resolveAll(zeta_dom.emit('preventLeave', element, null, true), function (result) {
       if (result) {
         var state = getComponentState('preventLeave', element);
         state.allowLeave = true;
@@ -1639,10 +1771,10 @@ function addTemplate(name, template) {
   templates[name] = jquery(template)[0];
 }
 function addTransformer(name, callback) {
-  transformationHandlers[name] = /* non-default import from default-exporting module */undefined(callback);
+  transformationHandlers[name] = throwNotFunction(callback);
 }
 function addRenderer(name, callback) {
-  renderHandlers[name] = /* non-default import from default-exporting module */undefined(callback);
+  renderHandlers[name] = throwNotFunction(callback);
 }
 /* --------------------------------------
  * Built-in transformers and renderers
@@ -1655,9 +1787,9 @@ addTransformer('apply-template', function (element, getState) {
   var currentTemplate = state.template;
 
   if (!state.attributes) {
-    /* non-default import from default-exporting module */undefined(state, {
+    extend(state, {
       attributes: getAttrValues(element),
-      childNodes: /* non-default import from default-exporting module */undefined(element.childNodes)
+      childNodes: makeArray(element.childNodes)
     });
   }
 
@@ -1667,7 +1799,7 @@ addTransformer('apply-template', function (element, getState) {
     // before applying new attributes
 
     if (currentTemplate) {
-      /* non-default import from default-exporting module */undefined(currentTemplate.attributes, function (i, v) {
+      each(currentTemplate.attributes, function (i, v) {
         element.removeAttribute(v.name);
       });
     }
@@ -1675,8 +1807,8 @@ addTransformer('apply-template', function (element, getState) {
     setAttr(element, state.attributes);
     copyAttr(template, element);
     var $contents = jquery(state.childNodes).detach();
-    jquery(/* non-default import from default-exporting module */undefined('content:not([for])', template)).replaceWith($contents);
-    jquery(/* non-default import from default-exporting module */undefined('content[for]', template)).each(function (i, v) {
+    jquery(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
+    jquery(selectIncludeSelf('content[for]', template)).each(function (i, v) {
       jquery(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
     });
     jquery(element).empty().append(template.childNodes);
@@ -1689,12 +1821,12 @@ addTransformer('foreach', function (element, getState) {
   }).get());
   var currentNodes = state.nodes || [];
   var oldItems = state.data || [];
-  var newItems = /* non-default import from default-exporting module */undefined(evalAttr(element, 'foreach'));
+  var newItems = makeArray(evalAttr(element, 'foreach'));
 
   if (newItems.length !== oldItems.length || newItems.some(function (v, i) {
     return oldItems[i] !== v;
   })) {
-    var newChildren = /* non-default import from default-exporting module */undefined(newItems, function (v) {
+    var newChildren = map(newItems, function (v) {
       var currentIndex = oldItems.indexOf(v);
 
       if (currentIndex >= 0) {
@@ -1703,7 +1835,7 @@ addTransformer('foreach', function (element, getState) {
       }
 
       var parts = jquery(templateNodes).clone().get();
-      /* non-default import from default-exporting module */undefined(parts, function (i, w) {
+      each(parts, function (i, w) {
         if (w.nodeType === 1) {
           var myState = getState(w);
           myState.template = getState(templateNodes[i]).template;
@@ -1716,7 +1848,7 @@ addTransformer('foreach', function (element, getState) {
       });
       return parts;
     });
-    /* non-default import from default-exporting module */undefined(state, {
+    extend(state, {
       nodes: newChildren,
       data: newItems.slice()
     });
@@ -1785,9 +1917,9 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
 
   if (!templates) {
     templates = {};
-    /* non-default import from default-exporting module */undefined(element.attributes, function (i, w) {
+    each(element.attributes, function (i, w) {
       if (w.value.indexOf('{{') >= 0) {
-        templates[w.name] = /* non-default import from default-exporting module */undefined(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
+        templates[w.name] = matchWord(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
       }
     });
 
@@ -1800,8 +1932,8 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
 
   var context = getVar(element);
   var props = {};
-  /* non-default import from default-exporting module */undefined(templates, function (i, w) {
-    var value = evaluate(w, context, element, i, !/* non-default import from default-exporting module */undefined(i, BOOL_ATTRS));
+  each(templates, function (i, w) {
+    var value = evaluate(w, context, element, i, !matchWord(i, BOOL_ATTRS));
 
     if ((i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
       props[i] = value;
@@ -1810,9 +1942,9 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
   applyDOMUpdates(element, props);
 });
 addRenderer('set-style', function (element, getState, applyDOMUpdates) {
-  var style = /* non-default import from default-exporting module */undefined(evalAttr(element, 'set-style', true));
-  /* non-default import from default-exporting module */undefined(IMAGE_STYLE_PROPS, function (i, v) {
-    var imageUrl = /* non-default import from default-exporting module */undefined(style[v]);
+  var style = parseCSS(evalAttr(element, 'set-style', true));
+  each(IMAGE_STYLE_PROPS, function (i, v) {
+    var imageUrl = isCssUrlValue(style[v]);
 
     if (imageUrl) {
       style[v] = 'url("' + withBaseUrl(imageUrl) + '")';
@@ -1838,9 +1970,9 @@ addRenderer('set-class', function (element, getState, applyDOMUpdates) {
 
 
 
-var app_ = /* non-default import from default-exporting module */undefined();
+var app_ = createPrivateStore();
 
-var app_root = dom.root;
+var app_root = zeta_dom.root;
 var featureDetections = {};
 /** @type {Brew.AppInstance} */
 
@@ -1853,7 +1985,7 @@ var appReady;
 var appInited;
 
 function processUntilEmpty(arr) {
-  return /* non-default import from default-exporting module */undefined(arr.splice(0), function () {
+  return resolveAll(arr.splice(0), function () {
     return arr.length && processUntilEmpty(arr);
   });
 }
@@ -1872,25 +2004,25 @@ function exactTargetWrapper(handler) {
 
 function onElementMounted(e) {
   var element = e.target;
-  jquery(/* non-default import from default-exporting module */undefined('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
+  jquery(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.src = withBaseUrl(v.getAttribute('src'));
   });
-  jquery(/* non-default import from default-exporting module */undefined('a[href^="/"]', element)).each(function (i, v) {
+  jquery(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.href = withBaseUrl(v.getAttribute('href'));
   });
-  jquery(/* non-default import from default-exporting module */undefined('[data-src]', element)).each(function (i, v) {
+  jquery(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.src = withBaseUrl(v.dataset.src);
     v.removeAttribute('data-src');
   });
-  jquery(/* non-default import from default-exporting module */undefined('[data-bg-src]', element)).each(function (i, v) {
+  jquery(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
     // @ts-ignore: known element type
     v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
     v.removeAttribute('data-bg-src');
   });
-  jquery(/* non-default import from default-exporting module */undefined('form', element)).on('submit', function (e) {
+  jquery(selectIncludeSelf('form', element)).on('submit', function (e) {
     e.preventDefault();
   });
 }
@@ -1903,25 +2035,25 @@ function App() {
     options: {}
   });
 
-  /* non-default import from default-exporting module */undefined(self, 'element', app_root, true);
+  defineOwnProperty(self, 'element', app_root, true);
   self.on('mounted', onElementMounted);
 }
 
-/* non-default import from default-exporting module */undefined(App, {
+definePrototype(App, {
   emit: function emit(event, element, data, bubbles) {
-    if (!/* non-default import from default-exporting module */undefined(element, Node)) {
+    if (!is(element, Node)) {
       bubbles = data;
       data = element;
       element = this.element;
     }
 
-    return dom.emit(event, element, data, bubbles);
+    return zeta_dom.emit(event, element, data, bubbles);
   },
   define: function define(props) {
-    /* non-default import from default-exporting module */undefined(this, props);
+    util_define(this, props);
   },
   beforeInit: function beforeInit(promise) {
-    if (/* non-default import from default-exporting module */undefined(promise)) {
+    if (isFunction(promise)) {
       promise = promise.call(this);
     }
 
@@ -1930,26 +2062,26 @@ function App() {
   detect: function detect(names, callback) {
     var app = this;
     var supports = {};
-    /* non-default import from default-exporting module */undefined(names, function (i, v) {
+    each(names, function (i, v) {
       if (featureDetections[v]) {
-        supports[v] = /* non-default import from default-exporting module */undefined(featureDetections[v]) ? featureDetections[v] = /* non-default import from default-exporting module */undefined(featureDetections[v]()).catch(function (e) {
+        supports[v] = isFunction(featureDetections[v]) ? featureDetections[v] = resolveAll(featureDetections[v]()).catch(function (e) {
           console.warn('Detection for ' + v + ' has thrown exception:', e);
           return false;
         }) : featureDetections[v];
       }
     });
-    this.beforeInit(/* non-default import from default-exporting module */undefined(supports, function (supports) {
-      supports = Object.freeze(/* non-default import from default-exporting module */undefined(app.supports || {}, supports));
+    this.beforeInit(resolveAll(supports, function (supports) {
+      supports = Object.freeze(extend(app.supports || {}, supports));
 
-      /* non-default import from default-exporting module */undefined(app, {
+      util_define(app, {
         supports: supports
       });
 
-      return /* non-default import from default-exporting module */undefined(callback) && callback(supports);
+      return isFunction(callback) && callback(supports);
     }));
   },
   when: function when(value, callback) {
-    this.beforeInit(/* non-default import from default-exporting module */undefined(value, function (value) {
+    this.beforeInit(resolveAll(value, function (value) {
       if (value) {
         return callback();
       }
@@ -1958,7 +2090,7 @@ function App() {
   on: function on(target, event, handler, noChildren) {
     noChildren = (noChildren || handler) === true;
 
-    if (/* non-default import from default-exporting module */undefined(event)) {
+    if (isFunction(event)) {
       handler = event;
       event = target;
       target = app_root;
@@ -1973,11 +2105,11 @@ function App() {
 
       if (event.indexOf(' ') >= 0) {
         handlers = {};
-        /* non-default import from default-exporting module */undefined(event, function (i, v) {
+        each(event, function (i, v) {
           handlers[v] = handler;
         });
       } else {
-        handlers = /* non-default import from default-exporting module */undefined(event, handler);
+        handlers = kv(event, handler);
       }
     } else if (noChildren) {
       for (var i in event) {
@@ -1997,12 +2129,12 @@ function App() {
       target = [target];
     }
 
-    /* non-default import from default-exporting module */undefined(target, function (i, v) {
-      dom.on(v, handlers);
+    each(target, function (i, v) {
+      zeta_dom.on(v, handlers);
     });
   },
   matchPath: function matchPath(path, selector, handler) {
-    if (/* non-default import from default-exporting module */undefined(selector)) {
+    if (isFunction(selector)) {
       handler = selector;
       selector = null;
     }
@@ -2017,48 +2149,54 @@ function App() {
   beforeUpdate: hookBeforeUpdate,
   beforePageEnter: hookBeforePageEnter
 });
-/* non-default import from default-exporting module */undefined(App.prototype);
+watchable(App.prototype);
 /* harmony default export */ function src_app(callback) {
   if (appInited) {
     throw new Error('brew() can only be called once');
   }
 
   app = new App();
-  /* non-default import from default-exporting module */undefined(src_defaults, function (i, v) {
-    var fn = v && /* non-default import from default-exporting module */undefined(app[/* non-default import from default-exporting module */undefined('use-' + i)]);
+  each(src_defaults, function (i, v) {
+    var fn = v && isFunction(app[camel('use-' + i)]);
 
     if (fn) {
       fn.call(app, v);
     }
   });
-  /* non-default import from default-exporting module */undefined(callback)(app);
-  /* non-default import from default-exporting module */undefined(window, {
+  throwNotFunction(callback)(app);
+  extend(window, {
     app: app
   });
   appInited = true;
   setVar(app_root, {
     loading: 'initial'
   });
-  handleAsync(/* non-default import from default-exporting module */undefined([dom.ready, processUntilEmpty(app_(app).init)], function () {
+  handleAsync(resolveAll([zeta_dom.ready, processUntilEmpty(app_(app).init)], function () {
     appReady = true;
     mountElement(app_root);
     app.emit('ready');
   }), app_root);
 }
 function install(name, callback) {
-  /* non-default import from default-exporting module */undefined(callback);
-  /* non-default import from default-exporting module */undefined(App, /* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined('use-' + name), function (options) {
+  throwNotFunction(callback);
+  definePrototype(App, kv(camel('use-' + name), function (options) {
     var state = app_(this);
 
-    state.options[name] = /* non-default import from default-exporting module */undefined(state.options[name] || {}, options);
+    state.options[name] = extend(state.options[name] || {}, options);
     callback(this, state.options[name]);
   }));
 }
 function addDetect(name, callback) {
-  featureDetections[name] = /* non-default import from default-exporting module */undefined(callback);
+  featureDetections[name] = throwNotFunction(callback);
 }
-// EXTERNAL MODULE: external {"commonjs":["zeta-dom"],"commonjs2":["zeta-dom"],"amd":["zeta-dom"],"root":["zeta"]}
-var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(668);
+// CONCATENATED MODULE: ./tmp/tree.js
+
+var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TraversableNode,
+    TraversableNodeTree = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TraversableNodeTree,
+    InheritedNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.InheritedNode,
+    InheritedNodeTree = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.InheritedNodeTree,
+    TreeWalker = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TreeWalker;
+
 // CONCATENATED MODULE: ./src/include/zeta/tree.js
 
 // CONCATENATED MODULE: ./src/var.js
@@ -2071,7 +2209,7 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __we
 
 
 var DEBUG_EVAL = /localhost:?/i.test(location.host);
-var var_root = dom.root;
+var var_root = zeta_dom.root;
 var varAttrs = {
   'var': true,
   'auto-var': true,
@@ -2082,7 +2220,7 @@ var varAttrs = {
     error: null
   }
 };
-var tree = new /* non-default import from default-exporting module */undefined(var_root, VarContext);
+var tree = new InheritedNodeTree(var_root, VarContext);
 /**
  * @class
  * @this {Brew.VarContext}
@@ -2092,11 +2230,11 @@ function VarContext() {
   var self = this;
   var element = self.element; // @ts-ignore: does not throw error when property dataset does not exist
 
-  /* non-default import from default-exporting module */undefined(element.dataset, function (i, v) {
-    /* non-default import from default-exporting module */undefined(self, i, waterpipe.eval('`' + v));
+  each(element.dataset, function (i, v) {
+    defineOwnProperty(self, i, waterpipe.eval('`' + v));
   });
-  /* non-default import from default-exporting module */undefined(getDeclaredVar(element, true, self), function (i, v) {
-    /* non-default import from default-exporting module */undefined(self, i, v);
+  each(getDeclaredVar(element, true, self), function (i, v) {
+    defineOwnProperty(self, i, v);
   });
 
   if (element === var_root) {
@@ -2107,11 +2245,11 @@ function VarContext() {
 
 function getDeclaredVar(element, resetToNull, state) {
   var initValues = {};
-  /* non-default import from default-exporting module */undefined(varAttrs, function (i, v) {
+  each(varAttrs, function (i, v) {
     if (v === true) {
-      /* non-default import from default-exporting module */undefined(initValues, evalAttr(element, i, false, state));
-    } else if (/* non-default import from default-exporting module */undefined(v) && element.attributes[i]) {
-      /* non-default import from default-exporting module */undefined(initValues, v);
+      extend(initValues, evalAttr(element, i, false, state));
+    } else if (isPlainObject(v) && element.attributes[i]) {
+      extend(initValues, v);
     }
   });
 
@@ -2128,7 +2266,7 @@ function findVarContext(varname, element) {
   element = element || var_root;
 
   for (var s = tree.getNode(element); s !== null; s = Object.getPrototypeOf(s)) {
-    if (/* non-default import from default-exporting module */undefined(s, varname)) {
+    if (util_hasOwnProperty(s, varname)) {
       return s;
     }
   }
@@ -2155,7 +2293,7 @@ function getVarScope(varname, element) {
  */
 
 function setVar(element, name, value) {
-  var values = name && (/* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value));
+  var values = name && (isPlainObject(name) || kv(name, value));
   var hasUpdated = false;
 
   if (typeof element === 'string') {
@@ -2167,7 +2305,7 @@ function setVar(element, name, value) {
     });
   } else {
     var state = tree.setNode(element);
-    /* non-default import from default-exporting module */undefined(values || evalAttr(element, 'set-var'), function (i, v) {
+    each(values || evalAttr(element, 'set-var'), function (i, v) {
       if (state[i] !== v) {
         var node = findVarContext(i, element);
         node[i] = v;
@@ -2177,7 +2315,7 @@ function setVar(element, name, value) {
     });
 
     if (hasUpdated && appReady) {
-      /* non-default import from default-exporting module */undefined(processStateChange);
+      setImmediateOnce(processStateChange);
     }
   }
 
@@ -2190,12 +2328,12 @@ function setVar(element, name, value) {
  */
 
 function declareVar(element, name, value) {
-  var values = /* non-default import from default-exporting module */undefined(name) || /* non-default import from default-exporting module */undefined(name, value);
+  var values = isPlainObject(name) || kv(name, value);
   var context = tree.setNode(element);
 
   for (var i in values) {
-    if (!/* non-default import from default-exporting module */undefined(context, i)) {
-      /* non-default import from default-exporting module */undefined(context, i, null);
+    if (!util_hasOwnProperty(context, i)) {
+      defineOwnProperty(context, i, null);
     }
   }
 
@@ -2208,7 +2346,7 @@ function declareVar(element, name, value) {
 
 function resetVar(element, resetToNull) {
   batch(function () {
-    /* non-default import from default-exporting module */undefined(tree.descendants(element), function (i, v) {
+    each(tree.descendants(element), function (i, v) {
       setVar(v.element, getDeclaredVar(v.element, resetToNull));
     });
   });
@@ -2220,7 +2358,7 @@ function resetVar(element, resetToNull) {
 
 function getVar(element, name) {
   var values = tree.getNode(element) || {};
-  return name ? values[name] : /* non-default import from default-exporting module */undefined({}, values);
+  return name ? values[name] : extend({}, values);
 }
 /**
  * @param {string} template
@@ -2236,12 +2374,12 @@ function evaluate(template, context, element, attrName, templateMode) {
       app: app
     }
   };
-  var result = templateMode ? /* non-default import from default-exporting module */undefined(waterpipe(template, /* non-default import from default-exporting module */undefined({}, context), options)) : waterpipe.eval(template, /* non-default import from default-exporting module */undefined({}, context), options);
+  var result = templateMode ? htmlDecode(waterpipe(template, extend({}, context), options)) : waterpipe.eval(template, extend({}, context), options);
 
   if (DEBUG_EVAL) {
     groupLog('eval', [element, attrName, '→', result], function (console) {
       console.log('%c%s%c', 'background-color:azure;color:darkblue;font-weight:bold', template, '', '→', result);
-      console.log('Context:', /* non-default import from default-exporting module */undefined({}, context));
+      console.log('Context:', extend({}, context));
       console.log('Element:', element === var_root ? document : element);
     });
   }
@@ -2264,13 +2402,13 @@ function evalAttr(element, attrName, templateMode, context) {
 
   return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-dom.watchAttributes(var_root, /* non-default import from default-exporting module */undefined(varAttrs), function (elements) {
-  /* non-default import from default-exporting module */undefined(elements, function (i, v) {
+zeta_dom.watchAttributes(var_root, keys(varAttrs), function (elements) {
+  each(elements, function (i, v) {
     tree.setNode(v);
   });
 }, true);
 tree.on('update', function (e) {
-  /* non-default import from default-exporting module */undefined(e.updatedNodes, function (i, v) {
+  each(e.updatedNodes, function (i, v) {
     markUpdated(v.element);
   });
 });
@@ -2298,7 +2436,7 @@ var asyncActions = {};
  */
 
 function addAsyncAction(attr, callback) {
-  asyncActions[attr] = /* non-default import from default-exporting module */undefined(callback);
+  asyncActions[attr] = throwNotFunction(callback);
 }
 /**
  * @param {Element | string=} flyout
@@ -2315,12 +2453,12 @@ function closeFlyout(flyout, value) {
       state.resolve(value);
 
       if (state.source) {
-        /* non-default import from default-exporting module */undefined(state.source, 'target-opened', false);
+        setClass(state.source, 'target-opened', false);
       }
     }
 
     animateOut(v, 'show').then(function () {
-      /* non-default import from default-exporting module */undefined(v, 'open', false);
+      setClass(v, 'open', false);
     });
   });
 }
@@ -2332,11 +2470,11 @@ function closeFlyout(flyout, value) {
  */
 
 function openFlyout(selector, states, source, closeIfOpened) {
-  var container = source || dom.root;
-  var element = selector ? /* non-default import from default-exporting module */undefined(selector, container) : jquery(container).closest('[is-flyout]')[0];
+  var container = source || zeta_dom.root;
+  var element = selector ? selectClosestRelative(selector, container) : jquery(container).closest('[is-flyout]')[0];
 
   if (!element) {
-    return /* non-default import from default-exporting module */undefined();
+    return reject();
   }
 
   var prev = flyoutStates.get(element);
@@ -2366,35 +2504,35 @@ function openFlyout(selector, states, source, closeIfOpened) {
   });
 
   if (source) {
-    /* non-default import from default-exporting module */undefined(source, 'target-opened', true);
+    setClass(source, 'target-opened', true);
   }
 
   if (states) {
     setVar(element, states);
   }
 
-  /* non-default import from default-exporting module */undefined(element, 'open', function () {
-    dom.focus(element);
+  runCSSTransition(element, 'open', function () {
+    zeta_dom.focus(element);
   });
   animateIn(element, 'open');
 
   if (element.attributes['is-modal']) {
-    dom.lock(element, promise);
+    zeta_dom.lock(element, promise);
   }
 
   return promise;
 }
 addAsyncAction('validate', function (e) {
-  var target = /* non-default import from default-exporting module */undefined(this.getAttribute('validate') || '', e.target);
+  var target = selectClosestRelative(this.getAttribute('validate') || '', e.target);
 
   if (target) {
     // @ts-ignore: type inference issue
-    var valid = dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
+    var valid = zeta_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
 
     if (!valid) {
       e.stopImmediatePropagation();
       e.preventDefault();
-    } else if (/* non-default import from default-exporting module */undefined(valid)) {
+    } else if (isThenable(valid)) {
       return valid.then(function (valid) {
         if (!valid) {
           throw 'validation-failed';
@@ -2405,23 +2543,23 @@ addAsyncAction('validate', function (e) {
 });
 addAsyncAction('context-method', function (e) {
   var self = e.currentTarget;
-  var method = /* non-default import from default-exporting module */undefined(self.getAttribute('context-method') || '');
+  var method = camel(self.getAttribute('context-method') || '');
 
-  if (/* non-default import from default-exporting module */undefined(app[method])) {
+  if (isFunction(app[method])) {
     var formSelector = self.getAttribute('context-form'); // @ts-ignore: acceptable if self.form is undefined
 
-    var form = formSelector ? /* non-default import from default-exporting module */undefined(formSelector, self) : self.form;
+    var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
     var params = {};
     var valid = true;
 
     if (form) {
-      valid = dom.emit('validate', form) || form.checkValidity();
-      /* non-default import from default-exporting module */undefined(params, getFormValues(form));
+      valid = zeta_dom.emit('validate', form) || form.checkValidity();
+      extend(params, getFormValues(form));
     } else {
-      /* non-default import from default-exporting module */undefined(params, self.dataset);
+      extend(params, self.dataset);
     }
 
-    return /* non-default import from default-exporting module */undefined(valid, function (valid) {
+    return resolveAll(valid, function (valid) {
       if (!valid) {
         throw 'validation-failed';
       }
@@ -2430,9 +2568,9 @@ addAsyncAction('context-method', function (e) {
     });
   }
 });
-dom.ready.then(function () {
+zeta_dom.ready.then(function () {
   app.on('mounted', function (e) {
-    jquery(/* non-default import from default-exporting module */undefined('[' + /* non-default import from default-exporting module */undefined(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
+    jquery(selectIncludeSelf('[' + keys(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
   });
   app.on('navigate', function () {
     setTimeout(function () {
@@ -2450,9 +2588,9 @@ dom.ready.then(function () {
   });
   jquery('body').on('click', '[async-action]', function (e) {
     var element = e.currentTarget;
-    var executed = /* non-default import from default-exporting module */undefined(executedAsyncActions, element, Array);
+    var executed = mapGet(executedAsyncActions, element, Array);
     var callback = null;
-    /* non-default import from default-exporting module */undefined(asyncActions, function (i, v) {
+    each(asyncActions, function (i, v) {
       if (element.attributes[i] && executed.indexOf(v) < 0) {
         callback = v;
         return false;
@@ -2466,11 +2604,11 @@ dom.ready.then(function () {
 
       var returnValue = callback.call(element, e);
 
-      if (/* non-default import from default-exporting module */undefined(returnValue) && !e.isImmediatePropagationStopped()) {
+      if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
         e.stopImmediatePropagation();
         e.preventDefault();
         handleAsync(returnValue).then(function () {
-          /* non-default import from default-exporting module */undefined(e);
+          dispatchDOMMouseEvent(e);
         }, function (e) {
           executedAsyncActions.delete(element);
           console.warn('Action threw an error:', e);
@@ -2518,9 +2656,9 @@ dom.ready.then(function () {
     e.stopPropagation();
     var self = e.currentTarget;
     var selector = self.getAttribute('toggle-class-for');
-    var target = selector ? /* non-default import from default-exporting module */undefined(selector, self) : e.currentTarget;
-    /* non-default import from default-exporting module */undefined(self.getAttribute('toggle-class'), function (i, v) {
-      /* non-default import from default-exporting module */undefined(target, v.slice(1), v[0] === '+');
+    var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
+    each(self.getAttribute('toggle-class'), function (i, v) {
+      setClass(target, v.slice(1), v[0] === '+');
     });
   });
   jquery('body').on('click', function () {
@@ -2534,13 +2672,13 @@ dom.ready.then(function () {
 
 
 
-dom.ready.then(function () {
+zeta_dom.ready.then(function () {
   jquery('[brew-template]').each(function (i, v) {
     addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
   });
   jquery('apply-attributes').each(function (i, v) {
-    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || dom.root);
-    /* non-default import from default-exporting module */undefined(v.attributes, function (i, v) {
+    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || zeta_dom.root);
+    each(v.attributes, function (i, v) {
       if (v.name !== 'elements') {
         $target.attr(v.name, v.value);
       }
@@ -2548,7 +2686,7 @@ dom.ready.then(function () {
   }).remove(); // replace inline background-image to prevent browser to load unneccessary images
 
   jquery('[style]').each(function (i, v) {
-    var backgroundImage = /* non-default import from default-exporting module */undefined(v.style.backgroundImage);
+    var backgroundImage = isCssUrlValue(v.style.backgroundImage);
 
     if (backgroundImage) {
       v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(backgroundImage)));
@@ -2563,7 +2701,7 @@ dom.ready.then(function () {
     }
   };
 });
-/* harmony default export */ const domReady = (null);
+/* harmony default export */ const src_domReady = (null);
 // CONCATENATED MODULE: ./src/core.js
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -2582,7 +2720,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-/* non-default import from default-exporting module */undefined(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   defaults: src_defaults
 }, common_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getVar: getVar,
@@ -2602,15 +2740,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 install('config', function (app, options) {
-  var config = /* non-default import from default-exporting module */undefined();
-  /* non-default import from default-exporting module */undefined(app, {
+  var config = watchable();
+  util_define(app, {
     config: config
   });
-  app.beforeInit(getJSON(options.path).catch(/* non-default import from default-exporting module */undefined(options.fallback) || null).then(function (d) {
-    /* non-default import from default-exporting module */undefined(config, d);
+  app.beforeInit(getJSON(options.path).catch(isFunction(options.fallback) || null).then(function (d) {
+    extend(config, d);
 
     if (options.freeze) {
-      /* non-default import from default-exporting module */undefined(config);
+      deepFreeze(config);
     }
   }));
 });
@@ -2642,20 +2780,20 @@ install('formVar', function (app) {
       } else {
         var currentValues = getVar(form, varname) || {};
 
-        if (!/* non-default import from default-exporting module */undefined(values, /* non-default import from default-exporting module */undefined(currentValues, /* non-default import from default-exporting module */undefined(values)))) {
-          setVar(form, varname, /* non-default import from default-exporting module */undefined({}, currentValues, values));
+        if (!equal(values, pick(currentValues, keys(values)))) {
+          setVar(form, varname, extend({}, currentValues, values));
         }
       }
     };
 
-    dom.watchAttributes(form, 'value', function () {
-      /* non-default import from default-exporting module */undefined(update);
+    zeta_dom.watchAttributes(form, 'value', function () {
+      setImmediateOnce(update);
     });
-    dom.watchElements(form, ':input', function (addedInputs) {
-      /* non-default import from default-exporting module */undefined(addedInputs, function (i, v) {
-        var afterDetached = dom.afterDetached(v, form);
-        /* non-default import from default-exporting module */undefined(afterDetached, v, 'change', function () {
-          /* non-default import from default-exporting module */undefined(update);
+    zeta_dom.watchElements(form, ':input', function (addedInputs) {
+      each(addedInputs, function (i, v) {
+        var afterDetached = zeta_dom.afterDetached(v, form);
+        bindUntil(afterDetached, v, 'change', function () {
+          setImmediateOnce(update);
         });
         afterDetached.then(update.bind(null, true));
       });
@@ -2669,7 +2807,7 @@ install('formVar', function (app) {
         }
       } else {
         // @ts-ignore: form must be HTMLFormElement
-        /* non-default import from default-exporting module */undefined(form.elements, function (i, v) {
+        each(form.elements, function (i, v) {
           if (!isElementActive(getVarScope(v.name, form))) {
             v.value = null;
           }
@@ -2680,7 +2818,7 @@ install('formVar', function (app) {
     });
   });
   app.on('pageenter', function (e) {
-    jquery(/* non-default import from default-exporting module */undefined('form[form-var]', e.target)).each(function (i, v) {
+    jquery(selectIncludeSelf('form[form-var]', e.target)).each(function (i, v) {
       jquery(':input:eq(0)', v).trigger('change');
     });
   });
@@ -2692,7 +2830,7 @@ install('formVar', function (app) {
 
 function detectLanguage(languages, defaultLanguage) {
   var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
-  /* non-default import from default-exporting module */undefined(userLanguages, function (i, v) {
+  each(userLanguages, function (i, v) {
     if (v.indexOf('-') > 0) {
       var invariant = v.split('-')[0];
 
@@ -2706,7 +2844,7 @@ function detectLanguage(languages, defaultLanguage) {
     }
   });
   languages = languages || userLanguages;
-  return /* non-default import from default-exporting module */undefined(userLanguages, function (v) {
+  return any(userLanguages, function (v) {
     return languages.indexOf(v) >= 0;
   }) || defaultLanguage || languages[0];
 }
@@ -2761,7 +2899,7 @@ install('i18n', function (app, options) {
 
 
 install('login', function (app, options) {
-  options = /* non-default import from default-exporting module */undefined({
+  options = extend({
     loginPagePath: '',
     defaultRedirectPath: '',
     cookie: '',
@@ -2772,12 +2910,12 @@ install('login', function (app, options) {
     getTokenFromResponse: null
   }, options);
   var authCookie = cookie(options.cookie, options.expiry);
-  var setLoggedIn = /* non-default import from default-exporting module */undefined(app, 'loggedIn', false, true);
+  var setLoggedIn = defineObservableProperty(app, 'loggedIn', false, true);
 
   function handleLogin(response) {
     setLoggedIn(true);
 
-    if (/* non-default import from default-exporting module */undefined(options.getTokenFromResponse)) {
+    if (isFunction(options.getTokenFromResponse)) {
       authCookie.set(options.getTokenFromResponse(response));
     }
 
@@ -2795,15 +2933,15 @@ install('login', function (app, options) {
   var redirectPath = app.initialPath;
   var previousToken = authCookie.get();
 
-  if (previousToken && /* non-default import from default-exporting module */undefined(options.tokenLogin)) {
-    app.beforeInit(/* non-default import from default-exporting module */undefined(/* non-default import from default-exporting module */undefined(options.tokenLogin(previousToken), handleLogin)));
+  if (previousToken && isFunction(options.tokenLogin)) {
+    app.beforeInit(catchAsync(resolveAll(options.tokenLogin(previousToken), handleLogin)));
   }
 
   app.define({
     login: function login(params, nextPath, callback) {
-      callback = /* non-default import from default-exporting module */undefined(callback || nextPath);
+      callback = isFunction(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return /* non-default import from default-exporting module */undefined(options.login(params)).then(function (d) {
+      return resolveAll(options.login(params)).then(function (d) {
         handleLogin(d);
         return callback && callback();
       }, function (e) {
@@ -2820,12 +2958,12 @@ install('login', function (app, options) {
     },
     logout: function logout(nextPath, callback) {
       if (!app.loggedIn) {
-        return /* non-default import from default-exporting module */undefined();
+        return resolve();
       }
 
-      callback = /* non-default import from default-exporting module */undefined(callback || nextPath);
+      callback = isFunction(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return /* non-default import from default-exporting module */undefined(preventLeave()).then(function () {
+      return resolve(preventLeave()).then(function () {
         return options.logout();
       }).then(function () {
         handleLogout();
@@ -2838,7 +2976,7 @@ install('login', function (app, options) {
   app.on('navigate', function (e) {
     var loginPagePath = app.resolvePath(options.loginPagePath);
 
-    if (/* non-default import from default-exporting module */undefined(app.loggedIn, e.pathname !== loginPagePath)) {
+    if (either(app.loggedIn, e.pathname !== loginPagePath)) {
       if (app.loggedIn) {
         app.navigate(options.defaultRedirectPath);
       } else {
@@ -2862,16 +3000,16 @@ src_defaults.preloadImage = true;
 install('preloadImage', function (app) {
   app.beforeUpdate(function (domUpdates) {
     var urls = {};
-    /* non-default import from default-exporting module */undefined(domUpdates, function (element, props) {
+    each(domUpdates, function (element, props) {
       if ((props.src || props.style) && isElementActive(element)) {
         if (props.src) {
           urls[toAbsoluteUrl(props.src)] = true;
         }
 
         if (props.style) {
-          /* non-default import from default-exporting module */undefined(preloadImage_IMAGE_STYLE_PROPS, function (i, v) {
+          each(preloadImage_IMAGE_STYLE_PROPS, function (i, v) {
             // @ts-ignore: props.style checked for truthiness
-            var imageUrl = /* non-default import from default-exporting module */undefined(props.style[v]);
+            var imageUrl = isCssUrlValue(props.style[v]);
 
             if (imageUrl) {
               urls[toAbsoluteUrl(imageUrl)] = true;
@@ -2880,7 +3018,7 @@ install('preloadImage', function (app) {
         }
       }
     });
-    return preloadImages(/* non-default import from default-exporting module */undefined(urls), 200);
+    return preloadImages(keys(urls), 200);
   });
   app.beforePageEnter(function (element) {
     return preloadImages(element, 1000);
@@ -2899,7 +3037,7 @@ install('preloadImage', function (app) {
 install('scrollable', function (app) {
   // @ts-ignore: non-standard member
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-  var store = /* non-default import from default-exporting module */undefined();
+  var store = createPrivateStore();
   var id = 0;
 
   function getState(container) {
@@ -2920,9 +3058,9 @@ install('scrollable', function (app) {
 
     jquery(container).scrollable({
       bounce: false,
-      handle: /* non-default import from default-exporting module */undefined(dir, 'auto scrollbar content') || 'content',
-      hScroll: !/* non-default import from default-exporting module */undefined(dir, 'y-only'),
-      vScroll: !/* non-default import from default-exporting module */undefined(dir, 'x-only'),
+      handle: matchWord(dir, 'auto scrollbar content') || 'content',
+      hScroll: !matchWord(dir, 'y-only'),
+      vScroll: !matchWord(dir, 'x-only'),
       content: '.' + getState(container).childClass + ':visible:not(.disabled)',
       pageItem: selector,
       snapToPage: paged === 'always' || paged === app.orientation,
@@ -2949,7 +3087,7 @@ install('scrollable', function (app) {
     function scrollTo(index, align) {
       align = align || 'center top';
 
-      if (!scrolling && /* non-default import from default-exporting module */undefined(container)) {
+      if (!scrolling && isVisible(container)) {
         scrolling = true;
         isControlledScroll = true;
         setState(index);
@@ -2963,7 +3101,7 @@ install('scrollable', function (app) {
     function refresh() {
       var isPaged = paged === 'always' || paged === app.orientation;
 
-      if (isPaged && /* non-default import from default-exporting module */undefined(container)) {
+      if (isPaged && isVisible(container)) {
         if (scrolling) {
           needRefresh = true;
         } else {
@@ -2988,7 +3126,7 @@ install('scrollable', function (app) {
             var newIndex = e.data[varname];
 
             if (!scrolling) {
-              if ((/* non-default import from default-exporting module */undefined(items[newIndex]).width | 0) > (/* non-default import from default-exporting module */undefined().width | 0)) {
+              if ((getRect(items[newIndex]).width | 0) > (getRect().width | 0)) {
                 scrollTo(newIndex, 'left center');
               } else {
                 scrollTo(newIndex);
@@ -3021,11 +3159,11 @@ install('scrollable', function (app) {
   }
 
   app.on('mounted', function (e) {
-    jquery(/* non-default import from default-exporting module */undefined('[scrollable-target]', e.target)).each(function (i, v) {
+    jquery(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
       var scrollable = jquery(v).closest('[scrollable]')[0];
       jquery(v).addClass(getState(scrollable).childClass);
     });
-    jquery(/* non-default import from default-exporting module */undefined('[scrollable]', e.target)).each(function (i, v) {
+    jquery(selectIncludeSelf('[scrollable]', e.target)).each(function (i, v) {
       initScrollable(v);
     });
   }); // update scroller on events other than window resize
@@ -3035,11 +3173,11 @@ install('scrollable', function (app) {
   }
 
   app.on('statechange orientationchange animationcomplete', function () {
-    /* non-default import from default-exporting module */undefined(refresh);
+    setTimeoutOnce(refresh);
   });
   app.on('pageenter', function (e) {
-    var $scrollables = jquery(/* non-default import from default-exporting module */undefined('[scrollable]', e.target)).add(jquery(e.target).parents('[scrollable]'));
-    jquery(/* non-default import from default-exporting module */undefined('[scrollable-target]', e.target)).each(function (i, v) {
+    var $scrollables = jquery(selectIncludeSelf('[scrollable]', e.target)).add(jquery(e.target).parents('[scrollable]'));
+    jquery(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
       jquery(v).toggleClass('disabled', !isElementActive(v));
     });
     $scrollables.scrollable('refresh');
@@ -3049,25 +3187,29 @@ install('scrollable', function (app) {
   function updateScrollIntoView() {
     jquery('[animate-on~="scroll-into-view"]:not(.tweening-in):visible').each(function (i, v) {
       var m = new DOMMatrix(getComputedStyle(v).transform);
-      var rootRect = /* non-default import from default-exporting module */undefined(dom.root);
-      var thisRect = /* non-default import from default-exporting module */undefined(v);
+      var rootRect = getRect(zeta_dom.root);
+      var thisRect = getRect(v);
 
-      if (/* non-default import from default-exporting module */undefined(rootRect, thisRect.translate(-m.e || 0, 0)) || /* non-default import from default-exporting module */undefined(rootRect, thisRect.translate(0, -m.f || 0))) {
+      if (rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0))) {
         animateIn(v, 'scroll-into-view');
       }
     });
   }
 
   app.on('resize pageenter statechange scrollMove orientationchange', function () {
-    /* non-default import from default-exporting module */undefined(updateScrollIntoView);
+    setTimeoutOnce(updateScrollIntoView);
   });
 });
 /* harmony default export */ const scrollable = (null);
-// EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
-var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_0 = __webpack_require__(163);
-// CONCATENATED MODULE: ./src/include/zeta/index.js
+// CONCATENATED MODULE: ./tmp/env.js
 
-/* harmony default export */ const zeta = ((/* unused pure expression or super */ null && (index)));
+var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
+    IS_IE10 = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE10,
+    IS_IE = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE,
+    IS_MAC = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_MAC,
+    IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_TOUCH;
+
+// CONCATENATED MODULE: ./src/include/zeta/env.js
 
 // CONCATENATED MODULE: ./src/extension/viewport.js
 
@@ -3080,14 +3222,14 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_0 = __w
 
 src_defaults.viewport = true;
 install('viewport', function (app) {
-  var setOrientation = /* non-default import from default-exporting module */undefined(app, 'orientation', '', true);
-  var useAvailOrInner = /* non-default import from default-exporting module */undefined && navigator.platform !== 'MacIntel';
+  var setOrientation = defineObservableProperty(app, 'orientation', '', true);
+  var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
   var availWidth = screen.availWidth;
   var availHeight = screen.availHeight;
   var aspectRatio, viewportWidth, viewportHeight;
 
   function checkViewportSize(triggerEvent) {
-    if (/* non-default import from default-exporting module */undefined && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
+    if (IS_TOUCH && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
       // set min-height on body container so that page size is correct when virtual keyboard pops out
       jquery('body').css('min-height', jquery('body').height() + 'px');
     } else {
@@ -3100,8 +3242,8 @@ install('viewport', function (app) {
     var bodyHeight = jquery('body').height() || 0;
     var htmlHeight = jquery('html').height() || 0;
 
-    if (htmlHeight < bodyHeight && jquery(dom.activeElement).is(':text')) {
-      /* non-default import from default-exporting module */undefined(dom.activeElement);
+    if (htmlHeight < bodyHeight && jquery(zeta_dom.activeElement).is(':text')) {
+      scrollIntoView(zeta_dom.activeElement);
     }
 
     var previousAspectRatio = aspectRatio;
@@ -3117,7 +3259,7 @@ install('viewport', function (app) {
         viewportHeight: viewportHeight
       });
 
-      if (/* non-default import from default-exporting module */undefined(aspectRatio >= 1, previousAspectRatio >= 1)) {
+      if (either(aspectRatio >= 1, previousAspectRatio >= 1)) {
         app.emit('orientationchange', {
           orientation: app.orientation
         });
@@ -3125,7 +3267,7 @@ install('viewport', function (app) {
     }
   }
 
-  /* non-default import from default-exporting module */undefined(app, {
+  util_define(app, {
     get aspectRatio() {
       return aspectRatio;
     },
@@ -3140,10 +3282,10 @@ install('viewport', function (app) {
 
   });
   app.on('orientationchange', function () {
-    animateIn(dom.root, 'orientationchange');
+    animateIn(zeta_dom.root, 'orientationchange');
   });
   jquery(window).on('resize', function () {
-    /* non-default import from default-exporting module */undefined(checkViewportSize);
+    setTimeoutOnce(checkViewportSize);
   });
   jquery(function () {
     checkViewportSize(false);
@@ -3179,7 +3321,7 @@ module.exports = History;
 
 /***/ }),
 
-/***/ 889:
+/***/ 304:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
 
 // @ts-nocheck
@@ -3269,38 +3411,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__229__;
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 
-/***/ }),
-
-/***/ 260:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__260__;
-
-/***/ }),
-
-/***/ 50:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__50__;
-
-/***/ }),
-
-/***/ 990:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__990__;
-
-/***/ }),
-
-/***/ 668:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__668__;
-
 /***/ })
 
 /******/ 	});
@@ -3361,7 +3471,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__668__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(304);
+/******/ 	return __webpack_require__(65);
 /******/ })()
 .default;
 });
