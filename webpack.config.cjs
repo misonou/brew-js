@@ -1,10 +1,92 @@
+const fs = require('fs');
 const path = require('path');
+const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+const srcPath = path.join(process.cwd(), 'src');
 const outputPath = path.join(process.cwd(), 'dist');
 const packagePath = path.join(process.cwd(), 'build');
+
+const includeESMDir = path.join(srcPath, 'include/zeta');
+const includeUMDDir = path.join(srcPath, 'include/zeta-umd');
+const zetaDir = fs.existsSync('../zeta-dom') ? path.resolve('../zeta-dom/src') : path.resolve('node_modules/zeta-dom');
+
+function getExportedNames(filename) {
+    const parser = new JavascriptParser('module');
+    const names = [];
+    parser.hooks.export.tap('export', (statement) => {
+        if (statement.type === 'ExportNamedDeclaration') {
+            names.push(...statement.specifiers.map(v => v.exported.name));
+        }
+    });
+    parser.parse(fs.readFileSync(filename, 'utf8'));
+    return names;
+}
+
+function getExpressionForSubModule(subMobule) {
+    switch (subMobule) {
+        case 'cssUtil':
+            return 'zeta.css';
+        case 'dom':
+        case 'domLock':
+        case 'observe':
+            return 'zeta.dom';
+        case 'util':
+        case 'domUtil':
+            return 'zeta.util';
+        case 'events':
+        case 'tree':
+        case 'env':
+            return 'zeta';
+    }
+}
+
+function transformDeconstructName(subMobule, name) {
+    if (subMobule === 'events') {
+        switch (name) {
+            case 'ZetaEventContainer':
+                return 'EventContainer: ZetaEventContainer';
+        }
+        throw `Export ${name} does not exist in zeta-dom/${subMobule} UMD distribution`
+    }
+    return name;
+}
+
+if (!fs.existsSync(includeUMDDir)) {
+    fs.mkdirSync(includeUMDDir);
+}
+fs.readdirSync(includeESMDir).forEach((filename) => {
+    var output = 'import zeta from "zeta-dom";';
+    var parser = new JavascriptParser('module');
+    var handler = (statement, source) => {
+        if (/^zeta-dom\/(.+)/.test(source)) {
+            const subMobule = RegExp.$1;
+            switch (statement.type) {
+                case 'ExportAllDeclaration': {
+                    let names = getExportedNames(path.join(zetaDir, `${subMobule}.js`));
+                    output += `const { ${names.map(v => transformDeconstructName(subMobule, v)).join(', ')} } = ${getExpressionForSubModule(subMobule)}; export { ${names.join(', ')} };`;
+                    break;
+                }
+                case 'ExportNamedDeclaration': {
+                    let names = statement.specifiers.map(v => v.local.name);
+                    output += `const { ${names.map(v => transformDeconstructName(subMobule, v)).join(', ')} } = ${getExpressionForSubModule(subMobule)}; export { ${names.join(', ')} };`;
+                    break;
+                }
+                case 'ImportDeclaration': {
+                    let defaultSpecifier = statement.specifiers.filter(v => v.type === 'ImportDefaultSpecifier')[0].local.name;
+                    output += `const ${defaultSpecifier} = ${getExpressionForSubModule(subMobule)}; export default ${defaultSpecifier};`;
+                    break;
+                }
+            }
+        }
+    };
+    parser.hooks.import.tap('import', handler);
+    parser.hooks.exportImport.tap('import', handler);
+    parser.parse(fs.readFileSync(path.join(includeESMDir, filename), 'utf8'));
+    fs.writeFileSync(path.join(includeUMDDir, filename), output);
+});
 
 module.exports = {
     entry: {
@@ -36,13 +118,17 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin({
-            cleanOnceBeforeBuildPatterns: [`${packagePath}/**/*`]
+            cleanOnceBeforeBuildPatterns: [`${packagePath}/**/*`],
+            cleanAfterEveryBuildPatterns: [includeUMDDir]
         }),
         new CopyWebpackPlugin({
             patterns: [
                 {
                     from: 'src',
-                    to: `${packagePath}`
+                    to: `${packagePath}`,
+                    globOptions: {
+                        ignore: ['**/zeta-umd/*']
+                    }
                 },
                 {
                     from: 'dist',
@@ -74,7 +160,9 @@ module.exports = {
         ]
     },
     resolve: {
-        modules: ['..', 'node_modules']
+        alias: {
+            'zeta-dom': includeUMDDir
+        }
     },
     externals: {
         'promise-polyfill': 'promise-polyfill',
@@ -86,41 +174,11 @@ module.exports = {
             amd: 'historyjs',
             root: 'History'
         },
-        'zeta-dom/env.js': {
+        'zeta-dom': {
             commonjs: 'zeta-dom',
             commonjs2: 'zeta-dom',
             amd: 'zeta-dom',
             root: 'zeta'
-        },
-        'zeta-dom/util.js': {
-            commonjs: ['zeta-dom', 'util'],
-            commonjs2: ['zeta-dom', 'util'],
-            amd: ['zeta-dom', 'util'],
-            root: ['zeta', 'util']
-        },
-        'zeta-dom/domUtil.js': {
-            commonjs: ['zeta-dom', 'util'],
-            commonjs2: ['zeta-dom', 'util'],
-            amd: ['zeta-dom', 'util'],
-            root: ['zeta', 'util']
-        },
-        'zeta-dom/cssUtil.js': {
-            commonjs: ['zeta-dom', 'css'],
-            commonjs2: ['zeta-dom', 'css'],
-            amd: ['zeta-dom', 'css'],
-            root: ['zeta', 'css']
-        },
-        'zeta-dom/tree.js': {
-            commonjs: ['zeta-dom'],
-            commonjs2: ['zeta-dom'],
-            amd: ['zeta-dom'],
-            root: ['zeta']
-        },
-        'zeta-dom/dom.js': {
-            commonjs: ['zeta-dom', 'dom'],
-            commonjs2: ['zeta-dom', 'dom'],
-            amd: ['zeta-dom', 'dom'],
-            root: ['zeta', 'dom']
         }
     }
 };
