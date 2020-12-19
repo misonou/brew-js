@@ -10,7 +10,7 @@ const outputPath = path.join(process.cwd(), 'dist');
 const packagePath = path.join(process.cwd(), 'build');
 
 const includeESMDir = path.join(srcPath, 'include/zeta');
-const includeUMDDir = path.join(srcPath, 'include/zeta-umd');
+const includeUMDDir = path.join(process.cwd(), 'tmp');
 const zetaDir = fs.existsSync('../zeta-dom') ? path.resolve('../zeta-dom/src') : path.resolve('node_modules/zeta-dom');
 
 function getExportedNames(filename) {
@@ -125,10 +125,7 @@ module.exports = {
             patterns: [
                 {
                     from: 'src',
-                    to: `${packagePath}`,
-                    globOptions: {
-                        ignore: ['**/zeta-umd/*']
-                    }
+                    to: `${packagePath}`
                 },
                 {
                     from: 'dist',
