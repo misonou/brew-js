@@ -1,10 +1,10 @@
-import Promise from "./include/promise-polyfill.cjs";
-import $ from "./include/jquery.cjs";
-import waterpipe from "./include/waterpipe.cjs"
-import { runCSSTransition } from "./include/zeta/cssUtil.js";
-import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta/domUtil.js";
-import dom from "./include/zeta/dom.js";
-import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject, isThenable } from "./include/zeta/util.js";
+import Promise from "./include/promise-polyfill/index.js";
+import $ from "./include/jquery/index.js";
+import waterpipe from "./include/waterpipe/index.js"
+import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
+import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
+import dom from "./include/zeta-dom/dom.js";
+import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject, isThenable } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";

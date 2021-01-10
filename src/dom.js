@@ -1,9 +1,9 @@
-import waterpipe from "./include/waterpipe.cjs"
-import $ from "./include/jquery.cjs";
-import { parseCSS, isCssUrlValue } from "./include/zeta/cssUtil.js";
-import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta/domUtil.js";
-import dom from "./include/zeta/dom.js";
-import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta/util.js";
+import waterpipe from "./include/waterpipe/index.js"
+import $ from "./include/jquery/index.js";
+import { parseCSS, isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
+import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
+import dom from "./include/zeta-dom/dom.js";
+import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";

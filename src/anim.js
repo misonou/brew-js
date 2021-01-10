@@ -1,9 +1,9 @@
-import Promise from "./include/promise-polyfill.cjs";
-import $ from "./include/jquery.cjs";
-import { selectIncludeSelf, isVisible } from "./include/zeta/domUtil.js";
-import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta/util.js";
-import { runCSSTransition } from "./include/zeta/cssUtil.js";
-import dom from "./include/zeta/dom.js";
+import Promise from "./include/promise-polyfill/index.js";
+import $ from "./include/jquery/index.js";
+import { selectIncludeSelf, isVisible } from "./include/zeta-dom/domUtil.js";
+import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta-dom/util.js";
+import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
+import dom from "./include/zeta-dom/dom.js";
 
 const customAnimateIn = {};
 const customAnimateOut = {};

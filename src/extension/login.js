@@ -1,4 +1,4 @@
-import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "../include/zeta/util.js";
+import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "../include/zeta-dom/util.js";
 import { cookie } from "../util/common.js";
 import { install } from "../app.js";
 import { preventLeave } from "../dom.js";

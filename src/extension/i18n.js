@@ -1,4 +1,4 @@
-import { any, each } from "../include/zeta/util.js";
+import { any, each } from "../include/zeta-dom/util.js";
 import { install } from "../app.js";
 
 function detectLanguage(languages, defaultLanguage) {

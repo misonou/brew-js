@@ -1,7 +1,7 @@
-import $ from "../include/jquery.cjs";
-import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/zeta/util.js";
-import { bindUntil, selectIncludeSelf } from "../include/zeta/domUtil.js";
-import dom from "../include/zeta/dom.js";
+import $ from "../include/jquery/index.js";
+import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/zeta-dom/util.js";
+import { bindUntil, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import dom from "../include/zeta-dom/dom.js";
 import { getVar, getVarScope, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";

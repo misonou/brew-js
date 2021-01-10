@@ -5,13 +5,22 @@ const express = require('express');
 const server = express();
 const basepath = __dirname;
 
-const zetaIncludePath = (function () {
-    var realPath = path.resolve(basepath, '../zeta-dom/src');
-    return fs.existsSync(realPath) ? realPath : path.resolve(basepath, 'node_modules/zeta-dom');
-})();
+const includePath = {
+    'zeta-dom': ''
+};
+
+function resolveRealPath(reqPath) {
+    var s = reqPath.replace('/src/', '/').split('/');
+    return includePath[s[1]] ? path.join(includePath[s[1]], ...s.slice(2)) : path.join(basepath, reqPath);
+}
+
+for (let i in includePath) {
+    var realPath = path.resolve(basepath, `../${i}/src`);
+    includePath[i] = fs.existsSync(realPath) ? realPath : path.resolve(basepath, `node_modules/${i}`);
+}
 
 server.get('**/*.cjs', function (req, res) {
-    var realPath = /^\/zeta-dom\/(.+)$/.test(req.path) ? path.join(zetaIncludePath, RegExp.$1) : path.join(basepath, req.path);
+    var realPath = resolveRealPath(req.path);
     fs.readFile(realPath, function (err, data) {
         console.log('GET', req.path, '->', realPath);
         if (err) {
@@ -22,23 +31,22 @@ server.get('**/*.cjs', function (req, res) {
         }
     });
 });
-server.use('/node_modules', express.static('node_modules'));
-server.use('/zeta-dom', express.static(zetaIncludePath));
-server.get('/src/include/zeta/*', function (req, res) {
-    console.log('GET', req.path);
-    fs.readFile(path.join(__dirname, req.path), function (err, data) {
+server.get('**/include/*/*', function (req, res) {
+    var realPath = resolveRealPath(req.path);
+    fs.readFile(realPath, function (err, data) {
+        console.log('GET', req.path, '->', realPath);
         if (err) {
             res.sendStatus(404);
         } else {
-            res.contentType(mime.lookup(req.path) || 'application/octet-stream');
-            if (req.path.substr(0, 4) === '/src') {
-                res.send(data.toString().replace(/from "zeta-dom\/(\w+)"/g, 'from "/zeta-dom/$1.js"'));
-            } else {
-                res.send(data);
-            }
+            res.contentType(mime.lookup(realPath) || 'application/octet-stream');
+            res.send(data.toString().replace(/from "([\w-]+)\/(\w+)"/g, 'from "/$1/src/$2.js"').replace(/module\.exports\s*=\s*/g, 'export default '));
         }
     });
 });
+for (let i in includePath) {
+    server.use('/' + i + '/src', express.static(includePath[i]));
+}
+server.use('/node_modules', express.static('node_modules'));
 server.use('/src', express.static('src'));
 server.use('/dev', express.static('dev'));
 server.use('/dist', express.static('dist'));

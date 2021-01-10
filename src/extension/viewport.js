@@ -1,8 +1,8 @@
-import $ from "../include/jquery.cjs";
-import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta/util.js";
-import { IS_TOUCH } from "../include/zeta/env.js";
-import dom from "../include/zeta/dom.js";
-import { scrollIntoView } from "../include/zeta/domUtil.js";
+import $ from "../include/jquery/index.js";
+import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta-dom/util.js";
+import { IS_TOUCH } from "../include/zeta-dom/env.js";
+import dom from "../include/zeta-dom/dom.js";
+import { scrollIntoView } from "../include/zeta-dom/domUtil.js";
 import { animateIn } from "../anim.js";
 import { install } from "../app.js";
 import defaults from "../defaults.js";

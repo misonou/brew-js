@@ -1,7 +1,7 @@
-import $ from "./include/jquery.cjs";
-import { each } from "./include/zeta/util.js";
-import { isCssUrlValue } from "./include/zeta/cssUtil.js";
-import dom from "./include/zeta/dom.js";
+import $ from "./include/jquery/index.js";
+import { each } from "./include/zeta-dom/util.js";
+import { isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
+import dom from "./include/zeta-dom/dom.js";
 import { addTemplate, preventLeave } from "./dom.js";
 import { withBaseUrl } from "./util/path.js";
 

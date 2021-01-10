@@ -1,4 +1,4 @@
-import { define, deepFreeze, extend, isFunction, watchable } from "../include/zeta/util.js";
+import { define, deepFreeze, extend, isFunction, watchable } from "../include/zeta-dom/util.js";
 import { getJSON } from "../util/common.js";
 import { install } from "../app.js";
 

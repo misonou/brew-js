@@ -1,8 +1,8 @@
-import History from "../include/history.cjs";
-import $ from "../include/jquery.cjs";
-import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta/domUtil.js";
-import dom from "../include/zeta/dom.js";
-import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal } from "../include/zeta/util.js";
+import History from "../include/historyjs/index.js";
+import $ from "../include/jquery/index.js";
+import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
+import dom from "../include/zeta-dom/dom.js";
+import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";

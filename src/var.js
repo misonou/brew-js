@@ -1,11 +1,11 @@
-import $ from "./include/jquery.cjs";
-import waterpipe from "./include/waterpipe.cjs"
-import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta/util.js";
-import dom from "./include/zeta/dom.js";
+import $ from "./include/jquery/index.js";
+import waterpipe from "./include/waterpipe/index.js"
+import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta-dom/util.js";
+import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { groupLog } from "./util/console.js";
-import { InheritedNodeTree } from "./include/zeta/tree.js";
+import { InheritedNodeTree } from "./include/zeta-dom/tree.js";
 
 const DEBUG_EVAL = /localhost:?/i.test(location.host);
 

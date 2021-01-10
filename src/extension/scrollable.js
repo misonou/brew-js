@@ -1,7 +1,7 @@
-import $ from "../include/jquery.cjs";
-import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta/util.js";
-import { getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta/domUtil.js";
-import dom from "../include/zeta/dom.js";
+import $ from "../include/jquery/index.js";
+import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
+import { getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import dom from "../include/zeta-dom/dom.js";
 import { animateIn } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
