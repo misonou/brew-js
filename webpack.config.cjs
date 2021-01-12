@@ -2,12 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const TerserPlugin = require('terser-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const srcPath = path.join(process.cwd(), 'src');
 const outputPath = path.join(process.cwd(), 'dist');
-const packagePath = path.join(process.cwd(), 'build');
 const tmpPath = path.join(process.cwd(), 'tmp');
 
 function processModule(module, options) {
@@ -122,34 +120,7 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin({
-            cleanOnceBeforeBuildPatterns: [`${packagePath}/**/*`],
             cleanAfterEveryBuildPatterns: [tmpPath]
-        }),
-        new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: 'src',
-                    to: `${packagePath}`
-                },
-                {
-                    from: 'dist',
-                    to: `${packagePath}/dist`
-                },
-                {
-                    from: 'README.md',
-                    to: `${packagePath}`,
-                },
-                {
-                    from: 'package.json',
-                    to: `${packagePath}`,
-                    transform: function (content) {
-                        var packageJSON = JSON.parse(content);
-                        packageJSON.main = 'index.js';
-                        packageJSON.types = 'index.d.ts';
-                        return JSON.stringify(packageJSON, null, 2);
-                    }
-                }
-            ]
         })
     ],
     optimization: {

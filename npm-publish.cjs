@@ -1,12 +1,25 @@
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
+const ncp = require('ncp');
 const path = require('path');
-const util = require('util');
+const { promisify } = require('util');
 
 (async function () {
-    const dst = path.resolve(__dirname, 'build');
-    const packageJSON = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), { encoding: 'utf8' }));
+    var dst = path.join(process.cwd(), 'build');
+    if (fs.existsSync(dst)) {
+        fs.rmSync(dst, { recursive: true });
+    }
+    fs.mkdirSync(dst);
 
-    console.log('Execute npm publish');
-    await util.promisify(exec)('npm publish' + (/-(alpha|beta)/.test(packageJSON.version) ? ' --tag beta' : ''), { cwd: dst });
+    var package = JSON.parse(fs.readFileSync('package.json', { encoding: 'utf-8' }));
+    package.main = 'index.js';
+    package.types = 'index.d.ts';
+
+    await Promise.all([
+        promisify(ncp)('README.md', dst),
+        promisify(ncp)('src', dst),
+        promisify(ncp)('dist', `${dst}/dist`),
+        promisify(fs.writeFile)(`${dst}/package.json`, JSON.stringify(package, null, 2))
+    ]);
+    execSync('npm publish' + (/-(alpha|beta)/.test(package.version) ? ' --tag beta' : ''), { cwd: dst });
 })();
