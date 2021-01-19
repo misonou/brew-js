@@ -201,7 +201,7 @@ function configureRouter(app, options) {
     function navigate(path, replace) {
         path = withBaseUrl(resolvePath(path));
         History[replace ? 'replaceState' : 'pushState']({}, document.title, path);
-        app.path = path.substr(baseUrl.length) || '/';
+        app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
     }
 
     function processPageChange(path, oldPath, newActiveElements) {
