@@ -1,4 +1,4 @@
-import $ from "../include/jquery/index.js";
+import $ from "../include/external/jquery.js";
 import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/zeta-dom/util.js";
 import { bindUntil, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";

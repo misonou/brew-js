@@ -1,6 +1,6 @@
 // @ts-nocheck
-import $ from "../include/jquery/index.js";
-import Promise from "../include/promise-polyfill/index.js";
+import $ from "../include/external/jquery.js";
+import Promise from "../include/external/promise-polyfill.js";
 import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta-dom/domUtil.js";
 import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta-dom/util.js";

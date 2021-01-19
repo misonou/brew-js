@@ -1,4 +1,4 @@
-import $ from "./include/jquery/index.js";
+import $ from "./include/external/jquery.js";
 import { each } from "./include/zeta-dom/util.js";
 import { isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import dom from "./include/zeta-dom/dom.js";

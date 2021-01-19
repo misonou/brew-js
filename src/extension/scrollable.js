@@ -1,4 +1,4 @@
-import $ from "../include/jquery/index.js";
+import $ from "../include/external/jquery.js";
 import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";

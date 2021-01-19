@@ -1,5 +1,5 @@
-import waterpipe from "./include/waterpipe/index.js"
-import $ from "./include/jquery/index.js";
+import waterpipe from "./include/external/waterpipe.js"
+import $ from "./include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";

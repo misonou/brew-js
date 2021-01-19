@@ -1,6 +1,6 @@
-import Promise from "./include/promise-polyfill/index.js";
-import $ from "./include/jquery/index.js";
-import waterpipe from "./include/waterpipe/index.js"
+import Promise from "./include/external/promise-polyfill.js";
+import $ from "./include/external/jquery.js";
+import waterpipe from "./include/external/waterpipe.js"
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";

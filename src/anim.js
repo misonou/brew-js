@@ -1,5 +1,5 @@
-import Promise from "./include/promise-polyfill/index.js";
-import $ from "./include/jquery/index.js";
+import Promise from "./include/external/promise-polyfill.js";
+import $ from "./include/external/jquery.js";
 import { selectIncludeSelf, isVisible } from "./include/zeta-dom/domUtil.js";
 import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";

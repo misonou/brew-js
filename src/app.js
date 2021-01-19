@@ -1,4 +1,4 @@
-import $ from "./include/jquery/index.js";
+import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta-dom/util.js";
