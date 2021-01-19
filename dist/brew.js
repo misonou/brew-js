@@ -11,7 +11,82 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 65:
+/***/ 31:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+var History = window.History;
+
+if (!History || !History.Adapter) {
+  window.jQuery = __webpack_require__(609);
+
+  __webpack_require__(229);
+
+  History = window.History;
+}
+
+module.exports = History;
+
+/***/ }),
+
+/***/ 860:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {JQueryStatic} */
+var jQuery = window.jQuery || __webpack_require__(609);
+
+module.exports = jQuery;
+
+/***/ }),
+
+/***/ 424:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {PromiseConstructor} */
+var Promise = window.Promise || __webpack_require__(804).default;
+
+module.exports = Promise;
+
+/***/ }),
+
+/***/ 256:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {Waterpipe} */
+var waterpipe = window.waterpipe || __webpack_require__(160);
+
+module.exports = waterpipe; // assign to a new variable to avoid incompatble declaration issue by typescript compiler
+
+var waterpipe_ = waterpipe;
+
+waterpipe_.pipes['{'] = function (_, varargs) {
+  var o = {};
+
+  while (varargs.hasArgs()) {
+    var key = varargs.raw();
+
+    if (key === '}') {
+      break;
+    }
+
+    o[String(key).replace(/:$/, '')] = varargs.next();
+  }
+
+  return o;
+}; // @ts-ignore: add member to function
+
+
+waterpipe_.pipes['{'].varargs = true;
+
+/***/ }),
+
+/***/ 344:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -76,7 +151,7 @@ __webpack_require__.d(domAction_namespaceObject, {
 
 // EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
 var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(163);
-// CONCATENATED MODULE: ./tmp/util.js
+// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
 
 var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     noop = _zeta$util.noop,
@@ -101,6 +176,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     exclude = _zeta$util.exclude,
     mapGet = _zeta$util.mapGet,
     mapRemove = _zeta$util.mapRemove,
+    setAdd = _zeta$util.setAdd,
     equal = _zeta$util.equal,
     createPrivateStore = _zeta$util.createPrivateStore,
     setTimeoutOnce = _zeta$util.setTimeoutOnce,
@@ -140,7 +216,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     catchAsync = _zeta$util.catchAsync,
     setPromiseTimeout = _zeta$util.setPromiseTimeout;
 
-// CONCATENATED MODULE: ./src/include/zeta/util.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
 
 // CONCATENATED MODULE: ./src/util/path.js
 var baseUrl = '';
@@ -236,20 +312,20 @@ function toRelativeUrl(url) {
 function isSubPathOf(a, b) {
   return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
 }
-// EXTERNAL MODULE: ./src/include/jquery.cjs
-var jquery = __webpack_require__(304);
-// EXTERNAL MODULE: ./src/include/promise-polyfill.cjs
-var promise_polyfill = __webpack_require__(511);
-// CONCATENATED MODULE: ./tmp/cssUtil.js
+// EXTERNAL MODULE: ./src/include/external/jquery.js
+var jquery = __webpack_require__(860);
+// EXTERNAL MODULE: ./src/include/external/promise-polyfill.js
+var promise_polyfill = __webpack_require__(424);
+// CONCATENATED MODULE: ./tmp/zeta-dom/cssUtil.js
 
 var _zeta$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.css,
     parseCSS = _zeta$css.parseCSS,
     isCssUrlValue = _zeta$css.isCssUrlValue,
     runCSSTransition = _zeta$css.runCSSTransition;
 
-// CONCATENATED MODULE: ./src/include/zeta/cssUtil.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/cssUtil.js
 
-// CONCATENATED MODULE: ./tmp/domUtil.js
+// CONCATENATED MODULE: ./tmp/zeta-dom/domUtil.js
 
 var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     domReady = domUtil_zeta$util.domReady,
@@ -297,7 +373,7 @@ var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_d
     mergeRect = domUtil_zeta$util.mergeRect,
     elementFromPoint = domUtil_zeta$util.elementFromPoint;
 
-// CONCATENATED MODULE: ./src/include/zeta/domUtil.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
 
 // CONCATENATED MODULE: ./src/util/common.js
 // @ts-nocheck
@@ -587,10 +663,10 @@ function preloadImages(urls, ms) {
 
   return setPromiseTimeout(resolveAll(values(preloadImagesCache)), ms, true);
 }
-// CONCATENATED MODULE: ./tmp/dom.js
+// CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
-var dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
-/* harmony default export */ const tmp_dom = (dom);
+var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
+/* harmony default export */ const dom = (_defaultExport);
 var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
     textInputAllowed = _zeta$dom.textInputAllowed,
     beginDrag = _zeta$dom.beginDrag,
@@ -604,10 +680,10 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     releaseFocus = _zeta$dom.releaseFocus,
     dom_focus = _zeta$dom.focus;
 
-// CONCATENATED MODULE: ./src/include/zeta/dom.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
 
-/* harmony default export */ const zeta_dom = (tmp_dom);
+/* harmony default export */ const zeta_dom_dom = (dom);
 // CONCATENATED MODULE: ./src/anim.js
 
 
@@ -656,7 +732,7 @@ function handleAnimation(element, elements, promises, trigger) {
 }
 
 function animateElement(element, cssClass, eventName, customAnimation) {
-  var promises = [runCSSTransition(element, cssClass), zeta_dom.emit(eventName, element)];
+  var promises = [runCSSTransition(element, cssClass), zeta_dom_dom.emit(eventName, element)];
   var delay = parseFloat(jquery(element).css('transition-delay'));
   each(customAnimation, function (i, v) {
     if (element.attributes[i]) {
@@ -691,7 +767,7 @@ function animateIn(element, trigger, scope, filterCallback) {
     return true;
   };
 
-  zeta_dom.emit('animationstart', element, {
+  zeta_dom_dom.emit('animationstart', element, {
     animationType: 'in',
     animationTrigger: trigger
   }, true);
@@ -740,7 +816,7 @@ function animateIn(element, trigger, scope, filterCallback) {
     }
   });
   return handleAnimation(element, elements, promises, trigger).then(function () {
-    zeta_dom.emit('animationcomplete', element, {
+    zeta_dom_dom.emit('animationcomplete', element, {
       animationType: 'in',
       animationTrigger: trigger
     }, true);
@@ -759,7 +835,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
     return true;
   };
 
-  zeta_dom.emit('animationstart', element, {
+  zeta_dom_dom.emit('animationstart', element, {
     animationType: 'out',
     animationTrigger: trigger
   }, true);
@@ -791,7 +867,7 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
     });
     $target.removeClass('tweening-in tweening-out');
     $target.find('[is-animate-sequence]').removeAttr('animate-in').removeClass('tweening-in tweening-out');
-    zeta_dom.emit('animationcomplete', element, {
+    zeta_dom_dom.emit('animationcomplete', element, {
       animationType: 'out',
       animationTrigger: trigger
     }, true);
@@ -813,14 +889,14 @@ function addAnimateIn(name, callback) {
 function addAnimateOut(name, callback) {
   customAnimateOut[name] = throwNotFunction(callback);
 }
-// EXTERNAL MODULE: ./src/include/waterpipe.cjs
-var waterpipe = __webpack_require__(203);
+// EXTERNAL MODULE: ./src/include/external/waterpipe.js
+var waterpipe = __webpack_require__(256);
 // CONCATENATED MODULE: ./src/defaults.js
 /** @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ const src_defaults = (defaults);
-// EXTERNAL MODULE: ./src/include/history.cjs
-var include_history = __webpack_require__(715);
+// EXTERNAL MODULE: ./src/include/external/historyjs.js
+var historyjs = __webpack_require__(31);
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -893,7 +969,7 @@ var matchByPathElements = new Map();
 var preloadHandlers = [];
 /** @type {Element[]} */
 
-var activeElements = [zeta_dom.root];
+var activeElements = [zeta_dom_dom.root];
 var pageTitleElement;
 /**
  * @param {Element} v
@@ -1109,8 +1185,8 @@ function configureRouter(app, options) {
 
   function navigate(path, replace) {
     path = withBaseUrl(resolvePath(path));
-    include_history[replace ? 'replaceState' : 'pushState']({}, document.title, path);
-    app.path = path.substr(baseUrl.length) || '/';
+    historyjs[replace ? 'replaceState' : 'pushState']({}, document.title, path);
+    app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
   }
 
   function processPageChange(path, oldPath, newActiveElements) {
@@ -1119,7 +1195,7 @@ function configureRouter(app, options) {
     }
 
     var preload = new Map();
-    var eventSource = zeta_dom.eventSource;
+    var eventSource = zeta_dom_dom.eventSource;
     var previousActiveElements = activeElements.slice(0);
     activeElements = newActiveElements;
     pageTitleElement = jquery(newActiveElements).filter('[page-title]')[0];
@@ -1129,7 +1205,7 @@ function configureRouter(app, options) {
     var pageTitle = evalAttr(pageTitleElement, 'page-title', true);
 
     if (location.pathname.substr(baseUrl.length) !== path) {
-      include_history[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
+      historyjs[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
     }
 
     navigated++;
@@ -1189,7 +1265,7 @@ function configureRouter(app, options) {
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
 
-    if (zeta_dom.locked(zeta_dom.activeElement, true)) {
+    if (zeta_dom_dom.locked(zeta_dom_dom.activeElement, true)) {
       lockedPath = newPath === lockedPath ? null : currentPath;
       navigate(lockedPath || newPath, true);
       return;
@@ -1210,7 +1286,7 @@ function configureRouter(app, options) {
 
     /** @type {HTMLElement[]} */
 
-    var newActiveElements = [zeta_dom.root];
+    var newActiveElements = [zeta_dom_dom.root];
     var oldPath = currentPath;
     var redirectPath;
     batch(true, function () {
@@ -1266,7 +1342,7 @@ function configureRouter(app, options) {
       oldPathname: oldPath,
       route: Object.freeze(extend({}, route))
     });
-    handleAsync(promise, zeta_dom.root, function () {
+    handleAsync(promise, zeta_dom_dom.root, function () {
       processPageChange(newPath, oldPath, newActiveElements);
     });
   }
@@ -1292,7 +1368,7 @@ function configureRouter(app, options) {
     back: function back() {
       if (navigated > 1) {
         // @ts-ignore: History.js
-        include_history.back();
+        historyjs.back();
       } else if (app.path !== '/') {
         navigate('/');
       }
@@ -1302,7 +1378,7 @@ function configureRouter(app, options) {
   defineOwnProperty(app, 'route', route, true);
   defineAliasProperty(app, 'path', observable);
   app.beforeInit(function () {
-    zeta_dom.ready.then(function () {
+    zeta_dom_dom.ready.then(function () {
       // detach elements which its visibility is controlled by current path
       jquery('[match-path]').addClass('hidden').each(function (i, v) {
         var placeholder = document.createElement('div');
@@ -1318,7 +1394,7 @@ function configureRouter(app, options) {
         matchByPathElements.set(placeholder, v);
       }); // @ts-ignore: History.js
 
-      include_history.Adapter.bind(window, 'statechange', function () {
+      historyjs.Adapter.bind(window, 'statechange', function () {
         app.path = location.pathname.substr(baseUrl.length) || '/';
       });
     });
@@ -1391,7 +1467,7 @@ var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
 var dom_ = createPrivateStore();
 
-var root = zeta_dom.root;
+var root = zeta_dom_dom.root;
 var updatedElements = new Set();
 var pendingDOMUpdates = new Map();
 var preupdateHandlers = [];
@@ -1439,7 +1515,7 @@ function updateDOM(element, props, suppressEvent) {
   });
 
   if (!suppressEvent) {
-    zeta_dom.emit('domchange', element);
+    zeta_dom_dom.emit('domchange', element);
   }
 }
 
@@ -1509,8 +1585,8 @@ function handleAsync(promise, element, callback) {
     return resolve((callback || noop)());
   }
 
-  if (element || zeta_dom.eventSource !== 'script') {
-    element = element || zeta_dom.activeElement;
+  if (element || zeta_dom_dom.eventSource !== 'script') {
+    element = element || zeta_dom_dom.activeElement;
     var elm1 = getVarScope('loading', element || root);
     var elm2 = getVarScope('error', element || root);
     var counter = getComponentState('handleAsync', elm1);
@@ -1564,7 +1640,7 @@ function processStateChange(suppressAnim) {
   stateChangeLock = true;
 
   try {
-    groupLog(zeta_dom.eventSource, 'statechange', function () {
+    groupLog(zeta_dom_dom.eventSource, 'statechange', function () {
       // recursively perform transformation until there is no new element produced
       processTransform(updatedElements, applyDOMUpdates); // trigger statechange events and perform DOM updates only on attached elements
       // leave detached elements in future rounds
@@ -1648,7 +1724,7 @@ function processStateChange(suppressAnim) {
         }
       });
       each(updatedProps, function (i, v) {
-        zeta_dom.emit('statechange', i, {
+        zeta_dom_dom.emit('statechange', i, {
           data: getVar(i),
           newValues: v.newValues,
           oldValues: v.oldValues
@@ -1715,12 +1791,12 @@ function mountElement(element) {
     });
     index = selectorHandlers.length;
     each(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
-      zeta_dom.emit('mounted', v);
+      zeta_dom_dom.emit('mounted', v);
     });
 
     if (!firedOnRoot) {
       firedOnRoot = true;
-      zeta_dom.emit('mounted', root, {
+      zeta_dom_dom.emit('mounted', root, {
         target: element
       });
     }
@@ -1755,7 +1831,7 @@ function preventLeave(suppressPrompt) {
   });
 
   if (element && !suppressPrompt) {
-    return resolveAll(zeta_dom.emit('preventLeave', element, null, true), function (result) {
+    return resolveAll(zeta_dom_dom.emit('preventLeave', element, null, true), function (result) {
       if (result) {
         var state = getComponentState('preventLeave', element);
         state.allowLeave = true;
@@ -1972,7 +2048,7 @@ addRenderer('set-class', function (element, getState, applyDOMUpdates) {
 
 var app_ = createPrivateStore();
 
-var app_root = zeta_dom.root;
+var app_root = zeta_dom_dom.root;
 var featureDetections = {};
 /** @type {Brew.AppInstance} */
 
@@ -2047,7 +2123,7 @@ definePrototype(App, {
       element = this.element;
     }
 
-    return zeta_dom.emit(event, element, data, bubbles);
+    return zeta_dom_dom.emit(event, element, data, bubbles);
   },
   define: function define(props) {
     util_define(this, props);
@@ -2130,7 +2206,7 @@ definePrototype(App, {
     }
 
     each(target, function (i, v) {
-      zeta_dom.on(v, handlers);
+      zeta_dom_dom.on(v, handlers);
     });
   },
   matchPath: function matchPath(path, selector, handler) {
@@ -2171,7 +2247,7 @@ watchable(App.prototype);
   setVar(app_root, {
     loading: 'initial'
   });
-  handleAsync(resolveAll([zeta_dom.ready, processUntilEmpty(app_(app).init)], function () {
+  handleAsync(resolveAll([zeta_dom_dom.ready, processUntilEmpty(app_(app).init)], function () {
     appReady = true;
     mountElement(app_root);
     app.emit('ready');
@@ -2189,7 +2265,7 @@ function install(name, callback) {
 function addDetect(name, callback) {
   featureDetections[name] = throwNotFunction(callback);
 }
-// CONCATENATED MODULE: ./tmp/tree.js
+// CONCATENATED MODULE: ./tmp/zeta-dom/tree.js
 
 var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TraversableNode,
     TraversableNodeTree = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TraversableNodeTree,
@@ -2197,7 +2273,7 @@ var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
     InheritedNodeTree = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.InheritedNodeTree,
     TreeWalker = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TreeWalker;
 
-// CONCATENATED MODULE: ./src/include/zeta/tree.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/tree.js
 
 // CONCATENATED MODULE: ./src/var.js
 
@@ -2209,7 +2285,7 @@ var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 
 
 var DEBUG_EVAL = /localhost:?/i.test(location.host);
-var var_root = zeta_dom.root;
+var var_root = zeta_dom_dom.root;
 var varAttrs = {
   'var': true,
   'auto-var': true,
@@ -2402,7 +2478,7 @@ function evalAttr(element, attrName, templateMode, context) {
 
   return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-zeta_dom.watchAttributes(var_root, keys(varAttrs), function (elements) {
+zeta_dom_dom.watchAttributes(var_root, keys(varAttrs), function (elements) {
   each(elements, function (i, v) {
     tree.setNode(v);
   });
@@ -2470,7 +2546,7 @@ function closeFlyout(flyout, value) {
  */
 
 function openFlyout(selector, states, source, closeIfOpened) {
-  var container = source || zeta_dom.root;
+  var container = source || zeta_dom_dom.root;
   var element = selector ? selectClosestRelative(selector, container) : jquery(container).closest('[is-flyout]')[0];
 
   if (!element) {
@@ -2512,12 +2588,12 @@ function openFlyout(selector, states, source, closeIfOpened) {
   }
 
   runCSSTransition(element, 'open', function () {
-    zeta_dom.focus(element);
+    zeta_dom_dom.focus(element);
   });
   animateIn(element, 'open');
 
   if (element.attributes['is-modal']) {
-    zeta_dom.lock(element, promise);
+    zeta_dom_dom.lock(element, promise);
   }
 
   return promise;
@@ -2527,7 +2603,7 @@ addAsyncAction('validate', function (e) {
 
   if (target) {
     // @ts-ignore: type inference issue
-    var valid = zeta_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
+    var valid = zeta_dom_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
 
     if (!valid) {
       e.stopImmediatePropagation();
@@ -2553,7 +2629,7 @@ addAsyncAction('context-method', function (e) {
     var valid = true;
 
     if (form) {
-      valid = zeta_dom.emit('validate', form) || form.checkValidity();
+      valid = zeta_dom_dom.emit('validate', form) || form.checkValidity();
       extend(params, getFormValues(form));
     } else {
       extend(params, self.dataset);
@@ -2568,7 +2644,7 @@ addAsyncAction('context-method', function (e) {
     });
   }
 });
-zeta_dom.ready.then(function () {
+zeta_dom_dom.ready.then(function () {
   app.on('mounted', function (e) {
     jquery(selectIncludeSelf('[' + keys(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
   });
@@ -2672,12 +2748,12 @@ zeta_dom.ready.then(function () {
 
 
 
-zeta_dom.ready.then(function () {
+zeta_dom_dom.ready.then(function () {
   jquery('[brew-template]').each(function (i, v) {
     addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
   });
   jquery('apply-attributes').each(function (i, v) {
-    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || zeta_dom.root);
+    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || zeta_dom_dom.root);
     each(v.attributes, function (i, v) {
       if (v.name !== 'elements') {
         $target.attr(v.name, v.value);
@@ -2786,12 +2862,12 @@ install('formVar', function (app) {
       }
     };
 
-    zeta_dom.watchAttributes(form, 'value', function () {
+    zeta_dom_dom.watchAttributes(form, 'value', function () {
       setImmediateOnce(update);
     });
-    zeta_dom.watchElements(form, ':input', function (addedInputs) {
+    zeta_dom_dom.watchElements(form, ':input', function (addedInputs) {
       each(addedInputs, function (i, v) {
-        var afterDetached = zeta_dom.afterDetached(v, form);
+        var afterDetached = zeta_dom_dom.afterDetached(v, form);
         bindUntil(afterDetached, v, 'change', function () {
           setImmediateOnce(update);
         });
@@ -3187,7 +3263,7 @@ install('scrollable', function (app) {
   function updateScrollIntoView() {
     jquery('[animate-on~="scroll-into-view"]:not(.tweening-in):visible').each(function (i, v) {
       var m = new DOMMatrix(getComputedStyle(v).transform);
-      var rootRect = getRect(zeta_dom.root);
+      var rootRect = getRect(zeta_dom_dom.root);
       var thisRect = getRect(v);
 
       if (rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0))) {
@@ -3201,7 +3277,7 @@ install('scrollable', function (app) {
   });
 });
 /* harmony default export */ const scrollable = (null);
-// CONCATENATED MODULE: ./tmp/env.js
+// CONCATENATED MODULE: ./tmp/zeta-dom/env.js
 
 var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
     IS_IE10 = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE10,
@@ -3209,7 +3285,7 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
     IS_MAC = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_MAC,
     IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_TOUCH;
 
-// CONCATENATED MODULE: ./src/include/zeta/env.js
+// CONCATENATED MODULE: ./src/include/zeta-dom/env.js
 
 // CONCATENATED MODULE: ./src/extension/viewport.js
 
@@ -3242,8 +3318,8 @@ install('viewport', function (app) {
     var bodyHeight = jquery('body').height() || 0;
     var htmlHeight = jquery('html').height() || 0;
 
-    if (htmlHeight < bodyHeight && jquery(zeta_dom.activeElement).is(':text')) {
-      scrollIntoView(zeta_dom.activeElement);
+    if (htmlHeight < bodyHeight && jquery(zeta_dom_dom.activeElement).is(':text')) {
+      scrollIntoView(zeta_dom_dom.activeElement);
     }
 
     var previousAspectRatio = aspectRatio;
@@ -3282,7 +3358,7 @@ install('viewport', function (app) {
 
   });
   app.on('orientationchange', function () {
-    animateIn(zeta_dom.root, 'orientationchange');
+    animateIn(zeta_dom_dom.root, 'orientationchange');
   });
   jquery(window).on('resize', function () {
     setTimeoutOnce(checkViewportSize);
@@ -3302,74 +3378,6 @@ install('viewport', function (app) {
 
 
 /* harmony default export */ const src = (core);
-
-/***/ }),
-
-/***/ 715:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-var History = window.History;
-if (!History || !History.Adapter) {
-    window.jQuery = __webpack_require__(609);
-    __webpack_require__(229);
-    History = window.History;
-}
-module.exports = History;
-
-
-/***/ }),
-
-/***/ 304:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {JQueryStatic} */
-const jQuery = window.jQuery || __webpack_require__(609);
-module.exports = jQuery;
-
-
-/***/ }),
-
-/***/ 511:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {PromiseConstructor} */
-const Promise = window.Promise || __webpack_require__(804).default;
-module.exports = Promise;
-
-
-/***/ }),
-
-/***/ 203:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {Waterpipe} */
-const waterpipe = window.waterpipe || __webpack_require__(160);
-module.exports = waterpipe;
-
-// assign to a new variable to avoid incompatble declaration issue by typescript compiler
-const waterpipe_ = waterpipe;
-waterpipe_.pipes['{'] = function (_, varargs) {
-    var o = {};
-    while (varargs.hasArgs()) {
-        var key = varargs.raw();
-        if (key === '}') {
-            break;
-        }
-        o[String(key).replace(/:$/, '')] = varargs.next();
-    }
-    return o;
-};
-// @ts-ignore: add member to function
-waterpipe_.pipes['{'].varargs = true;
-
 
 /***/ }),
 
@@ -3471,7 +3479,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(65);
+/******/ 	return __webpack_require__(344);
 /******/ })()
 .default;
 });
