@@ -217,7 +217,7 @@ function configureRouter(app, options) {
 
         // assign document title from matched active elements and
         // synchronize path in address bar if navigation is triggered by script
-        var pageTitle = evalAttr(pageTitleElement, 'page-title', true);
+        var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
         if (location.pathname.substr(baseUrl.length) !== path) {
             History[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
         }
