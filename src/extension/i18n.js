@@ -1,5 +1,6 @@
 import { any, each } from "../include/zeta-dom/util.js";
 import { install } from "../app.js";
+import { cookie as _cookie } from "../util/common.js";
 
 function detectLanguage(languages, defaultLanguage) {
     var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
@@ -23,7 +24,7 @@ function detectLanguage(languages, defaultLanguage) {
 
 install('i18n', function (app, options) {
     var routeParam = app.route && options.routeParam;
-    var cookie = options.cookie && cookie(options.cookie, 86400000);
+    var cookie = options.cookie && _cookie(options.cookie, 86400000);
     var language = (routeParam && app.route[routeParam]) || (cookie && cookie.get()) || detectLanguage(options.languages, options.defaultLanguage);
     var setLanguage = function (newLangauge) {
         if (options.languages.indexOf(newLangauge) < 0) {
