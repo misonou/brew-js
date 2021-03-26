@@ -1,6 +1,6 @@
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isPlainObject, keys, kv, setImmediateOnce } from "./include/zeta-dom/util.js";
+import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isFunction, isPlainObject, keys, kv, noop, pick, setImmediateOnce } from "./include/zeta-dom/util.js";
 import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
@@ -115,12 +115,16 @@ export function setVar(element, name, value) {
 export function declareVar(element, name, value) {
     var values = isPlainObject(name) || kv(name, value);
     var context = tree.setNode(element);
+    var newValues = {};
     for (var i in values) {
-        if (!hasOwnProperty(context, i)) {
-            defineOwnProperty(context, i, null);
+        if (isFunction(values[i])) {
+            defineGetterProperty(context, i, values[i], noop);
+        } else {
+            defineOwnProperty(context, i, context[i]);
+            newValues[i] = values[i];
         }
     }
-    return setVar(element, values);
+    return setVar(element, newValues);
 }
 
 /**
@@ -137,11 +141,20 @@ export function resetVar(element, resetToNull) {
 
 /**
  * @param {Element} element
- * @param {string=} name
+ * @param {string|boolean=} name
  */
 export function getVar(element, name) {
     var values = tree.getNode(element) || {};
-    return name ? values[name] : extend({}, values);
+    if (name !== true) {
+        return name ? values[name] : extend({}, values);
+    }
+    // @ts-ignore: element property exists on tree node
+    if (values.element !== element) {
+        return {};
+    }
+    var keys = Object.getOwnPropertyNames(values);
+    keys.splice(keys.indexOf('element'), 1);
+    return pick(values, keys);
 }
 
 /**

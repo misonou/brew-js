@@ -67,6 +67,13 @@ export function getVar(element: Element): Zeta.Dictionary;
 export function getVar(element: Element, name: string): any;
 
 /**
+ * Gets template variables directly defined on the specified element.
+ * @param element A DOM element.
+ * @param ownKeys A boolean true value.
+ */
+export function getVar(element: Element, ownKeys: true): any;
+
+/**
  * Evaluates template or expression.
  * @param template A string representing a template or an expression.
  * @param context Context object of which the template or expression is evaluated against.
