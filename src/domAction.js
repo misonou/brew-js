@@ -4,12 +4,12 @@ import waterpipe from "./include/external/waterpipe.js"
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
-import { throwNotFunction, isFunction, camel, extend, resolveAll, each, mapGet, keys, reject, isThenable } from "./include/zeta-dom/util.js";
+import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, keys, reject, isThenable, makeArray } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
 import { getFormValues } from "./util/common.js";
-import { setVar } from "./var.js";
+import { evalAttr, setVar } from "./var.js";
 
 const flyoutStates = new Map();
 const executedAsyncActions = new Map();
@@ -120,19 +120,19 @@ addAsyncAction('context-method', function (e) {
         var formSelector = self.getAttribute('context-form');
         // @ts-ignore: acceptable if self.form is undefined
         var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
-        var params = {};
+        var params;
         var valid = true;
         if (form) {
             valid = dom.emit('validate', form) || form.checkValidity();
-            extend(params, getFormValues(form));
+            params = [getFormValues(form)];
         } else {
-            extend(params, self.dataset);
+            params = makeArray(evalAttr(self, 'method-args'));
         }
         return resolveAll(valid, function (valid) {
             if (!valid) {
                 throw 'validation-failed';
             }
-            return app[method](params);
+            return app[method].apply(app, params);
         });
     }
 });
