@@ -446,6 +446,12 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
     if (!isElementActive(element) || !varname) {
         return;
     }
+    var state = getState(element);
+    if (state.matched === undefined) {
+        declareVar(element, 'matched', function () {
+            return state.matched && getVar(state.matched, true);
+        });
+    }
     var context = getVar(element);
     var matchValue = waterpipe.eval(varname, context);
     var $target = $('[match-' + varname + ']', element).filter(function (i, w) {
@@ -462,13 +468,12 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
         }
     });
     matched = matched || $target.filter('[default]')[0] || $target[0] || null;
-    if (!context.matched || context.matched.element !== matched) {
+    if (state.matched !== matched) {
         groupLog('switch', [element, varname, '→', matchValue], function (console) {
             console.log('Matched: ', matched || '(none)');
             if (matched) {
                 setVar(matched);
             }
-            setVar(element, { matched: matched && getVar(matched) });
             $target.each(function (i, v) {
                 applyDOMUpdates(v, { $$class: { active: v === matched } });
             });
@@ -479,6 +484,7 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
             setVar(element, varname, itemValues.get(matched));
         }
     }
+    state.matched = matched;
 });
 
 addRenderer('template', function (element, getState, applyDOMUpdates) {

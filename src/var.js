@@ -13,7 +13,6 @@ const root = dom.root;
 const varAttrs = {
     'var': true,
     'auto-var': true,
-    'switch': { matched: null },
     'error-scope': { error: null }
 };
 const tree = new InheritedNodeTree(root, VarContext);
