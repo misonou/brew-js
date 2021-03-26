@@ -279,11 +279,12 @@ function configureRouter(app, options) {
             return;
         }
         var promise = preventLeave();
+        var leavePath = newPath;
         if (promise) {
             lockedPath = currentPath;
             navigate(currentPath, true);
             resolve(promise).then(function () {
-                navigate(newPath, true);
+                navigate(leavePath, true);
             });
             return;
         }
