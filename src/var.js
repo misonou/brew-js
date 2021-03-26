@@ -37,6 +37,12 @@ function VarContext() {
     }
 }
 
+function hasDataAttributes(element) {
+    for (var i in element.dataset) {
+        return true;
+    }
+}
+
 function getDeclaredVar(element, resetToNull, state) {
     var initValues = {};
     each(varAttrs, function (i, v) {
@@ -143,7 +149,7 @@ export function resetVar(element, resetToNull) {
  * @param {string|boolean=} name
  */
 export function getVar(element, name) {
-    var values = tree.getNode(element) || {};
+    var values = hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element) || {};
     if (name !== true) {
         return name ? values[name] : extend({}, values);
     }
