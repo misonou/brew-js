@@ -79,7 +79,9 @@ function processTransform(elements, applyDOMUpdates) {
     var transformed = new Set();
     var exclude;
     do {
-        elements = makeArray(elements);
+        elements = grep(makeArray(elements), function (v) {
+            return containsOrEquals(root, v);
+        });
         exclude = makeArray(transformed);
         each(transformationHandlers, function (i, v) {
             $(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
