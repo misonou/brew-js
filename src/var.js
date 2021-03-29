@@ -46,17 +46,19 @@ function hasDataAttributes(element) {
 function getDeclaredVar(element, resetToNull, state) {
     var initValues = {};
     each(varAttrs, function (i, v) {
-        if (v === true) {
-            extend(initValues, evalAttr(element, i, false, state));
-        } else if (isPlainObject(v) && element.attributes[i]) {
-            extend(initValues, v);
+        if (element.attributes[i]) {
+            if (v === true) {
+                v = evalAttr(element, i, false, state);
+                if (!isPlainObject(v)) {
+                    return;
+                }
+            }
+            // @ts-ignore: v should be object
+            for (var j in v) {
+                initValues[j] = v[j] === undefined || resetToNull ? null : v[j];
+            }
         }
     });
-    if (resetToNull) {
-        for (var i in initValues) {
-            initValues[i] = null;
-        }
-    }
     return initValues;
 }
 
