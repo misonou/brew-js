@@ -9,7 +9,7 @@ import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { withBaseUrl } from "./util/path.js";
-import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar } from "./var.js";
+import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar, resetVar } from "./var.js";
 import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
@@ -478,6 +478,7 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
         groupLog('switch', [element, varname, '→', matchValue], function (console) {
             console.log('Matched: ', matched || '(none)');
             if (matched) {
+                resetVar(matched);
                 setVar(matched);
             }
             $target.each(function (i, v) {
