@@ -6,5 +6,7 @@
 /// <reference path="./extension/withScrollable.d.ts" />
 /// <reference path="./extension/withViewport.d.ts" />
 
-export { default } from "./core";
+import brew from "./core";
+
+export = brew;
 export as namespace brew;

@@ -30,4 +30,3 @@ const method = {
 };
 const brew: AppInit & typeof method;
 export default brew;
-export as namespace brew;
