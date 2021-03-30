@@ -35,4 +35,4 @@ export function loadScript(url: string | string[], options?: {
 
 export function addStyleSheet(url: string, media?: string): void;
 
-export function preloadImages(urls: string[] | Element, ms?: number): any;
+export function preloadImages(urls: string[] | Element, ms?: number): Promise<any>;

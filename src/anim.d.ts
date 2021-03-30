@@ -4,7 +4,7 @@
  * @param scope
  * @param filterCallback
  */
-export function animateIn(element: Element, trigger: string, scope?: string, filterCallback?: (elm: Element) => boolean): any;
+export function animateIn(element: Element, trigger: string, scope?: string, filterCallback?: (elm: Element) => boolean): Promise<void>;
 
 /**
  * @param element
@@ -13,7 +13,7 @@ export function animateIn(element: Element, trigger: string, scope?: string, fil
  * @param filterCallback
  * @param excludeSelf
  */
-export function animateOut(element: Element, trigger: string, scope?: string, filterCallback?: (elm: Element) => boolean, excludeSelf?: boolean): any;
+export function animateOut(element: Element, trigger: string, scope?: string, filterCallback?: (elm: Element) => boolean, excludeSelf?: boolean): Promise<void>;
 
 /**
  * @param name
