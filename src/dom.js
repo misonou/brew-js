@@ -419,10 +419,14 @@ addTransformer('foreach', function (element, getState) {
                 return currentNodes.splice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
             }
             var parts = $(templateNodes).clone().get();
+            var nested = $('[foreach]', parts);
+            if (nested[0]) {
+                $('[foreach]', templateNodes).each(function (i, v) {
+                    getState(nested[i]).template = getState(v).template;
+                });
+            }
             each(parts, function (i, w) {
                 if (w.nodeType === 1) {
-                    var myState = getState(w);
-                    myState.template = getState(templateNodes[i]).template;
                     $(element).append(w);
                     declareVar(w, { foreach: v });
                     mountElement(w);
