@@ -404,6 +404,10 @@ addTransformer('apply-template', function (element, getState) {
     }
 });
 
+addTransformer('auto-var', function (element) {
+    setVar(element, evalAttr(element, 'auto-var'));
+});
+
 addTransformer('foreach', function (element, getState) {
     var state = getState(element);
     var templateNodes = state.template || (state.template = $(element).contents().detach().filter(function (i, v) { return v.nodeType === 1 || /\S/.test(v.data || ''); }).get());
@@ -441,10 +445,6 @@ addTransformer('foreach', function (element, getState) {
         $(currentNodes).detach();
         $(element).append(newChildren);
     }
-});
-
-addTransformer('auto-var', function (element) {
-    setVar(element, evalAttr(element, 'auto-var'));
 });
 
 addTransformer('switch', function (element, getState, applyDOMUpdates) {
