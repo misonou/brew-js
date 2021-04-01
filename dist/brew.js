@@ -116,7 +116,7 @@ __webpack_require__.r(common_namespaceObject);
 __webpack_require__.d(common_namespaceObject, {
   "addStyleSheet": function() { return addStyleSheet; },
   "api": function() { return api; },
-  "cookie": function() { return cookie; },
+  "cookie": function() { return common_cookie; },
   "copyAttr": function() { return copyAttr; },
   "deleteCookie": function() { return deleteCookie; },
   "getAttrValues": function() { return getAttrValues; },
@@ -458,7 +458,7 @@ function deleteCookie(name) {
  * @param {number=} expiry
  */
 
-function cookie(name, expiry) {
+function common_cookie(name, expiry) {
   return {
     get: function get() {
       return getCookie(name);
@@ -1202,7 +1202,7 @@ function configureRouter(app, options) {
     redirectSource = {}; // assign document title from matched active elements and
     // synchronize path in address bar if navigation is triggered by script
 
-    var pageTitle = evalAttr(pageTitleElement, 'page-title', true);
+    var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
 
     if (location.pathname.substr(baseUrl.length) !== path) {
       historyjs[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
@@ -1272,12 +1272,13 @@ function configureRouter(app, options) {
     }
 
     var promise = preventLeave();
+    var leavePath = newPath;
 
     if (promise) {
       lockedPath = currentPath;
       navigate(currentPath, true);
       resolve(promise).then(function () {
-        navigate(newPath, true);
+        navigate(leavePath, true);
       });
       return;
     }
@@ -1534,7 +1535,9 @@ function processTransform(elements, applyDOMUpdates) {
   var exclude;
 
   do {
-    elements = makeArray(elements);
+    elements = grep(makeArray(elements), function (v) {
+      return containsOrEquals(root, v);
+    });
     exclude = makeArray(transformed);
     each(transformationHandlers, function (i, v) {
       jquery(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
@@ -1890,6 +1893,9 @@ addTransformer('apply-template', function (element, getState) {
     jquery(element).empty().append(template.childNodes);
   }
 });
+addTransformer('auto-var', function (element) {
+  setVar(element, evalAttr(element, 'auto-var'));
+});
 addTransformer('foreach', function (element, getState) {
   var state = getState(element);
   var templateNodes = state.template || (state.template = jquery(element).contents().detach().filter(function (i, v) {
@@ -1911,10 +1917,16 @@ addTransformer('foreach', function (element, getState) {
       }
 
       var parts = jquery(templateNodes).clone().get();
+      var nested = jquery('[foreach]', parts);
+
+      if (nested[0]) {
+        jquery('[foreach]', templateNodes).each(function (i, v) {
+          getState(nested[i]).template = getState(v).template;
+        });
+      }
+
       each(parts, function (i, w) {
         if (w.nodeType === 1) {
-          var myState = getState(w);
-          myState.template = getState(templateNodes[i]).template;
           jquery(element).append(w);
           declareVar(w, {
             foreach: v
@@ -1932,14 +1944,19 @@ addTransformer('foreach', function (element, getState) {
     jquery(element).append(newChildren);
   }
 });
-addTransformer('auto-var', function (element) {
-  setVar(element, evalAttr(element, 'auto-var'));
-});
 addTransformer('switch', function (element, getState, applyDOMUpdates) {
   var varname = element.getAttribute('switch') || '';
 
   if (!isElementActive(element) || !varname) {
     return;
+  }
+
+  var state = getState(element);
+
+  if (state.matched === undefined) {
+    declareVar(element, 'matched', function () {
+      return state.matched && getVar(state.matched, true);
+    });
   }
 
   var context = getVar(element);
@@ -1960,17 +1977,15 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
   });
   matched = matched || $target.filter('[default]')[0] || $target[0] || null;
 
-  if (!context.matched || context.matched.element !== matched) {
+  if (state.matched !== matched) {
     groupLog('switch', [element, varname, '→', matchValue], function (console) {
       console.log('Matched: ', matched || '(none)');
 
       if (matched) {
+        resetVar(matched);
         setVar(matched);
       }
 
-      setVar(element, {
-        matched: matched && getVar(matched)
-      });
       $target.each(function (i, v) {
         applyDOMUpdates(v, {
           $$class: {
@@ -1986,6 +2001,8 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
       setVar(element, varname, itemValues.get(matched));
     }
   }
+
+  state.matched = matched;
 });
 addRenderer('template', function (element, getState, applyDOMUpdates) {
   var state = getState(element);
@@ -2289,9 +2306,6 @@ var var_root = zeta_dom_dom.root;
 var varAttrs = {
   'var': true,
   'auto-var': true,
-  'switch': {
-    matched: null
-  },
   'error-scope': {
     error: null
   }
@@ -2319,22 +2333,30 @@ function VarContext() {
   }
 }
 
+function hasDataAttributes(element) {
+  for (var i in element.dataset) {
+    return true;
+  }
+}
+
 function getDeclaredVar(element, resetToNull, state) {
   var initValues = {};
   each(varAttrs, function (i, v) {
-    if (v === true) {
-      extend(initValues, evalAttr(element, i, false, state));
-    } else if (isPlainObject(v) && element.attributes[i]) {
-      extend(initValues, v);
+    if (element.attributes[i]) {
+      if (v === true) {
+        v = evalAttr(element, i, false, state);
+
+        if (!isPlainObject(v)) {
+          return;
+        }
+      } // @ts-ignore: v should be object
+
+
+      for (var j in v) {
+        initValues[j] = v[j] === undefined || resetToNull ? null : v[j];
+      }
     }
   });
-
-  if (resetToNull) {
-    for (var i in initValues) {
-      initValues[i] = null;
-    }
-  }
-
   return initValues;
 }
 
@@ -2406,14 +2428,18 @@ function setVar(element, name, value) {
 function declareVar(element, name, value) {
   var values = isPlainObject(name) || kv(name, value);
   var context = tree.setNode(element);
+  var newValues = {};
 
   for (var i in values) {
-    if (!util_hasOwnProperty(context, i)) {
-      defineOwnProperty(context, i, null);
+    if (isFunction(values[i])) {
+      defineGetterProperty(context, i, values[i], noop);
+    } else {
+      defineOwnProperty(context, i, context[i]);
+      newValues[i] = values[i];
     }
   }
 
-  return setVar(element, values);
+  return setVar(element, newValues);
 }
 /**
  * @param {Element} element
@@ -2429,12 +2455,24 @@ function resetVar(element, resetToNull) {
 }
 /**
  * @param {Element} element
- * @param {string=} name
+ * @param {string|boolean=} name
  */
 
 function getVar(element, name) {
-  var values = tree.getNode(element) || {};
-  return name ? values[name] : extend({}, values);
+  var values = hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element) || {};
+
+  if (name !== true) {
+    return name ? values[name] : extend({}, values);
+  } // @ts-ignore: element property exists on tree node
+
+
+  if (values.element !== element) {
+    return {};
+  }
+
+  var keys = Object.getOwnPropertyNames(values);
+  keys.splice(keys.indexOf('element'), 1);
+  return pick(values, keys);
 }
 /**
  * @param {string} template
@@ -2625,14 +2663,14 @@ addAsyncAction('context-method', function (e) {
     var formSelector = self.getAttribute('context-form'); // @ts-ignore: acceptable if self.form is undefined
 
     var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
-    var params = {};
+    var params;
     var valid = true;
 
     if (form) {
       valid = zeta_dom_dom.emit('validate', form) || form.checkValidity();
-      extend(params, getFormValues(form));
+      params = [getFormValues(form)];
     } else {
-      extend(params, self.dataset);
+      params = makeArray(evalAttr(self, 'method-args'));
     }
 
     return resolveAll(valid, function (valid) {
@@ -2640,7 +2678,7 @@ addAsyncAction('context-method', function (e) {
         throw 'validation-failed';
       }
 
-      return app[method](params);
+      return app[method].apply(app, params);
     });
   }
 });
@@ -2904,6 +2942,7 @@ install('formVar', function (app) {
 
 
 
+
 function detectLanguage(languages, defaultLanguage) {
   var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
   each(userLanguages, function (i, v) {
@@ -2927,7 +2966,9 @@ function detectLanguage(languages, defaultLanguage) {
 
 install('i18n', function (app, options) {
   var routeParam = app.route && options.routeParam;
-  var cookie = options.cookie && cookie(options.cookie, 86400000);
+
+  var cookie = options.cookie && common_cookie(options.cookie, 86400000);
+
   var language = routeParam && app.route[routeParam] || cookie && cookie.get() || detectLanguage(options.languages, options.defaultLanguage);
 
   var setLanguage = function setLanguage(newLangauge) {
@@ -2985,7 +3026,7 @@ install('login', function (app, options) {
     tokenLogin: null,
     getTokenFromResponse: null
   }, options);
-  var authCookie = cookie(options.cookie, options.expiry);
+  var authCookie = common_cookie(options.cookie, options.expiry);
   var setLoggedIn = defineObservableProperty(app, 'loggedIn', false, true);
 
   function handleLogin(response) {
