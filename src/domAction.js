@@ -220,17 +220,21 @@ dom.ready.then(function () {
     $('body').on('click', '[toggle]', function (e) {
         var self = e.currentTarget;
         e.stopPropagation();
-        openFlyout(self.getAttribute('toggle'), null, self, true);
+        if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+            openFlyout(self.getAttribute('toggle'), null, self, true);
+        }
     });
 
     $('body').on('click', '[toggle-class]', function (e) {
-        e.stopPropagation();
         var self = e.currentTarget;
-        var selector = self.getAttribute('toggle-class-for');
-        var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
-        each(self.getAttribute('toggle-class'), function (i, v) {
-            setClass(target, v.slice(1), v[0] === '+');
-        });
+        e.stopPropagation();
+        if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+            var selector = self.getAttribute('toggle-class-for');
+            var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
+            each(self.getAttribute('toggle-class'), function (i, v) {
+                setClass(target, v.slice(1), v[0] === '+');
+            });
+        }
     });
 
     $('body').on('click', function () {
