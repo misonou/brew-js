@@ -14,7 +14,9 @@ dom.ready.then(function () {
         var $target = $(v.getAttribute('elements') || '', v.parentNode || dom.root);
         each(v.attributes, function (i, v) {
             if (v.name !== 'elements') {
-                $target.attr(v.name, v.value);
+                $target.each(function (i, w) {
+                    w.setAttribute(v.name, v.value);
+                });
             }
         });
     }).remove();
