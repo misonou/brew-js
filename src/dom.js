@@ -36,16 +36,6 @@ function getComponentState(ns, element) {
     return obj[ns] || (obj[ns] = {});
 }
 
-function diffObject(currentValues, oldValues) {
-    var newValues = {};
-    each(currentValues, function (i, v) {
-        if (v !== oldValues[i]) {
-            newValues[i] = v;
-        }
-    });
-    return newValues;
-}
-
 function updateDOM(element, props, suppressEvent) {
     each(props, function (j, v) {
         if (j === '$$class') {
@@ -177,13 +167,31 @@ export function processStateChange(suppressAnim) {
                 return containsOrEquals(root, v) && updatedElements.delete(v);
             }));
             each(arr, function (i, v) {
-                var currentValues = getVar(v);
-                var oldValues = getComponentState('oldValues', v);
-                updatedProps.set(v, {
-                    oldValues: extend({}, oldValues),
-                    newValues: diffObject(currentValues, oldValues)
+                var state = getComponentState('oldValues', v);
+                var oldValues = {};
+                var newValues = {};
+                each(getVar(v, true), function (j, v) {
+                    if (state[j] !== v) {
+                        oldValues[j] = state[j];
+                        newValues[j] = v;
+                        state[j] = v;
+                    }
                 });
-                extend(oldValues, currentValues);
+                updatedProps.set(v, {
+                    oldValues: oldValues,
+                    newValues: newValues
+                });
+                while (v = v.parentNode) {
+                    var parent = updatedProps.get(v);
+                    if (parent) {
+                        for (var j in parent.newValues) {
+                            if (!(j in newValues)) {
+                                newValues[j] = parent.newValues[j];
+                                oldValues[j] = parent.oldValues[j];
+                            }
+                        }
+                    }
+                }
             });
 
             var visited = [];
