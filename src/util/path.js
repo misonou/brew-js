@@ -1,3 +1,8 @@
+const defaultPort = {
+    http: 80,
+    https: 443
+};
+
 export var baseUrl = '';
 
 /**
@@ -34,7 +39,7 @@ export function normalizePath(path, resolveDotDir) {
     if (/:\/\/|\?|#/.test(path)) {
         var a = document.createElement('a');
         a.href = path;
-        return a.origin + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+        return (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
     }
     path = String(path).replace(/\/+(\/|$)/, '$1');
     if (resolveDotDir && path.indexOf('./') >= 0) {
