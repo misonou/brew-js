@@ -471,6 +471,7 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
     var $target = $('[match-' + varname + ']', element).filter(function (i, w) {
         return $(w).parents('[switch]')[0] === element;
     });
+    var resetOnChange = !matchWord('switch', element.getAttribute('keep-child-state') || '');
     var previous = state.matched;
     var matched;
     var itemValues = new Map();
@@ -487,10 +488,12 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
         groupLog('switch', [element, varname, '→', matchValue], function (console) {
             console.log('Matched: ', matched || '(none)');
             if (matched) {
-                resetVar(matched);
+                if (resetOnChange) {
+                    resetVar(matched);
+                }
                 setVar(matched);
             }
-            if (previous) {
+            if (previous && resetOnChange) {
                 resetVar(previous, true);
             }
             $target.each(function (i, v) {
