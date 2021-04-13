@@ -66,7 +66,10 @@ module.exports = waterpipe; // assign to a new variable to avoid incompatble dec
 var waterpipe_ = waterpipe;
 
 waterpipe_.pipes['{'] = function (_, varargs) {
+  var globals = varargs.globals;
+  var prev = globals.new;
   var o = {};
+  globals.new = o;
 
   while (varargs.hasArgs()) {
     var key = varargs.raw();
@@ -78,6 +81,7 @@ waterpipe_.pipes['{'] = function (_, varargs) {
     o[String(key).replace(/:$/, '')] = varargs.next();
   }
 
+  globals.new = prev;
   return o;
 }; // @ts-ignore: add member to function
 
@@ -219,6 +223,10 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
 // CONCATENATED MODULE: ./src/include/zeta-dom/util.js
 
 // CONCATENATED MODULE: ./src/util/path.js
+var defaultPort = {
+  http: 80,
+  https: 443
+};
 var baseUrl = '';
 /**
  * @param {string} b
@@ -259,7 +267,7 @@ function normalizePath(path, resolveDotDir) {
   if (/:\/\/|\?|#/.test(path)) {
     var a = document.createElement('a');
     a.href = path;
-    return a.origin + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+    return (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
   }
 
   path = String(path).replace(/\/+(\/|$)/, '$1');
@@ -1490,16 +1498,6 @@ function getComponentState(ns, element) {
   return obj[ns] || (obj[ns] = {});
 }
 
-function diffObject(currentValues, oldValues) {
-  var newValues = {};
-  each(currentValues, function (i, v) {
-    if (v !== oldValues[i]) {
-      newValues[i] = v;
-    }
-  });
-  return newValues;
-}
-
 function updateDOM(element, props, suppressEvent) {
   each(props, function (j, v) {
     if (j === '$$class') {
@@ -1652,13 +1650,33 @@ function processStateChange(suppressAnim) {
         return containsOrEquals(root, v) && updatedElements.delete(v);
       }));
       each(arr, function (i, v) {
-        var currentValues = getVar(v);
-        var oldValues = getComponentState('oldValues', v);
-        updatedProps.set(v, {
-          oldValues: extend({}, oldValues),
-          newValues: diffObject(currentValues, oldValues)
+        var state = getComponentState('oldValues', v);
+        var oldValues = {};
+        var newValues = {};
+        each(getVar(v, true), function (j, v) {
+          if (state[j] !== v) {
+            oldValues[j] = state[j];
+            newValues[j] = v;
+            state[j] = v;
+          }
         });
-        extend(oldValues, currentValues);
+        updatedProps.set(v, {
+          oldValues: oldValues,
+          newValues: newValues
+        });
+
+        while (v = v.parentNode) {
+          var parent = updatedProps.get(v);
+
+          if (parent) {
+            for (var j in parent.newValues) {
+              if (!(j in newValues)) {
+                newValues[j] = parent.newValues[j];
+                oldValues[j] = parent.oldValues[j];
+              }
+            }
+          }
+        }
       });
       var visited = [];
       each(arr.reverse(), function (i, v) {
@@ -1964,6 +1982,7 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
   var $target = jquery('[match-' + varname + ']', element).filter(function (i, w) {
     return jquery(w).parents('[switch]')[0] === element;
   });
+  var previous = state.matched;
   var matched;
   var itemValues = new Map();
   $target.each(function (i, v) {
@@ -1977,13 +1996,17 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
   });
   matched = matched || $target.filter('[default]')[0] || $target[0] || null;
 
-  if (state.matched !== matched) {
+  if (previous !== matched) {
     groupLog('switch', [element, varname, '→', matchValue], function (console) {
       console.log('Matched: ', matched || '(none)');
 
       if (matched) {
         resetVar(matched);
         setVar(matched);
+      }
+
+      if (previous) {
+        resetVar(previous, true);
       }
 
       $target.each(function (i, v) {
@@ -2794,7 +2817,9 @@ zeta_dom_dom.ready.then(function () {
     var $target = jquery(v.getAttribute('elements') || '', v.parentNode || zeta_dom_dom.root);
     each(v.attributes, function (i, v) {
       if (v.name !== 'elements') {
-        $target.attr(v.name, v.value);
+        $target.each(function (i, w) {
+          w.setAttribute(v.name, v.value);
+        });
       }
     });
   }).remove(); // replace inline background-image to prevent browser to load unneccessary images
