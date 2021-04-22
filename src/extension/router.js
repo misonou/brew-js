@@ -2,7 +2,7 @@ import History from "../include/external/historyjs.js";
 import $ from "../include/external/jquery.js";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal } from "../include/zeta-dom/util.js";
+import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -296,16 +296,27 @@ function configureRouter(app, options) {
         var oldPath = currentPath;
         var redirectPath;
         batch(true, function () {
-            matchByPathElements.forEach(function (v, placeholder) {
-                var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
-                var matched = $('[switch=""]', v)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath;
-                if (matched) {
-                    newActiveElements.unshift(v);
-                    if (!v.parentNode) {
-                        $(placeholder).replaceWith(v);
-                        markUpdated(v);
-                        mountElement(v);
-                    }
+            var switchElements = $('[switch=""]').get();
+            each(switchElements, function (i, v) {
+                if (isElementActive(v, newActiveElements)) {
+                    var children = $(v).children('[match-path]').get().sort(function (a, b) {
+                        // @ts-ignore: element must have match-path attribute
+                        return b.getAttribute('match-path').localeCompare(a.getAttribute('match-path'));
+                    });
+                    any(children, function (v) {
+                        var element = mapGet(matchByPathElements, v) || v;
+                        var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
+                        if ($('[switch=""]', element)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath) {
+                            newActiveElements.unshift(element);
+                            if (element !== v) {
+                                $(v).replaceWith(element);
+                                markUpdated(element);
+                                mountElement(element);
+                                switchElements.push.apply(switchElements, $('[switch=""]', element).get());
+                            }
+                            return true;
+                        }
+                    });
                 }
             });
         });
