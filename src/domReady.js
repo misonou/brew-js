@@ -3,7 +3,7 @@ import { each } from "./include/zeta-dom/util.js";
 import { isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import dom from "./include/zeta-dom/dom.js";
 import { addTemplate, preventLeave } from "./dom.js";
-import { withBaseUrl } from "./util/path.js";
+import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 
 dom.ready.then(function () {
     $('[brew-template]').each(function (i, v) {
@@ -25,7 +25,7 @@ dom.ready.then(function () {
     $('[style]').each(function (i, v) {
         var backgroundImage = isCssUrlValue(v.style.backgroundImage);
         if (backgroundImage) {
-            v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(backgroundImage)));
+            v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(toRelativeUrl(backgroundImage))));
             v.style.backgroundImage = 'none';
         }
     });

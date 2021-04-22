@@ -8,7 +8,7 @@ import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
-import { withBaseUrl } from "./util/path.js";
+import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar, resetVar } from "./var.js";
 import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
 
@@ -537,7 +537,7 @@ addRenderer('set-style', function (element, getState, applyDOMUpdates) {
     each(IMAGE_STYLE_PROPS, function (i, v) {
         var imageUrl = isCssUrlValue(style[v]);
         if (imageUrl) {
-            style[v] = 'url("' + withBaseUrl(imageUrl) + '")';
+            style[v] = 'url("' + withBaseUrl(toRelativeUrl(imageUrl)) + '")';
         }
     });
     applyDOMUpdates(element, { style });
