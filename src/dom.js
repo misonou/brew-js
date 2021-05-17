@@ -73,10 +73,12 @@ function processTransform(elements, applyDOMUpdates) {
             return containsOrEquals(root, v);
         });
         exclude = makeArray(transformed);
-        each(transformationHandlers, function (i, v) {
-            $(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
-                v(element, getComponentState.bind(0, i), applyDOMUpdates);
-                transformed.add(element);
+        $(selectIncludeSelf('[' + keys(transformationHandlers).join('],[') + ']', elements)).not(exclude).each(function (j, element) {
+            each(transformationHandlers, function (i, v) {
+                if (element.attributes[i]) {
+                    v(element, getComponentState.bind(0, i), applyDOMUpdates);
+                    transformed.add(element);
+                }
             });
         });
     } while (exclude.length !== transformed.size);
