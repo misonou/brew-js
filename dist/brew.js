@@ -1299,18 +1299,30 @@ function configureRouter(app, options) {
     var oldPath = currentPath;
     var redirectPath;
     batch(true, function () {
-      matchByPathElements.forEach(function (v, placeholder) {
-        var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
-        var matched = jquery('[switch=""]', v)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath;
+      var switchElements = jquery('[switch=""]').get();
+      each(switchElements, function (i, v) {
+        if (isElementActive(v, newActiveElements)) {
+          var children = jquery(v).children('[match-path]').get().sort(function (a, b) {
+            // @ts-ignore: element must have match-path attribute
+            return b.getAttribute('match-path').localeCompare(a.getAttribute('match-path'));
+          });
+          grep(children, function (v) {
+            var element = mapGet(matchByPathElements, v) || v;
+            var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
 
-        if (matched) {
-          newActiveElements.unshift(v);
+            if (jquery('[switch=""]', element)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath) {
+              newActiveElements.unshift(element);
 
-          if (!v.parentNode) {
-            jquery(placeholder).replaceWith(v);
-            markUpdated(v);
-            mountElement(v);
-          }
+              if (element !== v) {
+                jquery(v).replaceWith(element);
+                markUpdated(element);
+                mountElement(element);
+                switchElements.push.apply(switchElements, jquery('[switch=""]', element).get());
+              }
+
+              return true;
+            }
+          });
         }
       });
     }); // prevent infinite redirection loop
@@ -1537,10 +1549,12 @@ function processTransform(elements, applyDOMUpdates) {
       return containsOrEquals(root, v);
     });
     exclude = makeArray(transformed);
-    each(transformationHandlers, function (i, v) {
-      jquery(selectIncludeSelf('[' + i + ']', elements)).not(exclude).each(function (j, element) {
-        v(element, getComponentState.bind(0, i), applyDOMUpdates);
-        transformed.add(element);
+    jquery(selectIncludeSelf('[' + keys(transformationHandlers).join('],[') + ']', elements)).not(exclude).each(function (j, element) {
+      each(transformationHandlers, function (i, v) {
+        if (element.attributes[i]) {
+          v(element, getComponentState.bind(0, i), applyDOMUpdates);
+          transformed.add(element);
+        }
       });
     });
   } while (exclude.length !== transformed.size);
@@ -1982,6 +1996,7 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
   var $target = jquery('[match-' + varname + ']', element).filter(function (i, w) {
     return jquery(w).parents('[switch]')[0] === element;
   });
+  var resetOnChange = !matchWord('switch', element.getAttribute('keep-child-state') || '');
   var previous = state.matched;
   var matched;
   var itemValues = new Map();
@@ -2001,11 +2016,14 @@ addTransformer('switch', function (element, getState, applyDOMUpdates) {
       console.log('Matched: ', matched || '(none)');
 
       if (matched) {
-        resetVar(matched);
+        if (resetOnChange) {
+          resetVar(matched);
+        }
+
         setVar(matched);
       }
 
-      if (previous) {
+      if (previous && resetOnChange) {
         resetVar(previous, true);
       }
 
@@ -2063,7 +2081,7 @@ addRenderer('set-style', function (element, getState, applyDOMUpdates) {
     var imageUrl = isCssUrlValue(style[v]);
 
     if (imageUrl) {
-      style[v] = 'url("' + withBaseUrl(imageUrl) + '")';
+      style[v] = 'url("' + withBaseUrl(toRelativeUrl(imageUrl)) + '")';
     }
   });
   applyDOMUpdates(element, {
@@ -2787,16 +2805,22 @@ zeta_dom_dom.ready.then(function () {
   jquery('body').on('click', '[toggle]', function (e) {
     var self = e.currentTarget;
     e.stopPropagation();
-    openFlyout(self.getAttribute('toggle'), null, self, true);
+
+    if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+      openFlyout(self.getAttribute('toggle'), null, self, true);
+    }
   });
   jquery('body').on('click', '[toggle-class]', function (e) {
-    e.stopPropagation();
     var self = e.currentTarget;
-    var selector = self.getAttribute('toggle-class-for');
-    var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
-    each(self.getAttribute('toggle-class'), function (i, v) {
-      setClass(target, v.slice(1), v[0] === '+');
-    });
+    e.stopPropagation();
+
+    if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+      var selector = self.getAttribute('toggle-class-for');
+      var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
+      each(self.getAttribute('toggle-class'), function (i, v) {
+        setClass(target, v.slice(1), v[0] === '+');
+      });
+    }
   });
   jquery('body').on('click', function () {
     closeFlyout();
@@ -2828,7 +2852,7 @@ zeta_dom_dom.ready.then(function () {
     var backgroundImage = isCssUrlValue(v.style.backgroundImage);
 
     if (backgroundImage) {
-      v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(backgroundImage)));
+      v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(toRelativeUrl(backgroundImage))));
       v.style.backgroundImage = 'none';
     }
   });
