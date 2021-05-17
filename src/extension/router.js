@@ -2,7 +2,7 @@ import History from "../include/external/historyjs.js";
 import $ from "../include/external/jquery.js";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet } from "../include/zeta-dom/util.js";
+import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -303,7 +303,7 @@ function configureRouter(app, options) {
                         // @ts-ignore: element must have match-path attribute
                         return b.getAttribute('match-path').localeCompare(a.getAttribute('match-path'));
                     });
-                    any(children, function (v) {
+                    grep(children, function (v) {
                         var element = mapGet(matchByPathElements, v) || v;
                         var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
                         if ($('[switch=""]', element)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath) {
