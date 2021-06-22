@@ -2,7 +2,7 @@ import History from "../include/external/historyjs.js";
 import $ from "../include/external/jquery.js";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, defineHiddenProperty, map, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep, isFunction, isArray, define } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -13,6 +13,7 @@ import { evalAttr, resetVar, setVar } from "../var.js";
 
 const _ = createPrivateStore();
 const matchByPathElements = new Map();
+const parsedRoutes = {};
 const preloadHandlers = [];
 
 /** @type {Element[]} */
@@ -28,52 +29,89 @@ export function isElementActive(v, arr) {
     return !parent || (arr || activeElements).indexOf(parent) >= 0;
 }
 
-/**
- * @param {Zeta.AnyFunction} callback
- */
-export function hookBeforePageEnter(callback) {
-    preloadHandlers.push(throwNotFunction(callback));
+export function hookBeforePageEnter(path, callback) {
+    if (isFunction(path)) {
+        callback = path;
+        path = '/*';
+    }
+    preloadHandlers.push({
+        route: parseRoute(path),
+        callback: throwNotFunction(callback)
+    });
+}
+
+export function matchRoute(route, segments, ignoreExact) {
+    if (!route || !route.test) {
+        route = parseRoute(route);
+    }
+    if (!isArray(segments)) {
+        segments = toSegments(segments);
+    }
+    return route.test(segments, ignoreExact);
+}
+
+function toSegments(path) {
+    path = normalizePath(path);
+    return path === '/' ? [] : path.slice(1).split('/');
+}
+
+function parseRoute(path) {
+    path = String(path);
+    if (!parsedRoutes[path]) {
+        var tokens = [];
+        var params = {};
+        var minLength;
+        path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
+            if (c && !minLength) {
+                minLength = tokens.length;
+            }
+            if (b) {
+                params[b] = tokens.length;
+            }
+            tokens.push(b ? { name: b, pattern: d ? new RegExp('^' + d + '$', 'i') : /./ } : a.toLowerCase());
+        });
+        define(tokens, {
+            value: path,
+            params: params,
+            exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
+            minLength: minLength || tokens.length,
+            test: function (segments, ignoreExact) {
+                // @ts-ignore: custom properties on array
+                return segments.length >= tokens.minLength && (ignoreExact || !tokens.exact || segments.length <= tokens.length) && !any(tokens, function (v, i) {
+                    return segments[i] && !(v.name ? v.pattern.test(segments[i]) : iequal(segments[i], v));
+                });
+            }
+        });
+        parsedRoutes[path] = tokens;
+    }
+    return parsedRoutes[path];
 }
 
 function createRouteState(route, segments, params) {
     route = route || [];
-    params = extend({}, params);
-    delete params.remainingSegments;
     return {
-        minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-        maxPath: normalizePath(segments.slice(0, route.length).join('/')),
         route: route,
-        params: params
+        params: exclude(params, ['remainingSegments']),
+        minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
+        maxPath: normalizePath(segments.slice(0, route.length).join('/'))
     };
 }
 
 function Route(app, routes, initialPath) {
     var self = this;
-    var state = _(self, {});
-    state.routes = routes.map(function (path) {
-        var tokens = [];
-        var minLength;
-        // @ts-ignore: no side effect to not return
-        String(path).replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
-            if (c && !minLength) {
-                minLength = tokens.length;
-            }
-            tokens.push(b ? { name: b, pattern: d ? new RegExp('^' + d + '$', 'i') : /./ } : a.toLowerCase());
-            self[b || 'remainingSegments'] = null;
-        });
-        defineHiddenProperty(tokens, 'value', path);
-        defineHiddenProperty(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
-        defineHiddenProperty(tokens, 'minLength', minLength || tokens.length);
-        defineHiddenProperty(tokens, 'names', map(tokens, function (v) {
-            return v.name;
-        }));
-        return tokens;
+    var state = _(self, {
+        routes: routes.map(parseRoute)
     });
-    Object.preventExtensions(self);
+    each(state.routes, function (i, v) {
+        each(v.params, function (i) {
+            self[i] = null;
+        });
+    });
     extend(self, self.parse(initialPath));
     state.current = state.lastMatch;
     state.handleChanges = watch(self, true);
 
+    Object.preventExtensions(self);
     Object.getOwnPropertyNames(self).forEach(function (prop) {
         defineObservableProperty(self, prop);
     });
@@ -97,7 +135,7 @@ function Route(app, routes, initialPath) {
                     segments[i] = varname ? self[varname] : tokens[i];
                 }
                 for (i in self) {
-                    if (i !== 'remainingSegments' && self[i] && tokens.names.indexOf(i) < 0) {
+                    if (i !== 'remainingSegments' && self[i] && !(i in tokens.params)) {
                         self[i] = null;
                         paramChanged = true;
                     }
@@ -106,7 +144,7 @@ function Route(app, routes, initialPath) {
             });
             state.current = createRouteState(matched, segments, self);
         }
-        if ((state.current.route || '').exact && self.remainingSegments !== '/') {
+        if (state.current.route.exact && self.remainingSegments !== '/') {
             self.remainingSegments = '/';
             return;
         }
@@ -121,28 +159,16 @@ definePrototype(Route, {
     parse: function (path) {
         var self = this;
         var state = _(self);
-        var segments = normalizePath(path).slice(1).split('/');
-        var params = {};
-
+        var segments = toSegments(path);
         var matched = any(state.routes, function (tokens) {
-            params = {};
-            if (segments.length < tokens.minLength) {
-                return false;
-            }
-            for (var i = 0, len = tokens.length; i < len; i++) {
-                var varname = tokens[i].name;
-                if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : iequal(segments[i], tokens[i]))) {
-                    return false;
-                }
-                if (varname) {
-                    params[varname] = segments[i];
-                }
-            }
-            params.remainingSegments = tokens.exact ? '/' : normalizePath(segments.slice(tokens.length).join('/'));
-            return true;
+            return matchRoute(tokens, segments, true);
         });
-        for (var i in self) {
-            params[i] = params[i] || null;
+        var params = {};
+        if (matched) {
+            for (var i in self) {
+                params[i] = segments[matched.params[i]] || null;
+            }
+            params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
         }
         state.lastMatch = createRouteState(matched, segments, params);
         return params;
@@ -236,8 +262,11 @@ function configureRouter(app, options) {
                                 // animation and pageenter event of inner scope
                                 // must be after those of parent scope
                                 var dependencies = preload.get($(element).parents('[match-path]')[0]);
+                                var segments = toSegments(element.getAttribute('match-path'));
                                 var promises = preloadHandlers.map(function (v) {
-                                    return v(element, path);
+                                    if (matchRoute(v.route, segments)) {
+                                        return v.callback(element, path);
+                                    }
                                 });
                                 promises.push(dependencies);
                                 preload.set(element, resolveAll(promises, function () {
@@ -462,3 +491,14 @@ install('router', function (app, options) {
     // @ts-ignore
     configureRouter(app, options || {});
 });
+
+parsedRoutes['/*'] = {
+    value: '/*',
+    exact: false,
+    length: 0,
+    minLength: 0,
+    params: {},
+    test: function () {
+        return true;
+    }
+};

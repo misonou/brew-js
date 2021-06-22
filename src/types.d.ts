@@ -205,6 +205,14 @@ declare namespace Brew {
         matchElement(selector: string, handler: (element: Element) => void): void;
 
         /**
+         * Determines whether a route matches a given path.
+         * @param {string} route
+         * @param {string} path Path to match.
+         * @param {boolean=} ignoreExact Whether to match child paths even though there is no trailing wildcard character in the route.
+         */
+        matchRoute(route: string, path: string, ignoreExact?: boolean): boolean;
+
+        /**
          * Postpones app start until the promise is fulfilled.
          * @param promise A promise-like object or a callback that returns promise-like object when called.
          */
