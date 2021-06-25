@@ -2,7 +2,7 @@ import History from "../include/external/historyjs.js";
 import $ from "../include/external/jquery.js";
 import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep, isFunction, isArray, define } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep, isFunction, isArray, define, single } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -328,22 +328,31 @@ function configureRouter(app, options) {
             var switchElements = $('[switch=""]').get();
             each(switchElements, function (i, v) {
                 if (isElementActive(v, newActiveElements)) {
-                    var children = $(v).children('[match-path]').get().sort(function (a, b) {
-                        // @ts-ignore: element must have match-path attribute
-                        return b.getAttribute('match-path').localeCompare(a.getAttribute('match-path'));
-                    });
-                    grep(children, function (v) {
+                    var children = $(v).children('[match-path]').get().map(function (v) {
                         var element = mapGet(matchByPathElements, v) || v;
-                        var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
-                        if ($('[switch=""]', element)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath) {
+                        return {
+                            element: element,
+                            path: resolvePath(element.getAttribute('match-path'), newPath),
+                            placeholder: (v !== element) && v,
+                            children: $('[switch=""]', element).get()
+                        };
+                    });
+                    children.sort(function (a, b) {
+                        return b.path.localeCompare(a.path);
+                    });
+                    var matchedPath = single(children, function (v) {
+                        return (v.children[0] ? isSubPathOf(newPath, v.path) : newPath === v.path) && v.path;
+                    });
+                    each(children, function (i, v) {
+                        if (v.path === matchedPath) {
+                            var element = v.element;
                             newActiveElements.unshift(element);
-                            if (element !== v) {
-                                $(v).replaceWith(element);
+                            if (v.placeholder) {
+                                $(v.placeholder).replaceWith(element);
                                 markUpdated(element);
                                 mountElement(element);
-                                switchElements.push.apply(switchElements, $('[switch=""]', element).get());
+                                switchElements.push.apply(switchElements, v.children);
                             }
-                            return true;
                         }
                     });
                 }
