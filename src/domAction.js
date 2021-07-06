@@ -4,7 +4,7 @@ import waterpipe from "./include/external/waterpipe.js"
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
-import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, keys, reject, isThenable, makeArray } from "./include/zeta-dom/util.js";
+import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, keys, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -189,21 +189,26 @@ dom.ready.then(function () {
 
     $('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
         var self = e.currentTarget;
-        if (self.target !== '_blank' && 'navigate' in app) {
-            e.preventDefault();
-            e.stopPropagation();
+        var href = self.getAttribute('data-href') || self.getAttribute('href');
+        e.preventDefault();
+        e.stopPropagation();
+        if (self.getAttribute('target') === '_blank') {
+            window.open(href, randomId());
+        } else if (!('navigate' in app)) {
+            location.href = href;
+        } else {
             var modalParent = $(self).closest('[is-modal]')[0];
             if (modalParent) {
                 // handle links inside modal popup
                 // this will return the promise which is resolved after modal popup is closed and release the lock
                 openFlyout(modalParent).then(function () {
                     // @ts-ignore: app.navigate checked for truthiness
-                    app.navigate(self.getAttribute('data-href') || self.getAttribute('href'));
+                    app.navigate(href);
                 });
                 closeFlyout(modalParent);
             } else {
                 // @ts-ignore: app.navigate checked for truthiness
-                app.navigate(self.getAttribute('data-href') || self.getAttribute('href'));
+                app.navigate(href);
                 closeFlyout();
             }
         }
