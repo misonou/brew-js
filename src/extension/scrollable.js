@@ -1,8 +1,8 @@
 import $ from "../include/external/jquery.js";
 import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
-import { getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import { getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { animateIn } from "../anim.js";
+import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
@@ -155,13 +155,14 @@ install('scrollable', function (app) {
 
     // scroll-into-view animation trigger
     function updateScrollIntoView() {
-        $('[animate-on~="scroll-into-view"]:not(.tweening-in):visible').each(function (i, v) {
+        $('[animate-on~="scroll-into-view"]:visible').each(function (i, v) {
             var m = new DOMMatrix(getComputedStyle(v).transform);
             var rootRect = getRect(dom.root);
             var thisRect = getRect(v);
-            if (rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) ||
-                rectIntersects(rootRect, thisRect.translate(0, -m.f || 0))) {
-                animateIn(v, 'scroll-into-view');
+            var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0));
+            // @ts-ignore: boolean arithmetics
+            if ((isInView ^ getClass(v, 'tweening-in')) && (isInView || v.attributes['animate-out'])) {
+                (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
             }
         });
     }
