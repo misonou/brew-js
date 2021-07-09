@@ -36,10 +36,10 @@ export function normalizePath(path, resolveDotDir) {
     if (path === undefined || path === null) {
         return '/';
     }
-    if (/:\/\/|\?|#/.test(path)) {
+    if (/(:\/\/)|\?|#/.test(path)) {
         var a = document.createElement('a');
         a.href = path;
-        return (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+        return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
     }
     path = String(path).replace(/\/+(\/|$)/, '$1');
     if (resolveDotDir && path.indexOf('./') >= 0) {
