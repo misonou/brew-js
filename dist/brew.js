@@ -264,10 +264,10 @@ function normalizePath(path, resolveDotDir) {
     return '/';
   }
 
-  if (/:\/\/|\?|#/.test(path)) {
+  if (/(:\/\/)|\?|#/.test(path)) {
     var a = document.createElement('a');
     a.href = path;
-    return (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+    return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
   }
 
   path = String(path).replace(/\/+(\/|$)/, '$1');
@@ -674,7 +674,7 @@ function preloadImages(urls, ms) {
 // CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
 var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
-/* harmony default export */ const dom = (_defaultExport);
+/* harmony default export */ var dom = (_defaultExport);
 var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
     textInputAllowed = _zeta$dom.textInputAllowed,
     beginDrag = _zeta$dom.beginDrag,
@@ -691,7 +691,7 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 // CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
 
-/* harmony default export */ const zeta_dom_dom = (dom);
+/* harmony default export */ var zeta_dom_dom = (dom);
 // CONCATENATED MODULE: ./src/anim.js
 
 
@@ -902,7 +902,7 @@ var waterpipe = __webpack_require__(256);
 // CONCATENATED MODULE: ./src/defaults.js
 /** @type {Zeta.Dictionary} */
 var defaults = {};
-/* harmony default export */ const src_defaults = (defaults);
+/* harmony default export */ var src_defaults = (defaults);
 // EXTERNAL MODULE: ./src/include/external/historyjs.js
 var historyjs = __webpack_require__(31);
 // CONCATENATED MODULE: ./src/util/console.js
@@ -974,6 +974,7 @@ function groupLog(eventSource, message, callback) {
 var _ = createPrivateStore();
 
 var matchByPathElements = new Map();
+var parsedRoutes = {};
 var preloadHandlers = [];
 /** @type {Element[]} */
 
@@ -988,58 +989,99 @@ function isElementActive(v, arr) {
   var parent = jquery(v).closest('[match-path]')[0];
   return !parent || (arr || activeElements).indexOf(parent) >= 0;
 }
-/**
- * @param {Zeta.AnyFunction} callback
- */
+function hookBeforePageEnter(path, callback) {
+  if (isFunction(path)) {
+    callback = path;
+    path = '/*';
+  }
 
-function hookBeforePageEnter(callback) {
-  preloadHandlers.push(throwNotFunction(callback));
+  preloadHandlers.push({
+    route: parseRoute(path),
+    callback: throwNotFunction(callback)
+  });
+}
+function matchRoute(route, segments, ignoreExact) {
+  if (!route || !route.test) {
+    route = parseRoute(route);
+  }
+
+  if (!isArray(segments)) {
+    segments = toSegments(segments);
+  }
+
+  return route.test(segments, ignoreExact);
 }
 
-function createRouteState(route, segments, params) {
-  route = route || [];
-  params = extend({}, params);
-  delete params.remainingSegments;
-  return {
-    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-    maxPath: normalizePath(segments.slice(0, route.length).join('/')),
-    route: route,
-    params: params
-  };
+function toSegments(path) {
+  path = normalizePath(path);
+  return path === '/' ? [] : path.slice(1).split('/');
 }
 
-function Route(app, routes, initialPath) {
-  var self = this;
+function parseRoute(path) {
+  path = String(path);
 
-  var state = _(self, {});
-
-  state.routes = routes.map(function (path) {
+  if (!parsedRoutes[path]) {
     var tokens = [];
-    var minLength; // @ts-ignore: no side effect to not return
-
-    String(path).replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
+    var params = {};
+    var minLength;
+    path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
       if (c && !minLength) {
         minLength = tokens.length;
+      }
+
+      if (b) {
+        params[b] = tokens.length;
       }
 
       tokens.push(b ? {
         name: b,
         pattern: d ? new RegExp('^' + d + '$', 'i') : /./
       } : a.toLowerCase());
-      self[b || 'remainingSegments'] = null;
     });
-    defineHiddenProperty(tokens, 'value', path);
-    defineHiddenProperty(tokens, 'exact', !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)));
-    defineHiddenProperty(tokens, 'minLength', minLength || tokens.length);
-    defineHiddenProperty(tokens, 'names', map(tokens, function (v) {
-      return v.name;
-    }));
-    return tokens;
+    util_define(tokens, {
+      value: path,
+      params: params,
+      exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
+      minLength: minLength || tokens.length,
+      test: function test(segments, ignoreExact) {
+        // @ts-ignore: custom properties on array
+        return segments.length >= tokens.minLength && (ignoreExact || !tokens.exact || segments.length <= tokens.length) && !any(tokens, function (v, i) {
+          return segments[i] && !(v.name ? v.pattern.test(segments[i]) : iequal(segments[i], v));
+        });
+      }
+    });
+    parsedRoutes[path] = tokens;
+  }
+
+  return parsedRoutes[path];
+}
+
+function createRouteState(route, segments, params) {
+  route = route || [];
+  return {
+    route: route,
+    params: exclude(params, ['remainingSegments']),
+    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
+    maxPath: normalizePath(segments.slice(0, route.length).join('/'))
+  };
+}
+
+function Route(app, routes, initialPath) {
+  var self = this;
+
+  var state = _(self, {
+    routes: routes.map(parseRoute)
   });
-  Object.preventExtensions(self);
+
+  each(state.routes, function (i, v) {
+    each(v.params, function (i) {
+      self[i] = null;
+    });
+  });
   extend(self, self.parse(initialPath));
   state.current = state.lastMatch;
   state.handleChanges = watch(self, true);
+  Object.preventExtensions(self);
   Object.getOwnPropertyNames(self).forEach(function (prop) {
     defineObservableProperty(self, prop);
   });
@@ -1071,7 +1113,7 @@ function Route(app, routes, initialPath) {
         }
 
         for (i in self) {
-          if (i !== 'remainingSegments' && self[i] && tokens.names.indexOf(i) < 0) {
+          if (i !== 'remainingSegments' && self[i] && !(i in tokens.params)) {
             self[i] = null;
             paramChanged = true;
           }
@@ -1082,7 +1124,7 @@ function Route(app, routes, initialPath) {
       state.current = createRouteState(matched, segments, self);
     }
 
-    if ((state.current.route || '').exact && self.remainingSegments !== '/') {
+    if (state.current.route.exact && self.remainingSegments !== '/') {
       self.remainingSegments = '/';
       return;
     }
@@ -1101,33 +1143,18 @@ definePrototype(Route, {
 
     var state = _(self);
 
-    var segments = normalizePath(path).slice(1).split('/');
-    var params = {};
+    var segments = toSegments(path);
     var matched = any(state.routes, function (tokens) {
-      params = {};
-
-      if (segments.length < tokens.minLength) {
-        return false;
-      }
-
-      for (var i = 0, len = tokens.length; i < len; i++) {
-        var varname = tokens[i].name;
-
-        if (segments[i] && !(varname ? tokens[i].pattern.test(segments[i]) : iequal(segments[i], tokens[i]))) {
-          return false;
-        }
-
-        if (varname) {
-          params[varname] = segments[i];
-        }
-      }
-
-      params.remainingSegments = tokens.exact ? '/' : normalizePath(segments.slice(tokens.length).join('/'));
-      return true;
+      return matchRoute(tokens, segments, true);
     });
+    var params = {};
 
-    for (var i in self) {
-      params[i] = params[i] || null;
+    if (matched) {
+      for (var i in self) {
+        params[i] = segments[matched.params[i]] || null;
+      }
+
+      params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
     }
 
     state.lastMatch = createRouteState(matched, segments, params);
@@ -1231,8 +1258,11 @@ function configureRouter(app, options) {
                 // animation and pageenter event of inner scope
                 // must be after those of parent scope
                 var dependencies = preload.get(jquery(element).parents('[match-path]')[0]);
+                var segments = toSegments(element.getAttribute('match-path'));
                 var promises = preloadHandlers.map(function (v) {
-                  return v(element, path);
+                  if (matchRoute(v.route, segments)) {
+                    return v.callback(element, path);
+                  }
                 });
                 promises.push(dependencies);
                 preload.set(element, resolveAll(promises, function () {
@@ -1302,25 +1332,32 @@ function configureRouter(app, options) {
       var switchElements = jquery('[switch=""]').get();
       each(switchElements, function (i, v) {
         if (isElementActive(v, newActiveElements)) {
-          var children = jquery(v).children('[match-path]').get().sort(function (a, b) {
-            // @ts-ignore: element must have match-path attribute
-            return b.getAttribute('match-path').localeCompare(a.getAttribute('match-path'));
-          });
-          grep(children, function (v) {
+          var children = jquery(v).children('[match-path]').get().map(function (v) {
             var element = mapGet(matchByPathElements, v) || v;
-            var targetPath = resolvePath(v.getAttribute('match-path'), newPath);
-
-            if (jquery('[switch=""]', element)[0] ? isSubPathOf(newPath, targetPath) : newPath === targetPath) {
+            return {
+              element: element,
+              path: resolvePath(element.getAttribute('match-path'), newPath),
+              placeholder: v !== element && v,
+              children: jquery('[switch=""]', element).get()
+            };
+          });
+          children.sort(function (a, b) {
+            return b.path.localeCompare(a.path);
+          });
+          var matchedPath = single(children, function (v) {
+            return (v.children[0] ? isSubPathOf(newPath, v.path) : newPath === v.path) && v.path;
+          });
+          each(children, function (i, v) {
+            if (v.path === matchedPath) {
+              var element = v.element;
               newActiveElements.unshift(element);
 
-              if (element !== v) {
-                jquery(v).replaceWith(element);
+              if (v.placeholder) {
+                jquery(v.placeholder).replaceWith(element);
                 markUpdated(element);
                 mountElement(element);
-                switchElements.push.apply(switchElements, jquery('[switch=""]', element).get());
+                switchElements.push.apply(switchElements, v.children);
               }
-
-              return true;
             }
           });
         }
@@ -1469,6 +1506,16 @@ install('router', function (app, options) {
   // @ts-ignore
   configureRouter(app, options || {});
 });
+parsedRoutes['/*'] = {
+  value: '/*',
+  exact: false,
+  length: 0,
+  minLength: 0,
+  params: {},
+  test: function test() {
+    return true;
+  }
+};
 // CONCATENATED MODULE: ./src/dom.js
 
 
@@ -2274,12 +2321,15 @@ definePrototype(App, {
     }
 
     this.on('mounted', function (e) {
-      if (e.target.getAttribute('match-path') === path && (!selector || jquery(e.target).is(selector))) {
+      var matchPath = e.target.getAttribute('match-path');
+
+      if (matchPath && matchRoute(path, matchPath) && (!selector || jquery(e.target).is(selector))) {
         handler.call(e.target, e.target);
       }
     });
   },
   matchElement: matchElement,
+  matchRoute: matchRoute,
   beforeUpdate: hookBeforeUpdate,
   beforePageEnter: hookBeforePageEnter
 });
@@ -2773,10 +2823,15 @@ zeta_dom_dom.ready.then(function () {
   });
   jquery('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
     var self = e.currentTarget;
+    var href = self.getAttribute('data-href') || self.getAttribute('href');
+    e.preventDefault();
+    e.stopPropagation();
 
-    if (self.target !== '_blank' && 'navigate' in app) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (self.getAttribute('target') === '_blank') {
+      window.open(href, randomId());
+    } else if (!('navigate' in app)) {
+      location.href = href;
+    } else {
       var modalParent = jquery(self).closest('[is-modal]')[0];
 
       if (modalParent) {
@@ -2784,12 +2839,12 @@ zeta_dom_dom.ready.then(function () {
         // this will return the promise which is resolved after modal popup is closed and release the lock
         openFlyout(modalParent).then(function () {
           // @ts-ignore: app.navigate checked for truthiness
-          app.navigate(self.getAttribute('data-href') || self.getAttribute('href'));
+          app.navigate(href);
         });
         closeFlyout(modalParent);
       } else {
         // @ts-ignore: app.navigate checked for truthiness
-        app.navigate(self.getAttribute('data-href') || self.getAttribute('href'));
+        app.navigate(href);
         closeFlyout();
       }
     }
@@ -2864,7 +2919,7 @@ zeta_dom_dom.ready.then(function () {
     }
   };
 });
-/* harmony default export */ const src_domReady = (null);
+/* harmony default export */ var src_domReady = (null);
 // CONCATENATED MODULE: ./src/core.js
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -2897,7 +2952,7 @@ util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_ob
   addDetect: addDetect,
   addTemplate: addTemplate
 }));
-/* harmony default export */ const core = (src_app);
+/* harmony default export */ var core = (src_app);
 // CONCATENATED MODULE: ./src/extension/config.js
 
 
@@ -2915,7 +2970,7 @@ install('config', function (app, options) {
     }
   }));
 });
-/* harmony default export */ const config = (null);
+/* harmony default export */ var config = (null);
 // CONCATENATED MODULE: ./src/extension/formVar.js
 
 
@@ -2986,7 +3041,7 @@ install('formVar', function (app) {
     });
   });
 });
-/* harmony default export */ const formVar = (null);
+/* harmony default export */ var formVar = (null);
 // CONCATENATED MODULE: ./src/extension/i18n.js
 
 
@@ -3058,7 +3113,7 @@ install('i18n', function (app, options) {
     });
   }
 });
-/* harmony default export */ const i18n = (null);
+/* harmony default export */ var i18n = (null);
 // CONCATENATED MODULE: ./src/extension/login.js
 
 
@@ -3152,7 +3207,7 @@ install('login', function (app, options) {
     }
   });
 });
-/* harmony default export */ const login = (null);
+/* harmony default export */ var login = (null);
 // CONCATENATED MODULE: ./src/extension/preloadImage.js
 
 
@@ -3190,7 +3245,7 @@ install('preloadImage', function (app) {
     return preloadImages(element, 1000);
   });
 });
-/* harmony default export */ const preloadImage = (null);
+/* harmony default export */ var preloadImage = (null);
 // CONCATENATED MODULE: ./src/extension/scrollable.js
 
 
@@ -3351,13 +3406,14 @@ install('scrollable', function (app) {
   }); // scroll-into-view animation trigger
 
   function updateScrollIntoView() {
-    jquery('[animate-on~="scroll-into-view"]:not(.tweening-in):visible').each(function (i, v) {
+    jquery('[animate-on~="scroll-into-view"]:visible').each(function (i, v) {
       var m = new DOMMatrix(getComputedStyle(v).transform);
       var rootRect = getRect(zeta_dom_dom.root);
       var thisRect = getRect(v);
+      var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0)); // @ts-ignore: boolean arithmetics
 
-      if (rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0))) {
-        animateIn(v, 'scroll-into-view');
+      if (isInView ^ getClass(v, 'tweening-in') && (isInView || v.attributes['animate-out'])) {
+        (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
       }
     });
   }
@@ -3366,7 +3422,7 @@ install('scrollable', function (app) {
     setTimeoutOnce(updateScrollIntoView);
   });
 });
-/* harmony default export */ const scrollable = (null);
+/* harmony default export */ var scrollable = (null);
 // CONCATENATED MODULE: ./tmp/zeta-dom/env.js
 
 var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
@@ -3457,7 +3513,7 @@ install('viewport', function (app) {
     checkViewportSize(false);
   });
 });
-/* harmony default export */ const viewport = (null);
+/* harmony default export */ var viewport = (null);
 // CONCATENATED MODULE: ./src/index.js
 
 
@@ -3467,7 +3523,7 @@ install('viewport', function (app) {
 
 
 
-/* harmony default export */ const src = (core);
+/* harmony default export */ var src = (core);
 
 /***/ }),
 
