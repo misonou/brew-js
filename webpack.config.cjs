@@ -140,12 +140,6 @@ module.exports = {
         'promise-polyfill': 'promise-polyfill',
         'waterpipe': 'waterpipe',
         'jquery': 'jQuery',
-        'historyjs/scripts/bundled-uncompressed/html5/jquery.history.js': {
-            commonjs: 'historyjs',
-            commonjs2: 'historyjs',
-            amd: 'historyjs',
-            root: 'History'
-        },
         'zeta-dom': {
             commonjs: 'zeta-dom',
             commonjs2: 'zeta-dom',

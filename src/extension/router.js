@@ -1,6 +1,5 @@
-import History from "../include/external/historyjs.js";
 import $ from "../include/external/jquery.js";
-import { containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
+import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep, isFunction, isArray, define, single } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
@@ -226,7 +225,9 @@ function configureRouter(app, options) {
 
     function navigate(path, replace) {
         path = withBaseUrl(resolvePath(path));
-        History[replace ? 'replaceState' : 'pushState']({}, document.title, path);
+        if (path !== location.pathname) {
+            history[replace ? 'replaceState' : 'pushState']({}, document.title, path);
+        }
         app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
     }
 
@@ -245,7 +246,7 @@ function configureRouter(app, options) {
         // synchronize path in address bar if navigation is triggered by script
         var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
         if (location.pathname.substr(baseUrl.length) !== path) {
-            History[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
+            history[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
         }
         navigated++;
         document.title = pageTitle;
@@ -418,8 +419,7 @@ function configureRouter(app, options) {
         navigate: navigate,
         back: function () {
             if (navigated > 1) {
-                // @ts-ignore: History.js
-                History.back();
+                history.back();
             } else if (app.path !== '/') {
                 navigate('/');
             }
@@ -443,8 +443,7 @@ function configureRouter(app, options) {
                 $(v).detach();
                 matchByPathElements.set(placeholder, v);
             });
-            // @ts-ignore: History.js
-            History.Adapter.bind(window, 'statechange', function () {
+            bind(window, 'popstate', function () {
                 app.path = location.pathname.substr(baseUrl.length) || '/';
             });
         });

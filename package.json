@@ -16,7 +16,6 @@
   "homepage": "http://hackmd.io/@misonou/brew-js",
   "repository": "github:misonou/brew-js",
   "dependencies": {
-    "historyjs": "^1.8.0-b2",
     "jquery": "^3.0.0",
     "promise-polyfill": "^8.2.0",
     "waterpipe": "^2.4.0",
