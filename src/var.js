@@ -1,6 +1,6 @@
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isFunction, isPlainObject, keys, kv, noop, pick, setImmediateOnce } from "./include/zeta-dom/util.js";
+import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isFunction, isPlainObject, keys, kv, noop, pick, setImmediateOnce, trim } from "./include/zeta-dom/util.js";
 import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
@@ -26,7 +26,7 @@ function VarContext() {
     var element = self.element;
     // @ts-ignore: does not throw error when property dataset does not exist
     each(element.dataset, function (i, v) {
-        defineOwnProperty(self, i, waterpipe.eval('`' + v));
+        defineOwnProperty(self, i, waterpipe.eval('`' + trim(v || 'null')));
     });
     each(getDeclaredVar(element, true, self), function (i, v) {
         defineOwnProperty(self, i, v);
