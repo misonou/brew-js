@@ -4,10 +4,7 @@ import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, 
 import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
-import { groupLog } from "./util/console.js";
 import { InheritedNodeTree } from "./include/zeta-dom/tree.js";
-
-const DEBUG_EVAL = /localhost:?/i.test(location.host);
 
 const root = dom.root;
 const varAttrs = {
@@ -174,13 +171,6 @@ export function getVar(element, name) {
 export function evaluate(template, context, element, attrName, templateMode) {
     var options = { globals: { app: app } };
     var result = templateMode ? htmlDecode(waterpipe(template, extend({}, context), options)) : waterpipe.eval(template, extend({}, context), options);
-    if (DEBUG_EVAL) {
-        groupLog('eval', [element, attrName, '→', result], function (console) {
-            console.log('%c%s%c', 'background-color:azure;color:darkblue;font-weight:bold', template, '', '→', result);
-            console.log('Context:', extend({}, context));
-            console.log('Element:', element === root ? document : element);
-        });
-    }
     return result;
 }
 
