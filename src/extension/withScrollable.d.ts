@@ -1,5 +1,5 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * useScrollable
      * ------------------------------------------------------------- */
     type ScrollableEventMap = {
@@ -26,6 +26,6 @@ declare namespace Brew {
          * Enables auto scrollable area initialization and scrolling events.
          * Requires the scrollable plugin https://github.com/misonou/jquery-scrollable.
          */
-        useScrollable(): void;
+        useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'handle' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd'>>): void;
     }
 }

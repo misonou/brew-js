@@ -61,9 +61,23 @@ interface JQueryScrollableOptions extends JQueryScrollableScrollbarOptions, JQue
     scrollEnd: (e: JQueryScrollableEvent) => void
 }
 
+interface JQueryScrollableMethod<TThis> {
+    refresh(): TThis;
+    enable(): TThis;
+    disable(): TThis;
+    stop(): TThis;
+    destroy(): TThis;
+    setOptions(options: Partial<JQueryScrollableOptions>): TThis;
+    scrollLeft(): number;
+    scrollTop(): number;
+    scrollPadding(): Record<'top' | 'left' | 'right' | 'bottom', number>;
+    scrollTo(x: number, y: number, duration?: number, callback?: () => any): TThis;
+    scrollBy(x: number, y: number, duration?: number, callback?: () => any): TThis;
+    scrollToPage(x: number, y: number, duration?: number, callback?: () => any): TThis;
+    scrollToElement(target: Element | string, targetOrigin: string, wrapperOrigin: string, duration?: number, callback?: () => any): TThis;
+}
+
 interface JQuery<TElement = Element> {
     scrollable(options: Partial<JQueryScrollableOptions>): JQuery<TElement>;
-    scrollable(method: 'refresh'): JQuery<TElement>;
-    scrollable(method: 'scrollTo', x: number, y: number): JQuery<TElement>;
-    scrollable(method: 'setOptions' | 'scrollToElement', ...args): JQuery<TElement>;
+    scrollable<T extends keyof JQueryScrollableMethod<this>>(this: this, method: T, ...args: Parameters<JQueryScrollableMethod<this>[T]>): ReturnType<JQueryScrollableMethod<this>[T]>;
 }

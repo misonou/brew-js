@@ -1,5 +1,5 @@
 import $ from "../include/external/jquery.js";
-import { createPrivateStore, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
+import { createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -7,7 +7,12 @@ import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
 
-install('scrollable', function (app) {
+install('scrollable', function (app, defaultOptions) {
+    defaultOptions = extend({
+        bounce: false,
+        scrollbar: false
+    }, defaultOptions);
+
     // @ts-ignore: non-standard member
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
     var store = createPrivateStore();
@@ -31,15 +36,13 @@ install('scrollable', function (app) {
         var isControlledScroll;
 
         // @ts-ignore: signature ignored
-        $(container).scrollable({
-            bounce: false,
+        $(container).scrollable(extend({}, defaultOptions, {
             handle: matchWord(dir, 'auto scrollbar content') || 'content',
             hScroll: !matchWord(dir, 'y-only'),
             vScroll: !matchWord(dir, 'x-only'),
             content: '.' + getState(container).childClass + ':visible:not(.disabled)',
             pageItem: selector,
             snapToPage: (paged === 'always' || paged === app.orientation),
-            scrollbar: false,
             scrollStart: function (e) {
                 app.emit('scrollStart', container, e, true);
             },
@@ -49,7 +52,7 @@ install('scrollable', function (app) {
             scrollEnd: function (e) {
                 app.emit('scrollStop', container, e, true);
             }
-        });
+        }));
 
         function setState(index) {
             if (varname) {
