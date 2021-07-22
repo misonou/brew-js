@@ -34,7 +34,7 @@ install('formVar', function (app) {
         dom.watchElements(form, ':input', function (addedInputs) {
             each(addedInputs, function (i, v) {
                 var afterDetached = dom.afterDetached(v, form);
-                bindUntil(afterDetached, v, 'change', function () {
+                bindUntil(afterDetached, v, 'change input', function () {
                     setImmediateOnce(update);
                 });
                 afterDetached.then(update.bind(null, true));
