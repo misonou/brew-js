@@ -15,6 +15,30 @@ declare namespace Brew {
         readonly pathname: string;
     }
 
+    interface NavigateResult {
+        /**
+         * A unique ID that can identify page load caused by navigation.
+         */
+        readonly id: string;
+        /**
+         * Gets the path being navigated to.
+         * If redirection has occured, redirected path will be returned.
+         */
+        readonly path: string;
+        /**
+         * Gets if navigation event has actually fired as caused a page load.
+         */
+        readonly navigated: boolean;
+        /**
+         * Gets if the app landed on current path through redirection.
+         */
+        readonly redirected: boolean;
+        /**
+         * Gets the original path that is passed to `app.navigate` if it has been redirected.
+         */
+        readonly originalPath: string | null;
+    }
+
     interface WithRouter extends EventDispatcher<keyof RouterEventMap, RouterEventMap> {
         /**
          * Gets or sets the current path.
@@ -34,10 +58,31 @@ declare namespace Brew {
          * Therefore, when setting multiple parameters at once, use `Route.set`.
          */
         readonly route: Route;
+        /**
+         * Gets if user can move back to previous page (or screen)
+         * without leaving the single-page app.
+         */
+        readonly canNavigateBack: boolean;
+        /**
+         * Gets the path that will be navigated to if user click 'Back' on browser or by calling `app.back()`.
+         */
+        readonly previousPath: string | null;
 
-        navigate(path: string, replace?: boolean): void;
-
-        back(): void;
+        /**
+         * Navigate to the specified path.
+         * @param path Path to navigate.
+         * @param replace If given true, visit of current page in the history stack will be replaced.
+         * @returns A promise that is fulfilled when the call has caused a page load, or is a no-op
+         * or is rejected if the navigation is cancelled due to another navigation or due to user actions.
+         */
+        navigate(path: string, replace?: boolean): Promise<NavigateResult>;
+        /**
+         * Navigate to the previous path in history stack.
+         * @param defaultPath Path to navigate when there is no previous path.
+         * @returns A promise that is fulfilled when the call has caused a page load, or is a no-op
+         * or is rejected if the navigation is cancelled due to another navigation or due to user actions.
+         */
+        back(defaultPath?: string): Promise<NavigateResult> | false;
 
         /**
          * Resolves given path by substituting current route parameters.

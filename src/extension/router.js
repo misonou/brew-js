@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, grep, isFunction, isArray, define, single } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -14,9 +14,10 @@ const _ = createPrivateStore();
 const matchByPathElements = new Map();
 const parsedRoutes = {};
 const preloadHandlers = [];
+const root = dom.root;
 
 /** @type {Element[]} */
-var activeElements = [dom.root];
+var activeElements = [root];
 var pageTitleElement;
 
 /**
@@ -204,7 +205,112 @@ function configureRouter(app, options) {
     var redirectSource = {};
     var lockedPath;
     var newPath;
-    var navigated = 0;
+    var currentIndex = -1;
+    var states = [];
+
+    function createNavigateResult(id, path, originalPath, navigated) {
+        return Object.freeze({
+            id: id,
+            path: path,
+            navigated: navigated !== false,
+            redirected: !!originalPath,
+            originalPath: originalPath || null
+        });
+    }
+
+    function handleNoop(path, originalPath) {
+        for (var i = currentIndex; i >= 0; i--) {
+            if (states[i].result && states[i].path === path) {
+                history.replaceState(history.state, '', withBaseUrl(path));
+                return createNavigateResult(states[i].result, path, originalPath, false);
+            }
+        }
+    }
+
+    function pushState(path, replace) {
+        var currentState = states[currentIndex];
+        path = resolvePath(path);
+        if (currentState && path === currentState.path && path === newPath) {
+            if (currentState.result) {
+                return { promise: resolve(handleNoop(path)) };
+            } else {
+                return currentState;
+            }
+        }
+        // @ts-ignore: boolean arithmetics
+        currentIndex = Math.max(0, currentIndex + !replace);
+
+        var id = randomId();
+        var resolvePromise = noop;
+        var rejectPromise = noop;
+        var promise, resolved;
+        var previous = states.splice(currentIndex);
+        var state = {
+            id: id,
+            path: path,
+            result: '',
+            get promise() {
+                return promise || (promise = new Promise(function (resolve_, reject_) {
+                    var wrapper = function (fn) {
+                        return function (value) {
+                            resolved = true;
+                            fn(value);
+                        };
+                    };
+                    resolved = false;
+                    resolvePromise = wrapper(resolve_);
+                    rejectPromise = wrapper(reject_);
+                }));
+            },
+            reset: function () {
+                if (resolved) {
+                    promise = null;
+                }
+                return state;
+            },
+            forward: function (other) {
+                if (promise && !resolved) {
+                    (other.promise || other.then(function (other) {
+                        return other.promise;
+                    })).then(function (data) {
+                        state.resolve(createNavigateResult(data.id, data.path, path));
+                    }, rejectPromise);
+                    rejectPromise = noop;
+                }
+            },
+            resolve: function (result) {
+                result = result || createNavigateResult(id, path);
+                state.path = result.path;
+                state.result = state.result || result.id;
+                resolvePromise(result);
+                each(states, function (i, v) {
+                    v.reject();
+                });
+            },
+            reject: function () {
+                rejectPromise('cancelled');
+            }
+        };
+        states[currentIndex] = state;
+        history[replace ? 'replaceState' : 'pushState'](id, '', withBaseUrl(path));
+        app.path = path;
+
+        if (replace && !previous[1]) {
+            previous[0].forward(state);
+        } else {
+            setImmediate(function () {
+                each(previous, function (i, v) {
+                    v.reject();
+                });
+            });
+        }
+        return state;
+    }
+
+    function popState() {
+        history.back();
+        return --currentIndex;
+    }
 
     function resolvePath(path, currentPath) {
         var parsedState;
@@ -222,14 +328,6 @@ function configureRouter(app, options) {
             path = combinePath(currentPath, path);
         }
         return normalizePath(path, true);
-    }
-
-    function navigate(path, replace) {
-        path = withBaseUrl(resolvePath(path));
-        if (path !== location.pathname) {
-            history[replace ? 'replaceState' : 'pushState']({}, document.title, path);
-        }
-        app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
     }
 
     function registerMatchPathElements(container) {
@@ -251,9 +349,7 @@ function configureRouter(app, options) {
     }
 
     function processPageChange(path, oldPath, newActiveElements) {
-        if (currentPath !== path) {
-            return;
-        }
+        var state = states[currentIndex];
         var preload = new Map();
         var eventSource = dom.eventSource;
         var previousActiveElements = activeElements.slice(0);
@@ -262,13 +358,7 @@ function configureRouter(app, options) {
         redirectSource = {};
 
         // assign document title from matched active elements and
-        // synchronize path in address bar if navigation is triggered by script
-        var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
-        if (location.pathname.substr(baseUrl.length) !== path) {
-            history[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
-        }
-        navigated++;
-        document.title = pageTitle;
+        document.title = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
 
         batch(true, function () {
             groupLog(eventSource, ['pageenter', path], function () {
@@ -312,34 +402,46 @@ function configureRouter(app, options) {
             each(preload, function (element, promise) {
                 handleAsync(promise, element);
             });
+            always(resolveAll(preload), function () {
+                state.resolve();
+            });
         });
     }
 
     function handlePathChange() {
-        if (newPath === currentPath) {
+        var state = states[currentIndex];
+        if (!state || location.pathname !== withBaseUrl(newPath)) {
+            pushState(newPath);
+            state = states[currentIndex];
+        }
+        if (currentIndex > 0 && newPath === currentPath) {
+            state.resolve(handleNoop(newPath));
             return;
         }
+
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
         if (dom.locked(dom.activeElement, true)) {
             lockedPath = newPath === lockedPath ? null : currentPath;
-            navigate(lockedPath || newPath, true);
+            popState();
+            state.reject();
             return;
         }
         var promise = preventLeave();
         var leavePath = newPath;
         if (promise) {
             lockedPath = currentPath;
-            navigate(currentPath, true);
-            resolve(promise).then(function () {
-                navigate(leavePath, true);
+            promise = resolve(promise).then(function () {
+                return pushState(leavePath);
             });
+            popState();
+            state.forward(promise);
             return;
         }
         lockedPath = null;
 
         // find active elements i.e. with match-path that is equal to or is parent of the new path
         /** @type {HTMLElement[]} */
-        var newActiveElements = [dom.root];
+        var newActiveElements = [root];
         var oldPath = currentPath;
         var redirectPath;
         registerMatchPathElements();
@@ -403,8 +505,12 @@ function configureRouter(app, options) {
                 }
             }
         });
-        if (redirectPath) {
-            navigate(redirectPath, true);
+        if (redirectPath && redirectPath !== newPath) {
+            if (redirectPath === currentPath) {
+                state.resolve(handleNoop(redirectPath, newPath));
+            } else {
+                state.forward(pushState(redirectPath, true));
+            }
             return;
         }
 
@@ -418,8 +524,10 @@ function configureRouter(app, options) {
             oldPathname: oldPath,
             route: Object.freeze(extend({}, route))
         }));
-        handleAsync(promise, dom.root, function () {
-            processPageChange(newPath, oldPath, newActiveElements);
+        handleAsync(promise, root, function () {
+            if (states[currentIndex] === state) {
+                processPageChange(newPath, oldPath, newActiveElements);
+            }
         });
     }
 
@@ -437,13 +545,21 @@ function configureRouter(app, options) {
 
     setBaseUrl(options.baseUrl || '');
     app.define({
+        get canNavigateBack() {
+            return currentIndex > 0;
+        },
+        get previousPath() {
+            return (states[currentIndex - 1] || '').path || null;
+        },
         resolvePath: resolvePath,
-        navigate: navigate,
-        back: function () {
-            if (navigated > 1) {
-                history.back();
-            } else if (app.path !== '/') {
-                navigate('/');
+        navigate: function (path, replace) {
+            return pushState(path, replace).promise;
+        },
+        back: function (defaultPath) {
+            if (currentIndex > 0) {
+                return states[popState()].reset().promise;
+            } else {
+                return !!defaultPath && pushState(defaultPath).promise;
             }
         }
     });
@@ -455,13 +571,22 @@ function configureRouter(app, options) {
         dom.ready.then(function () {
             registerMatchPathElements();
             bind(window, 'popstate', function () {
-                app.path = location.pathname.substr(baseUrl.length) || '/';
+                var index = single(states, function (v, i) {
+                    return v.id === history.state && i + 1;
+                });
+                if (index) {
+                    currentIndex = index - 1;
+                    newPath = states[currentIndex].reset().path;
+                    setImmediateOnce(handlePathChange);
+                } else {
+                    pushState(location.pathname.substr(baseUrl.length - 1) || '/');
+                }
             });
         });
     });
 
     app.on('ready', function () {
-        app.path = initialPath;
+        pushState(initialPath);
     });
 
     app.on('mounted', function (e) {
