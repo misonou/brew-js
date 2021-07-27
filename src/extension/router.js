@@ -327,9 +327,10 @@ function configureRouter(app, options) {
         var redirectPath;
         batch(true, function () {
             var switchElements = $('[switch=""]').get();
-            each(switchElements, function (i, v) {
-                if (isElementActive(v, newActiveElements)) {
-                    var children = $(v).children('[match-path]').get().map(function (v) {
+            var current;
+            while (current = switchElements.shift()) {
+                if (isElementActive(current, newActiveElements)) {
+                    var children = $(current).children('[match-path]').get().map(function (v) {
                         var element = mapGet(matchByPathElements, v) || v;
                         return {
                             element: element,
@@ -357,7 +358,7 @@ function configureRouter(app, options) {
                         }
                     });
                 }
-            });
+            }
         });
 
         // prevent infinite redirection loop
