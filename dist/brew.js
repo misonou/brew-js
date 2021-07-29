@@ -1,33 +1,15 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"), require("historyjs"));
+		module.exports = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", ["zeta-dom", "jQuery", "promise-polyfill", "waterpipe", "historyjs"], factory);
+		define("brew", ["zeta-dom", "jQuery", "promise-polyfill", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"), require("historyjs"));
+		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"));
 	else
-		root["brew"] = factory(root["zeta"], root["jQuery"], root["promise-polyfill"], root["waterpipe"], root["History"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__, __WEBPACK_EXTERNAL_MODULE__229__) {
+		root["brew"] = factory(root["zeta"], root["jQuery"], root["promise-polyfill"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 31:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-var History = window.History;
-
-if (!History || !History.Adapter) {
-  window.jQuery = __webpack_require__(609);
-
-  __webpack_require__(229);
-
-  History = window.History;
-}
-
-module.exports = History;
-
-/***/ }),
 
 /***/ 860:
 /***/ (function(module, __unused_webpack_exports, __webpack_require__) {
@@ -903,8 +885,6 @@ var waterpipe = __webpack_require__(256);
 /** @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ var src_defaults = (defaults);
-// EXTERNAL MODULE: ./src/include/external/historyjs.js
-var historyjs = __webpack_require__(31);
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -958,7 +938,6 @@ function groupLog(eventSource, message, callback) {
   }
 }
 // CONCATENATED MODULE: ./src/extension/router.js
-
 
 
 
@@ -1220,7 +1199,11 @@ function configureRouter(app, options) {
 
   function navigate(path, replace) {
     path = withBaseUrl(resolvePath(path));
-    historyjs[replace ? 'replaceState' : 'pushState']({}, document.title, path);
+
+    if (path !== location.pathname) {
+      history[replace ? 'replaceState' : 'pushState']({}, document.title, path);
+    }
+
     app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
   }
 
@@ -1240,7 +1223,7 @@ function configureRouter(app, options) {
     var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
 
     if (location.pathname.substr(baseUrl.length) !== path) {
-      historyjs[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
+      history[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
     }
 
     navigated++;
@@ -1330,9 +1313,11 @@ function configureRouter(app, options) {
     var redirectPath;
     batch(true, function () {
       var switchElements = jquery('[switch=""]').get();
-      each(switchElements, function (i, v) {
-        if (isElementActive(v, newActiveElements)) {
-          var children = jquery(v).children('[match-path]').get().map(function (v) {
+      var current;
+
+      while (current = switchElements.shift()) {
+        if (isElementActive(current, newActiveElements)) {
+          var children = jquery(current).children('[match-path]').get().map(function (v) {
             var element = mapGet(matchByPathElements, v) || v;
             return {
               element: element,
@@ -1361,7 +1346,7 @@ function configureRouter(app, options) {
             }
           });
         }
-      });
+      }
     }); // prevent infinite redirection loop
     // redirectSource will not be reset until processPageChange is fired
 
@@ -1425,8 +1410,7 @@ function configureRouter(app, options) {
     navigate: navigate,
     back: function back() {
       if (navigated > 1) {
-        // @ts-ignore: History.js
-        historyjs.back();
+        history.back();
       } else if (app.path !== '/') {
         navigate('/');
       }
@@ -1450,9 +1434,8 @@ function configureRouter(app, options) {
         jquery(v).before(placeholder);
         jquery(v).detach();
         matchByPathElements.set(placeholder, v);
-      }); // @ts-ignore: History.js
-
-      historyjs.Adapter.bind(window, 'statechange', function () {
+      });
+      bind(window, 'popstate', function () {
         app.path = location.pathname.substr(baseUrl.length) || '/';
       });
     });
@@ -2391,8 +2374,6 @@ var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 
 
 
-
-var DEBUG_EVAL = /localhost:?/i.test(location.host);
 var var_root = zeta_dom_dom.root;
 var varAttrs = {
   'var': true,
@@ -2412,7 +2393,7 @@ function VarContext() {
   var element = self.element; // @ts-ignore: does not throw error when property dataset does not exist
 
   each(element.dataset, function (i, v) {
-    defineOwnProperty(self, i, waterpipe.eval('`' + v));
+    defineOwnProperty(self, i, waterpipe.eval('`' + trim(v || 'null')));
   });
   each(getDeclaredVar(element, true, self), function (i, v) {
     defineOwnProperty(self, i, v);
@@ -2580,15 +2561,6 @@ function evaluate(template, context, element, attrName, templateMode) {
     }
   };
   var result = templateMode ? htmlDecode(waterpipe(template, extend({}, context), options)) : waterpipe.eval(template, extend({}, context), options);
-
-  if (DEBUG_EVAL) {
-    groupLog('eval', [element, attrName, '→', result], function (console) {
-      console.log('%c%s%c', 'background-color:azure;color:darkblue;font-weight:bold', template, '', '→', result);
-      console.log('Context:', extend({}, context));
-      console.log('Element:', element === var_root ? document : element);
-    });
-  }
-
   return result;
 }
 /**
@@ -3010,7 +2982,7 @@ install('formVar', function (app) {
     zeta_dom_dom.watchElements(form, ':input', function (addedInputs) {
       each(addedInputs, function (i, v) {
         var afterDetached = zeta_dom_dom.afterDetached(v, form);
-        bindUntil(afterDetached, v, 'change', function () {
+        bindUntil(afterDetached, v, 'change input', function () {
           setImmediateOnce(update);
         });
         afterDetached.then(update.bind(null, true));
@@ -3255,8 +3227,12 @@ install('preloadImage', function (app) {
 
 
 
-install('scrollable', function (app) {
-  // @ts-ignore: non-standard member
+install('scrollable', function (app, defaultOptions) {
+  defaultOptions = extend({
+    bounce: false,
+    scrollbar: false
+  }, defaultOptions); // @ts-ignore: non-standard member
+
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
   var store = createPrivateStore();
   var id = 0;
@@ -3277,15 +3253,13 @@ install('scrollable', function (app) {
     var needRefresh = false;
     var isControlledScroll; // @ts-ignore: signature ignored
 
-    jquery(container).scrollable({
-      bounce: false,
+    jquery(container).scrollable(extend({}, defaultOptions, {
       handle: matchWord(dir, 'auto scrollbar content') || 'content',
       hScroll: !matchWord(dir, 'y-only'),
       vScroll: !matchWord(dir, 'x-only'),
       content: '.' + getState(container).childClass + ':visible:not(.disabled)',
       pageItem: selector,
       snapToPage: paged === 'always' || paged === app.orientation,
-      scrollbar: false,
       scrollStart: function scrollStart(e) {
         app.emit('scrollStart', container, e, true);
       },
@@ -3295,7 +3269,7 @@ install('scrollable', function (app) {
       scrollEnd: function scrollEnd(e) {
         app.emit('scrollStop', container, e, true);
       }
-    });
+    }));
 
     function setState(index) {
       if (varname) {
@@ -3548,14 +3522,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__804__;
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__160__;
-
-/***/ }),
-
-/***/ 229:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__229__;
 
 /***/ }),
 
