@@ -433,9 +433,9 @@ addTransformer('foreach', function (element, getState) {
                 return currentNodes.splice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
             }
             var parts = $(templateNodes).clone().get();
-            var nested = $('[foreach]', parts);
+            var nested = $(selectIncludeSelf('[foreach]', parts));
             if (nested[0]) {
-                $('[foreach]', templateNodes).each(function (i, v) {
+                $(selectIncludeSelf('[foreach]', templateNodes)).each(function (i, v) {
                     getState(nested[i]).template = getState(v).template;
                 });
             }
