@@ -231,6 +231,24 @@ function configureRouter(app, options) {
         app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
     }
 
+    function registerMatchPathElements(container) {
+        $('[match-path]', container).each(function (i, v) {
+            if (!matchByPathElements.has(v)) {
+                var placeholder = document.createElement('div');
+                placeholder.setAttribute('style', 'display: none !important');
+                placeholder.setAttribute('match-path', v.getAttribute('match-path') || '');
+                if (v.attributes.default) {
+                    placeholder.setAttribute('default', '');
+                }
+                $(v).before(placeholder);
+                $(v).detach();
+                setClass(v, 'hidden', true);
+                matchByPathElements.set(placeholder, v);
+                matchByPathElements.set(v, v);
+            }
+        });
+    }
+
     function processPageChange(path, oldPath, newActiveElements) {
         if (currentPath !== path) {
             return;
@@ -253,9 +271,9 @@ function configureRouter(app, options) {
 
         batch(true, function () {
             groupLog(eventSource, ['pageenter', path], function () {
-                matchByPathElements.forEach(function (element) {
+                matchByPathElements.forEach(function (element, placeholder) {
                     var matched = activeElements.indexOf(element) >= 0;
-                    if (matched === (previousActiveElements.indexOf(element) < 0)) {
+                    if (element !== placeholder && matched === (previousActiveElements.indexOf(element) < 0)) {
                         if (matched) {
                             resetVar(element, false);
                             setVar(element);
@@ -325,6 +343,7 @@ function configureRouter(app, options) {
         var newActiveElements = [dom.root];
         var oldPath = currentPath;
         var redirectPath;
+        registerMatchPathElements();
         batch(true, function () {
             var switchElements = $('[switch=""]').get();
             var current;
@@ -392,11 +411,11 @@ function configureRouter(app, options) {
         app.path = newPath;
         route.set(newPath);
 
-        promise = app.emit('navigate', {
+        promise = resolve(app.emit('navigate', {
             pathname: newPath,
             oldPathname: oldPath,
             route: Object.freeze(extend({}, route))
-        });
+        }));
         handleAsync(promise, dom.root, function () {
             processPageChange(newPath, oldPath, newActiveElements);
         });
@@ -432,18 +451,7 @@ function configureRouter(app, options) {
 
     app.beforeInit(function () {
         dom.ready.then(function () {
-            // detach elements which its visibility is controlled by current path
-            $('[match-path]').addClass('hidden').each(function (i, v) {
-                var placeholder = document.createElement('div');
-                placeholder.setAttribute('style', 'display: none !important');
-                placeholder.setAttribute('match-path', v.getAttribute('match-path') || '');
-                if (v.attributes.default) {
-                    placeholder.setAttribute('default', '');
-                }
-                $(v).before(placeholder);
-                $(v).detach();
-                matchByPathElements.set(placeholder, v);
-            });
+            registerMatchPathElements();
             bind(window, 'popstate', function () {
                 app.path = location.pathname.substr(baseUrl.length) || '/';
             });
