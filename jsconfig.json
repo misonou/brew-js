@@ -9,7 +9,9 @@
         "noImplicitReturns": false,
         "baseUrl": ".",
         "paths": {
-            "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"]
+            "src/*": ["./src/*"],
+            "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"],
+            "@jest/globals": ["node_modules/@jest/globals/build/index"],
         }
     },
     "exclude": ["build"]

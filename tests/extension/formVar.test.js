@@ -1,7 +1,9 @@
 import $ from "jquery";
-import { after, uniqueName, mount } from "../testUtil";
+import { after, uniqueName, mount, initApp } from "../testUtil";
 import { getVar, setVar } from "src/var";
 import __ from "src/extension/formVar";
+
+beforeAll(() => initApp());
 
 describe('formVar', () => {
     it('should update variable when input value was changed', async () => {

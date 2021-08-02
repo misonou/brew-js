@@ -1,5 +1,5 @@
 {
-    "testEnvironment": "jsdom",
+    "testEnvironment": "./tests/environment",
     "transform": {},
     "setupFilesAfterEnv": [
         "<rootDir>/tests/setup.cjs"

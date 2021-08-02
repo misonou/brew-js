@@ -1,7 +1,9 @@
 import $ from "jquery";
-import { uniqueName, root, after, mount } from "./testUtil";
+import { uniqueName, root, after, mount, initApp } from "./testUtil";
 import { addTemplate } from "src/dom";
 import { setVar } from "src/var";
+
+beforeAll(() => initApp());
 
 describe('apply-template directive', () => {
     it("should re-apply template when value of parent variable has changed", async () => {

@@ -1,5 +1,5 @@
-import { uniqueName, root, mount, body, consoleWarnMock } from "./testUtil";
-import { declareVar, getVar, getVarScope, resetVar, setVar } from "src/var.js";
+import { uniqueName, root, mount, body } from "./testUtil";
+import { declareVar, getVar, getVarScope, resetVar, setVar } from "src/var";
 
 describe('getVar', () => {
     it('should return new object every time', () => {
@@ -60,7 +60,7 @@ describe('setVar', () => {
 
         expect(getVar(body, varname)).toBe(3);
         expect(getVar(root, varname)).toBeUndefined();
-        expect(consoleWarnMock).toBeCalledTimes(1);
+        expect(console.warn).toBeCalledTimes(1);
     });
 
     it('should handle detached element', () => {
