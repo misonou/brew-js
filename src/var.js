@@ -188,7 +188,7 @@ export function evalAttr(element, attrName, templateMode, context) {
     return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
 
-dom.watchAttributes(root, keys(varAttrs), function (elements) {
+dom.watchElements(root, '[' + keys(varAttrs).join('],[') + ']', function (elements) {
     each(elements, function (i, v) {
         tree.setNode(v);
     });
