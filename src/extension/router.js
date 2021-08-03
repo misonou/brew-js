@@ -277,25 +277,23 @@ function configureRouter(app, options) {
                         if (matched) {
                             resetVar(element, false);
                             setVar(element);
-                            setTimeout(function () {
-                                // animation and pageenter event of inner scope
-                                // must be after those of parent scope
-                                var dependencies = preload.get($(element).parents('[match-path]')[0]);
-                                var segments = toSegments(element.getAttribute('match-path'));
-                                var promises = preloadHandlers.map(function (v) {
-                                    if (matchRoute(v.route, segments)) {
-                                        return v.callback(element, path);
-                                    }
-                                });
-                                promises.push(dependencies);
-                                preload.set(element, resolveAll(promises, function () {
-                                    if (activeElements.indexOf(element) >= 0) {
-                                        setClass(element, 'hidden', false);
-                                        animateIn(element, 'show', '[match-path]');
-                                        app.emit('pageenter', element, { pathname: path }, true);
-                                    }
-                                }));
+                            // animation and pageenter event of inner scope
+                            // must be after those of parent scope
+                            var dependencies = preload.get($(element).parents('[match-path]')[0]);
+                            var segments = toSegments(element.getAttribute('match-path'));
+                            var promises = preloadHandlers.map(function (v) {
+                                if (matchRoute(v.route, segments)) {
+                                    return v.callback(element, path);
+                                }
                             });
+                            promises.push(dependencies);
+                            preload.set(element, resolveAll(promises, function () {
+                                if (activeElements.indexOf(element) >= 0) {
+                                    setClass(element, 'hidden', false);
+                                    animateIn(element, 'show', '[match-path]');
+                                    app.emit('pageenter', element, { pathname: path }, true);
+                                }
+                            }));
                         } else {
                             app.emit('pageleave', element, { pathname: oldPath }, true);
                             animateOut(element, 'show', '[match-path]').then(function () {
