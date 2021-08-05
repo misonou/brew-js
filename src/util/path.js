@@ -41,7 +41,7 @@ export function normalizePath(path, resolveDotDir) {
         a.href = path;
         return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
     }
-    path = String(path).replace(/\/+(\/|$)/, '$1');
+    path = String(path).replace(/\/+(\/|$)/g, '$1');
     if (resolveDotDir && path.indexOf('./') >= 0) {
         var segments = path.split('/');
         for (var j = 1; j < segments.length;) {
