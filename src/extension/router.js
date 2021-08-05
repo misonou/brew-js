@@ -206,21 +206,21 @@ function configureRouter(app, options) {
     var navigated = 0;
 
     function resolvePath(path, currentPath) {
+        var parsedState;
         path = decodeURI(path);
         currentPath = currentPath || app.path;
+        if (path[0] === '~' || path.indexOf('{') >= 0) {
+            parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+            path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
+                return parsedState.params[a] || ((b && i + v.length === path.length) ? '' : 'null');
+            });
+        }
         if (path[0] === '~') {
-            var parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
             path = combinePath(parsedState.minPath, path.slice(1));
         } else if (path[0] !== '/') {
             path = combinePath(currentPath, path);
         }
-        path = normalizePath(path, true);
-        if (path.indexOf('{') < 0) {
-            return path;
-        }
-        return path.replace(/\{([^}]+)\}/g, function (v, a) {
-            return route[a] || v;
-        });
+        return normalizePath(path, true);
     }
 
     function navigate(path, replace) {
