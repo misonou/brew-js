@@ -3,13 +3,13 @@ const defaultPort = {
     https: 443
 };
 
-export var baseUrl = '';
+export var baseUrl = '/';
 
 /**
  * @param {string} b
  */
 export function setBaseUrl(b) {
-    baseUrl = b;
+    baseUrl = normalizePath(b, true);
 }
 
 /**
@@ -63,7 +63,7 @@ export function normalizePath(path, resolveDotDir) {
  */
 export function withBaseUrl(url) {
     url = normalizePath(url);
-    return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? normalizePath(baseUrl + url) : url;
+    return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? combinePath(baseUrl, url) : url;
 }
 
 /**
