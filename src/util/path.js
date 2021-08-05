@@ -44,8 +44,8 @@ export function normalizePath(path, resolveDotDir) {
     path = String(path).replace(/\/+(\/|$)/g, '$1');
     if (resolveDotDir && path.indexOf('./') >= 0) {
         var segments = path.split('/');
-        for (var j = 1; j < segments.length;) {
-            if (segments[j] === '.') {
+        for (var j = 0; j < segments.length;) {
+            if (segments[j] === '.' || (segments[j] === '..' && !j)) {
                 segments.splice(j, 1);
             } else if (segments[j] === '..') {
                 segments.splice(--j, 2);
