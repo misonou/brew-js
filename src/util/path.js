@@ -85,5 +85,6 @@ export function toRelativeUrl(url) {
  * @param {string} b
  */
 export function isSubPathOf(a, b) {
-    return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
+    var len = b.length;
+    return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/');
 }
