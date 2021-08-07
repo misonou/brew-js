@@ -209,13 +209,13 @@ var defaultPort = {
   http: 80,
   https: 443
 };
-var baseUrl = '';
+var baseUrl = '/';
 /**
  * @param {string} b
  */
 
 function setBaseUrl(b) {
-  baseUrl = b;
+  baseUrl = normalizePath(b, true);
 }
 /**
  * @param {string} a
@@ -252,13 +252,13 @@ function normalizePath(path, resolveDotDir) {
     return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
   }
 
-  path = String(path).replace(/\/+(\/|$)/, '$1');
+  path = String(path).replace(/\/+(\/|$)/g, '$1');
 
   if (resolveDotDir && path.indexOf('./') >= 0) {
     var segments = path.split('/');
 
-    for (var j = 1; j < segments.length;) {
-      if (segments[j] === '.') {
+    for (var j = 0; j < segments.length;) {
+      if (segments[j] === '.' || segments[j] === '..' && !j) {
         segments.splice(j, 1);
       } else if (segments[j] === '..') {
         segments.splice(--j, 2);
@@ -278,7 +278,7 @@ function normalizePath(path, resolveDotDir) {
 
 function withBaseUrl(url) {
   url = normalizePath(url);
-  return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? normalizePath(baseUrl + url) : url;
+  return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? combinePath(baseUrl, url) : url;
 }
 /**
  * @param {string} url
@@ -300,7 +300,8 @@ function toRelativeUrl(url) {
  */
 
 function isSubPathOf(a, b) {
-  return a.substr(0, b.length) === b && (a.length === b.length || a[b.length] === '/');
+  var len = b.length;
+  return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/');
 }
 // EXTERNAL MODULE: ./src/include/external/jquery.js
 var jquery = __webpack_require__(860);
@@ -1176,25 +1177,24 @@ function configureRouter(app, options) {
   var navigated = 0;
 
   function resolvePath(path, currentPath) {
+    var parsedState;
     path = decodeURI(path);
     currentPath = currentPath || app.path;
 
+    if (path[0] === '~' || path.indexOf('{') >= 0) {
+      parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+      path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
+        return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
+      });
+    }
+
     if (path[0] === '~') {
-      var parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
       path = combinePath(parsedState.minPath, path.slice(1));
     } else if (path[0] !== '/') {
       path = combinePath(currentPath, path);
     }
 
-    path = normalizePath(path, true);
-
-    if (path.indexOf('{') < 0) {
-      return path;
-    }
-
-    return path.replace(/\{([^}]+)\}/g, function (v, a) {
-      return route[a] || v;
-    });
+    return normalizePath(path, true);
   }
 
   function navigate(path, replace) {
@@ -1205,6 +1205,26 @@ function configureRouter(app, options) {
     }
 
     app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
+  }
+
+  function registerMatchPathElements(container) {
+    jquery('[match-path]', container).each(function (i, v) {
+      if (!matchByPathElements.has(v)) {
+        var placeholder = document.createElement('div');
+        placeholder.setAttribute('style', 'display: none !important');
+        placeholder.setAttribute('match-path', v.getAttribute('match-path') || '');
+
+        if (v.attributes.default) {
+          placeholder.setAttribute('default', '');
+        }
+
+        jquery(v).before(placeholder);
+        jquery(v).detach();
+        setClass(v, 'hidden', true);
+        matchByPathElements.set(placeholder, v);
+        matchByPathElements.set(v, v);
+      }
+    });
   }
 
   function processPageChange(path, oldPath, newActiveElements) {
@@ -1230,34 +1250,32 @@ function configureRouter(app, options) {
     document.title = pageTitle;
     batch(true, function () {
       groupLog(eventSource, ['pageenter', path], function () {
-        matchByPathElements.forEach(function (element) {
+        matchByPathElements.forEach(function (element, placeholder) {
           var matched = activeElements.indexOf(element) >= 0;
 
-          if (matched === previousActiveElements.indexOf(element) < 0) {
+          if (element !== placeholder && matched === previousActiveElements.indexOf(element) < 0) {
             if (matched) {
               resetVar(element, false);
-              setVar(element);
-              setTimeout(function () {
-                // animation and pageenter event of inner scope
-                // must be after those of parent scope
-                var dependencies = preload.get(jquery(element).parents('[match-path]')[0]);
-                var segments = toSegments(element.getAttribute('match-path'));
-                var promises = preloadHandlers.map(function (v) {
-                  if (matchRoute(v.route, segments)) {
-                    return v.callback(element, path);
-                  }
-                });
-                promises.push(dependencies);
-                preload.set(element, resolveAll(promises, function () {
-                  if (activeElements.indexOf(element) >= 0) {
-                    setClass(element, 'hidden', false);
-                    animateIn(element, 'show', '[match-path]');
-                    app.emit('pageenter', element, {
-                      pathname: path
-                    }, true);
-                  }
-                }));
+              setVar(element); // animation and pageenter event of inner scope
+              // must be after those of parent scope
+
+              var dependencies = preload.get(jquery(element).parents('[match-path]')[0]);
+              var segments = toSegments(element.getAttribute('match-path'));
+              var promises = preloadHandlers.map(function (v) {
+                if (matchRoute(v.route, segments)) {
+                  return v.callback(element, path);
+                }
               });
+              promises.push(dependencies);
+              preload.set(element, resolveAll(promises, function () {
+                if (activeElements.indexOf(element) >= 0) {
+                  setClass(element, 'hidden', false);
+                  animateIn(element, 'show', '[match-path]');
+                  app.emit('pageenter', element, {
+                    pathname: path
+                  }, true);
+                }
+              }));
             } else {
               app.emit('pageleave', element, {
                 pathname: oldPath
@@ -1311,6 +1329,7 @@ function configureRouter(app, options) {
     var newActiveElements = [zeta_dom_dom.root];
     var oldPath = currentPath;
     var redirectPath;
+    registerMatchPathElements();
     batch(true, function () {
       var switchElements = jquery('[switch=""]').get();
       var current;
@@ -1380,11 +1399,11 @@ function configureRouter(app, options) {
     currentPath = newPath;
     app.path = newPath;
     route.set(newPath);
-    promise = app.emit('navigate', {
+    promise = resolve(app.emit('navigate', {
       pathname: newPath,
       oldPathname: oldPath,
       route: Object.freeze(extend({}, route))
-    });
+    }));
     handleAsync(promise, zeta_dom_dom.root, function () {
       processPageChange(newPath, oldPath, newActiveElements);
     });
@@ -1421,20 +1440,7 @@ function configureRouter(app, options) {
   defineAliasProperty(app, 'path', observable);
   app.beforeInit(function () {
     zeta_dom_dom.ready.then(function () {
-      // detach elements which its visibility is controlled by current path
-      jquery('[match-path]').addClass('hidden').each(function (i, v) {
-        var placeholder = document.createElement('div');
-        placeholder.setAttribute('style', 'display: none !important');
-        placeholder.setAttribute('match-path', v.getAttribute('match-path') || '');
-
-        if (v.attributes.default) {
-          placeholder.setAttribute('default', '');
-        }
-
-        jquery(v).before(placeholder);
-        jquery(v).detach();
-        matchByPathElements.set(placeholder, v);
-      });
+      registerMatchPathElements();
       bind(window, 'popstate', function () {
         app.path = location.pathname.substr(baseUrl.length) || '/';
       });
@@ -1979,10 +1985,10 @@ addTransformer('foreach', function (element, getState) {
       }
 
       var parts = jquery(templateNodes).clone().get();
-      var nested = jquery('[foreach]', parts);
+      var nested = jquery(selectIncludeSelf('[foreach]', parts));
 
       if (nested[0]) {
-        jquery('[foreach]', templateNodes).each(function (i, v) {
+        jquery(selectIncludeSelf('[foreach]', templateNodes)).each(function (i, v) {
           getState(nested[i]).template = getState(v).template;
         });
       }
@@ -2579,7 +2585,7 @@ function evalAttr(element, attrName, templateMode, context) {
 
   return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-zeta_dom_dom.watchAttributes(var_root, keys(varAttrs), function (elements) {
+zeta_dom_dom.watchElements(var_root, '[' + keys(varAttrs).join('],[') + ']', function (elements) {
   each(elements, function (i, v) {
     tree.setNode(v);
   });
