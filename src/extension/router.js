@@ -349,18 +349,21 @@ function configureRouter(app, options) {
                 if (isElementActive(current, newActiveElements)) {
                     var children = $(current).children('[match-path]').get().map(function (v) {
                         var element = mapGet(matchByPathElements, v) || v;
+                        var children = $('[switch=""]', element).get();
+                        var path = resolvePath(element.getAttribute('match-path'), newPath);
                         return {
                             element: element,
-                            path: resolvePath(element.getAttribute('match-path'), newPath),
+                            path: path.replace(/\/\*$/, ''),
+                            exact: !children[0] && path.slice(-2) !== '/*',
                             placeholder: (v !== element) && v,
-                            children: $('[switch=""]', element).get()
+                            children: children
                         };
                     });
                     children.sort(function (a, b) {
                         return b.path.localeCompare(a.path);
                     });
                     var matchedPath = single(children, function (v) {
-                        return (v.children[0] ? isSubPathOf(newPath, v.path) : newPath === v.path) && v.path;
+                        return (v.exact ? newPath === v.path : isSubPathOf(newPath, v.path)) && v.path;
                     });
                     each(children, function (i, v) {
                         if (v.path === matchedPath) {
