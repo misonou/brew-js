@@ -116,41 +116,42 @@ function Route(app, routes, initialPath) {
     });
     watch(self, function () {
         var current = exclude(self, ['remainingSegments']);
-        var paramChanged = false;
+        var previous = state.current;
         var routeChanged = !equal(current, state.current.params);
         if (routeChanged && state.lastMatch) {
             state.current = state.lastMatch;
+            state.lastMatch = null;
             routeChanged = !equal(current, state.current.params);
         }
         if (routeChanged) {
             var segments = [], i, len;
             var matched = any(state.routes, function (tokens) {
+                for (i in current) {
+                    if (current[i] && !(i in tokens.params)) {
+                        return false;
+                    }
+                }
                 segments.length = 0;
                 for (i = 0, len = tokens.length; i < len; i++) {
                     var varname = tokens[i].name;
-                    if (varname && i < tokens.minLength && !tokens[i].pattern.test(self[varname] || '')) {
+                    if (varname && !tokens[i].pattern.test(current[varname] || '')) {
                         return false;
                     }
-                    segments[i] = varname ? self[varname] : tokens[i];
-                }
-                for (i in self) {
-                    if (i !== 'remainingSegments' && self[i] && !(i in tokens.params)) {
-                        self[i] = null;
-                        paramChanged = true;
-                    }
+                    segments[i] = varname ? current[varname] : tokens[i];
                 }
                 return true;
             });
-            state.current = createRouteState(matched, segments, self);
+            if (matched) {
+                state.current = createRouteState(matched, segments, self);
+                app.path = self.toString();
+            } else if (previous) {
+                state.current = previous;
+                self.set(previous.params);
+            }
         }
         if (state.current.route.exact && self.remainingSegments !== '/') {
             self.remainingSegments = '/';
-            return;
         }
-        if (paramChanged) {
-            return;
-        }
-        app.navigate(self.toString());
     });
 }
 
