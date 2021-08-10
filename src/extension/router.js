@@ -589,31 +589,19 @@ function configureRouter(app, options) {
         pushState(initialPath);
     });
 
-    app.on('mounted', function (e) {
-        var $autoplay = $(selectIncludeSelf('video[autoplay], audio[autoplay]', e.target));
-        if ($autoplay[0]) {
-            $autoplay.removeAttr('autoplay');
-            app.on(e.target, {
-                pageenter: function () {
-                    $autoplay.each(function (i, v) {
-                        // @ts-ignore: known element type
-                        if (v.readyState !== 0) {
-                            // @ts-ignore: known element type
-                            v.currentTime = 0;
-                        }
-                        // @ts-ignore: known element type
-                        v.play();
-                    });
-                },
-                pageleave: function () {
-                    $autoplay.each(function (i, v) {
-                        // @ts-ignore: known element type
-                        v.pause();
-                    });
+    app.on('pageenter', function (e) {
+        $(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
+            if (isElementActive(v)) {
+                // @ts-ignore: known element type
+                if (v.readyState !== 0) {
+                    // @ts-ignore: known element type
+                    v.currentTime = 0;
                 }
-            }, true);
-        }
-    })
+                // @ts-ignore: known element type
+                v.play();
+            }
+        });
+    });
 
     app.on('pageleave', function (e) {
         $(selectIncludeSelf('form', e.target)).each(function (i, v) {
@@ -622,6 +610,10 @@ function configureRouter(app, options) {
                 v.reset();
             }
         });
+        $(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
+            // @ts-ignore: known element type
+            v.pause();
+        });
     });
 
     app.on('statechange', function (e) {
@@ -629,6 +621,10 @@ function configureRouter(app, options) {
             document.title = evalAttr(pageTitleElement, 'page-title', true);
         }
     });
+
+    dom.watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
+        $(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
+    }, true);
 }
 
 install('router', function (app, options) {
