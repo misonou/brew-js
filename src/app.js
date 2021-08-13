@@ -101,7 +101,7 @@ definePrototype(App, {
             }
         });
         this.beforeInit(resolveAll(supports, function (supports) {
-            supports = Object.freeze(extend(app.supports || {}, supports));
+            supports = Object.freeze(extend({}, app.supports, supports));
             define(app, { supports: supports });
             return isFunction(callback) && callback(supports);
         }));
