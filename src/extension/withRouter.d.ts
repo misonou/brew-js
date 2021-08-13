@@ -87,12 +87,13 @@ declare namespace Brew {
         /**
          * Resolves given path by substituting current route parameters.
          * @param path A relative or absolute path that may contains route parameters.
+         * @param refPath If specified, path will be resolved against supplied path instead of current path.
          * @description Path starting with `~/` is resolved against the current route,
          * without the trailing part matched by wildcard.
          * Path containing any relative path segment (`.` or `..`) will also be correctly resolved.
          * However, it will never resolve to path that is parent to the app's base path.
          */
-        resolvePath(path: string): string;
+        resolvePath(path: string, refPath?: string): string;
         /**
          * Configures router.
          * @param options

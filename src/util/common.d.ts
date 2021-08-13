@@ -22,9 +22,11 @@ export function cookie(name: string, expiry?: number): {
     delete: () => void;
 };
 
-export function api(options: Brew.APIOptions): Brew.API;
+export function api(options?: Brew.APIOptions): Brew.API;
 
-export function api(method: Brew.HTTPMethod, options?: Brew.APIOptions): Brew.APIMethod;
+export function api(method: Brew.HTTPMethod, baseUrl: string): Brew.APIMethod;
+
+export function api(method: Brew.HTTPMethod, options?: Omit<Brew.APIOptions<T>, 'methods'>): Brew.APIMethod;
 
 export function getJSON(path: string): Promise<Zeta.Dictionary>;
 

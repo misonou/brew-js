@@ -63,11 +63,12 @@ declare namespace Brew {
         on(target: string | Element, handlers: EventHandlers<T, M>, noChildren?: true): void;
     }
 
-    interface APIOptions<T extends HTTPMethod | HTTPMethod[]> {
+    interface APIOptions {
         /**
          * Specifies the types of requests the factory should generate functions for.
+         * @deprecated
          */
-        methods: T;
+        methods?: HTTPMethod | HTTPMethod[];
         /**
          * Specifies the base URL prepended to the request path.
          */
@@ -88,7 +89,7 @@ declare namespace Brew {
         /**
          * Performs request to the specified path with parameters.
          */
-        (path: string, params: any): Promise<any>;
+        (path: string, params?: any): Promise<any>;
         /**
          * Gets or sets the base URL prepended to the request path.
          */
@@ -99,7 +100,7 @@ declare namespace Brew {
         token?: string;
     }
 
-    interface API {
+    interface API extends Record<HTTPMethod, APIMethod> {
         /**
          * Gets or sets the base URL prepended to the request path.
          */
@@ -108,18 +109,6 @@ declare namespace Brew {
          * Gets or sets the bearer authorization token to be sent with the requests.
          */
         token?: string;
-        /**
-         * Gets the function for GET requests.
-         */
-        readonly get?: APIMethod;
-        /**
-         * Gets the function for POST requests.
-         */
-        readonly post?: APIMethod;
-        /**
-         * Gets the function for DELETE requests.
-         */
-        readonly delete?: APIMethod;
     }
 
     /* -------------------------------------------------------------
@@ -172,7 +161,7 @@ declare namespace Brew {
          * @param names Names of feature.
          * @param callback
          */
-        detect(names: string | string[], callback?: (result: Zeta.Dictionary<boolean>) => void): void;
+        detect<T extends string | string[]>(names: T, callback?: (result: Record<T, any>) => void): void;
 
         /**
          * Registers a callback that will be fired only when the promise resolves to a truthy value.
@@ -180,7 +169,7 @@ declare namespace Brew {
          * @param promise A promise-like object.
          * @param callback A callback to be fired.
          */
-        when(promise: PromiseLike<T>, callback: (value: T) => void): void;
+        when<T>(promise: T | PromiseLike<T>, callback: (value: T) => void): void;
 
         /**
          * Registers handler to be fired when each element matched the given path is being mounted.
