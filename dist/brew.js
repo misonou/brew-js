@@ -956,9 +956,10 @@ var _ = createPrivateStore();
 var matchByPathElements = new Map();
 var parsedRoutes = {};
 var preloadHandlers = [];
+var root = zeta_dom_dom.root;
 /** @type {Element[]} */
 
-var activeElements = [zeta_dom_dom.root];
+var activeElements = [root];
 var pageTitleElement;
 /**
  * @param {Element} v
@@ -1067,11 +1068,12 @@ function Route(app, routes, initialPath) {
   });
   watch(self, function () {
     var current = exclude(self, ['remainingSegments']);
-    var paramChanged = false;
+    var previous = state.current;
     var routeChanged = !equal(current, state.current.params);
 
     if (routeChanged && state.lastMatch) {
       state.current = state.lastMatch;
+      state.lastMatch = null;
       routeChanged = !equal(current, state.current.params);
     }
 
@@ -1080,40 +1082,39 @@ function Route(app, routes, initialPath) {
           i,
           len;
       var matched = any(state.routes, function (tokens) {
+        for (i in current) {
+          if (current[i] && !(i in tokens.params)) {
+            return false;
+          }
+        }
+
         segments.length = 0;
 
         for (i = 0, len = tokens.length; i < len; i++) {
           var varname = tokens[i].name;
 
-          if (varname && i < tokens.minLength && !tokens[i].pattern.test(self[varname] || '')) {
+          if (varname && !tokens[i].pattern.test(current[varname] || '')) {
             return false;
           }
 
-          segments[i] = varname ? self[varname] : tokens[i];
-        }
-
-        for (i in self) {
-          if (i !== 'remainingSegments' && self[i] && !(i in tokens.params)) {
-            self[i] = null;
-            paramChanged = true;
-          }
+          segments[i] = varname ? current[varname] : tokens[i];
         }
 
         return true;
       });
-      state.current = createRouteState(matched, segments, self);
+
+      if (matched) {
+        state.current = createRouteState(matched, segments, self);
+        app.path = self.toString();
+      } else if (previous) {
+        state.current = previous;
+        self.set(previous.params);
+      }
     }
 
     if (state.current.route.exact && self.remainingSegments !== '/') {
       self.remainingSegments = '/';
-      return;
     }
-
-    if (paramChanged) {
-      return;
-    }
-
-    app.navigate(self.toString());
   });
 }
 
@@ -1174,7 +1175,120 @@ function configureRouter(app, options) {
   var redirectSource = {};
   var lockedPath;
   var newPath;
-  var navigated = 0;
+  var currentIndex = -1;
+  var states = [];
+
+  function createNavigateResult(id, path, originalPath, navigated) {
+    return Object.freeze({
+      id: id,
+      path: path,
+      navigated: navigated !== false,
+      redirected: !!originalPath,
+      originalPath: originalPath || null
+    });
+  }
+
+  function handleNoop(path, originalPath) {
+    for (var i = currentIndex; i >= 0; i--) {
+      if (states[i].result && states[i].path === path) {
+        history.replaceState(history.state, '', withBaseUrl(path));
+        return createNavigateResult(states[i].result, path, originalPath, false);
+      }
+    }
+  }
+
+  function pushState(path, replace) {
+    var currentState = states[currentIndex];
+    path = resolvePath(path);
+
+    if (currentState && path === currentState.path && path === newPath) {
+      if (currentState.result) {
+        return {
+          promise: resolve(handleNoop(path))
+        };
+      } else {
+        return currentState;
+      }
+    } // @ts-ignore: boolean arithmetics
+
+
+    currentIndex = Math.max(0, currentIndex + !replace);
+    var id = randomId();
+    var resolvePromise = noop;
+    var rejectPromise = noop;
+    var promise, resolved;
+    var previous = states.splice(currentIndex);
+    var state = {
+      id: id,
+      path: path,
+      result: '',
+
+      get promise() {
+        return promise || (promise = new Promise(function (resolve_, reject_) {
+          var wrapper = function wrapper(fn) {
+            return function (value) {
+              resolved = true;
+              fn(value);
+            };
+          };
+
+          resolved = false;
+          resolvePromise = wrapper(resolve_);
+          rejectPromise = wrapper(reject_);
+        }));
+      },
+
+      reset: function reset() {
+        if (resolved) {
+          promise = null;
+        }
+
+        return state;
+      },
+      forward: function forward(other) {
+        if (promise && !resolved) {
+          (other.promise || other.then(function (other) {
+            return other.promise;
+          })).then(function (data) {
+            state.resolve(createNavigateResult(data.id, data.path, path));
+          }, rejectPromise);
+          rejectPromise = noop;
+        }
+      },
+      resolve: function resolve(result) {
+        result = result || createNavigateResult(id, path);
+        state.path = result.path;
+        state.result = state.result || result.id;
+        resolvePromise(result);
+        each(states, function (i, v) {
+          v.reject();
+        });
+      },
+      reject: function reject() {
+        rejectPromise('cancelled');
+      }
+    };
+    states[currentIndex] = state;
+    history[replace ? 'replaceState' : 'pushState'](id, '', withBaseUrl(path));
+    app.path = path;
+
+    if (replace && !previous[1]) {
+      previous[0].forward(state);
+    } else {
+      setImmediate(function () {
+        each(previous, function (i, v) {
+          v.reject();
+        });
+      });
+    }
+
+    return state;
+  }
+
+  function popState() {
+    history.back();
+    return --currentIndex;
+  }
 
   function resolvePath(path, currentPath) {
     var parsedState;
@@ -1195,16 +1309,6 @@ function configureRouter(app, options) {
     }
 
     return normalizePath(path, true);
-  }
-
-  function navigate(path, replace) {
-    path = withBaseUrl(resolvePath(path));
-
-    if (path !== location.pathname) {
-      history[replace ? 'replaceState' : 'pushState']({}, document.title, path);
-    }
-
-    app.path = baseUrl === '/' ? path : path.substr(baseUrl.length) || '/';
   }
 
   function registerMatchPathElements(container) {
@@ -1228,26 +1332,15 @@ function configureRouter(app, options) {
   }
 
   function processPageChange(path, oldPath, newActiveElements) {
-    if (currentPath !== path) {
-      return;
-    }
-
+    var state = states[currentIndex];
     var preload = new Map();
     var eventSource = zeta_dom_dom.eventSource;
     var previousActiveElements = activeElements.slice(0);
     activeElements = newActiveElements;
     pageTitleElement = jquery(newActiveElements).filter('[page-title]')[0];
     redirectSource = {}; // assign document title from matched active elements and
-    // synchronize path in address bar if navigation is triggered by script
 
-    var pageTitle = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
-
-    if (location.pathname.substr(baseUrl.length) !== path) {
-      history[navigated ? 'pushState' : 'replaceState']({}, pageTitle, withBaseUrl(path));
-    }
-
-    navigated++;
-    document.title = pageTitle;
+    document.title = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
     batch(true, function () {
       groupLog(eventSource, ['pageenter', path], function () {
         matchByPathElements.forEach(function (element, placeholder) {
@@ -1295,18 +1388,30 @@ function configureRouter(app, options) {
       each(preload, function (element, promise) {
         handleAsync(promise, element);
       });
+      always(resolveAll(preload), function () {
+        state.resolve();
+      });
     });
   }
 
   function handlePathChange() {
-    if (newPath === currentPath) {
+    var state = states[currentIndex];
+
+    if (!state || location.pathname !== withBaseUrl(newPath)) {
+      pushState(newPath);
+      state = states[currentIndex];
+    }
+
+    if (currentIndex > 0 && newPath === currentPath) {
+      state.resolve(handleNoop(newPath));
       return;
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
 
     if (zeta_dom_dom.locked(zeta_dom_dom.activeElement, true)) {
       lockedPath = newPath === lockedPath ? null : currentPath;
-      navigate(lockedPath || newPath, true);
+      popState();
+      state.reject();
       return;
     }
 
@@ -1315,10 +1420,11 @@ function configureRouter(app, options) {
 
     if (promise) {
       lockedPath = currentPath;
-      navigate(currentPath, true);
-      resolve(promise).then(function () {
-        navigate(leavePath, true);
+      promise = resolve(promise).then(function () {
+        return pushState(leavePath);
       });
+      popState();
+      state.forward(promise);
       return;
     }
 
@@ -1326,7 +1432,7 @@ function configureRouter(app, options) {
 
     /** @type {HTMLElement[]} */
 
-    var newActiveElements = [zeta_dom_dom.root];
+    var newActiveElements = [root];
     var oldPath = currentPath;
     var redirectPath;
     registerMatchPathElements();
@@ -1338,18 +1444,21 @@ function configureRouter(app, options) {
         if (isElementActive(current, newActiveElements)) {
           var children = jquery(current).children('[match-path]').get().map(function (v) {
             var element = mapGet(matchByPathElements, v) || v;
+            var children = jquery('[switch=""]', element).get();
+            var path = resolvePath(element.getAttribute('match-path'), newPath);
             return {
               element: element,
-              path: resolvePath(element.getAttribute('match-path'), newPath),
+              path: path.replace(/\/\*$/, ''),
+              exact: !children[0] && path.slice(-2) !== '/*',
               placeholder: v !== element && v,
-              children: jquery('[switch=""]', element).get()
+              children: children
             };
           });
           children.sort(function (a, b) {
             return b.path.localeCompare(a.path);
           });
           var matchedPath = single(children, function (v) {
-            return (v.children[0] ? isSubPathOf(newPath, v.path) : newPath === v.path) && v.path;
+            return (v.exact ? newPath === v.path : isSubPathOf(newPath, v.path)) && v.path;
           });
           each(children, function (i, v) {
             if (v.path === matchedPath) {
@@ -1390,8 +1499,13 @@ function configureRouter(app, options) {
       }
     });
 
-    if (redirectPath) {
-      navigate(redirectPath, true);
+    if (redirectPath && redirectPath !== newPath) {
+      if (redirectPath === currentPath) {
+        state.resolve(handleNoop(redirectPath, newPath));
+      } else {
+        state.forward(pushState(redirectPath, true));
+      }
+
       return;
     }
 
@@ -1404,8 +1518,10 @@ function configureRouter(app, options) {
       oldPathname: oldPath,
       route: Object.freeze(extend({}, route))
     }));
-    handleAsync(promise, zeta_dom_dom.root, function () {
-      processPageChange(newPath, oldPath, newActiveElements);
+    handleAsync(promise, root, function () {
+      if (states[currentIndex] === state) {
+        processPageChange(newPath, oldPath, newActiveElements);
+      }
     });
   }
 
@@ -1425,13 +1541,23 @@ function configureRouter(app, options) {
   });
   setBaseUrl(options.baseUrl || '');
   app.define({
+    get canNavigateBack() {
+      return currentIndex > 0;
+    },
+
+    get previousPath() {
+      return (states[currentIndex - 1] || '').path || null;
+    },
+
     resolvePath: resolvePath,
-    navigate: navigate,
-    back: function back() {
-      if (navigated > 1) {
-        history.back();
-      } else if (app.path !== '/') {
-        navigate('/');
+    navigate: function navigate(path, replace) {
+      return pushState(path, replace).promise;
+    },
+    back: function back(defaultPath) {
+      if (currentIndex > 0) {
+        return states[popState()].reset().promise;
+      } else {
+        return !!defaultPath && pushState(defaultPath).promise;
       }
     }
   });
@@ -1442,39 +1568,36 @@ function configureRouter(app, options) {
     zeta_dom_dom.ready.then(function () {
       registerMatchPathElements();
       bind(window, 'popstate', function () {
-        app.path = location.pathname.substr(baseUrl.length) || '/';
+        var index = single(states, function (v, i) {
+          return v.id === history.state && i + 1;
+        });
+
+        if (index) {
+          currentIndex = index - 1;
+          newPath = states[currentIndex].reset().path;
+          setImmediateOnce(handlePathChange);
+        } else {
+          pushState(location.pathname.substr(baseUrl.length - 1) || '/');
+        }
       });
     });
   });
   app.on('ready', function () {
-    app.path = initialPath;
+    pushState(initialPath);
   });
-  app.on('mounted', function (e) {
-    var $autoplay = jquery(selectIncludeSelf('video[autoplay], audio[autoplay]', e.target));
-
-    if ($autoplay[0]) {
-      $autoplay.removeAttr('autoplay');
-      app.on(e.target, {
-        pageenter: function pageenter() {
-          $autoplay.each(function (i, v) {
-            // @ts-ignore: known element type
-            if (v.readyState !== 0) {
-              // @ts-ignore: known element type
-              v.currentTime = 0;
-            } // @ts-ignore: known element type
+  app.on('pageenter', function (e) {
+    jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
+      if (isElementActive(v)) {
+        // @ts-ignore: known element type
+        if (v.readyState !== 0) {
+          // @ts-ignore: known element type
+          v.currentTime = 0;
+        } // @ts-ignore: known element type
 
 
-            v.play();
-          });
-        },
-        pageleave: function pageleave() {
-          $autoplay.each(function (i, v) {
-            // @ts-ignore: known element type
-            v.pause();
-          });
-        }
-      }, true);
-    }
+        v.play();
+      }
+    });
   });
   app.on('pageleave', function (e) {
     jquery(selectIncludeSelf('form', e.target)).each(function (i, v) {
@@ -1483,12 +1606,19 @@ function configureRouter(app, options) {
         v.reset();
       }
     });
+    jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
+      // @ts-ignore: known element type
+      v.pause();
+    });
   });
   app.on('statechange', function (e) {
     if (containsOrEquals(e.target, pageTitleElement)) {
       document.title = evalAttr(pageTitleElement, 'page-title', true);
     }
   });
+  zeta_dom_dom.watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
+    jquery(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
+  }, true);
 }
 
 install('router', function (app, options) {
@@ -1524,7 +1654,7 @@ var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
 var dom_ = createPrivateStore();
 
-var root = zeta_dom_dom.root;
+var dom_root = zeta_dom_dom.root;
 var updatedElements = new Set();
 var pendingDOMUpdates = new Map();
 var preupdateHandlers = [];
@@ -1582,7 +1712,7 @@ function processTransform(elements, applyDOMUpdates) {
 
   do {
     elements = grep(makeArray(elements), function (v) {
-      return containsOrEquals(root, v);
+      return containsOrEquals(dom_root, v);
     });
     exclude = makeArray(transformed);
     jquery(selectIncludeSelf('[' + keys(transformationHandlers).join('],[') + ']', elements)).not(exclude).each(function (j, element) {
@@ -1638,8 +1768,8 @@ function handleAsync(promise, element, callback) {
 
   if (element || zeta_dom_dom.eventSource !== 'script') {
     element = element || zeta_dom_dom.activeElement;
-    var elm1 = getVarScope('loading', element || root);
-    var elm2 = getVarScope('error', element || root);
+    var elm1 = getVarScope('loading', element || dom_root);
+    var elm2 = getVarScope('error', element || dom_root);
     var counter = getComponentState('handleAsync', elm1);
     setVar(elm1, {
       loading: getVar(elm1, 'loading') || true
@@ -1697,7 +1827,7 @@ function processStateChange(suppressAnim) {
       // leave detached elements in future rounds
 
       var arr = jquery.uniqueSort(grep(updatedElements, function (v) {
-        return containsOrEquals(root, v) && updatedElements.delete(v);
+        return containsOrEquals(dom_root, v) && updatedElements.delete(v);
       }));
       each(arr, function (i, v) {
         var state = getComponentState('oldValues', v);
@@ -1731,7 +1861,7 @@ function processStateChange(suppressAnim) {
       var visited = [];
       each(arr.reverse(), function (i, v) {
         groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
-          console.log(v === root ? document : v);
+          console.log(v === dom_root ? document : v);
           jquery(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
             each(renderHandlers, function (i, v) {
               if (element.attributes[i]) {
@@ -1753,7 +1883,7 @@ function processStateChange(suppressAnim) {
       var animScopes = new Map();
       each(domUpdates, function (element, props) {
         if (!suppressAnim) {
-          var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || root;
+          var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || dom_root;
           var groupElements = animScopes.get(animParent);
 
           if (!groupElements) {
@@ -1846,7 +1976,7 @@ function mountElement(element) {
   }
 
   var mountedElements = [element];
-  var firedOnRoot = element === root;
+  var firedOnRoot = element === dom_root;
   var index = -1,
       index2 = 0;
 
@@ -1867,7 +1997,7 @@ function mountElement(element) {
 
     if (!firedOnRoot) {
       firedOnRoot = true;
-      zeta_dom_dom.emit('mounted', root, {
+      zeta_dom_dom.emit('mounted', dom_root, {
         target: element
       });
     }
@@ -2241,7 +2371,7 @@ definePrototype(App, {
       }
     });
     this.beforeInit(resolveAll(supports, function (supports) {
-      supports = Object.freeze(extend(app.supports || {}, supports));
+      supports = Object.freeze(extend({}, app.supports, supports));
 
       util_define(app, {
         supports: supports
