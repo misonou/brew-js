@@ -36,7 +36,7 @@ declare namespace Brew {
          * @param handler Callack to be fired when such events are triggered.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on<E extends T>(event: E, handler: EventHandler<E, M>, noChildren?: true): void;
+        on<E extends T>(event: E, handler: EventHandler<E, M>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens events triggered from target elements.
@@ -45,14 +45,14 @@ declare namespace Brew {
          * @param handler Callack to be fired when such events are triggered.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on<E extends T>(target: string | Element, event: E, handler: EventHandler<E, M>, noChildren?: true): void;
+        on<E extends T>(target: string | Element, event: E, handler: EventHandler<E, M>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens multiple events.
          * @param handlers A dictionary which keys are event names and values are the associated handlers.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on(handlers: EventHandlers<T, M>, noChildren?: true): void;
+        on(handlers: EventHandlers<T, M>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens multiple events.
@@ -60,7 +60,7 @@ declare namespace Brew {
          * @param handlers A dictionary which keys are event names and values are the associated handlers.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on(target: string | Element, handlers: EventHandlers<T, M>, noChildren?: true): void;
+        on(target: string | Element, handlers: EventHandlers<T, M>, noChildren?: true): Zeta.UnregisterCallback;
     }
 
     interface APIOptions {

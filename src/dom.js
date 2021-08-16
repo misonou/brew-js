@@ -87,11 +87,13 @@ function processTransform(elements, applyDOMUpdates) {
 /**
  * @param {string} target
  * @param {Zeta.Dictionary} handlers
+ * @param {any[]} unbindHandlers
  */
-export function addSelectHandlers(target, handlers) {
+export function addSelectHandlers(target, handlers, unbindHandlers) {
     selectorHandlers.push({
         target: target,
-        handlers: handlers
+        handlers: handlers,
+        unbindHandlers: unbindHandlers
     });
 }
 
@@ -311,7 +313,7 @@ export function mountElement(element) {
     while (index < selectorHandlers.length) {
         each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
             $(selectIncludeSelf(v.target, element)).each(function (i, w) {
-                app.on(w, v.handlers);
+                v.unbindHandlers.push(app.on(w, v.handlers));
                 if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
                     mountedElements.push(w);
                 }

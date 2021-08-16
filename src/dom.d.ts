@@ -2,7 +2,7 @@
  * @param target
  * @param handlers
  */
-export function addSelectHandlers(target: string, handlers: any): void;
+export function addSelectHandlers(target: string, handlers: any, unbindHandlers: any[]): void;
 
 /**
  * @param selector

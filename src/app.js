@@ -1,7 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, map } from "./include/zeta-dom/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter, matchRoute } from "./extension/router.js";
@@ -141,18 +141,17 @@ definePrototype(App, {
                 event[i] = exactTargetWrapper(event[i]);
             }
         }
+        var arr = [];
         if (typeof target === 'string') {
-            addSelectHandlers(target, handlers);
-            if (!appReady) {
-                return;
-            }
+            addSelectHandlers(target, handlers, arr);
             target = $(target).get();
         } else if (target instanceof Node) {
             target = [target];
         }
         each(target, function (i, v) {
-            dom.on(v, handlers);
+            arr.push(dom.on(v, handlers));
         });
+        return combineFn(arr);
     },
     matchPath: function (path, selector, handler) {
         if (isFunction(selector)) {
