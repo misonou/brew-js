@@ -8,7 +8,7 @@ import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, keys, re
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
-import { getFormValues } from "./util/common.js";
+import { getFormValues, selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
 
 const flyoutStates = new Map();
@@ -139,7 +139,7 @@ addAsyncAction('context-method', function (e) {
 
 dom.ready.then(function () {
     app.on('mounted', function (e) {
-        $(selectIncludeSelf('[' + keys(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
+        $(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
     });
 
     app.on('navigate', function () {

@@ -6,6 +6,8 @@ export function setAttr(element: Element, values: Zeta.Dictionary<string>): void
 
 export function copyAttr(src: Element, dst: Element): void;
 
+export function selectorForAttr(attr: string[] | Zeta.Dictionary): string;
+
 export function getFormValues(form: HTMLFormElement): Zeta.Dictionary;
 
 export function getQueryParam(name: string): string;

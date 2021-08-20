@@ -10,7 +10,7 @@ import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar, resetVar } from "./var.js";
-import { copyAttr, getAttrValues, setAttr } from "./util/common.js";
+import { copyAttr, getAttrValues, selectorForAttr, setAttr } from "./util/common.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 const BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
@@ -73,7 +73,7 @@ function processTransform(elements, applyDOMUpdates) {
             return containsOrEquals(root, v);
         });
         exclude = makeArray(transformed);
-        $(selectIncludeSelf('[' + keys(transformationHandlers).join('],[') + ']', elements)).not(exclude).each(function (j, element) {
+        $(selectIncludeSelf(selectorForAttr(transformationHandlers), elements)).not(exclude).each(function (j, element) {
             each(transformationHandlers, function (i, v) {
                 if (element.attributes[i]) {
                     v(element, getComponentState.bind(0, i), applyDOMUpdates);
@@ -200,7 +200,7 @@ export function processStateChange(suppressAnim) {
             each(arr.reverse(), function (i, v) {
                 groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
                     console.log(v === root ? document : v);
-                    $(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+                    $(selectIncludeSelf(selectorForAttr(renderHandlers), v)).not(visited).each(function (i, element) {
                         each(renderHandlers, function (i, v) {
                             if (element.attributes[i]) {
                                 v(element, getComponentState.bind(0, i), applyDOMUpdates);

@@ -31,6 +31,13 @@ export function copyAttr(src, dst) {
     });
 }
 
+export function selectorForAttr(attr) {
+    if (isPlainObject(attr)) {
+        attr = keys(attr);
+    }
+    return '[' + attr.join('],[') + ']';
+}
+
 /**
  * @param {HTMLFormElement} form
  */

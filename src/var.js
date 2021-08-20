@@ -5,6 +5,7 @@ import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { InheritedNodeTree } from "./include/zeta-dom/tree.js";
+import { selectorForAttr } from "./util/common.js";
 
 const root = dom.root;
 const varAttrs = {
@@ -12,7 +13,9 @@ const varAttrs = {
     'auto-var': true,
     'error-scope': { error: null }
 };
-const tree = new InheritedNodeTree(root, VarContext);
+const tree = new InheritedNodeTree(root, VarContext, {
+    selector: selectorForAttr(varAttrs)
+});
 
 /**
  * @class
@@ -187,12 +190,6 @@ export function evalAttr(element, attrName, templateMode, context) {
     }
     return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-
-dom.watchElements(root, '[' + keys(varAttrs).join('],[') + ']', function (elements) {
-    each(elements, function (i, v) {
-        tree.setNode(v);
-    });
-}, true);
 
 tree.on('update', function (e) {
     each(e.updatedNodes, function (i, v) {
