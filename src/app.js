@@ -68,6 +68,9 @@ function App() {
         options: {}
     });
     defineOwnProperty(self, 'element', root, true);
+    defineOwnProperty(self, 'ready', new Promise(function (resolve) {
+        self.on('ready', resolve.bind(0, self));
+    }), true);
     self.on('mounted', onElementMounted);
 }
 

@@ -151,6 +151,11 @@ declare namespace Brew {
         readonly element: HTMLElement;
 
         /**
+         * Gets the promise which is resolved when app is ready.
+         */
+        readonly ready: Promise<App<T>>;
+
+        /**
          * Defines properties and methods on the app instance.
          * @param props
          */

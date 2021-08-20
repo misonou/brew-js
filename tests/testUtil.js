@@ -32,11 +32,7 @@ export async function after(callback) {
 
 export function initApp(callback) {
     brew(callback || noop);
-    return new Promise(resolve => {
-        app.on('ready', () => {
-            resolve(app);
-        });
-    });
+    return app.ready;
 }
 
 /** @type {(html: string) => Zeta.Dictionary<HTMLElement>} */
