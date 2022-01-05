@@ -9,8 +9,7 @@ import { install } from "../app.js";
 
 install('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
-        bounce: false,
-        scrollbar: false
+        bounce: false
     }, defaultOptions);
 
     // @ts-ignore: non-standard member
