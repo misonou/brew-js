@@ -6,6 +6,7 @@ import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { install } from "../app.js";
+import { selectorForAttr } from "../util/common.js";
 
 install('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
@@ -129,13 +130,15 @@ install('scrollable', function (app, defaultOptions) {
         }
     }
 
-    app.on('mounted', function (e) {
-        $(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
-            var scrollable = $(v).closest('[scrollable]')[0];
-            $(v).addClass(getState(scrollable).childClass);
-        });
-        $(selectIncludeSelf('[scrollable]', e.target)).each(function (i, v) {
-            initScrollable(v);
+    app.on('ready', function () {
+        dom.watchElements(dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
+            $(nodes).filter('[scrollable-target]').each(function (i, v) {
+                var scrollable = $(v).closest('[scrollable]')[0];
+                $(v).addClass(getState(scrollable).childClass);
+            });
+            $(nodes).filter('[scrollable]').each(function (i, v) {
+                initScrollable(v);
+            });
         });
     });
 
