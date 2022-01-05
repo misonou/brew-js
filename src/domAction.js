@@ -1,10 +1,11 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
+import { catchAsync } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
-import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, keys, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
+import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -29,8 +30,10 @@ export function addAsyncAction(attr, callback) {
  * @param {any=} value
  */
 export function closeFlyout(flyout, value) {
+    /** @type {Element[]} */
     // @ts-ignore: type inference issue
-    $(flyout || '[is-flyout].open').each(function (i, v) {
+    var elements = $(flyout || '[is-flyout].open').get();
+    return resolveAll(elements.map(function (v) {
         var state = flyoutStates.get(v);
         if (state) {
             flyoutStates.delete(v);
@@ -39,10 +42,10 @@ export function closeFlyout(flyout, value) {
                 setClass(state.source, 'target-opened', false);
             }
         }
-        animateOut(v, 'show').then(function () {
-            setClass(v, 'open', false);
+        return catchAsync(v.attributes['animate-out'] ? animateOut(v, 'open') : runCSSTransition(v, 'closing')).then(function () {
+            setClass(v, { open: false, closing: false });
         });
-    });
+    }));
 }
 
 /**

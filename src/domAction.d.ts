@@ -8,8 +8,9 @@ export function addAsyncAction(attr: string, callback: (this: Element, e: JQuery
  * Closes flyout and optionally passes result to the caller.
  * @param flyout A DOM element or a CSS selector that refers to a flyout.
  * @param value Value that will be passed as the resolved value of the promise returned by `openFlyout`.
+ * @returns A promise object that is resolved after flyout is closed.
  */
-export function closeFlyout(flyout?: Element | string, value?: any): void;
+export function closeFlyout(flyout?: Element | string, value?: any): Promise<void>;
 
 /**
  * Opens or toggles flyout and returns a promise that when resolved, receives the value passed to `closeFlyout`.
