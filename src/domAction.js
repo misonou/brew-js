@@ -243,6 +243,10 @@ dom.ready.then(function () {
     });
 
     $('body').on('click', function () {
-        closeFlyout();
+        $('[is-flyout].open').each(function (i, v) {
+            if (!dom.focused(v)) {
+                closeFlyout(v);
+            }
+        });
     });
 });
