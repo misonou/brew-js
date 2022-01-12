@@ -555,8 +555,9 @@ function configureRouter(app, options) {
         if (!appReady) {
             return currentPath;
         }
-        newPath = resolvePath(newValue, currentPath);
-        if (newPath !== currentPath) {
+        newValue = resolvePath(newValue, currentPath);
+        if (newValue !== currentPath && newValue !== newPath) {
+            newPath = newValue;
             setImmediateOnce(handlePathChange);
         }
         return currentPath;
