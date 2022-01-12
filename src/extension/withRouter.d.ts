@@ -130,6 +130,16 @@ declare namespace Brew {
          */
         set(path: string): void;
         /**
+         * Gets the path represented by specified route parameters.
+         * If none of the routes matches, the root path `/` is returned.
+         * @param params A dictionary containing route parameters.
+         */
+        getPath(params: Zeta.Dictionary<string>): string;
+        /**
+         * Gets all route parameters as a plain JSON object.
+         */
+        toJSON(): RouteParam;
+        /**
          * Gets the path represented by current route parameters.
          */
         toString(): string;

@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, isPlainObject } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -97,6 +97,28 @@ function createRouteState(route, segments, params) {
     };
 }
 
+function matchRouteByParams(routes, params) {
+    params = exclude(params, ['remainingSegments']);
+    var segments = [], i, len;
+    var matched = any(routes, function (tokens) {
+        for (i in params) {
+            if (params[i] && !(i in tokens.params)) {
+                return false;
+            }
+        }
+        segments.length = 0;
+        for (i = 0, len = tokens.length; i < len; i++) {
+            var varname = tokens[i].name;
+            if (varname && !tokens[i].pattern.test(params[varname] || '')) {
+                return false;
+            }
+            segments[i] = varname ? params[varname] : tokens[i];
+        }
+        return true;
+    });
+    return matched && createRouteState(matched, segments, params);
+}
+
 function Route(app, routes, initialPath) {
     var self = this;
     var state = _(self, {
@@ -125,25 +147,9 @@ function Route(app, routes, initialPath) {
             routeChanged = !equal(current, state.current.params);
         }
         if (routeChanged) {
-            var segments = [], i, len;
-            var matched = any(state.routes, function (tokens) {
-                for (i in current) {
-                    if (current[i] && !(i in tokens.params)) {
-                        return false;
-                    }
-                }
-                segments.length = 0;
-                for (i = 0, len = tokens.length; i < len; i++) {
-                    var varname = tokens[i].name;
-                    if (varname && !tokens[i].pattern.test(current[varname] || '')) {
-                        return false;
-                    }
-                    segments[i] = varname ? current[varname] : tokens[i];
-                }
-                return true;
-            });
+            var matched = matchRouteByParams(state.routes, current);
             if (matched) {
-                state.current = createRouteState(matched, segments, self);
+                state.current = matched;
                 app.path = self.toString();
             } else if (previous) {
                 state.current = previous;
@@ -185,6 +191,13 @@ definePrototype(Route, {
         _(self).handleChanges(function () {
             extend(self, params);
         });
+    },
+    getPath: function (params) {
+        var matched = matchRouteByParams(_(this).routes, params);
+        return matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/';
+    },
+    toJSON: function () {
+        return extend({}, this);
     },
     toString: function () {
         // @ts-ignore: unable to infer this
