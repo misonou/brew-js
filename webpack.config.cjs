@@ -140,6 +140,7 @@ module.exports = {
         'promise-polyfill': 'promise-polyfill',
         'waterpipe': 'waterpipe',
         'jquery': 'jQuery',
+        'jq-scrollable': 'jq-scrollable',
         'zeta-dom': {
             commonjs: 'zeta-dom',
             commonjs2: 'zeta-dom',
