@@ -64,7 +64,7 @@ install('scrollable', function (app, defaultOptions) {
 
         function scrollTo(index, align) {
             align = align || 'center top';
-            if (!scrolling && isVisible(container)) {
+            if (!scrolling && isVisible(container) && items[index]) {
                 scrolling = true;
                 isControlledScroll = true;
                 setState(index);
