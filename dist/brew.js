@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"));
+		module.exports = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("promise-polyfill"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", ["zeta-dom", "jQuery", "promise-polyfill", "waterpipe"], factory);
+		define("brew", ["zeta-dom", "jQuery", "jq-scrollable", "promise-polyfill", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), require("promise-polyfill"), require("waterpipe"));
+		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("promise-polyfill"), require("waterpipe"));
 	else
-		root["brew"] = factory(root["zeta"], root["jQuery"], root["promise-polyfill"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__) {
+		root["brew"] = factory(root["zeta"], root["jQuery"], root["jq-scrollable"], root["promise-polyfill"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -20,6 +20,10 @@ return /******/ (function() { // webpackBootstrap
 var jQuery = window.jQuery || __webpack_require__(609);
 
 module.exports = jQuery;
+
+try {
+  __webpack_require__(172);
+} catch (e) {}
 
 /***/ }),
 
@@ -112,6 +116,7 @@ __webpack_require__.d(common_namespaceObject, {
   "getQueryParam": function() { return getQueryParam; },
   "loadScript": function() { return loadScript; },
   "preloadImages": function() { return preloadImages; },
+  "selectorForAttr": function() { return selectorForAttr; },
   "setAttr": function() { return setAttr; },
   "setCookie": function() { return setCookie; }
 });
@@ -162,8 +167,11 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     exclude = _zeta$util.exclude,
     mapGet = _zeta$util.mapGet,
     mapRemove = _zeta$util.mapRemove,
+    arrRemove = _zeta$util.arrRemove,
     setAdd = _zeta$util.setAdd,
     equal = _zeta$util.equal,
+    combineFn = _zeta$util.combineFn,
+    executeOnce = _zeta$util.executeOnce,
     createPrivateStore = _zeta$util.createPrivateStore,
     setTimeoutOnce = _zeta$util.setTimeoutOnce,
     setImmediate = _zeta$util.setImmediate,
@@ -396,6 +404,13 @@ function copyAttr(src, dst) {
   each(src.attributes, function (i, v) {
     dst.setAttribute(v.name, v.value);
   });
+}
+function selectorForAttr(attr) {
+  if (isPlainObject(attr)) {
+    attr = keys(attr);
+  }
+
+  return '[' + attr.join('],[') + ']';
 }
 /**
  * @param {HTMLFormElement} form
@@ -1047,6 +1062,42 @@ function createRouteState(route, segments, params) {
   };
 }
 
+function matchRouteByParams(routes, params) {
+  params = exclude(params, ['remainingSegments']);
+  return single(routes, function (tokens) {
+    var i, len;
+
+    for (i in params) {
+      if (params[i] && !(i in tokens.params)) {
+        return false;
+      }
+    }
+
+    var segments = [];
+
+    for (i = 0, len = tokens.length; i < len; i++) {
+      var varname = tokens[i].name;
+
+      if (varname && !tokens[i].pattern.test(params[varname] || '')) {
+        if (i < tokens.minLength || params[varname]) {
+          return false;
+        }
+
+        each(tokens.params, function (j, v) {
+          if (v >= i) {
+            params[j] = null;
+          }
+        });
+        break;
+      }
+
+      segments[i] = varname ? params[varname] : tokens[i];
+    }
+
+    return createRouteState(tokens, segments, params);
+  });
+}
+
 function Route(app, routes, initialPath) {
   var self = this;
 
@@ -1067,53 +1118,31 @@ function Route(app, routes, initialPath) {
     defineObservableProperty(self, prop);
   });
   watch(self, function () {
-    var current = exclude(self, ['remainingSegments']);
-    var previous = state.current;
-    var routeChanged = !equal(current, state.current.params);
+    var params = exclude(self, ['remainingSegments']);
+    var current = state.current;
+    var previous = current;
+    var routeChanged = !equal(params, current.params);
 
     if (routeChanged && state.lastMatch) {
-      state.current = state.lastMatch;
+      current = state.lastMatch;
       state.lastMatch = null;
-      routeChanged = !equal(current, state.current.params);
+      routeChanged = !equal(params, current.params);
     }
 
     if (routeChanged) {
-      var segments = [],
-          i,
-          len;
-      var matched = any(state.routes, function (tokens) {
-        for (i in current) {
-          if (current[i] && !(i in tokens.params)) {
-            return false;
-          }
-        }
-
-        segments.length = 0;
-
-        for (i = 0, len = tokens.length; i < len; i++) {
-          var varname = tokens[i].name;
-
-          if (varname && !tokens[i].pattern.test(current[varname] || '')) {
-            return false;
-          }
-
-          segments[i] = varname ? current[varname] : tokens[i];
-        }
-
-        return true;
-      });
-
-      if (matched) {
-        state.current = createRouteState(matched, segments, self);
-        app.path = self.toString();
-      } else if (previous) {
-        state.current = previous;
-        self.set(previous.params);
-      }
+      current = matchRouteByParams(state.routes, params) || previous;
     }
 
-    if (state.current.route.exact && self.remainingSegments !== '/') {
+    state.current = current;
+
+    if (current.route.exact) {
       self.remainingSegments = '/';
+    }
+
+    self.set(current.params);
+
+    if (current !== previous) {
+      app.path = combinePath(current.maxPath, self.remainingSegments);
     }
   });
 }
@@ -1155,6 +1184,13 @@ definePrototype(Route, {
     _(self).handleChanges(function () {
       extend(self, params);
     });
+  },
+  getPath: function getPath(params) {
+    var matched = matchRouteByParams(_(this).routes, params);
+    return matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/';
+  },
+  toJSON: function toJSON() {
+    return extend({}, this);
   },
   toString: function toString() {
     // @ts-ignore: unable to infer this
@@ -1531,9 +1567,10 @@ function configureRouter(app, options) {
       return currentPath;
     }
 
-    newPath = resolvePath(newValue, currentPath);
+    newValue = resolvePath(newValue, currentPath);
 
-    if (newPath !== currentPath) {
+    if (newValue !== currentPath && newValue !== newPath) {
+      newPath = newValue;
       setImmediateOnce(handlePathChange);
     }
 
@@ -1715,7 +1752,7 @@ function processTransform(elements, applyDOMUpdates) {
       return containsOrEquals(dom_root, v);
     });
     exclude = makeArray(transformed);
-    jquery(selectIncludeSelf('[' + keys(transformationHandlers).join('],[') + ']', elements)).not(exclude).each(function (j, element) {
+    jquery(selectIncludeSelf(selectorForAttr(transformationHandlers), elements)).not(exclude).each(function (j, element) {
       each(transformationHandlers, function (i, v) {
         if (element.attributes[i]) {
           v(element, getComponentState.bind(0, i), applyDOMUpdates);
@@ -1728,13 +1765,15 @@ function processTransform(elements, applyDOMUpdates) {
 /**
  * @param {string} target
  * @param {Zeta.Dictionary} handlers
+ * @param {any[]} unbindHandlers
  */
 
 
-function addSelectHandlers(target, handlers) {
+function addSelectHandlers(target, handlers, unbindHandlers) {
   selectorHandlers.push({
     target: target,
-    handlers: handlers
+    handlers: handlers,
+    unbindHandlers: unbindHandlers
   });
 }
 /**
@@ -1862,7 +1901,7 @@ function processStateChange(suppressAnim) {
       each(arr.reverse(), function (i, v) {
         groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
           console.log(v === dom_root ? document : v);
-          jquery(selectIncludeSelf('[' + keys(renderHandlers).join('],[') + ']', v)).not(visited).each(function (i, element) {
+          jquery(selectIncludeSelf(selectorForAttr(renderHandlers), v)).not(visited).each(function (i, element) {
             each(renderHandlers, function (i, v) {
               if (element.attributes[i]) {
                 v(element, getComponentState.bind(0, i), applyDOMUpdates);
@@ -1983,7 +2022,7 @@ function mountElement(element) {
   while (index < selectorHandlers.length) {
     each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
       jquery(selectIncludeSelf(v.target, element)).each(function (i, w) {
-        app.on(w, v.handlers);
+        v.unbindHandlers.push(app.on(w, v.handlers));
 
         if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
           mountedElements.push(w);
@@ -2336,6 +2375,9 @@ function App() {
   });
 
   defineOwnProperty(self, 'element', app_root, true);
+  defineOwnProperty(self, 'ready', new Promise(function (resolve) {
+    self.on('ready', resolve.bind(0, self));
+  }), true);
   self.on('mounted', onElementMounted);
 }
 
@@ -2417,21 +2459,19 @@ definePrototype(App, {
       }
     }
 
+    var arr = [];
+
     if (typeof target === 'string') {
-      addSelectHandlers(target, handlers);
-
-      if (!appReady) {
-        return;
-      }
-
+      addSelectHandlers(target, handlers, arr);
       target = jquery(target).get();
     } else if (target instanceof Node) {
       target = [target];
     }
 
     each(target, function (i, v) {
-      zeta_dom_dom.on(v, handlers);
+      arr.push(zeta_dom_dom.on(v, handlers));
     });
+    return combineFn(arr);
   },
   matchPath: function matchPath(path, selector, handler) {
     if (isFunction(selector)) {
@@ -2510,6 +2550,7 @@ var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom
 
 
 
+
 var var_root = zeta_dom_dom.root;
 var varAttrs = {
   'var': true,
@@ -2518,7 +2559,9 @@ var varAttrs = {
     error: null
   }
 };
-var tree = new InheritedNodeTree(var_root, VarContext);
+var tree = new InheritedNodeTree(var_root, VarContext, {
+  selector: selectorForAttr(varAttrs)
+});
 /**
  * @class
  * @this {Brew.VarContext}
@@ -2715,17 +2758,13 @@ function evalAttr(element, attrName, templateMode, context) {
 
   return evaluate(str, context || getVar(element), element, attrName, templateMode);
 }
-zeta_dom_dom.watchElements(var_root, '[' + keys(varAttrs).join('],[') + ']', function (elements) {
-  each(elements, function (i, v) {
-    tree.setNode(v);
-  });
-}, true);
 tree.on('update', function (e) {
   each(e.updatedNodes, function (i, v) {
     markUpdated(v.element);
   });
 });
 // CONCATENATED MODULE: ./src/domAction.js
+
 
 
 
@@ -2757,8 +2796,10 @@ function addAsyncAction(attr, callback) {
  */
 
 function closeFlyout(flyout, value) {
+  /** @type {Element[]} */
   // @ts-ignore: type inference issue
-  jquery(flyout || '[is-flyout].open').each(function (i, v) {
+  var elements = jquery(flyout || '[is-flyout].open').get();
+  return resolveAll(elements.map(function (v) {
     var state = flyoutStates.get(v);
 
     if (state) {
@@ -2770,10 +2811,13 @@ function closeFlyout(flyout, value) {
       }
     }
 
-    animateOut(v, 'show').then(function () {
-      setClass(v, 'open', false);
+    return catchAsync(v.attributes['animate-out'] ? animateOut(v, 'open') : runCSSTransition(v, 'closing')).then(function () {
+      setClass(v, {
+        open: false,
+        closing: false
+      });
     });
-  });
+  }));
 }
 /**
  * @param {string} selector
@@ -2883,7 +2927,7 @@ addAsyncAction('context-method', function (e) {
 });
 zeta_dom_dom.ready.then(function () {
   app.on('mounted', function (e) {
-    jquery(selectIncludeSelf('[' + keys(asyncActions).join('],[') + ']', e.target)).attr('async-action', '');
+    jquery(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
   });
   app.on('navigate', function () {
     setTimeout(function () {
@@ -2986,7 +3030,11 @@ zeta_dom_dom.ready.then(function () {
     }
   });
   jquery('body').on('click', function () {
-    closeFlyout();
+    jquery('[is-flyout].open').each(function (i, v) {
+      if (!zeta_dom_dom.focused(v)) {
+        closeFlyout(v);
+      }
+    });
   });
 });
 // CONCATENATED MODULE: ./src/domReady.js
@@ -3363,10 +3411,10 @@ install('preloadImage', function (app) {
 
 
 
+
 install('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
-    bounce: false,
-    scrollbar: false
+    bounce: false
   }, defaultOptions); // @ts-ignore: non-standard member
 
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
@@ -3489,13 +3537,15 @@ install('scrollable', function (app, defaultOptions) {
     }
   }
 
-  app.on('mounted', function (e) {
-    jquery(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
-      var scrollable = jquery(v).closest('[scrollable]')[0];
-      jquery(v).addClass(getState(scrollable).childClass);
-    });
-    jquery(selectIncludeSelf('[scrollable]', e.target)).each(function (i, v) {
-      initScrollable(v);
+  app.on('ready', function () {
+    zeta_dom_dom.watchElements(zeta_dom_dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
+      jquery(nodes).filter('[scrollable-target]').each(function (i, v) {
+        var scrollable = jquery(v).closest('[scrollable]')[0];
+        jquery(v).addClass(getState(scrollable).childClass);
+      });
+      jquery(nodes).filter('[scrollable]').each(function (i, v) {
+        initScrollable(v);
+      });
     });
   }); // update scroller on events other than window resize
 
@@ -3642,6 +3692,16 @@ install('viewport', function (app) {
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__609__;
+
+/***/ }),
+
+/***/ 172:
+/***/ (function(module) {
+
+"use strict";
+if(typeof __WEBPACK_EXTERNAL_MODULE__172__ === 'undefined') { var e = new Error("Cannot find module 'jq-scrollable'"); e.code = 'MODULE_NOT_FOUND'; throw e; }
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__172__;
 
 /***/ }),
 
