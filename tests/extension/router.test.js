@@ -23,6 +23,7 @@ beforeAll(async () => {
             routes: [
                 '/foo/baz/*',
                 '/foo/{id?:[a-z]+}',
+                '/{bar:bar}/{id?:[a-z]+}',
                 '/baz/{another?}',
                 '/*'
             ]
@@ -74,6 +75,7 @@ beforeAll(async () => {
                 <video id="video" src="" autoplay></video>
                 <audio id="audio" src="" autoplay></audio>
             </div>
+            <div match-path="/bar"></div>
             <div match-path="/foo/baz/*"></div>
             <div match-path="/foo/{id?}"></div>
         </div>
@@ -359,6 +361,7 @@ describe('app.resolvePath', () => {
 describe('app.route', () => {
     it('should have properties named with all possible route parameters', () => {
         expect(app.route).toHaveProperty('id');
+        expect(app.route).toHaveProperty('bar');
         expect(app.route).toHaveProperty('another');
         expect(app.route).toHaveProperty('remainingSegments');
     });
@@ -384,6 +387,13 @@ describe('app.route', () => {
         await app.navigate('/foo/baz/sub1/sub2/sub3');
         expect(app.route.id).toBeNull();
         expect(app.route.remainingSegments).toEqual('/sub1/sub2/sub3');
+    });
+
+    it('should match min-path if there is optional parameter', async () => {
+        app.route.bar = 'bar';
+        await delay(100);
+        expect(app.path).toEqual('/bar');
+        expect(app.route.id).toBeNull();
     });
 
     it('should discard parameter changes if there is no matching route', async () => {

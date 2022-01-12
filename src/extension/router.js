@@ -99,24 +99,31 @@ function createRouteState(route, segments, params) {
 
 function matchRouteByParams(routes, params) {
     params = exclude(params, ['remainingSegments']);
-    var segments = [], i, len;
-    var matched = any(routes, function (tokens) {
+    return single(routes, function (tokens) {
+        var i, len;
         for (i in params) {
             if (params[i] && !(i in tokens.params)) {
                 return false;
             }
         }
-        segments.length = 0;
+        var segments = [];
         for (i = 0, len = tokens.length; i < len; i++) {
             var varname = tokens[i].name;
             if (varname && !tokens[i].pattern.test(params[varname] || '')) {
-                return false;
+                if (i < tokens.minLength || params[varname]) {
+                    return false;
+                }
+                each(tokens.params, function (j, v) {
+                    if (v >= i) {
+                        params[j] = null;
+                    }
+                });
+                break;
             }
             segments[i] = varname ? params[varname] : tokens[i];
         }
-        return true;
+        return createRouteState(tokens, segments, params);
     });
-    return matched && createRouteState(matched, segments, params);
 }
 
 function Route(app, routes, initialPath) {
@@ -138,26 +145,25 @@ function Route(app, routes, initialPath) {
         defineObservableProperty(self, prop);
     });
     watch(self, function () {
-        var current = exclude(self, ['remainingSegments']);
-        var previous = state.current;
-        var routeChanged = !equal(current, state.current.params);
+        var params = exclude(self, ['remainingSegments']);
+        var current = state.current;
+        var previous = current;
+        var routeChanged = !equal(params, current.params);
         if (routeChanged && state.lastMatch) {
-            state.current = state.lastMatch;
+            current = state.lastMatch;
             state.lastMatch = null;
-            routeChanged = !equal(current, state.current.params);
+            routeChanged = !equal(params, current.params);
         }
         if (routeChanged) {
-            var matched = matchRouteByParams(state.routes, current);
-            if (matched) {
-                state.current = matched;
-                app.path = self.toString();
-            } else if (previous) {
-                state.current = previous;
-                self.set(previous.params);
-            }
+            current = matchRouteByParams(state.routes, params) || previous;
         }
-        if (state.current.route.exact && self.remainingSegments !== '/') {
+        state.current = current;
+        if (current.route.exact) {
             self.remainingSegments = '/';
+        }
+        self.set(current.params);
+        if (current !== previous) {
+            app.path = combinePath(current.maxPath, self.remainingSegments);
         }
     });
 }
