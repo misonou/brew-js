@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, isPlainObject } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, isPlainObject, pick, keys, grep, makeArray } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -98,45 +98,41 @@ function createRouteState(route, segments, params) {
 }
 
 function matchRouteByParams(routes, params) {
-    params = exclude(params, ['remainingSegments']);
     return single(routes, function (tokens) {
-        var i, len;
-        for (i in params) {
-            if (params[i] && !(i in tokens.params)) {
-                return false;
-            }
+        var hasParam = single(tokens.params, function (v, i) {
+            return params[i] !== null;
+        });
+        if (!hasParam) {
+            return;
         }
         var segments = [];
-        for (i = 0, len = tokens.length; i < len; i++) {
+        for (var i = 0, len = tokens.length; i < len; i++) {
             var varname = tokens[i].name;
             if (varname && !tokens[i].pattern.test(params[varname] || '')) {
                 if (i < tokens.minLength || params[varname]) {
                     return false;
                 }
-                each(tokens.params, function (j, v) {
-                    if (v >= i) {
-                        params[j] = null;
-                    }
-                });
                 break;
             }
             segments[i] = varname ? params[varname] : tokens[i];
         }
-        return createRouteState(tokens, segments, params);
+        return createRouteState(tokens, segments, pick(params, keys(tokens.params)));
     });
 }
 
 function Route(app, routes, initialPath) {
     var self = this;
+    var params = {};
     var state = _(self, {
-        routes: routes.map(parseRoute)
+        routes: routes.map(parseRoute),
+        params: params
     });
     each(state.routes, function (i, v) {
         each(v.params, function (i) {
-            self[i] = null;
+            params[i] = null;
         });
     });
-    extend(self, self.parse(initialPath));
+    extend(self, params, self.parse(initialPath));
     state.current = state.lastMatch;
     state.handleChanges = watch(self, true);
 
@@ -161,7 +157,7 @@ function Route(app, routes, initialPath) {
         if (current.route.exact) {
             self.remainingSegments = '/';
         }
-        self.set(current.params);
+        self.set(extend({}, state.params, current.params));
         if (current !== previous) {
             app.path = combinePath(current.maxPath, self.remainingSegments);
         }
@@ -178,7 +174,7 @@ definePrototype(Route, {
         });
         var params = {};
         if (matched) {
-            for (var i in self) {
+            for (var i in state.params) {
                 params[i] = segments[matched.params[i]] || null;
             }
             params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));

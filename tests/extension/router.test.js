@@ -396,6 +396,13 @@ describe('app.route', () => {
         expect(app.route.id).toBeNull();
     });
 
+    it('should match route disregard of inexist parameters', async () => {
+        app.route.set({ bar: 'bar', another: 'foo' });
+        await delay(100);
+        expect(app.path).toEqual('/bar');
+        expect(app.route.another).toBeNull();
+    });
+
     it('should discard parameter changes if there is no matching route', async () => {
         const cb = mockFn();
         bindEvent('navigate', cb);
