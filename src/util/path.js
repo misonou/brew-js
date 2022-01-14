@@ -42,7 +42,7 @@ export function normalizePath(path, resolveDotDir) {
         return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
     }
     path = String(path).replace(/\/+(\/|$)/g, '$1');
-    if (resolveDotDir && path.indexOf('./') >= 0) {
+    if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
         var segments = path.split('/');
         for (var j = 0; j < segments.length;) {
             if (segments[j] === '.' || (segments[j] === '..' && !j)) {

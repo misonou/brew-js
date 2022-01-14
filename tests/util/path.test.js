@@ -80,6 +80,8 @@ describe('normalizePath', () => {
         expect(normalizePath('/./foo/../bar', true)).toEqual('/bar');
         expect(normalizePath('/./foo/../../bar', true)).toEqual('/bar');
         expect(normalizePath('./foo/', true)).toEqual('/foo');
+        expect(normalizePath('./foo/.', true)).toEqual('/foo');
+        expect(normalizePath('./foo/..', true)).toEqual('/');
         expect(normalizePath('./foo/../bar/', true)).toEqual('/bar');
         expect(normalizePath('./foo/../../bar/', true)).toEqual('/bar');
         expect(normalizePath('../../bar', true)).toEqual('/bar');
