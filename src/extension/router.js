@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, isPlainObject, pick, keys, grep, makeArray } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, isPlainObject, pick, keys, grep, makeArray, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -435,18 +435,14 @@ function configureRouter(app, options) {
         }
 
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
-        if (dom.locked(dom.activeElement, true)) {
-            lockedPath = newPath === lockedPath ? null : currentPath;
-            popState();
-            state.reject();
-            return;
-        }
-        var promise = preventLeave();
         var leavePath = newPath;
+        var promise = dom.locked(root, true) ? dom.cancelLock(root) : preventLeave();
         if (promise) {
-            lockedPath = currentPath;
+            lockedPath = newPath === lockedPath ? null : currentPath;
             promise = resolve(promise).then(function () {
-                return pushState(leavePath);
+                let state = pushState(leavePath);
+                setTimeoutOnce(handlePathChange);
+                return state;
             });
             popState();
             state.forward(promise);

@@ -207,7 +207,7 @@ describe('app.navigate', () => {
     it('should cancel navigation when dom is locked', async () => {
         dom.lock(root, delay(100));
 
-        await expect(app.navigate('/test-1')).rejects.toEqual('cancelled');
+        await expect(app.navigate('/test-1')).rejects.toEqual('user_cancelled');
         expect(app.path).toEqual(initialPath);
 
         while (dom.locked(root)) {
@@ -215,6 +215,14 @@ describe('app.navigate', () => {
         }
         await expect(app.navigate('/test-1')).resolves.toBeTruthy();
         expect(app.path).toEqual('/test-1');
+    });
+
+    it('should request lock cancellation and resume navigation when allowed', async () => {
+        const cb = mockFn(() => true);
+        dom.lock(root, delay(100), cb);
+
+        await expect(app.navigate('/test-1')).resolves.toBeTruthy();
+        expect(cb).toBeCalledTimes(1);
     });
 
     it('should cancel navigation when user prevented leaving', async () => {
