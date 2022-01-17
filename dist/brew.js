@@ -262,7 +262,7 @@ function normalizePath(path, resolveDotDir) {
 
   path = String(path).replace(/\/+(\/|$)/g, '$1');
 
-  if (resolveDotDir && path.indexOf('./') >= 0) {
+  if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
     var segments = path.split('/');
 
     for (var j = 0; j < segments.length;) {
@@ -1063,19 +1063,18 @@ function createRouteState(route, segments, params) {
 }
 
 function matchRouteByParams(routes, params) {
-  params = exclude(params, ['remainingSegments']);
   return single(routes, function (tokens) {
-    var i, len;
+    var hasParam = single(tokens.params, function (v, i) {
+      return params[i] !== null;
+    });
 
-    for (i in params) {
-      if (params[i] && !(i in tokens.params)) {
-        return false;
-      }
+    if (!hasParam) {
+      return;
     }
 
     var segments = [];
 
-    for (i = 0, len = tokens.length; i < len; i++) {
+    for (var i = 0, len = tokens.length; i < len; i++) {
       var varname = tokens[i].name;
 
       if (varname && !tokens[i].pattern.test(params[varname] || '')) {
@@ -1083,34 +1082,31 @@ function matchRouteByParams(routes, params) {
           return false;
         }
 
-        each(tokens.params, function (j, v) {
-          if (v >= i) {
-            params[j] = null;
-          }
-        });
         break;
       }
 
       segments[i] = varname ? params[varname] : tokens[i];
     }
 
-    return createRouteState(tokens, segments, params);
+    return createRouteState(tokens, segments, pick(params, keys(tokens.params)));
   });
 }
 
 function Route(app, routes, initialPath) {
   var self = this;
+  var params = {};
 
   var state = _(self, {
-    routes: routes.map(parseRoute)
+    routes: routes.map(parseRoute),
+    params: params
   });
 
   each(state.routes, function (i, v) {
     each(v.params, function (i) {
-      self[i] = null;
+      params[i] = null;
     });
   });
-  extend(self, self.parse(initialPath));
+  extend(self, params, self.parse(initialPath));
   state.current = state.lastMatch;
   state.handleChanges = watch(self, true);
   Object.preventExtensions(self);
@@ -1139,7 +1135,7 @@ function Route(app, routes, initialPath) {
       self.remainingSegments = '/';
     }
 
-    self.set(current.params);
+    self.set(extend({}, state.params, current.params));
 
     if (current !== previous) {
       app.path = combinePath(current.maxPath, self.remainingSegments);
@@ -1160,7 +1156,7 @@ definePrototype(Route, {
     var params = {};
 
     if (matched) {
-      for (var i in self) {
+      for (var i in state.params) {
         params[i] = segments[matched.params[i]] || null;
       }
 
@@ -1444,20 +1440,15 @@ function configureRouter(app, options) {
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
 
-    if (zeta_dom_dom.locked(zeta_dom_dom.activeElement, true)) {
-      lockedPath = newPath === lockedPath ? null : currentPath;
-      popState();
-      state.reject();
-      return;
-    }
-
-    var promise = preventLeave();
     var leavePath = newPath;
+    var promise = zeta_dom_dom.locked(root, true) ? zeta_dom_dom.cancelLock(root) : preventLeave();
 
     if (promise) {
-      lockedPath = currentPath;
+      lockedPath = newPath === lockedPath ? null : currentPath;
       promise = resolve(promise).then(function () {
-        return pushState(leavePath);
+        var state = pushState(leavePath);
+        setImmediateOnce(handlePathChange);
+        return state;
       });
       popState();
       state.forward(promise);
@@ -3466,7 +3457,7 @@ install('scrollable', function (app, defaultOptions) {
     function scrollTo(index, align) {
       align = align || 'center top';
 
-      if (!scrolling && isVisible(container)) {
+      if (!scrolling && isVisible(container) && items[index]) {
         scrolling = true;
         isControlledScroll = true;
         setState(index);
