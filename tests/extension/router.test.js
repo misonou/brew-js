@@ -219,9 +219,10 @@ describe('app.navigate', () => {
 
     it('should request lock cancellation and resume navigation when allowed', async () => {
         const cb = mockFn(() => true);
-        dom.lock(root, delay(100), cb);
+        const promise = dom.lock(root, delay(100), cb);
 
         await expect(app.navigate('/test-1')).resolves.toBeTruthy();
+        await expect(promise).rejects.toMatch('user_cancelled');
         expect(cb).toBeCalledTimes(1);
     });
 
