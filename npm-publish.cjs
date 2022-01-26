@@ -16,7 +16,7 @@ const { promisify } = require('util');
     package.types = 'index.d.ts';
 
     await Promise.all([
-        promisify(ncp)('README.md', dst),
+        promisify(fs.copyFile)('README.md', `${dst}/README.md`),
         promisify(ncp)('src', dst),
         promisify(ncp)('dist', `${dst}/dist`),
         promisify(fs.writeFile)(`${dst}/package.json`, JSON.stringify(package, null, 2))
