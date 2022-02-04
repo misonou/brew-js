@@ -1,9 +1,11 @@
 export interface AppInit {
     /**
      * Initialize an app instance.
+     * App instance will become ready once all promises registered through {@link Brew.AppInstance.beforeInit}
+     * during the init callback are all settled.
      * @param init Callback to initialize before app starts.
      */
-    <T = {}>(init: (app: Brew.AppInstance<T>) => void): void;
+    <T = {}>(init: (app: Brew.AppInstance<T>) => void): Brew.AppInstance<T>;
 };
 
 declare const init: AppInit;

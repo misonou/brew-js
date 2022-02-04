@@ -193,6 +193,7 @@ export default function (callback) {
         mountElement(root);
         app.emit('ready');
     }), root);
+    return app;
 }
 
 export function install(name, callback) {
