@@ -19,19 +19,7 @@ for (let i in includePath) {
     includePath[i] = fs.existsSync(realPath) ? realPath : path.resolve(basepath, `node_modules/${i}`);
 }
 
-server.get('**/*.cjs', function (req, res) {
-    var realPath = resolveRealPath(req.path);
-    fs.readFile(realPath, function (err, data) {
-        console.log('GET', req.path, '->', realPath);
-        if (err) {
-            res.sendStatus(404);
-        } else {
-            res.contentType('application/javascript');
-            res.send(data.toString().replace(/module\.exports\s*=\s*/g, 'export default '));
-        }
-    });
-});
-server.get('**/include/*/*', function (req, res) {
+function handleInclude(req, res) {
     var realPath = resolveRealPath(req.path);
     fs.readFile(realPath, function (err, data) {
         console.log('GET', req.path, '->', realPath);
@@ -42,7 +30,10 @@ server.get('**/include/*/*', function (req, res) {
             res.send(data.toString().replace(/from "([\w-]+)\/(\w+)"/g, 'from "/$1/src/$2.js"').replace(/module\.exports\s*=\s*/g, 'export default '));
         }
     });
-});
+}
+
+server.get('**/include/*.js', handleInclude);
+server.get('**/include/**/*.js', handleInclude);
 for (let i in includePath) {
     server.use('/' + i + '/src', express.static(includePath[i]));
 }
