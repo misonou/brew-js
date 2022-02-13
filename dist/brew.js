@@ -2510,6 +2510,7 @@ watchable(App.prototype);
     mountElement(app_root);
     app.emit('ready');
   }), app_root);
+  return app;
 }
 function install(name, callback) {
   throwNotFunction(callback);
@@ -3445,6 +3446,30 @@ install('scrollable', function (app, defaultOptions) {
         app.emit('scrollStop', container, e, true);
       }
     }));
+    zeta_dom_dom.on(container, {
+      drag: function drag() {
+        zeta_dom_dom.beginDrag();
+      },
+      getContentRect: function getContentRect() {
+        var rect = getRect(container);
+        var padding = jquery(container).scrollable('scrollPadding');
+        rect.top += padding.top;
+        rect.left += padding.left;
+        rect.right -= padding.right;
+        rect.bottom -= padding.bottom;
+        return rect;
+      },
+      scrollBy: function scrollBy(e) {
+        jquery(container).scrollable('stop');
+        var origX = jquery(container).scrollable('scrollLeft');
+        var origY = jquery(container).scrollable('scrollTop');
+        jquery(container).scrollable('scrollBy', e.x, e.y, 200);
+        return {
+          x: origX - jquery(container).scrollable('scrollLeft'),
+          y: origY - jquery(container).scrollable('scrollTop')
+        };
+      }
+    });
 
     function setState(index) {
       if (varname) {
