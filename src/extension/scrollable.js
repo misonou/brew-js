@@ -54,6 +54,31 @@ install('scrollable', function (app, defaultOptions) {
             }
         }));
 
+        dom.on(container, {
+            drag: function () {
+                dom.beginDrag();
+            },
+            getContentRect: function () {
+                var rect = getRect(container);
+                var padding = $(container).scrollable('scrollPadding');
+                rect.top += padding.top;
+                rect.left += padding.left;
+                rect.right -= padding.right;
+                rect.bottom -= padding.bottom;
+                return rect;
+            },
+            scrollBy: function (e) {
+                $(container).scrollable('stop');
+                var origX = $(container).scrollable('scrollLeft');
+                var origY = $(container).scrollable('scrollTop');
+                $(container).scrollable('scrollBy', e.x, e.y, 200);
+                return {
+                    x: origX - $(container).scrollable('scrollLeft'),
+                    y: origY - $(container).scrollable('scrollTop')
+                };
+            }
+        });
+
         function setState(index) {
             if (varname) {
                 var obj = {};
