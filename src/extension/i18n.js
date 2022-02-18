@@ -1,9 +1,21 @@
-import { any, each } from "../include/zeta-dom/util.js";
+import { any, each, iequal, single } from "../include/zeta-dom/util.js";
 import { install } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
+function getCanonicalValue(languages, value) {
+    if (languages && value) {
+        return any(languages, function (v) {
+            return iequal(v, value);
+        });
+    }
+    return value;
+}
+
 function detectLanguage(languages, defaultLanguage) {
     var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
+    if (!languages) {
+        return userLanguages[0];
+    }
     each(userLanguages, function (i, v) {
         if (v.indexOf('-') > 0) {
             var invariant = v.split('-')[0];
@@ -16,20 +28,18 @@ function detectLanguage(languages, defaultLanguage) {
             }
         }
     });
-    languages = languages || userLanguages;
-    return any(userLanguages, function (v) {
-        return languages.indexOf(v) >= 0;
+    return single(userLanguages, function (v) {
+        return getCanonicalValue(languages, v);
     }) || defaultLanguage || languages[0];
 }
 
 install('i18n', function (app, options) {
+    var languages = options.languages;
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
-    var language = (routeParam && app.route[routeParam]) || (cookie && cookie.get()) || detectLanguage(options.languages, options.defaultLanguage);
+    var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || detectLanguage(languages, options.defaultLanguage);
     var setLanguage = function (newLangauge) {
-        if (options.languages.indexOf(newLangauge) < 0) {
-            newLangauge = language;
-        }
+        newLangauge = getCanonicalValue(languages, newLangauge) || language;
         app.language = newLangauge;
         if (cookie) {
             cookie.set(newLangauge);
