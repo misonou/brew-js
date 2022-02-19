@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv } from "../include/zeta-dom/util.js";
 import { appReady, install } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -125,7 +125,8 @@ function Route(app, routes, initialPath) {
     var params = {};
     var state = _(self, {
         routes: routes.map(parseRoute),
-        params: params
+        params: params,
+        app: app
     });
     each(state.routes, function (i, v) {
         each(v.params, function (i) {
@@ -193,6 +194,11 @@ definePrototype(Route, {
         _(self).handleChanges(function () {
             extend(self, params);
         });
+    },
+    replace: function (key, value) {
+        var self = this;
+        var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
+        return _(self).app.navigate(path, true);
     },
     getPath: function (params) {
         var matched = matchRouteByParams(_(this).routes, params);

@@ -127,8 +127,22 @@ declare namespace Brew {
          * @description It is similar to directly setting `App<T>.path` except that
          * the path must be absolute and not contain parameter subsitution.
          * @param path A string specifying a path.
+         * @deprecated Use {@link Brew.WithRouter.navigate} instead.
          */
         set(path: string): void;
+        /**
+         * Updates router and cause the app to redirect to the specified path.
+         * Visit of current page in the history stack will be replaced.
+         * @param key Name of route parameter.
+         * @param value New value.
+         */
+        replace(key: string, value: string): Promise<NavigateResult>;
+        /**
+         * Updates router and cause the app to redirect to the specified path.
+         * Visit of current page in the history stack will be replaced.
+         * @param params A dictionary containing new parameter values. Unrecorgnized keys are omitted.
+         */
+        replace(params: RouteParam): Promise<NavigateResult>;
         /**
          * Gets the path represented by specified route parameters.
          * If none of the routes matches, the root path `/` is returned.
