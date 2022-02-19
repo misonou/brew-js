@@ -55,6 +55,16 @@ export async function mount(html) {
     return elm;
 }
 
+export function cleanupAfterTest(callback) {
+    cleanup.push(callback);
+}
+
+export function waitForEvent(target, event) {
+    return new Promise(resolve => {
+        cleanup.push(target.on(event, resolve));
+    });
+}
+
 export function bindEvent(...args) {
     // @ts-ignore
     cleanup.push(dom.on(...args));
