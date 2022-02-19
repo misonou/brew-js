@@ -50,7 +50,7 @@ install('i18n', function (app, options) {
         if (language !== newLangauge) {
             language = newLangauge;
             if (routeParam) {
-                app.route[routeParam] = newLangauge;
+                app.route.replace(routeParam, newLangauge.toLowerCase());
             }
             if (options.reloadOnChange) {
                 location.reload();
@@ -65,7 +65,7 @@ install('i18n', function (app, options) {
     if (routeParam) {
         app.route.watch(routeParam, setLanguage);
         app.on('ready', function () {
-            app.route[routeParam] = language;
+            app.route.replace(routeParam, language.toLowerCase());
         });
     }
 });
