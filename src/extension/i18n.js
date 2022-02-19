@@ -1,4 +1,4 @@
-import { any, each, iequal, single } from "../include/zeta-dom/util.js";
+import { any, defineObservableProperty, each, iequal, single } from "../include/zeta-dom/util.js";
 import { install } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
@@ -39,28 +39,29 @@ install('i18n', function (app, options) {
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
     var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || detectLanguage(languages, options.defaultLanguage);
     var setLanguage = function (newLangauge) {
-        newLangauge = getCanonicalValue(languages, newLangauge) || language;
         app.language = newLangauge;
+    };
+
+    defineObservableProperty(app, 'language', language, function (newLangauge) {
+        newLangauge = getCanonicalValue(languages, newLangauge) || language;
         if (cookie) {
             cookie.set(newLangauge);
         }
-        if (routeParam) {
-            app.route[routeParam] = newLangauge;
-        }
         if (language !== newLangauge) {
             language = newLangauge;
+            if (routeParam) {
+                app.route[routeParam] = newLangauge;
+            }
             if (options.reloadOnChange) {
                 location.reload();
             }
         }
-    };
-
+        return language;
+    });
     app.define({
-        language,
         setLanguage,
         detectLanguage
     });
-    app.watch('language', setLanguage);
     if (routeParam) {
         app.route.watch(routeParam, setLanguage);
         app.on('ready', function () {
