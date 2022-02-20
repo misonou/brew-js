@@ -1098,7 +1098,8 @@ function Route(app, routes, initialPath) {
 
   var state = _(self, {
     routes: routes.map(parseRoute),
-    params: params
+    params: params,
+    app: app
   });
 
   each(state.routes, function (i, v) {
@@ -1180,6 +1181,11 @@ definePrototype(Route, {
     _(self).handleChanges(function () {
       extend(self, params);
     });
+  },
+  replace: function replace(key, value) {
+    var self = this;
+    var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
+    return _(self).app.navigate(path, true);
   },
   getPath: function getPath(params) {
     var matched = matchRouteByParams(_(this).routes, params);
@@ -3195,8 +3201,23 @@ install('formVar', function (app) {
 
 
 
+function getCanonicalValue(languages, value) {
+  if (languages && value) {
+    return any(languages, function (v) {
+      return iequal(v, value);
+    });
+  }
+
+  return value;
+}
+
 function detectLanguage(languages, defaultLanguage) {
   var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
+
+  if (!languages) {
+    return userLanguages[0];
+  }
+
   each(userLanguages, function (i, v) {
     if (v.indexOf('-') > 0) {
       var invariant = v.split('-')[0];
@@ -3210,54 +3231,53 @@ function detectLanguage(languages, defaultLanguage) {
       }
     }
   });
-  languages = languages || userLanguages;
-  return any(userLanguages, function (v) {
-    return languages.indexOf(v) >= 0;
+  return single(userLanguages, function (v) {
+    return getCanonicalValue(languages, v);
   }) || defaultLanguage || languages[0];
 }
 
 install('i18n', function (app, options) {
+  var languages = options.languages;
   var routeParam = app.route && options.routeParam;
 
   var cookie = options.cookie && common_cookie(options.cookie, 86400000);
 
-  var language = routeParam && app.route[routeParam] || cookie && cookie.get() || detectLanguage(options.languages, options.defaultLanguage);
+  var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || detectLanguage(languages, options.defaultLanguage);
 
   var setLanguage = function setLanguage(newLangauge) {
-    if (options.languages.indexOf(newLangauge) < 0) {
-      newLangauge = language;
-    }
-
     app.language = newLangauge;
+  };
+
+  defineObservableProperty(app, 'language', language, function (newLangauge) {
+    newLangauge = getCanonicalValue(languages, newLangauge) || language;
 
     if (cookie) {
       cookie.set(newLangauge);
     }
 
-    if (routeParam) {
-      app.route[routeParam] = newLangauge;
-    }
-
     if (language !== newLangauge) {
       language = newLangauge;
+
+      if (routeParam) {
+        app.route.replace(routeParam, newLangauge.toLowerCase());
+      }
 
       if (options.reloadOnChange) {
         location.reload();
       }
     }
-  };
 
+    return language;
+  });
   app.define({
-    language: language,
     setLanguage: setLanguage,
     detectLanguage: detectLanguage
   });
-  app.watch('language', setLanguage);
 
   if (routeParam) {
     app.route.watch(routeParam, setLanguage);
     app.on('ready', function () {
-      app.route[routeParam] = language;
+      app.route.replace(routeParam, language.toLowerCase());
     });
   }
 });
