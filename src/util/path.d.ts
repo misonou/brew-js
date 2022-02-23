@@ -51,4 +51,4 @@ export function toRelativeUrl(url: string): string;
  * @param path A path to test.
  * @param basePath A parent path to test against.
  */
-export function isSubPathOf(path: string, basePath: string): boolean;
+export function isSubPathOf(path: string, basePath: string): string | false;

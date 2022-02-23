@@ -33,7 +33,7 @@ export function combinePath(a, b) {
  * @param {boolean=} resolveDotDir
  */
 export function normalizePath(path, resolveDotDir) {
-    if (path === undefined || path === null) {
+    if (!path || path === '/') {
         return '/';
     }
     if (/(:\/\/)|\?|#/.test(path)) {
@@ -86,5 +86,5 @@ export function toRelativeUrl(url) {
  */
 export function isSubPathOf(a, b) {
     var len = b.length;
-    return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/');
+    return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
