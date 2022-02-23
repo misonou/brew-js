@@ -1,40 +1,44 @@
-import { any, defineObservableProperty, each, iequal, single } from "../include/zeta-dom/util.js";
+import { defineObservableProperty, each, isArray, single } from "../include/zeta-dom/util.js";
 import { install } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
+function toDictionary(languages) {
+    if (languages) {
+        var dict = {};
+        each(languages, function (i, v) {
+            var key = v.toLowerCase();
+            dict[key] = v;
+            if (key.indexOf('-') > 0) {
+                dict[key.split('-')[0]] = v;
+            }
+        });
+        return dict;
+    }
+}
+
 function getCanonicalValue(languages, value) {
     if (languages && value) {
-        return any(languages, function (v) {
-            return iequal(v, value);
-        });
+        return languages[value.toLowerCase()];
     }
     return value;
 }
 
 function detectLanguage(languages, defaultLanguage) {
-    var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
+    var userLanguages = navigator.languages || [navigator.language || ''];
     if (!languages) {
         return userLanguages[0];
     }
-    each(userLanguages, function (i, v) {
-        if (v.indexOf('-') > 0) {
-            var invariant = v.split('-')[0];
-            if (userLanguages.indexOf(invariant) < 0) {
-                for (var j = userLanguages.length - 1; j >= 0; j--) {
-                    if (userLanguages[j].split('-')[0] === invariant) {
-                        userLanguages.splice(j + 1, 0, invariant);
-                    }
-                }
-            }
-        }
-    });
-    return single(userLanguages, function (v) {
-        return getCanonicalValue(languages, v);
+    userLanguages = toDictionary(userLanguages);
+    if (isArray(languages)) {
+        languages = toDictionary(languages);
+    }
+    return single(userLanguages, function (v, i) {
+        return languages[i];
     }) || defaultLanguage || languages[0];
 }
 
 install('i18n', function (app, options) {
-    var languages = options.languages;
+    var languages = toDictionary(options.languages);
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
     var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || detectLanguage(languages, options.defaultLanguage);

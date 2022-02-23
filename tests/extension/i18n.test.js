@@ -31,7 +31,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
     jest.spyOn(window.navigator, 'language', 'get').mockReturnValue('en-US');
-    jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['en-US', 'en', 'ja']);
+    jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['en-US', 'en', 'es', 'ja']);
 });
 
 beforeEach(async () => {
@@ -121,6 +121,10 @@ describe('app.detectLanguage', () => {
 
     it('should match invariant language when no variant matches', () => {
         expect(app.detectLanguage(['en-UK', 'en'])).toBe('en');
+    });
+
+    it('should match variant language when no invariant matches', () => {
+        expect(app.detectLanguage(['es-ES', 'de'])).toBe('es-ES');
     });
 
     it('should match language in order of navigator.languages', () => {
