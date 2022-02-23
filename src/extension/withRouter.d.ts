@@ -165,6 +165,10 @@ declare namespace Brew {
          */
         baseUrl?: string;
         /**
+         * Specifies base path must be explicitly included in {@link WithRouter.path} and related method like {@link WithRouter.navigate}.
+         */
+        explicitBaseUrl?: boolean;
+        /**
          * Specifies initial path to be landed on when the app starts.
          */
         initialPath?: string;

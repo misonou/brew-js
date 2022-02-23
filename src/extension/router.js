@@ -7,7 +7,7 @@ import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../
 import { animateIn, animateOut } from "../anim.js";
 import { groupLog } from "../util/console.js";
 import { getQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, withBaseUrl, isSubPathOf, baseUrl, setBaseUrl } from "../util/path.js";
+import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl } from "../util/path.js";
 import { evalAttr, resetVar, setVar } from "../var.js";
 
 const _ = createPrivateStore();
@@ -19,6 +19,18 @@ const root = dom.root;
 /** @type {Element[]} */
 var activeElements = [root];
 var pageTitleElement;
+
+var pass = function (path) {
+    return path;
+};
+var fromPathname = function (path) {
+    return isSubPathOf(path, baseUrl) || '/';
+};
+var toPathname = function (path) {
+    return combinePath(baseUrl, path);
+};
+var fromRoutePath = pass;
+var toRoutePath = pass;
 
 /**
  * @param {Element} v
@@ -160,7 +172,7 @@ function Route(app, routes, initialPath) {
         }
         self.set(extend({}, state.params, current.params));
         if (current !== previous) {
-            app.path = combinePath(current.maxPath, self.remainingSegments);
+            app.path = fromRoutePath(combinePath(current.maxPath, self.remainingSegments));
         }
     });
 }
@@ -169,7 +181,7 @@ definePrototype(Route, {
     parse: function (path) {
         var self = this;
         var state = _(self);
-        var segments = toSegments(path);
+        var segments = toSegments(toRoutePath(path));
         var matched = any(state.routes, function (tokens) {
             return matchRoute(tokens, segments, true);
         });
@@ -202,14 +214,14 @@ definePrototype(Route, {
     },
     getPath: function (params) {
         var matched = matchRouteByParams(_(this).routes, params);
-        return matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/';
+        return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
     },
     toJSON: function () {
         return extend({}, this);
     },
     toString: function () {
         // @ts-ignore: unable to infer this
-        return combinePath(_(this).current.maxPath || '/', this.remainingSegments);
+        return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
     }
 });
 watchable(Route.prototype);
@@ -242,7 +254,7 @@ function configureRouter(app, options) {
     function handleNoop(path, originalPath) {
         for (var i = currentIndex; i >= 0; i--) {
             if (states[i].result && states[i].path === path) {
-                history.replaceState(history.state, '', withBaseUrl(path));
+                history.replaceState(history.state, '', toPathname(path));
                 return createNavigateResult(states[i].result, path, originalPath, false);
             }
         }
@@ -313,7 +325,7 @@ function configureRouter(app, options) {
             }
         };
         states[currentIndex] = state;
-        history[replace ? 'replaceState' : 'pushState'](id, '', withBaseUrl(path));
+        history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
         app.path = path;
 
         if (replace && !previous[1]) {
@@ -333,22 +345,25 @@ function configureRouter(app, options) {
         return --currentIndex;
     }
 
-    function resolvePath(path, currentPath) {
+    function resolvePath(path, currentPath, isRoutePath) {
         var parsedState;
-        path = decodeURI(path);
+        path = decodeURI(path) || '/';
         currentPath = currentPath || app.path;
         if (path[0] === '~' || path.indexOf('{') >= 0) {
-            parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+            var fullPath = (isRoutePath ? fromRoutePath : pass)(currentPath);
+            parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
             path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
                 return parsedState.params[a] || ((b && i + v.length === path.length) ? '' : 'null');
             });
         }
-        if (path[0] === '~') {
-            path = combinePath(parsedState.minPath, path.slice(1));
-        } else if (path[0] !== '/') {
-            path = combinePath(currentPath, path);
+        switch (path[0]) {
+            case '~':
+                return (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
+            case '/':
+                return normalizePath(path, true);
+            default:
+                return combinePath(currentPath, path);
         }
-        return normalizePath(path, true);
     }
 
     function registerMatchPathElements(container) {
@@ -431,7 +446,7 @@ function configureRouter(app, options) {
 
     function handlePathChange() {
         var state = states[currentIndex];
-        if (!state || location.pathname !== withBaseUrl(newPath)) {
+        if (!state || location.pathname !== toPathname(newPath)) {
             pushState(newPath);
             state = states[currentIndex];
         }
@@ -463,6 +478,7 @@ function configureRouter(app, options) {
         var redirectPath;
         registerMatchPathElements();
         batch(true, function () {
+            var newRoutePath = toRoutePath(newPath);
             var switchElements = $('[switch=""]').get();
             var current;
             while (current = switchElements.shift()) {
@@ -470,7 +486,7 @@ function configureRouter(app, options) {
                     var children = $(current).children('[match-path]').get().map(function (v) {
                         var element = mapGet(matchByPathElements, v) || v;
                         var children = $('[switch=""]', element).get();
-                        var path = resolvePath(element.getAttribute('match-path'), newPath);
+                        var path = resolvePath(element.getAttribute('match-path'), newRoutePath, true);
                         return {
                             element: element,
                             path: path.replace(/\/\*$/, ''),
@@ -483,7 +499,7 @@ function configureRouter(app, options) {
                         return b.path.localeCompare(a.path);
                     });
                     var matchedPath = single(children, function (v) {
-                        return (v.exact ? newPath === v.path : isSubPathOf(newPath, v.path)) && v.path;
+                        return (v.exact ? newRoutePath === v.path : isSubPathOf(newRoutePath, v.path)) && v.path;
                     });
                     each(children, function (i, v) {
                         if (v.path === matchedPath) {
@@ -517,7 +533,7 @@ function configureRouter(app, options) {
                     return newActiveElements.indexOf(v) >= 0;
                 })[0];
                 if (!currentMatched) {
-                    redirectPath = ($children.filter('[default]')[0] || $children[0]).getAttribute('match-path');
+                    redirectPath = fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path'));
                     return false;
                 }
             }
@@ -562,6 +578,18 @@ function configureRouter(app, options) {
     });
 
     setBaseUrl(options.baseUrl || '');
+    if (baseUrl === '/') {
+        fromPathname = pass;
+        toPathname = pass;
+    } else if (options.explicitBaseUrl) {
+        fromRoutePath = toPathname;
+        toRoutePath = fromPathname;
+        fromPathname = pass;
+        toPathname = pass;
+        if (!isSubPathOf(initialPath, baseUrl)) {
+            initialPath = baseUrl;
+        }
+    }
     app.define({
         get canNavigateBack() {
             return currentIndex > 0;
@@ -597,7 +625,7 @@ function configureRouter(app, options) {
                     newPath = states[currentIndex].reset().path;
                     setImmediateOnce(handlePathChange);
                 } else {
-                    pushState(location.pathname.substr(baseUrl.length - 1) || '/');
+                    pushState(fromPathname(location.pathname));
                 }
             });
         });
