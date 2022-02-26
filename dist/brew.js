@@ -250,7 +250,7 @@ function combinePath(a, b) {
  */
 
 function normalizePath(path, resolveDotDir) {
-  if (path === undefined || path === null) {
+  if (!path || path === '/') {
     return '/';
   }
 
@@ -309,7 +309,7 @@ function toRelativeUrl(url) {
 
 function isSubPathOf(a, b) {
   var len = b.length;
-  return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/');
+  return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
 // EXTERNAL MODULE: ./src/include/external/jquery.js
 var jquery = __webpack_require__(860);
@@ -976,6 +976,21 @@ var root = zeta_dom_dom.root;
 
 var activeElements = [root];
 var pageTitleElement;
+
+var pass = function pass(path) {
+  return path;
+};
+
+var fromPathname = function fromPathname(path) {
+  return isSubPathOf(path, baseUrl) || '/';
+};
+
+var toPathname = function toPathname(path) {
+  return combinePath(baseUrl, path);
+};
+
+var fromRoutePath = pass;
+var toRoutePath = pass;
 /**
  * @param {Element} v
  * @param {Element[]=} arr
@@ -1139,7 +1154,7 @@ function Route(app, routes, initialPath) {
     self.set(extend({}, state.params, current.params));
 
     if (current !== previous) {
-      app.path = combinePath(current.maxPath, self.remainingSegments);
+      app.path = fromRoutePath(combinePath(current.maxPath, self.remainingSegments));
     }
   });
 }
@@ -1150,7 +1165,7 @@ definePrototype(Route, {
 
     var state = _(self);
 
-    var segments = toSegments(path);
+    var segments = toSegments(toRoutePath(path));
     var matched = any(state.routes, function (tokens) {
       return matchRoute(tokens, segments, true);
     });
@@ -1189,14 +1204,14 @@ definePrototype(Route, {
   },
   getPath: function getPath(params) {
     var matched = matchRouteByParams(_(this).routes, params);
-    return matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/';
+    return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
   },
   toJSON: function toJSON() {
     return extend({}, this);
   },
   toString: function toString() {
     // @ts-ignore: unable to infer this
-    return combinePath(_(this).current.maxPath || '/', this.remainingSegments);
+    return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
   }
 });
 watchable(Route.prototype);
@@ -1229,7 +1244,7 @@ function configureRouter(app, options) {
   function handleNoop(path, originalPath) {
     for (var i = currentIndex; i >= 0; i--) {
       if (states[i].result && states[i].path === path) {
-        history.replaceState(history.state, '', withBaseUrl(path));
+        history.replaceState(history.state, '', toPathname(path));
         return createNavigateResult(states[i].result, path, originalPath, false);
       }
     }
@@ -1307,7 +1322,7 @@ function configureRouter(app, options) {
       }
     };
     states[currentIndex] = state;
-    history[replace ? 'replaceState' : 'pushState'](id, '', withBaseUrl(path));
+    history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
     app.path = path;
 
     if (replace && !previous[1]) {
@@ -1328,25 +1343,29 @@ function configureRouter(app, options) {
     return --currentIndex;
   }
 
-  function resolvePath(path, currentPath) {
+  function resolvePath(path, currentPath, isRoutePath) {
     var parsedState;
-    path = decodeURI(path);
+    path = decodeURI(path) || '/';
     currentPath = currentPath || app.path;
 
     if (path[0] === '~' || path.indexOf('{') >= 0) {
-      parsedState = iequal(currentPath, route.toString()) ? _(route).current : route.parse(currentPath) && _(route).lastMatch;
+      var fullPath = (isRoutePath ? fromRoutePath : pass)(currentPath);
+      parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
       path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
         return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
       });
     }
 
-    if (path[0] === '~') {
-      path = combinePath(parsedState.minPath, path.slice(1));
-    } else if (path[0] !== '/') {
-      path = combinePath(currentPath, path);
-    }
+    switch (path[0]) {
+      case '~':
+        return (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
 
-    return normalizePath(path, true);
+      case '/':
+        return normalizePath(path, true);
+
+      default:
+        return combinePath(currentPath, path);
+    }
   }
 
   function registerMatchPathElements(container) {
@@ -1435,7 +1454,7 @@ function configureRouter(app, options) {
   function handlePathChange() {
     var state = states[currentIndex];
 
-    if (!state || location.pathname !== withBaseUrl(newPath)) {
+    if (!state || location.pathname !== toPathname(newPath)) {
       pushState(newPath);
       state = states[currentIndex];
     }
@@ -1470,6 +1489,7 @@ function configureRouter(app, options) {
     var redirectPath;
     registerMatchPathElements();
     batch(true, function () {
+      var newRoutePath = toRoutePath(newPath);
       var switchElements = jquery('[switch=""]').get();
       var current;
 
@@ -1478,7 +1498,7 @@ function configureRouter(app, options) {
           var children = jquery(current).children('[match-path]').get().map(function (v) {
             var element = mapGet(matchByPathElements, v) || v;
             var children = jquery('[switch=""]', element).get();
-            var path = resolvePath(element.getAttribute('match-path'), newPath);
+            var path = resolvePath(element.getAttribute('match-path'), newRoutePath, true);
             return {
               element: element,
               path: path.replace(/\/\*$/, ''),
@@ -1491,7 +1511,7 @@ function configureRouter(app, options) {
             return b.path.localeCompare(a.path);
           });
           var matchedPath = single(children, function (v) {
-            return (v.exact ? newPath === v.path : isSubPathOf(newPath, v.path)) && v.path;
+            return (v.exact ? newRoutePath === v.path : isSubPathOf(newRoutePath, v.path)) && v.path;
           });
           each(children, function (i, v) {
             if (v.path === matchedPath) {
@@ -1526,7 +1546,7 @@ function configureRouter(app, options) {
         })[0];
 
         if (!currentMatched) {
-          redirectPath = ($children.filter('[default]')[0] || $children[0]).getAttribute('match-path');
+          redirectPath = fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path'));
           return false;
         }
       }
@@ -1574,6 +1594,21 @@ function configureRouter(app, options) {
     return currentPath;
   });
   setBaseUrl(options.baseUrl || '');
+
+  if (baseUrl === '/') {
+    fromPathname = pass;
+    toPathname = pass;
+  } else if (options.explicitBaseUrl) {
+    fromRoutePath = toPathname;
+    toRoutePath = fromPathname;
+    fromPathname = pass;
+    toPathname = pass;
+
+    if (!isSubPathOf(initialPath, baseUrl)) {
+      initialPath = baseUrl;
+    }
+  }
+
   app.define({
     get canNavigateBack() {
       return currentIndex > 0;
@@ -1611,7 +1646,7 @@ function configureRouter(app, options) {
           newPath = states[currentIndex].reset().path;
           setImmediateOnce(handlePathChange);
         } else {
-          pushState(location.pathname.substr(baseUrl.length - 1) || '/');
+          pushState(fromPathname(location.pathname));
         }
       });
     });
@@ -3201,43 +3236,49 @@ install('formVar', function (app) {
 
 
 
+function toDictionary(languages) {
+  if (languages) {
+    var dict = {};
+    each(languages, function (i, v) {
+      var key = v.toLowerCase();
+      dict[key] = v;
+
+      if (key.indexOf('-') > 0) {
+        dict[key.split('-')[0]] = v;
+      }
+    });
+    return dict;
+  }
+}
+
 function getCanonicalValue(languages, value) {
   if (languages && value) {
-    return any(languages, function (v) {
-      return iequal(v, value);
-    });
+    return languages[value.toLowerCase()];
   }
 
   return value;
 }
 
 function detectLanguage(languages, defaultLanguage) {
-  var userLanguages = navigator.languages ? [].slice.apply(navigator.languages) : [navigator.language || ''];
+  var userLanguages = navigator.languages || [navigator.language || ''];
 
   if (!languages) {
     return userLanguages[0];
   }
 
-  each(userLanguages, function (i, v) {
-    if (v.indexOf('-') > 0) {
-      var invariant = v.split('-')[0];
+  userLanguages = toDictionary(userLanguages);
 
-      if (userLanguages.indexOf(invariant) < 0) {
-        for (var j = userLanguages.length - 1; j >= 0; j--) {
-          if (userLanguages[j].split('-')[0] === invariant) {
-            userLanguages.splice(j + 1, 0, invariant);
-          }
-        }
-      }
-    }
-  });
-  return single(userLanguages, function (v) {
-    return getCanonicalValue(languages, v);
+  if (isArray(languages)) {
+    languages = toDictionary(languages);
+  }
+
+  return single(userLanguages, function (v, i) {
+    return languages[i];
   }) || defaultLanguage || languages[0];
 }
 
 install('i18n', function (app, options) {
-  var languages = options.languages;
+  var languages = toDictionary(options.languages);
   var routeParam = app.route && options.routeParam;
 
   var cookie = options.cookie && common_cookie(options.cookie, 86400000);
