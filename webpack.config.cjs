@@ -92,8 +92,8 @@ const zetaDOMPath = processModule('zeta-dom', {
 
 module.exports = {
     entry: {
-        'brew': './src/index.js',
-        'brew.min': './src/index.js',
+        'brew': './src/entry.js',
+        'brew.min': './src/entry.js',
     },
     devtool: 'source-map',
     output: {
