@@ -30,8 +30,8 @@ export async function after(callback) {
     await delay();
 }
 
-export function initApp(callback) {
-    brew(callback || noop);
+export function initApp(...callbacks) {
+    brew(...callbacks);
     return app.ready;
 }
 

@@ -4,12 +4,9 @@ import { IS_TOUCH } from "../include/zeta-dom/env.js";
 import dom from "../include/zeta-dom/dom.js";
 import { scrollIntoView } from "../include/zeta-dom/domUtil.js";
 import { animateIn } from "../anim.js";
-import { install } from "../app.js";
-import defaults from "../defaults.js";
+import { addExtension } from "../app.js";
 
-defaults.viewport = true;
-
-install('viewport', function (app) {
+export default addExtension(true, 'viewport', function (app) {
     var setOrientation = defineObservableProperty(app, 'orientation', '', true);
     var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
     var availWidth = screen.availWidth;
@@ -73,5 +70,3 @@ install('viewport', function (app) {
         checkViewportSize(false);
     });
 });
-
-export default null;

@@ -1,12 +1,12 @@
 import { addDetect, app, install } from "src/app";
-import { } from "src/extension/router";
+import router from "src/extension/router";
 import { setBaseUrl } from "src/util/path";
 import { resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
 
 const { objectContaining } = expect;
 
-beforeAll(() => initApp());
+beforeAll(() => initApp(router));
 
 describe('app', () => {
     it('should prepend baseUrl to hyperlinks and resources', async () => {

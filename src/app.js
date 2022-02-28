@@ -172,7 +172,7 @@ definePrototype(App, {
 });
 watchable(App.prototype);
 
-export default function (callback) {
+export default function () {
     if (appInited) {
         throw new Error('brew() can only be called once');
     }
@@ -183,8 +183,9 @@ export default function (callback) {
             fn.call(app, v);
         }
     });
-    throwNotFunction(callback)(app);
-    extend(window, { app });
+    each(arguments, function (i, v) {
+        throwNotFunction(v)(app);
+    });
 
     appInited = true;
     setVar(root, { loading: 'initial' });
@@ -203,6 +204,15 @@ export function install(name, callback) {
         state.options[name] = extend(state.options[name] || {}, options);
         callback(this, state.options[name]);
     }));
+}
+
+export function addExtension(autoInit, name, callback) {
+    if (autoInit === true) {
+        return function (app) {
+            callback(app, {});
+        };
+    }
+    return install.bind(0, autoInit, name);
 }
 
 export function addDetect(name, callback) {

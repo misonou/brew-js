@@ -1,5 +1,5 @@
 import { defineObservableProperty, each, isArray, single } from "../include/zeta-dom/util.js";
-import { install } from "../app.js";
+import { addExtension } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
 function toDictionary(languages) {
@@ -37,7 +37,7 @@ function detectLanguage(languages, defaultLanguage) {
     }) || defaultLanguage || languages[0];
 }
 
-install('i18n', function (app, options) {
+export default addExtension('i18n', function (app, options) {
     var languages = toDictionary(options.languages);
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
@@ -73,5 +73,3 @@ install('i18n', function (app, options) {
         });
     }
 });
-
-export default null;

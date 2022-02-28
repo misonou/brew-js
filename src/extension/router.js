@@ -2,7 +2,7 @@ import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv } from "../include/zeta-dom/util.js";
-import { appReady, install } from "../app.js";
+import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
 import { groupLog } from "../util/console.js";
@@ -673,11 +673,6 @@ function configureRouter(app, options) {
     }, true);
 }
 
-install('router', function (app, options) {
-    // @ts-ignore
-    configureRouter(app, options || {});
-});
-
 parsedRoutes['/*'] = {
     value: '/*',
     exact: false,
@@ -688,3 +683,5 @@ parsedRoutes['/*'] = {
         return true;
     }
 };
+
+export default addExtension('router', configureRouter);

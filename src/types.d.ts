@@ -1,4 +1,6 @@
 declare namespace Brew {
+    type Extension<T> = import("./core").Extension<T>;
+
     /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */

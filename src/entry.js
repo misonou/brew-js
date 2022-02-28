@@ -8,4 +8,8 @@ import lib5 from "./extension/preloadImage.js";
 import lib6 from "./extension/scrollable.js";
 import lib7 from "./extension/viewport.js";
 
-export default brew;
+function exportAppToGlobal(app) {
+    window.app = app;
+}
+
+export default brew.with(exportAppToGlobal, lib1, lib2, lib3, lib4, lib5, lib6, lib7);

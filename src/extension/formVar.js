@@ -4,13 +4,10 @@ import { bindUntil, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { getVar, getVarScope, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
-import { install } from "../app.js";
+import { addExtension } from "../app.js";
 import { getFormValues } from "../util/common.js";
-import defaults from "../defaults.js";
 
-defaults.formVar = true;
-
-install('formVar', function (app) {
+export default addExtension(true, 'formVar', function (app) {
     app.matchElement('form[form-var]', function (form) {
         var varname = form.getAttribute('form-var');
         var values = {};
@@ -66,5 +63,3 @@ install('formVar', function (app) {
         });
     });
 });
-
-export default null;

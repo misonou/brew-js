@@ -1,9 +1,9 @@
 import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "../include/zeta-dom/util.js";
 import { cookie } from "../util/common.js";
-import { install } from "../app.js";
+import { addExtension } from "../app.js";
 import { preventLeave } from "../dom.js";
 
-install('login', function (app, options) {
+export default addExtension('login', function (app, options) {
     options = extend({
         loginPagePath: '',
         defaultRedirectPath: '',
@@ -83,5 +83,3 @@ install('login', function (app, options) {
         }
     });
 });
-
-export default null;

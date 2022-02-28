@@ -5,10 +5,10 @@ import dom from "../include/zeta-dom/dom.js";
 import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
-import { install } from "../app.js";
+import { addExtension } from "../app.js";
 import { selectorForAttr } from "../util/common.js";
 
-install('scrollable', function (app, defaultOptions) {
+export default addExtension('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
         bounce: false
     }, defaultOptions);
@@ -201,5 +201,3 @@ install('scrollable', function (app, defaultOptions) {
         setTimeoutOnce(updateScrollIntoView);
     });
 });
-
-export default null;

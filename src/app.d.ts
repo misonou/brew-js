@@ -1,11 +1,13 @@
-export interface AppInit {
+import brew, { Extension } from "./core";
+
+export interface AppInit<U = {}> {
     /**
      * Initialize an app instance.
      * App instance will become ready once all promises registered through {@link Brew.AppInstance.beforeInit}
      * during the init callback are all settled.
      * @param init Callback to initialize before app starts.
      */
-    <T = {}>(init: (app: Brew.AppInstance<T>) => void): Brew.AppInstance<T>;
+    <T = {}>(init: (app: Brew.AppInstance<T & U>) => void): Brew.AppInstance<T & U>;
 };
 
 declare const init: AppInit;
@@ -33,8 +35,25 @@ export var appInited: boolean;
  * for which when called, the given initialization callback will be invoked.
  * @param name Name of the extension.
  * @param callback A callback to initialize the extension.
+ * @deprecated Use {@link addExtension} instead.
  */
 export function install(name: string, callback: (this: Brew.AppInstance<Zeta.Dictionary>, app: Brew.AppInstance<Zeta.Dictionary>, options: Zeta.Dictionary) => void): void;
+
+/**
+ * Registers an extension that will be initialized when passed to {@link brew.with}.
+ * @param name Name of the extension.
+ * @param callback A callback to initialize the extension.
+ */
+export function addExtension<T = Zeta.Dictionary>(autoInit: true, name: string, callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: {}) => void): Extension<T>;
+
+/**
+ * Registers an extension to the app.
+ * A method of the name `use{Name}` in camel-case is automatically generated,
+ * for which when called, the given initialization callback will be invoked.
+ * @param name Name of the extension.
+ * @param callback A callback to initialize the extension.
+ */
+export function addExtension<T = Zeta.Dictionary, U = Zeta.Dictionary>(name: string, callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: U) => void): Extension<T>;
 
 /**
  * Adds a feature detection.

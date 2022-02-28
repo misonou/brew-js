@@ -1,8 +1,8 @@
 import { define, deepFreeze, extend, isFunction, watchable } from "../include/zeta-dom/util.js";
 import { getJSON } from "../util/common.js";
-import { install } from "../app.js";
+import { addExtension } from "../app.js";
 
-install('config', function (app, options) {
+export default addExtension('config', function (app, options) {
     var config = watchable();
     define(app, { config });
     app.beforeInit(getJSON(options.path).catch(isFunction(options.fallback) || null).then(function (d) {
@@ -12,5 +12,3 @@ install('config', function (app, options) {
         }
     }));
 });
-
-export default null;

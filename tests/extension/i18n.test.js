@@ -1,5 +1,6 @@
 import { _, initApp, waitForEvent } from "../testUtil";
-import { } from "src/extension/i18n";
+import router from "src/extension/router";
+import i18n from "src/extension/i18n";
 import { jest } from "@jest/globals";
 
 var initialPath;
@@ -7,7 +8,7 @@ var initialPath;
 var app;
 
 beforeAll(async () => {
-    app = await initApp(app => {
+    app = await initApp(router, i18n, app => {
         app.useRouter({
             initialPath: '/fr',
             baseUrl: '/',

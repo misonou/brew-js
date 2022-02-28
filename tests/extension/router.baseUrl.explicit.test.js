@@ -1,5 +1,5 @@
 import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp } from "../testUtil";
-import { hookBeforePageEnter, isElementActive, matchRoute } from "src/extension/router";
+import router, { hookBeforePageEnter, isElementActive, matchRoute } from "src/extension/router";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
 import { mountElement } from "src/dom";
@@ -17,7 +17,7 @@ var initialPreviousPath;
 var app;
 
 beforeAll(async () => {
-    app = await initApp(app => {
+    app = await initApp(router, app => {
         app.useRouter({
             baseUrl: '/base',
             explicitBaseUrl: true,
