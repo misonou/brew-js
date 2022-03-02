@@ -43,6 +43,14 @@ describe('i18n extension', () => {
         expect(app.initialPath).toBe('/fr');
         expect(initialPath).toBe('/en');
     });
+
+    it('should redirect to path of current language if route paramter is invalid', async () => {
+        await app.navigate('/');
+        expect(app.path).toBe('/en');
+
+        await app.navigate('/fr/foo');
+        expect(app.path).toBe('/en/foo');
+    });
 });
 
 describe('app.language', () => {

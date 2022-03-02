@@ -51,11 +51,11 @@ install('i18n', function (app, options) {
         if (cookie) {
             cookie.set(newLangauge);
         }
+        if (routeParam) {
+            app.route.replace(routeParam, newLangauge.toLowerCase());
+        }
         if (language !== newLangauge) {
             language = newLangauge;
-            if (routeParam) {
-                app.route.replace(routeParam, newLangauge.toLowerCase());
-            }
             if (options.reloadOnChange) {
                 location.reload();
             }
