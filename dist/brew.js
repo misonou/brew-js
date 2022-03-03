@@ -11,79 +11,14 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 860:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {JQueryStatic} */
-var jQuery = window.jQuery || __webpack_require__(609);
-
-module.exports = jQuery;
-
-try {
-  __webpack_require__(172);
-} catch (e) {}
-
-/***/ }),
-
-/***/ 424:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {PromiseConstructor} */
-var Promise = window.Promise || __webpack_require__(804).default;
-
-module.exports = Promise;
-
-/***/ }),
-
-/***/ 256:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-// @ts-nocheck
-
-/** @type {Waterpipe} */
-var waterpipe = window.waterpipe || __webpack_require__(160);
-
-module.exports = waterpipe; // assign to a new variable to avoid incompatble declaration issue by typescript compiler
-
-var waterpipe_ = waterpipe;
-
-waterpipe_.pipes['{'] = function (_, varargs) {
-  var globals = varargs.globals;
-  var prev = globals.new;
-  var o = {};
-  globals.new = o;
-
-  while (varargs.hasArgs()) {
-    var key = varargs.raw();
-
-    if (key === '}') {
-      break;
-    }
-
-    o[String(key).replace(/:$/, '')] = varargs.next();
-  }
-
-  globals.new = prev;
-  return o;
-}; // @ts-ignore: add member to function
-
-
-waterpipe_.pipes['{'].varargs = true;
-
-/***/ }),
-
-/***/ 344:
+/***/ 434:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "default": function() { return /* binding */ src; }
+  "default": function() { return /* binding */ entry; }
 });
 
 // NAMESPACE OBJECT: ./src/util/path.js
@@ -898,7 +833,7 @@ function addAnimateOut(name, callback) {
 // EXTERNAL MODULE: ./src/include/external/waterpipe.js
 var waterpipe = __webpack_require__(256);
 // CONCATENATED MODULE: ./src/defaults.js
-/** @type {Zeta.Dictionary} */
+/** @deprecated @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ var src_defaults = (defaults);
 // CONCATENATED MODULE: ./src/util/console.js
@@ -1690,10 +1625,6 @@ function configureRouter(app, options) {
   }, true);
 }
 
-install('router', function (app, options) {
-  // @ts-ignore
-  configureRouter(app, options || {});
-});
 parsedRoutes['/*'] = {
   value: '/*',
   exact: false,
@@ -1704,6 +1635,7 @@ parsedRoutes['/*'] = {
     return true;
   }
 };
+/* harmony default export */ var router = (addExtension('router', configureRouter));
 // CONCATENATED MODULE: ./src/dom.js
 
 
@@ -2525,7 +2457,7 @@ definePrototype(App, {
   beforePageEnter: hookBeforePageEnter
 });
 watchable(App.prototype);
-/* harmony default export */ function src_app(callback) {
+/* harmony default export */ function src_app() {
   if (appInited) {
     throw new Error('brew() can only be called once');
   }
@@ -2538,9 +2470,8 @@ watchable(App.prototype);
       fn.call(app, v);
     }
   });
-  throwNotFunction(callback)(app);
-  extend(window, {
-    app: app
+  each(arguments, function (i, v) {
+    throwNotFunction(v)(app);
   });
   appInited = true;
   setVar(app_root, {
@@ -2561,6 +2492,15 @@ function install(name, callback) {
     state.options[name] = extend(state.options[name] || {}, options);
     callback(this, state.options[name]);
   }));
+}
+function addExtension(autoInit, name, callback) {
+  if (autoInit === true) {
+    return function (app) {
+      callback(app, {});
+    };
+  }
+
+  return install.bind(0, autoInit, name);
 }
 function addDetect(name, callback) {
   featureDetections[name] = throwNotFunction(callback);
@@ -3127,7 +3067,22 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+
+function with_() {
+  var fn = this.bind.apply(src_app, [0].concat(map(arguments, function (v) {
+    if (isPlainObject(v)) {
+      return function (app) {
+        util_define(app, v);
+      };
+    }
+
+    return isFunction(v) || noop;
+  })));
+  util_define(fn, method);
+  return fn;
+}
+
+var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   defaults: src_defaults
 }, common_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getVar: getVar,
@@ -3139,14 +3094,18 @@ util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_ob
   preventLeave: preventLeave,
   install: install,
   addDetect: addDetect,
-  addTemplate: addTemplate
-}));
+  addExtension: addExtension,
+  addTemplate: addTemplate,
+  with: with_
+});
+
+util_define(src_app, method);
 /* harmony default export */ var core = (src_app);
 // CONCATENATED MODULE: ./src/extension/config.js
 
 
 
-install('config', function (app, options) {
+/* harmony default export */ var config = (addExtension('config', function (app, options) {
   var config = watchable();
   util_define(app, {
     config: config
@@ -3158,8 +3117,7 @@ install('config', function (app, options) {
       deepFreeze(config);
     }
   }));
-});
-/* harmony default export */ var config = (null);
+}));
 // CONCATENATED MODULE: ./src/extension/formVar.js
 
 
@@ -3169,9 +3127,7 @@ install('config', function (app, options) {
 
 
 
-
-src_defaults.formVar = true;
-install('formVar', function (app) {
+/* harmony default export */ var formVar = (addExtension(true, 'formVar', function (app) {
   app.matchElement('form[form-var]', function (form) {
     var varname = form.getAttribute('form-var');
     var values = {};
@@ -3229,8 +3185,7 @@ install('formVar', function (app) {
       jquery(':input:eq(0)', v).trigger('change');
     });
   });
-});
-/* harmony default export */ var formVar = (null);
+}));
 // CONCATENATED MODULE: ./src/extension/i18n.js
 
 
@@ -3277,7 +3232,7 @@ function detectLanguage(languages, defaultLanguage) {
   }) || defaultLanguage || languages[0];
 }
 
-install('i18n', function (app, options) {
+/* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
   var languages = toDictionary(options.languages);
   var routeParam = app.route && options.routeParam;
 
@@ -3296,12 +3251,12 @@ install('i18n', function (app, options) {
       cookie.set(newLangauge);
     }
 
+    if (routeParam) {
+      app.route.replace(routeParam, newLangauge.toLowerCase());
+    }
+
     if (language !== newLangauge) {
       language = newLangauge;
-
-      if (routeParam) {
-        app.route.replace(routeParam, newLangauge.toLowerCase());
-      }
 
       if (options.reloadOnChange) {
         location.reload();
@@ -3321,14 +3276,13 @@ install('i18n', function (app, options) {
       app.route.replace(routeParam, language.toLowerCase());
     });
   }
-});
-/* harmony default export */ var i18n = (null);
+}));
 // CONCATENATED MODULE: ./src/extension/login.js
 
 
 
 
-install('login', function (app, options) {
+/* harmony default export */ var login = (addExtension('login', function (app, options) {
   options = extend({
     loginPagePath: '',
     defaultRedirectPath: '',
@@ -3415,8 +3369,7 @@ install('login', function (app, options) {
       }
     }
   });
-});
-/* harmony default export */ var login = (null);
+}));
 // CONCATENATED MODULE: ./src/extension/preloadImage.js
 
 
@@ -3427,7 +3380,7 @@ install('login', function (app, options) {
 
 var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 src_defaults.preloadImage = true;
-install('preloadImage', function (app) {
+/* harmony default export */ var preloadImage = (addExtension('preloadImage', function (app) {
   app.beforeUpdate(function (domUpdates) {
     var urls = {};
     each(domUpdates, function (element, props) {
@@ -3453,8 +3406,7 @@ install('preloadImage', function (app) {
   app.beforePageEnter(function (element) {
     return preloadImages(element, 1000);
   });
-});
-/* harmony default export */ var preloadImage = (null);
+}));
 // CONCATENATED MODULE: ./src/extension/scrollable.js
 
 
@@ -3465,7 +3417,7 @@ install('preloadImage', function (app) {
 
 
 
-install('scrollable', function (app, defaultOptions) {
+/* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     bounce: false
   }, defaultOptions); // @ts-ignore: non-standard member
@@ -3658,8 +3610,7 @@ install('scrollable', function (app, defaultOptions) {
   app.on('resize pageenter statechange scrollMove orientationchange', function () {
     setTimeoutOnce(updateScrollIntoView);
   });
-});
-/* harmony default export */ var scrollable = (null);
+}));
 // CONCATENATED MODULE: ./tmp/zeta-dom/env.js
 
 var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
@@ -3678,9 +3629,7 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
-
-src_defaults.viewport = true;
-install('viewport', function (app) {
+/* harmony default export */ var viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
   var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
   var availWidth = screen.availWidth;
@@ -3749,9 +3698,8 @@ install('viewport', function (app) {
   jquery(function () {
     checkViewportSize(false);
   });
-});
-/* harmony default export */ var viewport = (null);
-// CONCATENATED MODULE: ./src/index.js
+}));
+// CONCATENATED MODULE: ./src/entry.js
 
 
 
@@ -3760,7 +3708,77 @@ install('viewport', function (app) {
 
 
 
-/* harmony default export */ var src = (core);
+
+function exportAppToGlobal(app) {
+  window.app = app;
+}
+
+/* harmony default export */ var entry = (core.with(exportAppToGlobal, config, formVar, i18n, login, preloadImage, scrollable, viewport));
+
+/***/ }),
+
+/***/ 860:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {JQueryStatic} */
+var jQuery = window.jQuery || __webpack_require__(609);
+
+module.exports = jQuery;
+
+try {
+  __webpack_require__(172);
+} catch (e) {}
+
+/***/ }),
+
+/***/ 424:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {PromiseConstructor} */
+var Promise = window.Promise || __webpack_require__(804).default;
+
+module.exports = Promise;
+
+/***/ }),
+
+/***/ 256:
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+// @ts-nocheck
+
+/** @type {Waterpipe} */
+var waterpipe = window.waterpipe || __webpack_require__(160);
+
+module.exports = waterpipe; // assign to a new variable to avoid incompatble declaration issue by typescript compiler
+
+var waterpipe_ = waterpipe;
+
+waterpipe_.pipes['{'] = function (_, varargs) {
+  var globals = varargs.globals;
+  var prev = globals.new;
+  var o = {};
+  globals.new = o;
+
+  while (varargs.hasArgs()) {
+    var key = varargs.raw();
+
+    if (key === '}') {
+      break;
+    }
+
+    o[String(key).replace(/:$/, '')] = varargs.next();
+  }
+
+  globals.new = prev;
+  return o;
+}; // @ts-ignore: add member to function
+
+
+waterpipe_.pipes['{'].varargs = true;
 
 /***/ }),
 
@@ -3864,7 +3882,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(344);
+/******/ 	return __webpack_require__(434);
 /******/ })()
 .default;
 });
