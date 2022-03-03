@@ -1,4 +1,4 @@
-import { defineObservableProperty, each, isArray, single } from "../include/zeta-dom/util.js";
+import { defineObservableProperty, each, isArray, keys, single } from "../include/zeta-dom/util.js";
 import { addExtension } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
@@ -34,7 +34,7 @@ function detectLanguage(languages, defaultLanguage) {
     }
     return single(userLanguages, function (v, i) {
         return languages[i];
-    }) || defaultLanguage || languages[0];
+    }) || defaultLanguage || keys(languages)[0];
 }
 
 export default addExtension('i18n', function (app, options) {

@@ -145,4 +145,12 @@ describe('app.detectLanguage', () => {
         jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(undefined);
         expect(app.detectLanguage(['ja', 'en'])).toBe('ja');
     });
+
+    it('should return first language when none of the languages match', () => {
+        expect(app.detectLanguage(['fr'])).toBe('fr');
+    });
+
+    it('should return default language when none of the languages match', () => {
+        expect(app.detectLanguage(['fr'], 'pt')).toBe('pt');
+    });
 });
