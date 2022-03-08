@@ -37,6 +37,7 @@ export function closeFlyout(flyout, value) {
         var state = flyoutStates.get(v);
         if (state) {
             flyoutStates.delete(v);
+            dom.releaseModal(v);
             state.resolve(value);
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
@@ -94,6 +95,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     animateIn(element, 'open');
     if (element.attributes['is-modal']) {
         dom.lock(element, promise);
+        dom.setModal(element);
     }
     return promise;
 }
