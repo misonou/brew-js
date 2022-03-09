@@ -163,6 +163,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             });
             $(nodes).filter('[scrollable]').each(function (i, v) {
                 initScrollable(v);
+                $(v).scrollable(dom.focusable(v) ? 'enable' : 'disable');
             });
         });
     });
@@ -199,5 +200,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     app.on('resize pageenter statechange scrollMove orientationchange', function () {
         setTimeoutOnce(updateScrollIntoView);
+    });
+
+    dom.on('modalchange', function () {
+        $('[scrollable]').each(function (i, v) {
+            $(v).scrollable(dom.focusable(v) ? 'enable' : 'disable');
+        });
     });
 });
