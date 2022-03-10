@@ -617,6 +617,7 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     focusable = _zeta$dom.focusable,
     focused = _zeta$dom.focused,
     setModal = _zeta$dom.setModal,
+    releaseModal = _zeta$dom.releaseModal,
     retainFocus = _zeta$dom.retainFocus,
     releaseFocus = _zeta$dom.releaseFocus,
     dom_focus = _zeta$dom.focus;
@@ -2777,6 +2778,7 @@ function closeFlyout(flyout, value) {
 
     if (state) {
       flyoutStates.delete(v);
+      zeta_dom_dom.releaseModal(v);
       state.resolve(value);
 
       if (state.source) {
@@ -2848,6 +2850,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
 
   if (element.attributes['is-modal']) {
     zeta_dom_dom.lock(element, promise);
+    zeta_dom_dom.setModal(element);
   }
 
   return promise;
@@ -3229,7 +3232,7 @@ function detectLanguage(languages, defaultLanguage) {
 
   return single(userLanguages, function (v, i) {
     return languages[i];
-  }) || defaultLanguage || languages[0];
+  }) || defaultLanguage || keys(languages)[0];
 }
 
 /* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
@@ -3574,6 +3577,7 @@ src_defaults.preloadImage = true;
       });
       jquery(nodes).filter('[scrollable]').each(function (i, v) {
         initScrollable(v);
+        jquery(v).scrollable(zeta_dom_dom.focusable(v) ? 'enable' : 'disable');
       });
     });
   }); // update scroller on events other than window resize
@@ -3609,6 +3613,11 @@ src_defaults.preloadImage = true;
 
   app.on('resize pageenter statechange scrollMove orientationchange', function () {
     setTimeoutOnce(updateScrollIntoView);
+  });
+  zeta_dom_dom.on('modalchange', function () {
+    jquery('[scrollable]').each(function (i, v) {
+      jquery(v).scrollable(zeta_dom_dom.focusable(v) ? 'enable' : 'disable');
+    });
   });
 }));
 // CONCATENATED MODULE: ./tmp/zeta-dom/env.js
