@@ -30,7 +30,6 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         var varname = container.getAttribute('scroller-state') || '';
         var selector = container.getAttribute('scroller-page') || '';
 
-        var items = selector && $(selector, container).get();
         var scrolling = false;
         var needRefresh = false;
         var isControlledScroll;
@@ -79,6 +78,10 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             }
         });
 
+        function getItem(index) {
+            return selector && $(selector, container).get()[index];
+        }
+
         function setState(index) {
             if (varname) {
                 var obj = {};
@@ -88,12 +91,13 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         }
 
         function scrollTo(index, align) {
+            var item = getItem(index);
             align = align || 'center top';
-            if (!scrolling && isVisible(container) && items[index]) {
+            if (!scrolling && isVisible(container) && item) {
                 scrolling = true;
                 isControlledScroll = true;
                 setState(index);
-                $(container).scrollable('scrollToElement', items[index], align, align, 200, function () {
+                $(container).scrollable('scrollToElement', item, align, align, 200, function () {
                     scrolling = false;
                     isControlledScroll = false;
                 });
@@ -125,7 +129,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     statechange: function (e) {
                         var newIndex = e.data[varname];
                         if (!scrolling) {
-                            if ((getRect(items[newIndex]).width | 0) > (getRect().width | 0)) {
+                            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
                                 scrollTo(newIndex, 'left center');
                             } else {
                                 scrollTo(newIndex);
