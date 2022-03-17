@@ -97,6 +97,10 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         dom.lock(element, promise);
         dom.setModal(element);
     }
+    var unbind = dom.on(element, 'focusout', function () {
+        unbind();
+        closeFlyout(element);
+    });
     return promise;
 }
 
@@ -245,13 +249,5 @@ dom.ready.then(function () {
                 setClass(target, v.slice(1), v[0] === '+');
             });
         }
-    });
-
-    $('body').on('click', function () {
-        $('[is-flyout].open').each(function (i, v) {
-            if (!dom.focused(v)) {
-                closeFlyout(v);
-            }
-        });
     });
 });
