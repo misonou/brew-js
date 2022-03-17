@@ -43,7 +43,7 @@ export function closeFlyout(flyout, value) {
                 setClass(state.source, 'target-opened', false);
             }
         }
-        return catchAsync(v.attributes['animate-out'] ? animateOut(v, 'open') : runCSSTransition(v, 'closing')).then(function () {
+        return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
             setClass(v, { open: false, closing: false });
         });
     }));
