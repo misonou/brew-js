@@ -1,7 +1,7 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, catchAsync } from "./include/zeta-dom/util.js";
+import { always, catchAsync, matchWord } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
@@ -98,8 +98,15 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         dom.lock(element, promise);
         dom.setModal(element);
     }
-    always(promise, dom.on(element, 'focusout', function () {
-        closeFlyout(element);
+    var closeHandler = function (e) {
+        if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
+            closeFlyout(element);
+            e.handled();
+        }
+    };
+    always(promise, dom.on(element, {
+        focusout: closeHandler,
+        gesture: closeHandler
     }));
     return promise;
 }
