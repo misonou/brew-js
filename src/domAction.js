@@ -101,6 +101,9 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     var closeHandler = function (e) {
         if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
             closeFlyout(element);
+            if (dom.event) {
+                dom.event.preventDefault();
+            }
             e.handled();
         }
     };
