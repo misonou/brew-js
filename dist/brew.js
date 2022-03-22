@@ -182,17 +182,18 @@ function combinePath(a, b) {
 /**
  * @param {string} path
  * @param {boolean=} resolveDotDir
+ * @param {boolean=} returnEmpty
  */
 
-function normalizePath(path, resolveDotDir) {
+function normalizePath(path, resolveDotDir, returnEmpty) {
   if (!path || path === '/') {
-    return '/';
+    return returnEmpty ? '' : '/';
   }
 
   if (/(:\/\/)|\?|#/.test(path)) {
     var a = document.createElement('a');
     a.href = path;
-    return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+    return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) + a.search + a.hash;
   }
 
   path = String(path).replace(/\/+(\/|$)/g, '$1');
@@ -2786,7 +2787,7 @@ function closeFlyout(flyout, value) {
       }
     }
 
-    return catchAsync(v.attributes['animate-out'] ? animateOut(v, 'open') : runCSSTransition(v, 'closing')).then(function () {
+    return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
       setClass(v, {
         open: false,
         closing: false
@@ -2837,6 +2838,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
 
   if (source) {
     setClass(source, 'target-opened', true);
+    zeta_dom_dom.retainFocus(element, source);
   }
 
   if (states) {
@@ -2853,6 +2855,22 @@ function openFlyout(selector, states, source, closeIfOpened) {
     zeta_dom_dom.setModal(element);
   }
 
+  var closeHandler = function closeHandler(e) {
+    if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
+      closeFlyout(element);
+
+      if (zeta_dom_dom.event) {
+        zeta_dom_dom.event.preventDefault();
+      }
+
+      e.handled();
+    }
+  };
+
+  always(promise, zeta_dom_dom.on(element, {
+    focusout: closeHandler,
+    gesture: closeHandler
+  }));
   return promise;
 }
 addAsyncAction('validate', function (e) {
@@ -3004,13 +3022,6 @@ zeta_dom_dom.ready.then(function () {
         setClass(target, v.slice(1), v[0] === '+');
       });
     }
-  });
-  jquery('body').on('click', function () {
-    jquery('[is-flyout].open').each(function (i, v) {
-      if (!zeta_dom_dom.focused(v)) {
-        closeFlyout(v);
-      }
-    });
   });
 });
 // CONCATENATED MODULE: ./src/domReady.js
@@ -3440,7 +3451,6 @@ src_defaults.preloadImage = true;
     var paged = container.getAttribute('scroller-snap-page') || '';
     var varname = container.getAttribute('scroller-state') || '';
     var selector = container.getAttribute('scroller-page') || '';
-    var items = selector && jquery(selector, container).get();
     var scrolling = false;
     var needRefresh = false;
     var isControlledScroll; // @ts-ignore: signature ignored
@@ -3487,6 +3497,10 @@ src_defaults.preloadImage = true;
       }
     });
 
+    function getItem(index) {
+      return selector && jquery(selector, container).get()[index];
+    }
+
     function setState(index) {
       if (varname) {
         var obj = {};
@@ -3496,13 +3510,14 @@ src_defaults.preloadImage = true;
     }
 
     function scrollTo(index, align) {
+      var item = getItem(index);
       align = align || 'center top';
 
-      if (!scrolling && isVisible(container) && items[index]) {
+      if (!scrolling && isVisible(container) && item) {
         scrolling = true;
         isControlledScroll = true;
         setState(index);
-        jquery(container).scrollable('scrollToElement', items[index], align, align, 200, function () {
+        jquery(container).scrollable('scrollToElement', item, align, align, 200, function () {
           scrolling = false;
           isControlledScroll = false;
         });
@@ -3537,7 +3552,7 @@ src_defaults.preloadImage = true;
             var newIndex = e.data[varname];
 
             if (!scrolling) {
-              if ((getRect(items[newIndex]).width | 0) > (getRect().width | 0)) {
+              if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
                 scrollTo(newIndex, 'left center');
               } else {
                 scrollTo(newIndex);
