@@ -31,6 +31,9 @@ describe('combinePath', () => {
         expect(combinePath('/foo/', '/bar//baz')).toEqual('/foo/bar/baz');
         expect(combinePath('/foo', '/')).toEqual('/foo');
         expect(combinePath('/', '/foo')).toEqual('/foo');
+        expect(combinePath('http://test.com/', '/')).toEqual('http://test.com');
+        expect(combinePath('http://test.com/', '/foo/')).toEqual('http://test.com/foo');
+        expect(combinePath('http://test.com/bar/', '/foo/')).toEqual('http://test.com/bar/foo');
     });
 });
 
@@ -50,6 +53,7 @@ describe('normalizePath', () => {
     it('should remove trailing slash', () => {
         expect(normalizePath('/')).toEqual('/');
         expect(normalizePath('/foo/')).toEqual('/foo');
+        expect(normalizePath('http://test.com/')).toEqual('http://test.com');
         expect(normalizePath('http://test.com/foo/bar/')).toEqual('http://test.com/foo/bar');
     });
 

@@ -31,15 +31,16 @@ export function combinePath(a, b) {
 /**
  * @param {string} path
  * @param {boolean=} resolveDotDir
+ * @param {boolean=} returnEmpty
  */
-export function normalizePath(path, resolveDotDir) {
+export function normalizePath(path, resolveDotDir, returnEmpty) {
     if (!path || path === '/') {
-        return '/';
+        return returnEmpty ? '' : '/';
     }
     if (/(:\/\/)|\?|#/.test(path)) {
         var a = document.createElement('a');
         a.href = path;
-        return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir) + a.search + a.hash;
+        return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir, true) + a.search + a.hash;
     }
     path = String(path).replace(/\/+(\/|$)/g, '$1');
     if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
