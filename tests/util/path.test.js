@@ -35,6 +35,10 @@ describe('combinePath', () => {
         expect(combinePath('http://test.com/', '/foo/')).toEqual('http://test.com/foo');
         expect(combinePath('http://test.com/bar/', '/foo/')).toEqual('http://test.com/bar/foo');
     });
+
+    it('should return second argument normalized if it is an absolute URL', () => {
+        expect(combinePath('/foo', 'http://test.com/')).toEqual('http://test.com');
+    });
 });
 
 describe('normalizePath', () => {

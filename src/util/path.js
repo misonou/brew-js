@@ -19,11 +19,11 @@ export function setBaseUrl(b) {
 export function combinePath(a, b) {
     a = normalizePath(a);
     b = normalizePath(b);
-    if (a === '/') {
-        return b;
-    }
     if (b === '/') {
         return a;
+    }
+    if (a === '/' || b.indexOf('://') > 0) {
+        return b;
     }
     return a + b;
 }
