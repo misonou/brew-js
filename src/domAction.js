@@ -213,21 +213,24 @@ dom.ready.then(function () {
         e.stopPropagation();
         if (self.getAttribute('target') === '_blank') {
             window.open(href, randomId());
-        } else if (!('navigate' in app)) {
-            location.href = href;
         } else {
+            var navigate = function () {
+                if (!('navigate' in app) || /^(?:[a-z0-9]+:)?\/\//.test(href)) {
+                    location.href = href;
+                } else {
+                    // @ts-ignore: app.navigate checked for truthiness
+                    app.navigate(href);
+                }
+            };
             var modalParent = $(self).closest('[is-modal]')[0];
             if (modalParent) {
                 // handle links inside modal popup
                 // this will return the promise which is resolved after modal popup is closed and release the lock
-                openFlyout(modalParent).then(function () {
-                    // @ts-ignore: app.navigate checked for truthiness
-                    app.navigate(href);
-                });
+                openFlyout(modalParent).then(navigate);
                 closeFlyout(modalParent);
             } else {
                 // @ts-ignore: app.navigate checked for truthiness
-                app.navigate(href);
+                navigate();
                 closeFlyout();
             }
         }
