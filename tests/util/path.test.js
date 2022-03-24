@@ -99,6 +99,10 @@ describe('normalizePath', () => {
         expect(normalizePath('http://test.com:80/foo')).toEqual('http://test.com/foo');
         expect(normalizePath('https://test.com:443/foo')).toEqual('https://test.com/foo');
     });
+
+    it('should throw error when path contains ://', () => {
+        expect(normalizePath('/foo/http://test.com')).toEqual('/foo/http:/test.com');
+    });
 });
 
 describe('withBaseUrl', () => {
