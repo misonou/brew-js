@@ -13,6 +13,7 @@ const div = {};
 
 var initialCanNavigateBack;
 var initialPreviousPath;
+var initialRedirectError;
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 var app;
 
@@ -28,9 +29,14 @@ beforeAll(async () => {
                 '/*'
             ]
         });
+        initialCanNavigateBack = app.canNavigateBack;
+        initialPreviousPath = app.previousPath;
+        try {
+            app.navigate('/test-1', true).catch(() => { });
+        } catch (e) {
+            initialRedirectError = e;
+        }
     });
-    initialCanNavigateBack = app.canNavigateBack;
-    initialPreviousPath = app.previousPath;
 });
 
 beforeAll(async () => {
@@ -253,6 +259,10 @@ describe('app.navigate', () => {
     it('should redirect to path of first match-path children', async () => {
         await app.navigate('/test-nested-nodefault');
         expect(app.path).toEqual('/test-nested-nodefault/default');
+    });
+
+    it('should not throw error when navigate with redirect before app init', () => {
+        expect(initialRedirectError).toBeUndefined();
     });
 });
 

@@ -328,14 +328,16 @@ function configureRouter(app, options) {
         history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
         app.path = path;
 
-        if (replace && !previous[1]) {
-            previous[0].forward(state);
-        } else {
-            setImmediate(function () {
-                each(previous, function (i, v) {
-                    v.reject();
+        if (previous[0]) {
+            if (replace && !previous[1]) {
+                previous[0].forward(state);
+            } else {
+                setImmediate(function () {
+                    each(previous, function (i, v) {
+                        v.reject();
+                    });
                 });
-            });
+            }
         }
         return state;
     }
