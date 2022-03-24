@@ -270,6 +270,7 @@ function configureRouter(app, options) {
                 return currentState;
             }
         }
+        replace = replace || currentIndex < 0;
         // @ts-ignore: boolean arithmetics
         currentIndex = Math.max(0, currentIndex + !replace);
 
@@ -634,7 +635,7 @@ function configureRouter(app, options) {
     });
 
     app.on('ready', function () {
-        pushState(initialPath);
+        pushState(initialPath, true);
     });
 
     app.on('pageenter', function (e) {
