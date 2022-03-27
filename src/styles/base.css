@@ -53,11 +53,15 @@
     transition-property: opacity, transform;
 }
 
+[is-flyout] {
+    --closed-flyout-interaction: none;
+}
+
 [is-flyout]:not(.open),
 [is-flyout].closing {
-    pointer-events: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
+    pointer-events: var(--closed-flyout-interaction) !important;
+    -webkit-user-select: var(--closed-flyout-interaction) !important;
+    -moz-user-select: var(--closed-flyout-interaction) !important;
+    -ms-user-select: var(--closed-flyout-interaction) !important;
+    user-select: var(--closed-flyout-interaction) !important;
 }
