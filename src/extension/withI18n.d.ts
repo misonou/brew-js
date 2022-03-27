@@ -1,5 +1,5 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * useI18n
      * ------------------------------------------------------------- */
     interface WithI18n {
@@ -12,11 +12,11 @@ declare namespace Brew {
         /**
          * Sets the language.
          * If the language is not on the specified list, the language will not be changed.
-         * @param language 
+         * @param language
          */
         setLanguage(language: string): void;
 
-        detectLanguage(languages: string[], defaultLanguage?: string): string;
+        detectLanguage(languages: readonly string[], defaultLanguage?: string): string;
         /**
          * Enables the i18n (internationalization) module.
          * @param options Options to be passed to the module.
@@ -28,7 +28,7 @@ declare namespace Brew {
         /**
          * Specifies the allowed list of languages.
          */
-        languages: string[];
+        languages: readonly string[];
         /**
          * Specifies the default language if there is no cookie or route parameter
          * that can infer the current language.

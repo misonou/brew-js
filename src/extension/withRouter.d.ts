@@ -185,6 +185,6 @@ declare namespace Brew {
          * "/{action}"                 // simple parameter
          * "/path/*"                   // wildcard matching all extra segments
          */
-        routes?: string[];
+        routes?: readonly string[];
     }
 }
