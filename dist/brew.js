@@ -169,12 +169,12 @@ function combinePath(a, b) {
   a = normalizePath(a);
   b = normalizePath(b);
 
-  if (a === '/') {
-    return b;
-  }
-
   if (b === '/') {
     return a;
+  }
+
+  if (a === '/' || b.indexOf('://') > 0) {
+    return b;
   }
 
   return a + b;
@@ -190,7 +190,7 @@ function normalizePath(path, resolveDotDir, returnEmpty) {
     return returnEmpty ? '' : '/';
   }
 
-  if (/(:\/\/)|\?|#/.test(path)) {
+  if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
     var a = document.createElement('a');
     a.href = path;
     return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) + a.search + a.hash;
@@ -1199,8 +1199,9 @@ function configureRouter(app, options) {
       } else {
         return currentState;
       }
-    } // @ts-ignore: boolean arithmetics
+    }
 
+    replace = replace || currentIndex < 0; // @ts-ignore: boolean arithmetics
 
     currentIndex = Math.max(0, currentIndex + !replace);
     var id = randomId();
@@ -1262,14 +1263,16 @@ function configureRouter(app, options) {
     history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
     app.path = path;
 
-    if (replace && !previous[1]) {
-      previous[0].forward(state);
-    } else {
-      setImmediate(function () {
-        each(previous, function (i, v) {
-          v.reject();
+    if (previous[0]) {
+      if (replace && !previous[1]) {
+        previous[0].forward(state);
+      } else {
+        setImmediate(function () {
+          each(previous, function (i, v) {
+            v.reject();
+          });
         });
-      });
+      }
     }
 
     return state;
@@ -1589,7 +1592,7 @@ function configureRouter(app, options) {
     });
   });
   app.on('ready', function () {
-    pushState(initialPath);
+    pushState(initialPath, true);
   });
   app.on('pageenter', function (e) {
     jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
@@ -2975,22 +2978,26 @@ zeta_dom_dom.ready.then(function () {
 
     if (self.getAttribute('target') === '_blank') {
       window.open(href, randomId());
-    } else if (!('navigate' in app)) {
-      location.href = href;
     } else {
+      var navigate = function navigate() {
+        if (!('navigate' in app) || /^(?:[a-z0-9]+:)?\/\//.test(href)) {
+          location.href = href;
+        } else {
+          // @ts-ignore: app.navigate checked for truthiness
+          app.navigate(href);
+        }
+      };
+
       var modalParent = jquery(self).closest('[is-modal]')[0];
 
       if (modalParent) {
         // handle links inside modal popup
         // this will return the promise which is resolved after modal popup is closed and release the lock
-        openFlyout(modalParent).then(function () {
-          // @ts-ignore: app.navigate checked for truthiness
-          app.navigate(href);
-        });
+        openFlyout(modalParent).then(navigate);
         closeFlyout(modalParent);
       } else {
         // @ts-ignore: app.navigate checked for truthiness
-        app.navigate(href);
+        navigate();
         closeFlyout();
       }
     }
