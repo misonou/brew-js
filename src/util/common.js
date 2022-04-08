@@ -1,10 +1,10 @@
-// @ts-nocheck
 import $ from "../include/external/jquery.js";
 import Promise from "../include/external/promise-polyfill.js";
 import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta-dom/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta-dom/util.js";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, errorWithCode, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta-dom/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
+import * as ErrorCode from "../errorCode.js";
 
 /** @type {Zeta.Dictionary<Promise<void>>} */
 const preloadImagesCache = {};
@@ -143,14 +143,14 @@ export function api(options, extra) {
                     }
                 }).catch(function (e) {
                     if (e.status === 0) {
-                        throw 'network-failed';
+                        throw errorWithCode(ErrorCode.networkError);
                     }
                     var response = e.responseJSON;
                     if (response) {
                         console.error(method + ':', response.error || response.message);
-                        throw response.error || response.message;
+                        throw errorWithCode(ErrorCode.apiError, response.error || response.message);
                     }
-                    throw e.statusText;
+                    throw errorWithCode(ErrorCode.apiError, e.statusText);
                 });
             });
             defineAliasProperty(obj[v], 'baseUrl', obj);
@@ -197,7 +197,7 @@ export function loadScript(url, options) {
                 resolve({});
             });
             script.addEventListener('error', function () {
-                reject();
+                reject(errorWithCode(ErrorCode.resourceError));
             });
             script.src = withBaseUrl(url);
             document.head.appendChild(script);

@@ -1,7 +1,7 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, catchAsync, matchWord } from "./include/zeta-dom/util.js";
+import { always, catchAsync, errorWithCode } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
@@ -11,6 +11,7 @@ import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
 import { getFormValues, selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
+import * as ErrorCode from "./errorCode.js";
 
 const flyoutStates = new Map();
 const executedAsyncActions = new Map();
@@ -125,7 +126,7 @@ addAsyncAction('validate', function (e) {
         } else if (isThenable(valid)) {
             return valid.then(function (valid) {
                 if (!valid) {
-                    throw 'validation-failed';
+                    throw errorWithCode(ErrorCode.validationFailed);
                 }
             });
         }
@@ -149,7 +150,7 @@ addAsyncAction('context-method', function (e) {
         }
         return resolveAll(valid, function (valid) {
             if (!valid) {
-                throw 'validation-failed';
+                throw errorWithCode(ErrorCode.validationFailed);
             }
             return app[method].apply(app, params);
         });

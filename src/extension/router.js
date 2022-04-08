@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -9,6 +9,7 @@ import { groupLog } from "../util/console.js";
 import { getQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl } from "../util/path.js";
 import { evalAttr, resetVar, setVar } from "../var.js";
+import * as ErrorCode from "../errorCode.js";
 
 const _ = createPrivateStore();
 const matchByPathElements = new Map();
@@ -322,7 +323,7 @@ function configureRouter(app, options) {
                 });
             },
             reject: function () {
-                rejectPromise('cancelled');
+                rejectPromise(errorWithCode(ErrorCode.navigationCancelled));
             }
         };
         states[currentIndex] = state;
@@ -467,6 +468,8 @@ function configureRouter(app, options) {
                 let state = pushState(leavePath);
                 setImmediateOnce(handlePathChange);
                 return state;
+            }, function () {
+                throw errorWithCode(ErrorCode.navigationRejected);
             });
             popState();
             state.forward(promise);

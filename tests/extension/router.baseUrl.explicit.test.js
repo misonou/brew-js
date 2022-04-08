@@ -159,7 +159,7 @@ describe('app#navigate', () => {
         const promise1 = app.navigate('/base/test-1');
         const promise2 = app.navigate('/base/test-2');
 
-        await expect(promise1).rejects.toEqual('cancelled');
+        await expect(promise1).rejects.toBeErrorWithCode('brew/navigation-cancelled');
         await expect(promise2).resolves.toEqual(objectContaining({ path: '/base/test-2' }));
         expect(app.path).toEqual('/base/test-2');
     });
@@ -189,7 +189,7 @@ describe('app#navigate', () => {
             }
         });
         bindEvent(root, 'navigate', cb);
-        await expect(app.navigate('/base/test-1')).rejects.toEqual('cancelled');
+        await expect(app.navigate('/base/test-1')).rejects.toBeErrorWithCode('brew/navigation-cancelled');
 
         expect(cb).toBeCalledTimes(2);
         expect(app.path).toEqual('/base/test-2');
@@ -214,7 +214,7 @@ describe('app#navigate', () => {
     it('should cancel navigation when dom is locked', async () => {
         dom.lock(root, delay(100));
 
-        await expect(app.navigate('/base/test-1')).rejects.toEqual('user_cancelled');
+        await expect(app.navigate('/base/test-1')).rejects.toBeErrorWithCode('brew/navigation-rejected');
         expect(app.path).toEqual(initialPath);
 
         while (dom.locked(root)) {
@@ -229,7 +229,7 @@ describe('app#navigate', () => {
         const promise = dom.lock(root, delay(100), cb);
 
         await expect(app.navigate('/base/test-1')).resolves.toBeTruthy();
-        await expect(promise).rejects.toMatch('user_cancelled');
+        await expect(promise).rejects.toBeErrorWithCode('zeta/cancelled');
         expect(cb).toBeCalledTimes(1);
     });
 
@@ -241,7 +241,7 @@ describe('app#navigate', () => {
         bindEvent(div.preventLeave, 'preventLeave', () => {
             return delay(100).then(cb);
         });
-        await expect(app.navigate('/base/')).rejects.toEqual('user_rejected');
+        await expect(app.navigate('/base/')).rejects.toBeErrorWithCode('brew/navigation-rejected');
         expect(cb).toBeCalledTimes(1);
     });
 
@@ -285,7 +285,7 @@ describe('app#back', () => {
         await app.back();
 
         await expect(promise1).resolves.toEqual(objectContaining({ path: '/base/test-1' }));
-        await expect(promise2).rejects.toEqual('cancelled');
+        await expect(promise2).rejects.toBeErrorWithCode('brew/navigation-cancelled');
     });
 
     it('should return false if there is no previous page', async () => {

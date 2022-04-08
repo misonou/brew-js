@@ -2,6 +2,7 @@ import { define, isFunction, isPlainObject, map, noop } from "./include/zeta-dom
 import * as path from "./util/path.js";
 import * as commonUtil from "./util/common.js";
 import * as animation from "./anim.js";
+import * as ErrorCode from "./errorCode.js";
 import { declareVar, evalAttr, getVar, setVar } from "./var.js";
 import { addTemplate, handleAsync, preventLeave } from "./dom.js";
 import { isElementActive } from "./extension/router.js";
@@ -24,6 +25,7 @@ function with_() {
 }
 
 const method = {
+    ErrorCode,
     defaults,
     ...commonUtil,
     ...path,

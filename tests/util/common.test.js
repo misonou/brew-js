@@ -209,11 +209,11 @@ describe('api', () => {
     it('should reject with reason or message property if present', async () => {
         const api1 = api({ baseUrl: '/' });
         mockXHROnce(500, { error: 'error' });
-        await expect(api1.get('/')).rejects.toEqual('error');
+        await expect(api1.get('/')).rejects.toBeErrorWithCode('brew/api-error', 'error');
 
         const api2 = api({ baseUrl: '/' });
         mockXHROnce(500, { message: 'error' });
-        await expect(api2.get('/')).rejects.toEqual('error');
+        await expect(api2.get('/')).rejects.toBeErrorWithCode('brew/api-error', 'error');
     });
 });
 
@@ -258,7 +258,7 @@ describe('loadScript', () => {
     });
 
     it('should reject if the script is not loadable', async () => {
-        await expect(loadScript('/foo/bar.js')).rejects.toBeUndefined();
+        await expect(loadScript('/foo/bar.js')).rejects.toBeErrorWithCode('brew/load-failed');
     });
 
     it('should prepend baseUrl to the given url', () => {

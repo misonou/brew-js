@@ -3,7 +3,7 @@ import $ from "./include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord } from "./include/zeta-dom/util.js";
+import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, errorWithCode } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { isElementActive } from "./extension/router.js";
 import { animateOut, animateIn } from "./anim.js";
@@ -11,6 +11,7 @@ import { groupLog, writeLog } from "./util/console.js";
 import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar, resetVar } from "./var.js";
 import { copyAttr, getAttrValues, selectorForAttr, setAttr } from "./util/common.js";
+import * as ErrorCode from "./errorCode.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 const BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
@@ -357,7 +358,7 @@ export function preventLeave(suppressPrompt) {
                 var state = getComponentState('preventLeave', element);
                 state.allowLeave = true;
             } else {
-                throw 'user_rejected';
+                throw errorWithCode(ErrorCode.navigationRejected);
             }
         });
     }

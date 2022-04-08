@@ -8,6 +8,7 @@ import * as path from "./util/path";
 import * as commonUtil from "./util/common";
 import * as animation from "./anim";
 import * as domAction from "./domAction";
+import * as ErrorCode from "./errorCode.js";
 
 import { AppInit } from "./app";
 
@@ -32,6 +33,7 @@ export interface Extension<T> {
 }
 
 const method = {
+    ErrorCode,
     defaults,
     ...commonUtil,
     ...path,
