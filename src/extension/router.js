@@ -1,6 +1,8 @@
 import $ from "../include/external/jquery.js";
 import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
+import { cancelLock, locked } from "../include/zeta-dom/domLock.js";
+import { watchElements } from "../include/zeta-dom/observe.js";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
@@ -461,7 +463,7 @@ function configureRouter(app, options) {
 
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
         var leavePath = newPath;
-        var promise = dom.locked(root, true) ? dom.cancelLock(root) : preventLeave();
+        var promise = locked(root, true) ? cancelLock(root) : preventLeave();
         if (promise) {
             lockedPath = newPath === lockedPath ? null : currentPath;
             promise = resolve(promise).then(function () {
@@ -674,7 +676,7 @@ function configureRouter(app, options) {
         }
     });
 
-    dom.watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
+    watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
         $(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
     }, true);
 }

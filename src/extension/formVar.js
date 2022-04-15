@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
 import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/zeta-dom/util.js";
 import { bindUntil, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
-import dom from "../include/zeta-dom/dom.js";
+import { afterDetached, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
 import { getVar, getVarScope, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
 import { addExtension } from "../app.js";
@@ -25,16 +25,16 @@ export default addExtension(true, 'formVar', function (app) {
                 }
             }
         };
-        dom.watchAttributes(form, 'value', function () {
+        watchAttributes(form, 'value', function () {
             setImmediateOnce(update);
         });
-        dom.watchElements(form, ':input', function (addedInputs) {
+        watchElements(form, ':input', function (addedInputs) {
             each(addedInputs, function (i, v) {
-                var afterDetached = dom.afterDetached(v, form);
-                bindUntil(afterDetached, v, 'change input', function () {
+                var detached = afterDetached(v, form);
+                bindUntil(detached, v, 'change input', function () {
                     setImmediateOnce(update);
                 });
-                afterDetached.then(update.bind(null, true));
+                detached.then(update.bind(null, true));
             });
             update(true);
         }, true);

@@ -1,7 +1,8 @@
 import $ from "../include/external/jquery.js";
 import { createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
-import dom from "../include/zeta-dom/dom.js";
+import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
+import { watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
@@ -55,7 +56,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
         dom.on(container, {
             drag: function () {
-                dom.beginDrag();
+                beginDrag();
             },
             getContentRect: function () {
                 var rect = getRect(container);
@@ -160,14 +161,14 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }
 
     app.on('ready', function () {
-        dom.watchElements(dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
+        watchElements(dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
             $(nodes).filter('[scrollable-target]').each(function (i, v) {
                 var scrollable = $(v).closest('[scrollable]')[0];
                 $(v).addClass(getState(scrollable).childClass);
             });
             $(nodes).filter('[scrollable]').each(function (i, v) {
                 initScrollable(v);
-                $(v).scrollable(dom.focusable(v) ? 'enable' : 'disable');
+                $(v).scrollable(focusable(v) ? 'enable' : 'disable');
             });
         });
     });
@@ -208,7 +209,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     dom.on('modalchange', function () {
         $('[scrollable]').each(function (i, v) {
-            $(v).scrollable(dom.focusable(v) ? 'enable' : 'disable');
+            $(v).scrollable(focusable(v) ? 'enable' : 'disable');
         });
     });
 });

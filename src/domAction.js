@@ -4,7 +4,8 @@ import waterpipe from "./include/external/waterpipe.js"
 import { always, catchAsync, errorWithCode } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom from "./include/zeta-dom/dom.js";
+import dom, { focus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
+import { lock } from "./include/zeta-dom/domLock.js";
 import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
@@ -38,7 +39,7 @@ export function closeFlyout(flyout, value) {
         var state = flyoutStates.get(v);
         if (state) {
             flyoutStates.delete(v);
-            dom.releaseModal(v);
+            releaseModal(v);
             state.resolve(value);
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
@@ -86,18 +87,18 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     });
     if (source) {
         setClass(source, 'target-opened', true);
-        dom.retainFocus(element, source);
+        retainFocus(element, source);
     }
     if (states) {
         setVar(element, states);
     }
     runCSSTransition(element, 'open', function () {
-        dom.focus(element);
+        focus(element);
     });
     animateIn(element, 'open');
     if (element.attributes['is-modal']) {
-        dom.lock(element, promise);
-        dom.setModal(element);
+        lock(element, promise);
+        setModal(element);
     }
     var closeHandler = function (e) {
         if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
