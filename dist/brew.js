@@ -11,7 +11,7 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 434:
+/***/ 979:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -33,6 +33,18 @@ __webpack_require__.d(path_namespaceObject, {
   "toAbsoluteUrl": function() { return toAbsoluteUrl; },
   "toRelativeUrl": function() { return toRelativeUrl; },
   "withBaseUrl": function() { return withBaseUrl; }
+});
+
+// NAMESPACE OBJECT: ./src/errorCode.js
+var errorCode_namespaceObject = {};
+__webpack_require__.r(errorCode_namespaceObject);
+__webpack_require__.d(errorCode_namespaceObject, {
+  "apiError": function() { return apiError; },
+  "navigationCancelled": function() { return navigationCancelled; },
+  "navigationRejected": function() { return navigationRejected; },
+  "networkError": function() { return networkError; },
+  "resourceError": function() { return resourceError; },
+  "validationFailed": function() { return validationFailed; }
 });
 
 // NAMESPACE OBJECT: ./src/util/common.js
@@ -108,10 +120,14 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     combineFn = _zeta$util.combineFn,
     executeOnce = _zeta$util.executeOnce,
     createPrivateStore = _zeta$util.createPrivateStore,
+    util_setTimeout = _zeta$util.setTimeout,
     setTimeoutOnce = _zeta$util.setTimeoutOnce,
+    util_setInterval = _zeta$util.setInterval,
+    setIntervalSafe = _zeta$util.setIntervalSafe,
     setImmediate = _zeta$util.setImmediate,
     setImmediateOnce = _zeta$util.setImmediateOnce,
     throwNotFunction = _zeta$util.throwNotFunction,
+    errorWithCode = _zeta$util.errorWithCode,
     keys = _zeta$util.keys,
     values = _zeta$util.values,
     util_hasOwnProperty = _zeta$util.hasOwnProperty,
@@ -265,7 +281,6 @@ var _zeta$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     domReady = domUtil_zeta$util.domReady,
     tagName = domUtil_zeta$util.tagName,
-    domUtil_is = domUtil_zeta$util.is,
     isVisible = domUtil_zeta$util.isVisible,
     matchSelector = domUtil_zeta$util.matchSelector,
     comparePosition = domUtil_zeta$util.comparePosition,
@@ -292,11 +307,6 @@ var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_d
     getContentRect = domUtil_zeta$util.getContentRect,
     scrollBy = domUtil_zeta$util.scrollBy,
     scrollIntoView = domUtil_zeta$util.scrollIntoView,
-    createRange = domUtil_zeta$util.createRange,
-    rangeIntersects = domUtil_zeta$util.rangeIntersects,
-    rangeEquals = domUtil_zeta$util.rangeEquals,
-    rangeCovers = domUtil_zeta$util.rangeCovers,
-    compareRangePosition = domUtil_zeta$util.compareRangePosition,
     makeSelection = domUtil_zeta$util.makeSelection,
     getRect = domUtil_zeta$util.getRect,
     getRects = domUtil_zeta$util.getRects,
@@ -310,8 +320,15 @@ var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_d
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
 
+// CONCATENATED MODULE: ./src/errorCode.js
+var networkError = 'brew/network-error';
+var resourceError = 'brew/resource-error';
+var apiError = 'brew/api-error';
+var validationFailed = 'brew/validation-failed';
+var navigationCancelled = 'brew/navigation-cancelled';
+var navigationRejected = 'brew/navigation-rejected';
 // CONCATENATED MODULE: ./src/util/common.js
-// @ts-nocheck
+
 
 
 
@@ -465,17 +482,17 @@ function api(options, extra) {
           }
         }).catch(function (e) {
           if (e.status === 0) {
-            throw 'network-failed';
+            throw errorWithCode(networkError);
           }
 
           var response = e.responseJSON;
 
           if (response) {
             console.error(method + ':', response.error || response.message);
-            throw response.error || response.message;
+            throw errorWithCode(apiError, response.error || response.message);
           }
 
-          throw e.statusText;
+          throw errorWithCode(apiError, e.statusText);
         });
       });
       defineAliasProperty(obj[v], 'baseUrl', obj);
@@ -527,7 +544,7 @@ function loadScript(url, options) {
         resolve({});
       });
       script.addEventListener('error', function () {
-        reject();
+        reject(errorWithCode(resourceError));
       });
       script.src = withBaseUrl(url);
       document.head.appendChild(script);
@@ -621,6 +638,7 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     releaseModal = _zeta$dom.releaseModal,
     retainFocus = _zeta$dom.retainFocus,
     releaseFocus = _zeta$dom.releaseFocus,
+    iterateFocusPath = _zeta$dom.iterateFocusPath,
     dom_focus = _zeta$dom.focus;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
@@ -838,6 +856,26 @@ var waterpipe = __webpack_require__(256);
 /** @deprecated @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ var src_defaults = (defaults);
+// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
+
+var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    lock = domLock_zeta$dom.lock,
+    locked = domLock_zeta$dom.locked,
+    cancelLock = domLock_zeta$dom.cancelLock;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
+
+// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
+
+var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    observe = observe_zeta$dom.observe,
+    registerCleanup = observe_zeta$dom.registerCleanup,
+    afterDetached = observe_zeta$dom.afterDetached,
+    watchElements = observe_zeta$dom.watchElements,
+    watchAttributes = observe_zeta$dom.watchAttributes;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
+
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -891,6 +929,9 @@ function groupLog(eventSource, message, callback) {
   }
 }
 // CONCATENATED MODULE: ./src/extension/router.js
+
+
+
 
 
 
@@ -1256,7 +1297,7 @@ function configureRouter(app, options) {
         });
       },
       reject: function reject() {
-        rejectPromise('cancelled');
+        rejectPromise(errorWithCode(navigationCancelled));
       }
     };
     states[currentIndex] = state;
@@ -1406,7 +1447,7 @@ function configureRouter(app, options) {
 
 
     var leavePath = newPath;
-    var promise = zeta_dom_dom.locked(root, true) ? zeta_dom_dom.cancelLock(root) : preventLeave();
+    var promise = locked(root, true) ? cancelLock(root) : preventLeave();
 
     if (promise) {
       lockedPath = newPath === lockedPath ? null : currentPath;
@@ -1414,6 +1455,8 @@ function configureRouter(app, options) {
         var state = pushState(leavePath);
         setImmediateOnce(handlePathChange);
         return state;
+      }, function () {
+        throw errorWithCode(navigationRejected);
       });
       popState();
       state.forward(promise);
@@ -1625,7 +1668,7 @@ function configureRouter(app, options) {
       document.title = evalAttr(pageTitleElement, 'page-title', true);
     }
   });
-  zeta_dom_dom.watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
+  watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
     jquery(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
   }, true);
 }
@@ -1642,6 +1685,7 @@ parsedRoutes['/*'] = {
 };
 /* harmony default export */ var router = (addExtension('router', configureRouter));
 // CONCATENATED MODULE: ./src/dom.js
+
 
 
 
@@ -2045,7 +2089,7 @@ function preventLeave(suppressPrompt) {
         var state = getComponentState('preventLeave', element);
         state.allowLeave = true;
       } else {
-        throw 'user_rejected';
+        throw errorWithCode(navigationRejected);
       }
     });
   }
@@ -2755,6 +2799,8 @@ tree.on('update', function (e) {
 
 
 
+
+
 var flyoutStates = new Map();
 var executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
@@ -2782,7 +2828,7 @@ function closeFlyout(flyout, value) {
 
     if (state) {
       flyoutStates.delete(v);
-      zeta_dom_dom.releaseModal(v);
+      releaseModal(v);
       state.resolve(value);
 
       if (state.source) {
@@ -2841,7 +2887,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
 
   if (source) {
     setClass(source, 'target-opened', true);
-    zeta_dom_dom.retainFocus(element, source);
+    retainFocus(element, source);
   }
 
   if (states) {
@@ -2849,13 +2895,13 @@ function openFlyout(selector, states, source, closeIfOpened) {
   }
 
   runCSSTransition(element, 'open', function () {
-    zeta_dom_dom.focus(element);
+    dom_focus(element);
   });
   animateIn(element, 'open');
 
   if (element.attributes['is-modal']) {
-    zeta_dom_dom.lock(element, promise);
-    zeta_dom_dom.setModal(element);
+    lock(element, promise);
+    setModal(element);
   }
 
   var closeHandler = function closeHandler(e) {
@@ -2889,7 +2935,7 @@ addAsyncAction('validate', function (e) {
     } else if (isThenable(valid)) {
       return valid.then(function (valid) {
         if (!valid) {
-          throw 'validation-failed';
+          throw errorWithCode(validationFailed);
         }
       });
     }
@@ -2915,7 +2961,7 @@ addAsyncAction('context-method', function (e) {
 
     return resolveAll(valid, function (valid) {
       if (!valid) {
-        throw 'validation-failed';
+        throw errorWithCode(validationFailed);
       }
 
       return app[method].apply(app, params);
@@ -3089,6 +3135,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+
 function with_() {
   var fn = this.bind.apply(src_app, [0].concat(map(arguments, function (v) {
     if (isPlainObject(v)) {
@@ -3104,6 +3151,7 @@ function with_() {
 }
 
 var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+  ErrorCode: errorCode_namespaceObject,
   defaults: src_defaults
 }, common_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getVar: getVar,
@@ -3170,16 +3218,16 @@ util_define(src_app, method);
       }
     };
 
-    zeta_dom_dom.watchAttributes(form, 'value', function () {
+    watchAttributes(form, 'value', function () {
       setImmediateOnce(update);
     });
-    zeta_dom_dom.watchElements(form, ':input', function (addedInputs) {
+    watchElements(form, ':input', function (addedInputs) {
       each(addedInputs, function (i, v) {
-        var afterDetached = zeta_dom_dom.afterDetached(v, form);
-        bindUntil(afterDetached, v, 'change input', function () {
+        var detached = afterDetached(v, form);
+        bindUntil(detached, v, 'change input', function () {
           setImmediateOnce(update);
         });
-        afterDetached.then(update.bind(null, true));
+        detached.then(update.bind(null, true));
       });
       update(true);
     }, true);
@@ -3438,6 +3486,7 @@ src_defaults.preloadImage = true;
 
 
 
+
 /* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     bounce: false
@@ -3481,7 +3530,7 @@ src_defaults.preloadImage = true;
     }));
     zeta_dom_dom.on(container, {
       drag: function drag() {
-        zeta_dom_dom.beginDrag();
+        beginDrag();
       },
       getContentRect: function getContentRect() {
         var rect = getRect(container);
@@ -3592,14 +3641,14 @@ src_defaults.preloadImage = true;
   }
 
   app.on('ready', function () {
-    zeta_dom_dom.watchElements(zeta_dom_dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
+    watchElements(zeta_dom_dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
       jquery(nodes).filter('[scrollable-target]').each(function (i, v) {
         var scrollable = jquery(v).closest('[scrollable]')[0];
         jquery(v).addClass(getState(scrollable).childClass);
       });
       jquery(nodes).filter('[scrollable]').each(function (i, v) {
         initScrollable(v);
-        jquery(v).scrollable(zeta_dom_dom.focusable(v) ? 'enable' : 'disable');
+        jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
       });
     });
   }); // update scroller on events other than window resize
@@ -3638,7 +3687,7 @@ src_defaults.preloadImage = true;
   });
   zeta_dom_dom.on('modalchange', function () {
     jquery('[scrollable]').each(function (i, v) {
-      jquery(v).scrollable(zeta_dom_dom.focusable(v) ? 'enable' : 'disable');
+      jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
     });
   });
 }));
@@ -3913,7 +3962,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(434);
+/******/ 	return __webpack_require__(979);
 /******/ })()
 .default;
 });
