@@ -142,7 +142,7 @@ declare namespace Brew {
          * Visit of current page in the history stack will be replaced.
          * @param params A dictionary containing new parameter values. Unrecorgnized keys are omitted.
          */
-        replace(params: RouteParam): Promise<NavigateResult>;
+        replace(params: Partial<RouteParam>): Promise<NavigateResult>;
         /**
          * Gets the path represented by specified route parameters.
          * If none of the routes matches, the root path `/` is returned.
