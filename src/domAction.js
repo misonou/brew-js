@@ -209,6 +209,9 @@ dom.ready.then(function () {
     });
 
     $('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
+        if (e.isDefaultPrevented()) {
+            return;
+        }
         var self = e.currentTarget;
         var href = self.getAttribute('data-href') || self.getAttribute('href');
         e.preventDefault();
