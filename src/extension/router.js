@@ -286,6 +286,7 @@ function configureRouter(app, options) {
             id: id,
             path: path,
             result: '',
+            previous: currentState,
             get promise() {
                 return promise || (promise = new Promise(function (resolve_, reject_) {
                     var wrapper = function (fn) {
@@ -462,6 +463,7 @@ function configureRouter(app, options) {
         }
 
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
+        var previous = state.previous;
         var leavePath = newPath;
         var promise = locked(root, true) ? cancelLock(root) : preventLeave();
         if (promise) {
@@ -473,7 +475,12 @@ function configureRouter(app, options) {
             }, function () {
                 throw errorWithCode(ErrorCode.navigationRejected);
             });
-            popState();
+            if (states[currentIndex - 1] === previous) {
+                popState();
+            } else {
+                states[currentIndex] = previous;
+                history.replaceState(previous.id, '', toPathname(previous.path));
+            }
             state.forward(promise);
             return;
         }
