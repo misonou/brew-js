@@ -1254,6 +1254,7 @@ function configureRouter(app, options) {
       id: id,
       path: path,
       result: '',
+      previous: currentState,
 
       get promise() {
         return promise || (promise = new Promise(function (resolve_, reject_) {
@@ -1446,6 +1447,7 @@ function configureRouter(app, options) {
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
 
+    var previous = state.previous;
     var leavePath = newPath;
     var promise = locked(root, true) ? cancelLock(root) : preventLeave();
 
@@ -1458,7 +1460,14 @@ function configureRouter(app, options) {
       }, function () {
         throw errorWithCode(navigationRejected);
       });
-      popState();
+
+      if (states[currentIndex - 1] === previous) {
+        popState();
+      } else {
+        states[currentIndex] = previous;
+        history.replaceState(previous.id, '', toPathname(previous.path));
+      }
+
       state.forward(promise);
       return;
     }
@@ -3017,6 +3026,10 @@ zeta_dom_dom.ready.then(function () {
     }
   });
   jquery('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
+    if (e.isDefaultPrevented()) {
+      return;
+    }
+
     var self = e.currentTarget;
     var href = self.getAttribute('data-href') || self.getAttribute('href');
     e.preventDefault();
