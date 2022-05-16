@@ -220,7 +220,7 @@ dom.ready.then(function () {
             window.open(href, randomId());
         } else {
             var navigate = function () {
-                if (!('navigate' in app) || /^(?:[a-z0-9]+:)?\/\//.test(href)) {
+                if (!('navigate' in app) || /^([a-z0-9]+:|\/\/)/.test(href)) {
                     location.href = href;
                 } else {
                     // @ts-ignore: app.navigate checked for truthiness
