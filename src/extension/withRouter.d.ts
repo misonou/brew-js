@@ -8,6 +8,14 @@ declare namespace Brew {
     interface NavigateEvent extends Zeta.ZetaEventBase {
         readonly pathname: string;
         readonly oldPathname: string;
+        /**
+         * Gets the unique state ID for the page about to leave.
+         */
+        readonly oldStateId: string;
+        /**
+         * Gets the unique state ID for the page going to navigate.
+         */
+        readonly newStateId: string;
         readonly route: Readonly<RouteParam>;
     }
 

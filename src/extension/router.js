@@ -242,6 +242,7 @@ function configureRouter(app, options) {
     var lockedPath;
     var newPath;
     var currentIndex = -1;
+    var lastResult;
     var states = [];
 
     function createNavigateResult(id, path, originalPath, navigated) {
@@ -320,6 +321,7 @@ function configureRouter(app, options) {
                 result = result || createNavigateResult(id, path);
                 state.path = result.path;
                 state.result = state.result || result.id;
+                lastResult = result;
                 resolvePromise(result);
                 each(states, function (i, v) {
                     v.reject();
@@ -568,6 +570,8 @@ function configureRouter(app, options) {
         promise = resolve(app.emit('navigate', {
             pathname: newPath,
             oldPathname: oldPath,
+            oldStateId: lastResult && lastResult.id,
+            newStateId: state.id,
             route: Object.freeze(extend({}, route))
         }));
         handleAsync(promise, root, function () {
