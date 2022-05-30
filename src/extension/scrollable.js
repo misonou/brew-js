@@ -1,8 +1,8 @@
 import $ from "../include/external/jquery.js";
-import { createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
+import { combineFn, createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
-import { watchElements } from "../include/zeta-dom/observe.js";
+import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
 import { isElementActive } from "./router.js";
@@ -30,6 +30,8 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         var paged = container.getAttribute('scroller-snap-page') || '';
         var varname = container.getAttribute('scroller-state') || '';
         var selector = container.getAttribute('scroller-page') || '';
+        var persistScroll = container.hasAttribute('persist-scroll');
+        var savedOffset = {};
 
         var scrolling = false;
         var needRefresh = false;
@@ -44,6 +46,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             pageItem: selector,
             snapToPage: (paged === 'always' || paged === app.orientation),
             scrollStart: function (e) {
+                delete savedOffset[history.state];
                 app.emit('scrollStart', container, e, true);
             },
             scrollMove: function (e) {
@@ -157,6 +160,36 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     timeout = setTimeout(refresh, 200);
                 });
             }
+        }
+
+        if (persistScroll) {
+            var hasAsync = false;
+            var restoreScroll = function () {
+                let offset = savedOffset[history.state];
+                if (offset) {
+                    $(container).scrollable('scrollTo', offset.x, offset.y, 0);
+                }
+            };
+            registerCleanup(container, combineFn(
+                dom.on('asyncStart', function () {
+                    hasAsync = true;
+                }),
+                dom.on('asyncEnd', function () {
+                    hasAsync = false;
+                    restoreScroll();
+                }),
+                app.on('navigate', function (e) {
+                    savedOffset[e.oldStateId] = {
+                        x: $(container).scrollable('scrollLeft'),
+                        y: $(container).scrollable('scrollTop')
+                    };
+                    setTimeout(function () {
+                        if (!hasAsync) {
+                            restoreScroll();
+                        }
+                    });
+                })
+            ));
         }
     }
 
