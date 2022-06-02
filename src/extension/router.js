@@ -363,14 +363,12 @@ function configureRouter(app, options) {
                 return parsedState.params[a] || ((b && i + v.length === path.length) ? '' : 'null');
             });
         }
-        switch (path[0]) {
-            case '~':
-                return (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
-            case '/':
-                return normalizePath(path, true);
-            default:
-                return combinePath(currentPath, path);
+        if (path[0] === '~') {
+            path = (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
+        } else if (path[0] !== '/') {
+            path = combinePath(currentPath, path);
         }
+        return normalizePath(path, true);
     }
 
     function registerMatchPathElements(container) {
