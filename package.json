@@ -16,11 +16,11 @@
   "homepage": "http://hackmd.io/@misonou/brew-js",
   "repository": "github:misonou/brew-js",
   "dependencies": {
-    "jquery": "^3.0.0",
     "jq-scrollable": "^1.4.2",
+    "jquery": "^3.0.0",
     "promise-polyfill": "^8.2.0",
     "waterpipe": "^2.4.0",
-    "zeta-dom": ">=0.1.16"
+    "zeta-dom": ">=0.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
