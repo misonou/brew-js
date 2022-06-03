@@ -93,6 +93,7 @@ var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __we
 
 var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
     noop = _zeta$util.noop,
+    pipe = _zeta$util.pipe,
     either = _zeta$util.either,
     is = _zeta$util.is,
     isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
@@ -861,7 +862,9 @@ var defaults = {};
 var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
     lock = domLock_zeta$dom.lock,
     locked = domLock_zeta$dom.locked,
-    cancelLock = domLock_zeta$dom.cancelLock;
+    cancelLock = domLock_zeta$dom.cancelLock,
+    notifyAsync = domLock_zeta$dom.notifyAsync,
+    preventLeave = domLock_zeta$dom.preventLeave;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
 
@@ -870,6 +873,7 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
     observe = observe_zeta$dom.observe,
     registerCleanup = observe_zeta$dom.registerCleanup,
+    createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
     afterDetached = observe_zeta$dom.afterDetached,
     watchElements = observe_zeta$dom.watchElements,
     watchAttributes = observe_zeta$dom.watchAttributes;
@@ -1207,6 +1211,7 @@ function configureRouter(app, options) {
   var lockedPath;
   var newPath;
   var currentIndex = -1;
+  var lastResult;
   var states = [];
 
   function createNavigateResult(id, path, originalPath, navigated) {
@@ -1292,6 +1297,7 @@ function configureRouter(app, options) {
         result = result || createNavigateResult(id, path);
         state.path = result.path;
         state.result = state.result || result.id;
+        lastResult = result;
         resolvePromise(result);
         each(states, function (i, v) {
           v.reject();
@@ -1338,16 +1344,13 @@ function configureRouter(app, options) {
       });
     }
 
-    switch (path[0]) {
-      case '~':
-        return (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
-
-      case '/':
-        return normalizePath(path, true);
-
-      default:
-        return combinePath(currentPath, path);
+    if (path[0] === '~') {
+      path = (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
+    } else if (path[0] !== '/') {
+      path = combinePath(currentPath, path);
     }
+
+    return normalizePath(path, true);
   }
 
   function registerMatchPathElements(container) {
@@ -1449,7 +1452,7 @@ function configureRouter(app, options) {
 
     var previous = state.previous;
     var leavePath = newPath;
-    var promise = locked(root, true) ? cancelLock(root) : preventLeave();
+    var promise = locked(root, true) ? cancelLock(root) : dom_preventLeave();
 
     if (promise) {
       lockedPath = newPath === lockedPath ? null : currentPath;
@@ -1561,6 +1564,8 @@ function configureRouter(app, options) {
     promise = resolve(app.emit('navigate', {
       pathname: newPath,
       oldPathname: oldPath,
+      oldStateId: lastResult && lastResult.id,
+      newStateId: state.id,
       route: Object.freeze(extend({}, route))
     }));
     handleAsync(promise, root, function () {
@@ -2076,7 +2081,7 @@ function mountElement(element) {
  * @param {boolean=} suppressPrompt
  */
 
-function preventLeave(suppressPrompt) {
+function dom_preventLeave(suppressPrompt) {
   var element = any(jquery('[prevent-leave]').get(), function (v) {
     var state = getComponentState('preventLeave', v);
     var allowLeave = state.allowLeave;
@@ -2909,7 +2914,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
   animateIn(element, 'open');
 
   if (element.attributes['is-modal']) {
-    lock(element, promise);
+    preventLeave(element, promise);
     setModal(element);
   }
 
@@ -3039,7 +3044,7 @@ zeta_dom_dom.ready.then(function () {
       window.open(href, randomId());
     } else {
       var navigate = function navigate() {
-        if (!('navigate' in app) || /^(?:[a-z0-9]+:)?\/\//.test(href)) {
+        if (!('navigate' in app) || /^([a-z0-9]+:|\/\/)/.test(href)) {
           location.href = href;
         } else {
           // @ts-ignore: app.navigate checked for truthiness
@@ -3122,7 +3127,7 @@ zeta_dom_dom.ready.then(function () {
   });
 
   window.onbeforeunload = function (e) {
-    if (preventLeave(true)) {
+    if (dom_preventLeave(true)) {
       e.returnValue = '';
       e.preventDefault();
     }
@@ -3173,7 +3178,7 @@ var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpre
   evalAttr: evalAttr,
   isElementActive: isElementActive,
   handleAsync: handleAsync,
-  preventLeave: preventLeave,
+  preventLeave: dom_preventLeave,
   install: install,
   addDetect: addDetect,
   addExtension: addExtension,
@@ -3429,7 +3434,7 @@ function detectLanguage(languages, defaultLanguage) {
 
       callback = isFunction(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return resolve(preventLeave()).then(function () {
+      return resolve(dom_preventLeave()).then(function () {
         return options.logout();
       }).then(function () {
         handleLogout();
@@ -3520,6 +3525,8 @@ src_defaults.preloadImage = true;
     var paged = container.getAttribute('scroller-snap-page') || '';
     var varname = container.getAttribute('scroller-state') || '';
     var selector = container.getAttribute('scroller-page') || '';
+    var persistScroll = container.hasAttribute('persist-scroll');
+    var savedOffset = {};
     var scrolling = false;
     var needRefresh = false;
     var isControlledScroll; // @ts-ignore: signature ignored
@@ -3532,6 +3539,7 @@ src_defaults.preloadImage = true;
       pageItem: selector,
       snapToPage: paged === 'always' || paged === app.orientation,
       scrollStart: function scrollStart(e) {
+        delete savedOffset[history.state];
         app.emit('scrollStart', container, e, true);
       },
       scrollMove: function scrollMove(e) {
@@ -3650,6 +3658,35 @@ src_defaults.preloadImage = true;
           timeout = setTimeout(refresh, 200);
         });
       }
+    }
+
+    if (persistScroll) {
+      var hasAsync = false;
+
+      var restoreScroll = function restoreScroll() {
+        var offset = savedOffset[history.state];
+
+        if (offset) {
+          jquery(container).scrollable('scrollTo', offset.x, offset.y, 0);
+        }
+      };
+
+      registerCleanup(container, combineFn(zeta_dom_dom.on('asyncStart', function () {
+        hasAsync = true;
+      }), zeta_dom_dom.on('asyncEnd', function () {
+        hasAsync = false;
+        restoreScroll();
+      }), app.on('navigate', function (e) {
+        savedOffset[e.oldStateId] = {
+          x: jquery(container).scrollable('scrollLeft'),
+          y: jquery(container).scrollable('scrollTop')
+        };
+        setTimeout(function () {
+          if (!hasAsync) {
+            restoreScroll();
+          }
+        });
+      })));
     }
   }
 
