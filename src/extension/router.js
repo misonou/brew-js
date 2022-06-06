@@ -67,7 +67,7 @@ export function matchRoute(route, segments, ignoreExact) {
 
 function toSegments(path) {
     path = normalizePath(path);
-    return path === '/' ? [] : path.slice(1).split('/');
+    return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
 function parseRoute(path) {
@@ -104,6 +104,7 @@ function parseRoute(path) {
 
 function createRouteState(route, segments, params) {
     route = route || [];
+    segments = segments.map(encodeURIComponent);
     return {
         route: route,
         params: exclude(params, ['remainingSegments']),
