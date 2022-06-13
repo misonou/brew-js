@@ -251,4 +251,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             $(v).scrollable(focusable(v) ? 'enable' : 'disable');
         });
     });
+
+    dom.on('keystroke', function (e) {
+        const originalEvent = dom.event;
+        if (dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
+            var target = selectIncludeSelf('[scrollable]', dom.modalElement)[0];
+            if (target) {
+                $(target).triggerHandler($.Event('keydown', {
+                    keyCode: originalEvent.keyCode
+                }));
+            }
+        }
+    });
 });
