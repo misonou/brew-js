@@ -1,11 +1,12 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, catchAsync, errorWithCode } from "./include/zeta-dom/util.js";
+import { always, any, catchAsync, errorWithCode, mapRemove } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
+import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
 import { preventLeave } from "./include/zeta-dom/domLock.js";
+import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
@@ -14,6 +15,10 @@ import { getFormValues, selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
 import * as ErrorCode from "./errorCode.js";
 
+const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
+const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
+
+const root = dom.root;
 const flyoutStates = new Map();
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
@@ -58,7 +63,7 @@ export function closeFlyout(flyout, value) {
  * @param {boolean=} closeIfOpened
  */
 export function openFlyout(selector, states, source, closeIfOpened) {
-    var container = source || dom.root;
+    var container = source || root;
     var element = selector ? selectClosestRelative(selector, container) : $(container).closest('[is-flyout]')[0];
     if (!element) {
         return reject();
@@ -159,6 +164,35 @@ addAsyncAction('context-method', function (e) {
 });
 
 dom.ready.then(function () {
+    var tabindexMap = new WeakMap();
+    var tabRoot = root;
+
+    function setTabIndex(nodes) {
+        $(nodes || SELECTOR_FOCUSABLE).each(function (i, v) {
+            var closest = $(v).closest(SELECTOR_TABROOT)[0] || root;
+            if (closest !== tabRoot) {
+                if (!tabindexMap.has(v)) {
+                    tabindexMap.set(v, v.tabIndex);
+                }
+                v.tabIndex = -1;
+            } else {
+                $(v).attr('tabindex', mapRemove(tabindexMap, v) || null);
+            }
+        });
+    }
+
+    dom.on('focuschange', function () {
+        var newRoot = any($(SELECTOR_TABROOT).get().reverse(), function (v) {
+            return focused(v);
+        }) || root;
+        if (newRoot !== tabRoot) {
+            tabRoot = newRoot;
+            setTabIndex();
+        }
+    });
+
+    watchElements(root, SELECTOR_FOCUSABLE, setTabIndex, true);
+
     app.on('mounted', function (e) {
         $(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
     });
