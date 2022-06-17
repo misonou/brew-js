@@ -1,6 +1,6 @@
 import $ from "../include/external/jquery.js";
 import { combineFn, createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
-import { getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import { bind, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -57,7 +57,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             }
         }));
 
-        dom.on(container, {
+        registerCleanup(container, function () {
+            $(container).scrollable('destroy');
+        });
+
+        registerCleanup(container, dom.on(container, {
             drag: function () {
                 beginDrag();
             },
@@ -80,7 +84,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     y: origY - $(container).scrollable('scrollTop')
                 };
             }
-        });
+        }));
 
         function getItem(index) {
             return selector && $(selector, container).get()[index];
@@ -122,14 +126,14 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
         if (selector) {
             if (paged !== 'always') {
-                app.on('orientationchange', function () {
+                registerCleanup(container, app.on('orientationchange', function () {
                     $(container).scrollable('setOptions', {
                         snapToPage: paged === app.orientation
                     });
-                });
+                }));
             }
             if (varname) {
-                app.on(container, {
+                registerCleanup(container, app.on(container, {
                     statechange: function (e) {
                         var newIndex = e.data[varname];
                         if (!scrolling) {
@@ -153,12 +157,12 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                             refresh();
                         }
                     }
-                }, true);
+                }, true));
                 var timeout;
-                $(window).on('resize', function () {
+                registerCleanup(container, bind(window, 'resize', function () {
                     clearTimeout(timeout);
                     timeout = setTimeout(refresh, 200);
-                });
+                }));
             }
         }
 
