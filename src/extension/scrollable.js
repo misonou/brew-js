@@ -46,7 +46,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             pageItem: selector,
             snapToPage: (paged === 'always' || paged === app.orientation),
             scrollStart: function (e) {
-                delete savedOffset[history.state];
+                if (dom.eventSource !== 'script') {
+                    delete savedOffset[history.state];
+                }
                 app.emit('scrollStart', container, e, true);
             },
             scrollMove: function (e) {
