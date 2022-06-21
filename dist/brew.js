@@ -144,6 +144,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     watchOnce = _zeta$util.watchOnce,
     watchable = _zeta$util.watchable,
     inherit = _zeta$util.inherit,
+    freeze = _zeta$util.freeze,
     deepFreeze = _zeta$util.deepFreeze,
     iequal = _zeta$util.iequal,
     randomId = _zeta$util.randomId,
@@ -1007,7 +1008,7 @@ function matchRoute(route, segments, ignoreExact) {
 
 function toSegments(path) {
   path = normalizePath(path);
-  return path === '/' ? [] : path.slice(1).split('/');
+  return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
 function parseRoute(path) {
@@ -1051,6 +1052,7 @@ function parseRoute(path) {
 
 function createRouteState(route, segments, params) {
   route = route || [];
+  segments = segments.map(encodeURIComponent);
   return {
     route: route,
     params: exclude(params, ['remainingSegments']),
@@ -2815,6 +2817,10 @@ tree.on('update', function (e) {
 
 
 
+
+var SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
+var SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
+var domAction_root = zeta_dom_dom.root;
 var flyoutStates = new Map();
 var executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
@@ -2866,7 +2872,7 @@ function closeFlyout(flyout, value) {
  */
 
 function openFlyout(selector, states, source, closeIfOpened) {
-  var container = source || zeta_dom_dom.root;
+  var container = source || domAction_root;
   var element = selector ? selectClosestRelative(selector, container) : jquery(container).closest('[is-flyout]')[0];
 
   if (!element) {
@@ -2983,6 +2989,36 @@ addAsyncAction('context-method', function (e) {
   }
 });
 zeta_dom_dom.ready.then(function () {
+  var tabindexMap = new WeakMap();
+  var tabRoot = domAction_root;
+
+  function setTabIndex(nodes) {
+    jquery(nodes || SELECTOR_FOCUSABLE).each(function (i, v) {
+      var closest = jquery(v).closest(SELECTOR_TABROOT)[0] || domAction_root;
+
+      if (closest !== tabRoot) {
+        if (!tabindexMap.has(v)) {
+          tabindexMap.set(v, v.tabIndex);
+        }
+
+        v.tabIndex = -1;
+      } else {
+        jquery(v).attr('tabindex', mapRemove(tabindexMap, v) || null);
+      }
+    });
+  }
+
+  zeta_dom_dom.on('focuschange', function () {
+    var newRoot = any(jquery(SELECTOR_TABROOT).get().reverse(), function (v) {
+      return focused(v);
+    }) || domAction_root;
+
+    if (newRoot !== tabRoot) {
+      tabRoot = newRoot;
+      setTabIndex();
+    }
+  });
+  watchElements(domAction_root, SELECTOR_FOCUSABLE, setTabIndex, true);
   app.on('mounted', function (e) {
     jquery(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
   });
@@ -3539,7 +3575,10 @@ src_defaults.preloadImage = true;
       pageItem: selector,
       snapToPage: paged === 'always' || paged === app.orientation,
       scrollStart: function scrollStart(e) {
-        delete savedOffset[history.state];
+        if (zeta_dom_dom.eventSource !== 'script') {
+          delete savedOffset[history.state];
+        }
+
         app.emit('scrollStart', container, e, true);
       },
       scrollMove: function scrollMove(e) {
@@ -3549,7 +3588,10 @@ src_defaults.preloadImage = true;
         app.emit('scrollStop', container, e, true);
       }
     }));
-    zeta_dom_dom.on(container, {
+    registerCleanup(container, function () {
+      jquery(container).scrollable('destroy');
+    });
+    registerCleanup(container, zeta_dom_dom.on(container, {
       drag: function drag() {
         beginDrag();
       },
@@ -3572,7 +3614,7 @@ src_defaults.preloadImage = true;
           y: origY - jquery(container).scrollable('scrollTop')
         };
       }
-    });
+    }));
 
     function getItem(index) {
       return selector && jquery(selector, container).get()[index];
@@ -3616,15 +3658,15 @@ src_defaults.preloadImage = true;
 
     if (selector) {
       if (paged !== 'always') {
-        app.on('orientationchange', function () {
+        registerCleanup(container, app.on('orientationchange', function () {
           jquery(container).scrollable('setOptions', {
             snapToPage: paged === app.orientation
           });
-        });
+        }));
       }
 
       if (varname) {
-        app.on(container, {
+        registerCleanup(container, app.on(container, {
           statechange: function statechange(e) {
             var newIndex = e.data[varname];
 
@@ -3651,12 +3693,12 @@ src_defaults.preloadImage = true;
               refresh();
             }
           }
-        }, true);
+        }, true));
         var timeout;
-        jquery(window).on('resize', function () {
+        registerCleanup(container, bind(window, 'resize', function () {
           clearTimeout(timeout);
           timeout = setTimeout(refresh, 200);
-        });
+        }));
       }
     }
 
@@ -3739,6 +3781,19 @@ src_defaults.preloadImage = true;
     jquery('[scrollable]').each(function (i, v) {
       jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
     });
+  });
+  zeta_dom_dom.on('keystroke', function (e) {
+    var originalEvent = zeta_dom_dom.event;
+
+    if (zeta_dom_dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
+      var target = selectIncludeSelf('[scrollable]', zeta_dom_dom.modalElement)[0];
+
+      if (target) {
+        jquery(target).triggerHandler(jquery.Event('keydown', {
+          keyCode: originalEvent.keyCode
+        }));
+      }
+    }
   });
 }));
 // CONCATENATED MODULE: ./tmp/zeta-dom/env.js
