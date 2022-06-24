@@ -1,8 +1,9 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import { selectIncludeSelf, isVisible } from "./include/zeta-dom/domUtil.js";
-import { catchAsync, resolve, resolveAll, each, throwNotFunction } from "./include/zeta-dom/util.js";
+import { catchAsync, resolve, resolveAll, each, throwNotFunction, errorWithCode } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
+import * as ErrorCode from "./errorCode.js";
 import dom from "./include/zeta-dom/dom.js";
 
 const customAnimateIn = {};
@@ -26,20 +27,18 @@ function handleAnimation(element, elements, promises, trigger) {
         clearTimeout(timeout);
         timeoutResolve();
         animatingElements.delete(element);
-        console.log('Animation #%i completed', id);
     }));
     promises.push(new Promise(function (resolve, reject) {
         timeoutResolve = resolve;
         timeoutReject = reject;
     }));
     timeout = setTimeout(function () {
-        timeoutReject('Animation #' + id + ' timed out');
-        console.log('Animation #%i might take longer than expected', id, promises);
+        timeoutReject(errorWithCode(ErrorCode.timeout, 'Animation timed out'));
+        console.warn('Animation #%i might take longer than expected', id, promises);
         animatingElements.delete(element);
     }, 1500);
 
     var promise = catchAsync(resolveAll(promises));
-    console.log('Animation #%i triggered on %s', id, trigger, { elements: elements });
     animatingElements.set(element, promise);
     return promise;
 }

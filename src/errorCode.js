@@ -4,3 +4,4 @@ export const apiError = 'brew/api-error';
 export const validationFailed = 'brew/validation-failed';
 export const navigationCancelled = 'brew/navigation-cancelled';
 export const navigationRejected = 'brew/navigation-rejected';
+export const timeout = "brew/timeout";
