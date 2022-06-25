@@ -51,7 +51,7 @@ export function closeFlyout(flyout, value) {
             }
         }
         return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
-            setClass(v, { open: false, closing: false });
+            setClass(v, { open: false, closing: false, visible: false });
         });
     }));
 }
@@ -97,6 +97,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     if (states) {
         setVar(element, states);
     }
+    setClass(element, 'visible', true);
     runCSSTransition(element, 'open', function () {
         focus(element);
     });

@@ -57,6 +57,10 @@
     --closed-flyout-interaction: none;
 }
 
+[is-flyout]:not(.visible) {
+    display: none;
+}
+
 [is-flyout]:not(.open),
 [is-flyout].closing {
     pointer-events: var(--closed-flyout-interaction) !important;
