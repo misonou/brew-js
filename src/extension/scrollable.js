@@ -26,6 +26,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }
 
     function initScrollable(container) {
+        var childClass = getState(container).childClass;
         var dir = container.getAttribute('scrollable');
         var paged = container.getAttribute('scroller-snap-page') || '';
         var varname = container.getAttribute('scroller-state') || '';
@@ -67,14 +68,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             drag: function () {
                 beginDrag();
             },
-            getContentRect: function () {
-                var rect = getRect(container);
-                var padding = $(container).scrollable('scrollPadding');
-                rect.top += padding.top;
-                rect.left += padding.left;
-                rect.right -= padding.right;
-                rect.bottom -= padding.bottom;
-                return rect;
+            getContentRect: function (e) {
+                if (e.target === container || $(e.target).closest('.' + childClass)[0]) {
+                    var rect = getRect(container);
+                    var padding = $(container).scrollable('scrollPadding');
+                    rect.top += padding.top;
+                    rect.left += padding.left;
+                    rect.right -= padding.right;
+                    rect.bottom -= padding.bottom;
+                    return rect;
+                }
             },
             scrollBy: function (e) {
                 $(container).scrollable('stop');
