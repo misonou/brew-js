@@ -258,7 +258,7 @@ describe('loadScript', () => {
     });
 
     it('should reject if the script is not loadable', async () => {
-        await expect(loadScript('/foo/bar.js')).rejects.toBeErrorWithCode('brew/load-failed');
+        await expect(loadScript('/foo/bar.js')).rejects.toBeErrorWithCode('brew/resource-error');
     });
 
     it('should prepend baseUrl to the given url', () => {
