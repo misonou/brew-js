@@ -3,7 +3,7 @@ import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked } from "../include/zeta-dom/domLock.js";
 import { watchElements } from "../include/zeta-dom/observe.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -70,10 +70,33 @@ function toSegments(path) {
     return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
+function RoutePattern(props) {
+    extend(this, props);
+}
+
+definePrototype(RoutePattern, Array, {
+    has: function (name) {
+        return name in this.params;
+    },
+    match: function (index, value) {
+        if (typeof index === 'string') {
+            index = this.params[index];
+        }
+        var part = this[index];
+        return !!part && (part.name ? part.test(value) : iequal(part, value));
+    },
+    test: function (segments, ignoreExact) {
+        var self = this;
+        return segments.length >= self.minLength && (ignoreExact || !self.exact || segments.length <= self.length) && !any(self, function (v, i) {
+            return segments[i] && !(v.name ? v.test(segments[i]) : iequal(segments[i], v));
+        });
+    }
+});
+
 function parseRoute(path) {
     path = String(path);
     if (!parsedRoutes[path]) {
-        var tokens = [];
+        var tokens = new RoutePattern();
         var params = {};
         var minLength;
         path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
@@ -81,23 +104,20 @@ function parseRoute(path) {
                 minLength = tokens.length;
             }
             if (b) {
+                var re = d ? new RegExp('^' + d + '$', 'i') : /./;
                 params[b] = tokens.length;
+                tokens.push({ name: b, test: re.test.bind(re) });
+            } else {
+                tokens.push(a.toLowerCase());
             }
-            tokens.push(b ? { name: b, pattern: d ? new RegExp('^' + d + '$', 'i') : /./ } : a.toLowerCase());
         });
-        define(tokens, {
-            value: path,
+        extend(tokens, {
+            pattern: path,
             params: params,
             exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
-            minLength: minLength || tokens.length,
-            test: function (segments, ignoreExact) {
-                // @ts-ignore: custom properties on array
-                return segments.length >= tokens.minLength && (ignoreExact || !tokens.exact || segments.length <= tokens.length) && !any(tokens, function (v, i) {
-                    return segments[i] && !(v.name ? v.pattern.test(segments[i]) : iequal(segments[i], v));
-                });
-            }
+            minLength: minLength || tokens.length
         });
-        parsedRoutes[path] = tokens;
+        parsedRoutes[path] = deepFreeze(tokens);
     }
     return parsedRoutes[path];
 }
@@ -124,7 +144,7 @@ function matchRouteByParams(routes, params) {
         var segments = [];
         for (var i = 0, len = tokens.length; i < len; i++) {
             var varname = tokens[i].name;
-            if (varname && !tokens[i].pattern.test(params[varname] || '')) {
+            if (varname && !tokens[i].test(params[varname] || '')) {
                 if (i < tokens.minLength || params[varname]) {
                     return false;
                 }
@@ -615,6 +635,7 @@ function configureRouter(app, options) {
         get previousPath() {
             return (states[currentIndex - 1] || '').path || null;
         },
+        parseRoute: parseRoute,
         resolvePath: resolvePath,
         navigate: function (path, replace) {
             return pushState(path, replace).promise;
@@ -629,6 +650,7 @@ function configureRouter(app, options) {
     });
     defineOwnProperty(app, 'initialPath', initialPath, true);
     defineOwnProperty(app, 'route', route, true);
+    defineOwnProperty(app, 'routes', freeze(options.routes));
     defineAliasProperty(app, 'path', observable);
 
     app.beforeInit(function () {
@@ -691,7 +713,7 @@ function configureRouter(app, options) {
     }, true);
 }
 
-parsedRoutes['/*'] = {
+parsedRoutes['/*'] = deepFreeze(new RoutePattern({
     value: '/*',
     exact: false,
     length: 0,
@@ -700,6 +722,6 @@ parsedRoutes['/*'] = {
     test: function () {
         return true;
     }
-};
+}));
 
 export default addExtension('router', configureRouter);

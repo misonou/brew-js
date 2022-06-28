@@ -67,6 +67,10 @@ declare namespace Brew {
          */
         readonly route: Route;
         /**
+         * Gets the route patterns provided to router.
+         */
+        readonly routes: ReadonlyArray<string>;
+        /**
          * Gets if user can move back to previous page (or screen)
          * without leaving the single-page app.
          */
@@ -103,10 +107,56 @@ declare namespace Brew {
          */
         resolvePath(path: string, refPath?: string): string;
         /**
+         * Parses a given route pattern and returns its information.
+         * @param pattern A valid route pattern.
+         */
+        parseRoute(pattern: string): RoutePattern;
+        /**
          * Configures router.
          * @param options
          */
         useRouter(options: RouterOptions): void;
+    }
+
+    interface RoutePattern {
+        /**
+         * Gets the input route pattern.
+         */
+        readonly pattern: string;
+        /**
+         * Gets a dictionary that maps a route parameter name to a zero-based index.
+         */
+        readonly params: Zeta.Dictionary<number>;
+        /**
+         * Gets whether the route accepts extra segments.
+         */
+        readonly exact: boolean;
+        /**
+         * Gets the minimum number of segments.
+         * If the route is exact, the minimum length is the same as the number of segments of the input route pattern.
+         */
+        readonly minLength: number;
+        /**
+         * Gets the number of segments, including optional ones.
+         */
+        readonly length: number;
+        /**
+         * Gets whether the route has the named route parameter.
+         * @param name Name of a route parameter.
+         */
+        has(name: string): boolean;
+        /**
+         * Tests whether a value matches the constraints of a named route parameter.
+         * @param name Name of a route parameter.
+         * @param value A string being tested.
+         */
+        match(name: string, value: string): boolean;
+        /**
+         * Tests whether a value matches the constraints of the n-th segment.
+         * @param name A zero-based index.
+         * @param value A string being tested.
+         */
+        match(index: number, value: string): boolean;
     }
 
     interface RouteParam {
