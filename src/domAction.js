@@ -107,7 +107,8 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         setModal(element);
     }
     var closeHandler = function (e) {
-        if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
+        var swipeDismiss = element.getAttribute('swipe-dismiss');
+        if (e.type === 'focusout' ? !swipeDismiss : e.data === camel('swipe-' + swipeDismiss)) {
             closeFlyout(element);
             if (dom.event) {
                 dom.event.preventDefault();
