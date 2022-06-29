@@ -133,12 +133,17 @@ function createRouteState(route, segments, params) {
     };
 }
 
-function matchRouteByParams(routes, params) {
-    return single(routes, function (tokens) {
-        var hasParam = single(tokens.params, function (v, i) {
+function matchRouteByParams(routes, params, partial) {
+    var matched = single(routes, function (tokens) {
+        var valid = single(tokens.params, function (v, i) {
             return params[i] !== null;
         });
-        if (!hasParam) {
+        if (valid && !partial) {
+            valid = !single(params, function (v, i) {
+                return v && !tokens.has(i);
+            });
+        }
+        if (!valid) {
             return;
         }
         var segments = [];
@@ -154,6 +159,7 @@ function matchRouteByParams(routes, params) {
         }
         return createRouteState(tokens, segments, pick(params, keys(tokens.params)));
     });
+    return matched || (!partial && matchRouteByParams(routes, params, true));
 }
 
 function Route(app, routes, initialPath) {

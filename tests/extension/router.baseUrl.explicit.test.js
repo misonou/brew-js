@@ -26,6 +26,7 @@ beforeAll(async () => {
                 '/foo/baz/*',
                 '/foo/{id?:[a-z]+}',
                 '/{bar:bar}/{id?:[a-z]+}',
+                '/{bar:bar}/{optional?:[a-z]+}',
                 '/baz/{another?}',
                 '/*'
             ]
@@ -83,6 +84,7 @@ beforeAll(async () => {
                 <audio id="audio" src="" autoplay></audio>
             </div>
             <div match-path="/bar"></div>
+            <div match-path="/bar/foo"></div>
             <div match-path="/foo/baz/*"></div>
             <div match-path="/foo/{id?}"></div>
         </div>
@@ -383,6 +385,7 @@ describe('app#route', () => {
         expect(app.route).toHaveProperty('id');
         expect(app.route).toHaveProperty('bar');
         expect(app.route).toHaveProperty('another');
+        expect(app.route).toHaveProperty('optional');
         expect(app.route).toHaveProperty('remainingSegments');
     });
 
@@ -421,6 +424,13 @@ describe('app#route', () => {
         await delay(100);
         expect(app.path).toEqual('/base/bar');
         expect(app.route.another).toBeNull();
+    });
+
+    it('should match route disregard of inexist parameters only when no other routes matches', async () => {
+        app.route.set({ bar: 'bar', optional: 'foo' });
+        await delay(100);
+        expect(app.path).toEqual('/base/bar/foo');
+        expect(app.route.optional).toBe('foo');
     });
 
     it('should discard parameter changes if there is no matching route', async () => {
