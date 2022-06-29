@@ -3,7 +3,7 @@ import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked } from "../include/zeta-dom/domLock.js";
 import { watchElements } from "../include/zeta-dom/observe.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -181,7 +181,9 @@ function Route(app, routes, initialPath) {
 
     Object.preventExtensions(self);
     Object.getOwnPropertyNames(self).forEach(function (prop) {
-        defineObservableProperty(self, prop);
+        defineObservableProperty(self, prop, null, function (v) {
+            return isUndefinedOrNull(v) || v === '' ? null : String(v);
+        });
     });
     watch(self, function () {
         var params = exclude(self, ['remainingSegments']);

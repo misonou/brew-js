@@ -84,6 +84,7 @@ beforeAll(async () => {
             </div>
             <div match-path="/bar"></div>
             <div match-path="/bar/foo"></div>
+            <div match-path="/baz/*"></div>
             <div match-path="/foo/baz/*"></div>
             <div match-path="/foo/{id?}"></div>
         </div>
@@ -398,6 +399,19 @@ describe('app.route', () => {
         app.route.id = 'bar';
         await delay(100);
         expect(app.path).toEqual('/foo/bar');
+    });
+
+    it('should normalize route parameter', async () => {
+        app.route.another = '';
+        expect(app.route.another).toBeNull();
+        app.route.another = undefined;
+        expect(app.route.another).toBeNull();
+        app.route.another = false;
+        expect(app.route.another).toBe('false');
+        app.route.another = true;
+        expect(app.route.another).toBe('true');
+        app.route.another = 0;
+        expect(app.route.another).toBe('0');
     });
 
     it('should match route in declaring order', async () => {
