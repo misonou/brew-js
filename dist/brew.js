@@ -44,6 +44,7 @@ __webpack_require__.d(errorCode_namespaceObject, {
   "navigationRejected": function() { return navigationRejected; },
   "networkError": function() { return networkError; },
   "resourceError": function() { return resourceError; },
+  "timeout": function() { return errorCode_timeout; },
   "validationFailed": function() { return validationFailed; }
 });
 
@@ -329,6 +330,7 @@ var apiError = 'brew/api-error';
 var validationFailed = 'brew/validation-failed';
 var navigationCancelled = 'brew/navigation-cancelled';
 var navigationRejected = 'brew/navigation-rejected';
+var errorCode_timeout = "brew/timeout";
 // CONCATENATED MODULE: ./src/util/common.js
 
 
@@ -627,7 +629,7 @@ function preloadImages(urls, ms) {
 // CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
 var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
-/* harmony default export */ var dom = (_defaultExport);
+/* harmony default export */ const dom = (_defaultExport);
 var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
     textInputAllowed = _zeta$dom.textInputAllowed,
     beginDrag = _zeta$dom.beginDrag,
@@ -646,8 +648,9 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 // CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
 
-/* harmony default export */ var zeta_dom_dom = (dom);
+/* harmony default export */ const zeta_dom_dom = (dom);
 // CONCATENATED MODULE: ./src/anim.js
+
 
 
 
@@ -675,21 +678,17 @@ function handleAnimation(element, elements, promises, trigger) {
     clearTimeout(timeout);
     timeoutResolve();
     animatingElements.delete(element);
-    console.log('Animation #%i completed', id);
   }));
   promises.push(new promise_polyfill(function (resolve, reject) {
     timeoutResolve = resolve;
     timeoutReject = reject;
   }));
   timeout = setTimeout(function () {
-    timeoutReject('Animation #' + id + ' timed out');
-    console.log('Animation #%i might take longer than expected', id, promises);
+    timeoutReject(errorWithCode(errorCode_timeout, 'Animation timed out'));
+    console.warn('Animation #%i might take longer than expected', id, promises);
     animatingElements.delete(element);
   }, 1500);
   var promise = catchAsync(resolveAll(promises));
-  console.log('Animation #%i triggered on %s', id, trigger, {
-    elements: elements
-  });
   animatingElements.set(element, promise);
   return promise;
 }
@@ -857,7 +856,7 @@ var waterpipe = __webpack_require__(256);
 // CONCATENATED MODULE: ./src/defaults.js
 /** @deprecated @type {Zeta.Dictionary} */
 var defaults = {};
-/* harmony default export */ var src_defaults = (defaults);
+/* harmony default export */ const src_defaults = (defaults);
 // CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
 
 var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
@@ -1011,11 +1010,35 @@ function toSegments(path) {
   return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
+function RoutePattern(props) {
+  extend(this, props);
+}
+
+definePrototype(RoutePattern, Array, {
+  has: function has(name) {
+    return name in this.params;
+  },
+  match: function match(index, value) {
+    if (typeof index === 'string') {
+      index = this.params[index];
+    }
+
+    var part = this[index];
+    return !!part && (part.name ? part.test(value) : iequal(part, value));
+  },
+  test: function test(segments, ignoreExact) {
+    var self = this;
+    return segments.length >= self.minLength && (ignoreExact || !self.exact || segments.length <= self.length) && !any(self, function (v, i) {
+      return segments[i] && !(v.name ? v.test(segments[i]) : iequal(segments[i], v));
+    });
+  }
+});
+
 function parseRoute(path) {
   path = String(path);
 
   if (!parsedRoutes[path]) {
-    var tokens = [];
+    var tokens = new RoutePattern();
     var params = {};
     var minLength;
     path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
@@ -1024,27 +1047,23 @@ function parseRoute(path) {
       }
 
       if (b) {
+        var re = d ? new RegExp('^' + d + '$', 'i') : /./;
         params[b] = tokens.length;
+        tokens.push({
+          name: b,
+          test: re.test.bind(re)
+        });
+      } else {
+        tokens.push(a.toLowerCase());
       }
-
-      tokens.push(b ? {
-        name: b,
-        pattern: d ? new RegExp('^' + d + '$', 'i') : /./
-      } : a.toLowerCase());
     });
-    util_define(tokens, {
-      value: path,
+    extend(tokens, {
+      pattern: path,
       params: params,
       exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
-      minLength: minLength || tokens.length,
-      test: function test(segments, ignoreExact) {
-        // @ts-ignore: custom properties on array
-        return segments.length >= tokens.minLength && (ignoreExact || !tokens.exact || segments.length <= tokens.length) && !any(tokens, function (v, i) {
-          return segments[i] && !(v.name ? v.pattern.test(segments[i]) : iequal(segments[i], v));
-        });
-      }
+      minLength: minLength || tokens.length
     });
-    parsedRoutes[path] = tokens;
+    parsedRoutes[path] = deepFreeze(tokens);
   }
 
   return parsedRoutes[path];
@@ -1061,13 +1080,19 @@ function createRouteState(route, segments, params) {
   };
 }
 
-function matchRouteByParams(routes, params) {
-  return single(routes, function (tokens) {
-    var hasParam = single(tokens.params, function (v, i) {
+function matchRouteByParams(routes, params, partial) {
+  var matched = single(routes, function (tokens) {
+    var valid = single(tokens.params, function (v, i) {
       return params[i] !== null;
     });
 
-    if (!hasParam) {
+    if (valid && !partial) {
+      valid = !single(params, function (v, i) {
+        return v && !tokens.has(i);
+      });
+    }
+
+    if (!valid) {
       return;
     }
 
@@ -1076,7 +1101,7 @@ function matchRouteByParams(routes, params) {
     for (var i = 0, len = tokens.length; i < len; i++) {
       var varname = tokens[i].name;
 
-      if (varname && !tokens[i].pattern.test(params[varname] || '')) {
+      if (varname && !tokens[i].test(params[varname] || '')) {
         if (i < tokens.minLength || params[varname]) {
           return false;
         }
@@ -1089,6 +1114,7 @@ function matchRouteByParams(routes, params) {
 
     return createRouteState(tokens, segments, pick(params, keys(tokens.params)));
   });
+  return matched || !partial && matchRouteByParams(routes, params, true);
 }
 
 function Route(app, routes, initialPath) {
@@ -1111,7 +1137,9 @@ function Route(app, routes, initialPath) {
   state.handleChanges = watch(self, true);
   Object.preventExtensions(self);
   Object.getOwnPropertyNames(self).forEach(function (prop) {
-    defineObservableProperty(self, prop);
+    defineObservableProperty(self, prop, null, function (v) {
+      return isUndefinedOrNull(v) || v === '' ? null : String(v);
+    });
   });
   watch(self, function () {
     var params = exclude(self, ['remainingSegments']);
@@ -1617,6 +1645,7 @@ function configureRouter(app, options) {
       return (states[currentIndex - 1] || '').path || null;
     },
 
+    parseRoute: parseRoute,
     resolvePath: resolvePath,
     navigate: function navigate(path, replace) {
       return pushState(path, replace).promise;
@@ -1631,6 +1660,7 @@ function configureRouter(app, options) {
   });
   defineOwnProperty(app, 'initialPath', initialPath, true);
   defineOwnProperty(app, 'route', route, true);
+  defineOwnProperty(app, 'routes', freeze(options.routes));
   defineAliasProperty(app, 'path', observable);
   app.beforeInit(function () {
     zeta_dom_dom.ready.then(function () {
@@ -1689,7 +1719,7 @@ function configureRouter(app, options) {
   }, true);
 }
 
-parsedRoutes['/*'] = {
+parsedRoutes['/*'] = deepFreeze(new RoutePattern({
   value: '/*',
   exact: false,
   length: 0,
@@ -1698,8 +1728,8 @@ parsedRoutes['/*'] = {
   test: function test() {
     return true;
   }
-};
-/* harmony default export */ var router = (addExtension('router', configureRouter));
+}));
+/* harmony default export */ const router = (addExtension('router', configureRouter));
 // CONCATENATED MODULE: ./src/dom.js
 
 
@@ -2859,7 +2889,8 @@ function closeFlyout(flyout, value) {
     return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
       setClass(v, {
         open: false,
-        closing: false
+        closing: false,
+        visible: false
       });
     });
   }));
@@ -2914,6 +2945,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
     setVar(element, states);
   }
 
+  setClass(element, 'visible', true);
   runCSSTransition(element, 'open', function () {
     dom_focus(element);
   });
@@ -2925,7 +2957,9 @@ function openFlyout(selector, states, source, closeIfOpened) {
   }
 
   var closeHandler = function closeHandler(e) {
-    if (e.type === 'focusout' || e.data === camel('swipe-' + element.getAttribute('swipe-dismiss'))) {
+    var swipeDismiss = element.getAttribute('swipe-dismiss');
+
+    if (e.type === 'focusout' ? !swipeDismiss : e.data === camel('swipe-' + swipeDismiss)) {
       closeFlyout(element);
 
       if (zeta_dom_dom.event) {
@@ -3169,7 +3203,7 @@ zeta_dom_dom.ready.then(function () {
     }
   };
 });
-/* harmony default export */ var src_domReady = (null);
+/* harmony default export */ const src_domReady = (null);
 // CONCATENATED MODULE: ./src/core.js
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -3223,12 +3257,12 @@ var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpre
 });
 
 util_define(src_app, method);
-/* harmony default export */ var core = (src_app);
+/* harmony default export */ const core = (src_app);
 // CONCATENATED MODULE: ./src/extension/config.js
 
 
 
-/* harmony default export */ var config = (addExtension('config', function (app, options) {
+/* harmony default export */ const config = (addExtension('config', function (app, options) {
   var config = watchable();
   util_define(app, {
     config: config
@@ -3250,7 +3284,7 @@ util_define(src_app, method);
 
 
 
-/* harmony default export */ var formVar = (addExtension(true, 'formVar', function (app) {
+/* harmony default export */ const formVar = (addExtension(true, 'formVar', function (app) {
   app.matchElement('form[form-var]', function (form) {
     var varname = form.getAttribute('form-var');
     var values = {};
@@ -3355,7 +3389,7 @@ function detectLanguage(languages, defaultLanguage) {
   }) || defaultLanguage || keys(languages)[0];
 }
 
-/* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
+/* harmony default export */ const i18n = (addExtension('i18n', function (app, options) {
   var languages = toDictionary(options.languages);
   var routeParam = app.route && options.routeParam;
 
@@ -3405,7 +3439,7 @@ function detectLanguage(languages, defaultLanguage) {
 
 
 
-/* harmony default export */ var login = (addExtension('login', function (app, options) {
+/* harmony default export */ const login = (addExtension('login', function (app, options) {
   options = extend({
     loginPagePath: '',
     defaultRedirectPath: '',
@@ -3503,7 +3537,7 @@ function detectLanguage(languages, defaultLanguage) {
 
 var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 src_defaults.preloadImage = true;
-/* harmony default export */ var preloadImage = (addExtension('preloadImage', function (app) {
+/* harmony default export */ const preloadImage = (addExtension('preloadImage', function (app) {
   app.beforeUpdate(function (domUpdates) {
     var urls = {};
     each(domUpdates, function (element, props) {
@@ -3541,7 +3575,7 @@ src_defaults.preloadImage = true;
 
 
 
-/* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
+/* harmony default export */ const scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     bounce: false
   }, defaultOptions); // @ts-ignore: non-standard member
@@ -3557,6 +3591,7 @@ src_defaults.preloadImage = true;
   }
 
   function initScrollable(container) {
+    var childClass = getState(container).childClass;
     var dir = container.getAttribute('scrollable');
     var paged = container.getAttribute('scroller-snap-page') || '';
     var varname = container.getAttribute('scroller-state') || '';
@@ -3595,14 +3630,16 @@ src_defaults.preloadImage = true;
       drag: function drag() {
         beginDrag();
       },
-      getContentRect: function getContentRect() {
-        var rect = getRect(container);
-        var padding = jquery(container).scrollable('scrollPadding');
-        rect.top += padding.top;
-        rect.left += padding.left;
-        rect.right -= padding.right;
-        rect.bottom -= padding.bottom;
-        return rect;
+      getContentRect: function getContentRect(e) {
+        if (e.target === container || jquery(e.target).closest('.' + childClass)[0]) {
+          var rect = getRect(container);
+          var padding = jquery(container).scrollable('scrollPadding');
+          rect.top += padding.top;
+          rect.left += padding.left;
+          rect.right -= padding.right;
+          rect.bottom -= padding.bottom;
+          return rect;
+        }
       },
       scrollBy: function scrollBy(e) {
         jquery(container).scrollable('stop');
@@ -3814,7 +3851,7 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
-/* harmony default export */ var viewport = (addExtension(true, 'viewport', function (app) {
+/* harmony default export */ const viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
   var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
   var availWidth = screen.availWidth;
@@ -3898,7 +3935,7 @@ function exportAppToGlobal(app) {
   window.app = app;
 }
 
-/* harmony default export */ var entry = (core.with(exportAppToGlobal, config, formVar, i18n, login, preloadImage, scrollable, viewport));
+/* harmony default export */ const entry = (core.with(exportAppToGlobal, config, formVar, i18n, login, preloadImage, scrollable, viewport));
 
 /***/ }),
 
