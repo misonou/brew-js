@@ -263,8 +263,8 @@ watchable(Route.prototype);
  * @param {Record<string, any>} options
  */
 function configureRouter(app, options) {
-    var initialPath = app.path || options.initialPath || (options.queryParam && getQueryParam(options.queryParam)) || location.pathname.substr(options.baseUrl.length) || '/';
-    var route = new Route(app, options.routes, initialPath);
+    var initialPath = app.path || options.initialPath || (options.queryParam && getQueryParam(options.queryParam)) || location.pathname || '/';
+    var route;
     var currentPath = '';
     var observable = {};
     var redirectSource = {};
@@ -632,10 +632,10 @@ function configureRouter(app, options) {
         toRoutePath = fromPathname;
         fromPathname = pass;
         toPathname = pass;
-        if (!isSubPathOf(initialPath, baseUrl)) {
-            initialPath = baseUrl;
-        }
     }
+    initialPath = fromPathname(initialPath);
+    route = new Route(app, options.routes, initialPath);
+
     app.define({
         get canNavigateBack() {
             return currentIndex > 0;
