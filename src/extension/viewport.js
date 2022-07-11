@@ -2,38 +2,23 @@ import $ from "../include/external/jquery.js";
 import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { IS_TOUCH } from "../include/zeta-dom/env.js";
 import dom from "../include/zeta-dom/dom.js";
-import { scrollIntoView } from "../include/zeta-dom/domUtil.js";
 import { animateIn } from "../anim.js";
 import { addExtension } from "../app.js";
 
 export default addExtension(true, 'viewport', function (app) {
     var setOrientation = defineObservableProperty(app, 'orientation', '', true);
     var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
-    var availWidth = screen.availWidth;
-    var availHeight = screen.availHeight;
     var aspectRatio, viewportWidth, viewportHeight;
 
     function checkViewportSize(triggerEvent) {
-        if (IS_TOUCH && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
-            // set min-height on body container so that page size is correct when virtual keyboard pops out
-            $('body').css('min-height', $('body').height() + 'px');
-        } else {
-            $('body').css('min-height', '0');
-        }
-        availWidth = screen.availWidth;
-        availHeight = screen.availHeight;
-
-        // scroll properly by CSS transform when height of body is larger than root
-        var bodyHeight = $('body').height() || 0;
-        var htmlHeight = $('html').height() || 0;
-        if (htmlHeight < bodyHeight && $(dom.activeElement).is(':text')) {
-            scrollIntoView(dom.activeElement);
-        }
+        var availWidth = screen.availWidth;
+        var availHeight = screen.availHeight;
         var previousAspectRatio = aspectRatio;
         viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
         viewportHeight = useAvailOrInner ? (availWidth === window.innerWidth ? availHeight : window.innerHeight) : document.body.offsetHeight;
         aspectRatio = viewportWidth / viewportHeight;
         setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
+
         if (triggerEvent !== false) {
             app.emit('resize', {
                 aspectRatio: aspectRatio,
