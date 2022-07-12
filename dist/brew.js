@@ -1233,8 +1233,8 @@ watchable(Route.prototype);
  */
 
 function configureRouter(app, options) {
-  var initialPath = app.path || options.initialPath || options.queryParam && getQueryParam(options.queryParam) || location.pathname.substr(options.baseUrl.length) || '/';
-  var route = new Route(app, options.routes, initialPath);
+  var initialPath = app.path || options.initialPath || options.queryParam && getQueryParam(options.queryParam) || location.pathname || '/';
+  var route;
   var currentPath = '';
   var observable = {};
   var redirectSource = {};
@@ -1630,12 +1630,10 @@ function configureRouter(app, options) {
     toRoutePath = fromPathname;
     fromPathname = pass;
     toPathname = pass;
-
-    if (!isSubPathOf(initialPath, baseUrl)) {
-      initialPath = baseUrl;
-    }
   }
 
+  initialPath = fromPathname(initialPath);
+  route = new Route(app, options.routes, initialPath);
   app.define({
     get canNavigateBack() {
       return currentIndex > 0;
@@ -3850,32 +3848,14 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
-
 /* harmony default export */ const viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
   var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
-  var availWidth = screen.availWidth;
-  var availHeight = screen.availHeight;
   var aspectRatio, viewportWidth, viewportHeight;
 
   function checkViewportSize(triggerEvent) {
-    if (IS_TOUCH && screen.availWidth === availWidth && screen.availHeight === availHeight && screen.availWidth === window.innerWidth) {
-      // set min-height on body container so that page size is correct when virtual keyboard pops out
-      jquery('body').css('min-height', jquery('body').height() + 'px');
-    } else {
-      jquery('body').css('min-height', '0');
-    }
-
-    availWidth = screen.availWidth;
-    availHeight = screen.availHeight; // scroll properly by CSS transform when height of body is larger than root
-
-    var bodyHeight = jquery('body').height() || 0;
-    var htmlHeight = jquery('html').height() || 0;
-
-    if (htmlHeight < bodyHeight && jquery(zeta_dom_dom.activeElement).is(':text')) {
-      scrollIntoView(zeta_dom_dom.activeElement);
-    }
-
+    var availWidth = screen.availWidth;
+    var availHeight = screen.availHeight;
     var previousAspectRatio = aspectRatio;
     viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
     viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
