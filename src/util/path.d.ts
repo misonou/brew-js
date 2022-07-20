@@ -28,6 +28,12 @@ export function combinePath(path: string, child: string): string;
 export function normalizePath(path: string, resolveDotDir?: boolean): string;
 
 /**
+ * Removes query string and hash from a path or URL.
+ * @param path An input path.
+ */
+export function removeQueryAndHash(path: string): string;
+
+/**
  * Prepends the base URL if the given url does not start with the base URL.
  * Paths with origins (i.e. protocol and host) are untouched.
  * @param url An input path.

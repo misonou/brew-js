@@ -1,4 +1,4 @@
-import { baseUrl, combinePath, isSubPathOf, normalizePath, setBaseUrl, withBaseUrl } from "src/util/path";
+import { baseUrl, combinePath, isSubPathOf, normalizePath, removeQueryAndHash, setBaseUrl, withBaseUrl } from "src/util/path";
 
 const initialBaseUrl = baseUrl;
 
@@ -106,6 +106,19 @@ describe('normalizePath', () => {
 
     it('should throw error when path contains ://', () => {
         expect(normalizePath('/foo/http://test.com')).toEqual('/foo/http:/test.com');
+    });
+});
+
+describe('removeQueryAndHash', () => {
+    it('should remove query or hash from a path', () => {
+        expect(removeQueryAndHash('/path?a=1&b=1')).toBe('/path');
+        expect(removeQueryAndHash('/path#a=1&b=1')).toBe('/path');
+        expect(removeQueryAndHash('/path?a=1#a=1&b=1')).toBe('/path');
+        expect(removeQueryAndHash('/path?a=1#a=1?b=1')).toBe('/path');
+    });
+
+    it('should return the same string if there is no query or hash', () => {
+        expect(removeQueryAndHash('/path')).toBe('/path');
     });
 });
 
