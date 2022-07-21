@@ -268,6 +268,32 @@ describe('app#navigate', () => {
     it('should not throw error when navigate with redirect before app init', () => {
         expect(initialRedirectError).toBeUndefined();
     });
+
+    it('should handle query string in path', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+        await app.navigate('/base/test-1?a=1');
+        expect(location.search).toBe('?a=1');
+        expect(location.hash).toBe('');
+        expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/base/test-1?a=1' }), _);
+    });
+
+    it('should handle hash in path', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+        await app.navigate('/base/test-1#a=1');
+        expect(location.search).toBe('');
+        expect(location.hash).toBe('#a=1');
+        expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/base/test-1#a=1' }), _);
+    });
+
+    it('should not trigger navigation if pathname is the same', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+        await app.navigate('/base/?a=1');
+        await app.navigate('/base/#a=1');
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('app#back', () => {

@@ -70,6 +70,10 @@ function toSegments(path) {
     return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
+function getCurrentQuery() {
+    return location.search + location.hash;
+}
+
 function RoutePattern(props) {
     extend(this, props);
 }
@@ -269,7 +273,7 @@ function configureRouter(app, options) {
     var observable = {};
     var redirectSource = {};
     var lockedPath;
-    var newPath;
+    var newPath = '';
     var currentIndex = -1;
     var lastResult;
     var states = [];
@@ -285,8 +289,9 @@ function configureRouter(app, options) {
     }
 
     function handleNoop(path, originalPath) {
+        var pathNoQuery = removeQueryAndHash(path);
         for (var i = currentIndex; i >= 0; i--) {
-            if (states[i].result && states[i].path === path) {
+            if (states[i].result && states[i].pathname === pathNoQuery) {
                 history.replaceState(history.state, '', toPathname(path));
                 return createNavigateResult(states[i].result, path, originalPath, false);
             }
@@ -294,18 +299,22 @@ function configureRouter(app, options) {
     }
 
     function pushState(path, replace) {
-        var currentState = states[currentIndex];
         path = resolvePath(path);
-        if (currentState && path === currentState.path && path === newPath) {
+        var currentState = states[currentIndex];
+        var pathNoQuery = removeQueryAndHash(path);
+        if (currentState && pathNoQuery === currentState.pathname && pathNoQuery === removeQueryAndHash(newPath)) {
+            currentState.path = path;
             if (currentState.result) {
                 return { promise: resolve(handleNoop(path)) };
             } else {
+                history.replaceState(currentState.id, '', toPathname(path));
                 return currentState;
             }
         }
         replace = replace || currentIndex < 0;
         // @ts-ignore: boolean arithmetics
         currentIndex = Math.max(0, currentIndex + !replace);
+        newPath = path;
 
         var id = randomId();
         var resolvePromise = noop;
@@ -315,6 +324,7 @@ function configureRouter(app, options) {
         var state = {
             id: id,
             path: path,
+            pathname: removeQueryAndHash(path),
             result: '',
             previous: currentState,
             get promise() {
@@ -482,11 +492,11 @@ function configureRouter(app, options) {
 
     function handlePathChange() {
         var state = states[currentIndex];
-        if (!state || location.pathname !== toPathname(newPath)) {
+        if (!state || (location.pathname + getCurrentQuery()) !== toPathname(newPath)) {
             pushState(newPath);
             state = states[currentIndex];
         }
-        if (currentIndex > 0 && newPath === currentPath) {
+        if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
             state.resolve(handleNoop(newPath));
             return;
         }
@@ -522,7 +532,7 @@ function configureRouter(app, options) {
         var redirectPath;
         registerMatchPathElements();
         batch(true, function () {
-            var newRoutePath = toRoutePath(newPath);
+            var newRoutePath = toRoutePath(removeQueryAndHash(newPath));
             var switchElements = $('[switch=""]').get();
             var current;
             while (current = switchElements.shift()) {
@@ -615,8 +625,8 @@ function configureRouter(app, options) {
         if (!appReady) {
             return currentPath;
         }
-        newValue = resolvePath(newValue, currentPath);
-        if (newValue !== currentPath && newValue !== newPath) {
+        newValue = resolvePath(newValue);
+        if (newValue !== currentPath) {
             newPath = newValue;
             setImmediateOnce(handlePathChange);
         }
