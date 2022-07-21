@@ -463,6 +463,19 @@ describe('app.route', () => {
         await delay(100);
         expect(cb).not.toBeCalled();
     });
+
+    it('should ignore query and hash when parsing route params', () => {
+        const result = {
+            another: null,
+            bar: null,
+            id: 'bar',
+            optional: null,
+            remainingSegments: "/",
+        }
+        expect(app.route.parse('/foo/bar?a=1&b=1')).toEqual(result);
+        expect(app.route.parse('/foo/bar#a=1&b=1')).toEqual(result);
+        expect(app.route.parse('/foo/bar#a=1&b=1?c=1')).toEqual(result);
+    });
 });
 
 describe('isElementActive', () => {

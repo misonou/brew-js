@@ -9,7 +9,7 @@ import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../
 import { animateIn, animateOut } from "../anim.js";
 import { groupLog } from "../util/console.js";
 import { getQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl } from "../util/path.js";
+import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl, removeQueryAndHash } from "../util/path.js";
 import { evalAttr, resetVar, setVar } from "../var.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -213,7 +213,7 @@ definePrototype(Route, {
     parse: function (path) {
         var self = this;
         var state = _(self);
-        var segments = toSegments(toRoutePath(path));
+        var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
         var matched = any(state.routes, function (tokens) {
             return matchRoute(tokens, segments, true);
         });
