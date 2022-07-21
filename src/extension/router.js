@@ -267,7 +267,6 @@ watchable(Route.prototype);
  * @param {Record<string, any>} options
  */
 function configureRouter(app, options) {
-    var initialPath = app.path || options.initialPath || (options.queryParam && getQueryParam(options.queryParam)) || location.pathname || '/';
     var route;
     var currentPath = '';
     var observable = {};
@@ -643,7 +642,9 @@ function configureRouter(app, options) {
         fromPathname = pass;
         toPathname = pass;
     }
-    initialPath = fromPathname(initialPath);
+    var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
+    var includeQuery = !initialPath;
+    initialPath = fromPathname(initialPath || location.pathname);
     route = new Route(app, options.routes, initialPath);
 
     app.define({
@@ -666,7 +667,7 @@ function configureRouter(app, options) {
             }
         }
     });
-    defineOwnProperty(app, 'initialPath', initialPath, true);
+    defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
     defineAliasProperty(app, 'path', observable);
@@ -689,8 +690,12 @@ function configureRouter(app, options) {
         });
     });
 
+    pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
     app.on('ready', function () {
-        pushState(initialPath, true);
+        if (currentIndex === 0) {
+            pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+        }
+        handlePathChange();
     });
 
     app.on('pageenter', function (e) {
