@@ -66,6 +66,11 @@ describe('normalizePath', () => {
         expect(normalizePath('http://test.com/foo//bar///baz')).toEqual('http://test.com/foo/bar/baz');
     });
 
+    it('should keep starting slash for path with query or hash', () => {
+        expect(normalizePath('/?a=1')).toEqual('/?a=1');
+        expect(normalizePath('/#a=1')).toEqual('/#a=1');
+    });
+
     it('should keep query string and hash', () => {
         expect(normalizePath('foo?bar')).toEqual('/foo?bar');
         expect(normalizePath('/foo?bar')).toEqual('/foo?bar');

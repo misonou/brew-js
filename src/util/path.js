@@ -40,7 +40,7 @@ export function normalizePath(path, resolveDotDir, returnEmpty) {
     if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
         var a = document.createElement('a');
         a.href = path;
-        return (RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir, true) + a.search + a.hash;
+        return ((RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
     }
     path = String(path).replace(/\/+(\/|$)/g, '$1');
     if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
