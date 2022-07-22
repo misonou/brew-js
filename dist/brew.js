@@ -29,6 +29,7 @@ __webpack_require__.d(path_namespaceObject, {
   "combinePath": function() { return combinePath; },
   "isSubPathOf": function() { return isSubPathOf; },
   "normalizePath": function() { return normalizePath; },
+  "removeQueryAndHash": function() { return removeQueryAndHash; },
   "setBaseUrl": function() { return setBaseUrl; },
   "toAbsoluteUrl": function() { return toAbsoluteUrl; },
   "toRelativeUrl": function() { return toRelativeUrl; },
@@ -212,7 +213,7 @@ function normalizePath(path, resolveDotDir, returnEmpty) {
   if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
     var a = document.createElement('a');
     a.href = path;
-    return (RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) + a.search + a.hash;
+    return ((RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
   }
 
   path = String(path).replace(/\/+(\/|$)/g, '$1');
@@ -234,6 +235,16 @@ function normalizePath(path, resolveDotDir, returnEmpty) {
   }
 
   return path[0] === '/' ? path : '/' + path;
+}
+function removeQueryAndHash(path) {
+  var pos1 = path.indexOf('?') + 1;
+  var pos2 = path.indexOf('#') + 1;
+
+  if (!pos1 && !pos2) {
+    return path;
+  }
+
+  return path.slice(0, Math.min(pos1 || pos2, pos2 || pos1) - 1);
 }
 /**
  * @param {string} url
@@ -1010,6 +1021,10 @@ function toSegments(path) {
   return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
+function getCurrentQuery() {
+  return location.search + location.hash;
+}
+
 function RoutePattern(props) {
   extend(this, props);
 }
@@ -1177,7 +1192,7 @@ definePrototype(Route, {
 
     var state = _(self);
 
-    var segments = toSegments(toRoutePath(path));
+    var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
     var matched = any(state.routes, function (tokens) {
       return matchRoute(tokens, segments, true);
     });
@@ -1212,7 +1227,7 @@ definePrototype(Route, {
   replace: function replace(key, value) {
     var self = this;
     var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-    return _(self).app.navigate(path, true);
+    return _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
   },
   getPath: function getPath(params) {
     var matched = matchRouteByParams(_(this).routes, params);
@@ -1233,13 +1248,12 @@ watchable(Route.prototype);
  */
 
 function configureRouter(app, options) {
-  var initialPath = app.path || options.initialPath || options.queryParam && getQueryParam(options.queryParam) || location.pathname || '/';
   var route;
   var currentPath = '';
   var observable = {};
   var redirectSource = {};
   var lockedPath;
-  var newPath;
+  var newPath = '';
   var currentIndex = -1;
   var lastResult;
   var states = [];
@@ -1255,8 +1269,10 @@ function configureRouter(app, options) {
   }
 
   function handleNoop(path, originalPath) {
+    var pathNoQuery = removeQueryAndHash(path);
+
     for (var i = currentIndex; i >= 0; i--) {
-      if (states[i].result && states[i].path === path) {
+      if (states[i].result && states[i].pathname === pathNoQuery) {
         history.replaceState(history.state, '', toPathname(path));
         return createNavigateResult(states[i].result, path, originalPath, false);
       }
@@ -1264,15 +1280,19 @@ function configureRouter(app, options) {
   }
 
   function pushState(path, replace) {
-    var currentState = states[currentIndex];
     path = resolvePath(path);
+    var currentState = states[currentIndex];
+    var pathNoQuery = removeQueryAndHash(path);
 
-    if (currentState && path === currentState.path && path === newPath) {
+    if (currentState && pathNoQuery === currentState.pathname && pathNoQuery === removeQueryAndHash(newPath)) {
+      currentState.path = path;
+
       if (currentState.result) {
         return {
           promise: resolve(handleNoop(path))
         };
       } else {
+        history.replaceState(currentState.id, '', toPathname(path));
         return currentState;
       }
     }
@@ -1280,6 +1300,7 @@ function configureRouter(app, options) {
     replace = replace || currentIndex < 0; // @ts-ignore: boolean arithmetics
 
     currentIndex = Math.max(0, currentIndex + !replace);
+    newPath = path;
     var id = randomId();
     var resolvePromise = noop;
     var rejectPromise = noop;
@@ -1288,6 +1309,7 @@ function configureRouter(app, options) {
     var state = {
       id: id,
       path: path,
+      pathname: removeQueryAndHash(path),
       result: '',
       previous: currentState,
 
@@ -1469,12 +1491,12 @@ function configureRouter(app, options) {
   function handlePathChange() {
     var state = states[currentIndex];
 
-    if (!state || location.pathname !== toPathname(newPath)) {
+    if (!state || location.pathname + getCurrentQuery() !== toPathname(newPath)) {
       pushState(newPath);
       state = states[currentIndex];
     }
 
-    if (currentIndex > 0 && newPath === currentPath) {
+    if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
       state.resolve(handleNoop(newPath));
       return;
     } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
@@ -1514,7 +1536,7 @@ function configureRouter(app, options) {
     var redirectPath;
     registerMatchPathElements();
     batch(true, function () {
-      var newRoutePath = toRoutePath(newPath);
+      var newRoutePath = toRoutePath(removeQueryAndHash(newPath));
       var switchElements = jquery('[switch=""]').get();
       var current;
 
@@ -1611,9 +1633,9 @@ function configureRouter(app, options) {
       return currentPath;
     }
 
-    newValue = resolvePath(newValue, currentPath);
+    newValue = resolvePath(newValue);
 
-    if (newValue !== currentPath && newValue !== newPath) {
+    if (newValue !== currentPath) {
       newPath = newValue;
       setImmediateOnce(handlePathChange);
     }
@@ -1632,7 +1654,9 @@ function configureRouter(app, options) {
     toPathname = pass;
   }
 
-  initialPath = fromPathname(initialPath);
+  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
+  var includeQuery = !initialPath;
+  initialPath = fromPathname(initialPath || location.pathname);
   route = new Route(app, options.routes, initialPath);
   app.define({
     get canNavigateBack() {
@@ -1656,7 +1680,7 @@ function configureRouter(app, options) {
       }
     }
   });
-  defineOwnProperty(app, 'initialPath', initialPath, true);
+  defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
   defineOwnProperty(app, 'route', route, true);
   defineOwnProperty(app, 'routes', freeze(options.routes));
   defineAliasProperty(app, 'path', observable);
@@ -1678,8 +1702,13 @@ function configureRouter(app, options) {
       });
     });
   });
+  pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
   app.on('ready', function () {
-    pushState(initialPath, true);
+    if (currentIndex === 0) {
+      pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+    }
+
+    handlePathChange();
   });
   app.on('pageenter', function (e) {
     jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
@@ -3406,7 +3435,7 @@ function detectLanguage(languages, defaultLanguage) {
       cookie.set(newLangauge);
     }
 
-    if (routeParam) {
+    if (routeParam && appReady) {
       app.route.replace(routeParam, newLangauge.toLowerCase());
     }
 
