@@ -246,7 +246,7 @@ definePrototype(Route, {
     replace: function (key, value) {
         var self = this;
         var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-        return _(self).app.navigate(path, true);
+        return _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
     },
     getPath: function (params) {
         var matched = matchRouteByParams(_(this).routes, params);
