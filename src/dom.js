@@ -144,7 +144,9 @@ export function handleAsync(promise, element, callback) {
  * @param {Element} element
  */
 export function markUpdated(element) {
-    updatedElements.add(element);
+    if (containsOrEquals(root, element)) {
+        updatedElements.add(element);
+    }
 }
 
 /**
@@ -166,11 +168,10 @@ export function processStateChange(suppressAnim) {
             // recursively perform transformation until there is no new element produced
             processTransform(updatedElements, applyDOMUpdates);
 
-            // trigger statechange events and perform DOM updates only on attached elements
-            // leave detached elements in future rounds
             var arr = $.uniqueSort(grep(updatedElements, function (v) {
-                return containsOrEquals(root, v) && updatedElements.delete(v);
+                return containsOrEquals(root, v);
             }));
+            updatedElements.clear();
             each(arr, function (i, v) {
                 var state = getComponentState('oldValues', v);
                 var oldValues = {};
