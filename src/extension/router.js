@@ -298,11 +298,14 @@ function configureRouter(app, options) {
 
     function pushState(path, replace) {
         path = resolvePath(path);
+        newPath = path;
         var currentState = states[currentIndex];
         var pathNoQuery = removeQueryAndHash(path);
-        if (currentState && pathNoQuery === currentState.pathname && pathNoQuery === removeQueryAndHash(newPath)) {
+        if (currentState && pathNoQuery === currentState.pathname) {
             currentState.path = path;
             if (currentState.done) {
+                currentPath = path;
+                app.path = path;
                 return { promise: resolve(handleNoop(path)) };
             } else {
                 history.replaceState(currentState.id, '', toPathname(path));
@@ -312,7 +315,6 @@ function configureRouter(app, options) {
         replace = replace || currentIndex < 0;
         // @ts-ignore: boolean arithmetics
         currentIndex = Math.max(0, currentIndex + !replace);
-        newPath = path;
 
         var id = randomId();
         var resolvePromise = noop;
@@ -348,14 +350,14 @@ function configureRouter(app, options) {
                     (other.promise || other.then(function (other) {
                         return other.promise;
                     })).then(function (data) {
-                        state.resolve(createNavigateResult(data.id, data.path, path));
+                        state.resolve(createNavigateResult(data.id, data.path, state.path));
                     }, rejectPromise);
                     rejectPromise = noop;
                 }
             },
             resolve: function (result) {
                 resolved = true;
-                resolvePromise(result || createNavigateResult(id, path));
+                resolvePromise(result || createNavigateResult(id, state.path));
                 each(states, function (i, v) {
                     v.reject();
                 });

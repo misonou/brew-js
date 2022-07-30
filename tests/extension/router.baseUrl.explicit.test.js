@@ -294,6 +294,21 @@ describe('app#navigate', () => {
         await app.navigate('/base/#a=1');
         expect(cb).not.toBeCalled();
     });
+
+    it('should report latest query string or hash in event data and navigation result', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+
+        const p1 = app.navigate('/base/test-1?a=1');
+        const p2 = app.navigate('/base/test-1?a=2');
+        const r1 = await p1;
+        const r2 = await p2;
+        expect(cb).toBeCalledTimes(1);
+        expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/base/test-1?a=2', oldPathname: initialPath }), _);
+        expect(r1).toEqual(r2);
+        expect(r1.path).toBe('/base/test-1?a=2');
+        expect(r1.redirected).toBe(false);
+    });
 });
 
 describe('app#back', () => {
