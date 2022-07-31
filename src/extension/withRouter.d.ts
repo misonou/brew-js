@@ -7,7 +7,7 @@ declare namespace Brew {
         pageleave: PageEvent;
     }
 
-    interface NavigateEvent extends Zeta.ZetaEventBase {
+    interface NavigateEvent extends Zeta.ZetaAsyncHandleableEvent {
         readonly pathname: string;
         readonly oldPathname: string;
         /**

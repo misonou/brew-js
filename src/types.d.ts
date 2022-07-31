@@ -228,8 +228,8 @@ declare namespace Brew {
          */
         beforePageEnter(callback: (element: Element) => PromiseOrEmpty): void;
 
-        emit(event: string, data?: any, bubble?: boolean): PromiseOrEmpty;
+        emit(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
 
-        emit(event: string, target: Element, data?: any, bubble?: boolean): PromiseOrEmpty;
+        emit(event: string, target: Element, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
     }
 }
