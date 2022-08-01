@@ -326,6 +326,7 @@ function configureRouter(app, options) {
             pathname: pathNoQuery,
             route: freeze(route.parse(pathNoQuery)),
             previous: currentState,
+            handled: false,
             get done() {
                 return resolved;
             },
@@ -336,6 +337,7 @@ function configureRouter(app, options) {
                 }));
             },
             reset: function () {
+                state.handled = false;
                 if (resolved) {
                     resolved = false;
                     promise = null;
@@ -426,11 +428,17 @@ function configureRouter(app, options) {
         });
     }
 
-    function processPageChange(path, oldPath, newActiveElements) {
-        var state = states[currentIndex];
+    function processPageChange(state, newActiveElements) {
+        var oldPath = currentPath;
+        var path = state.path;
         var preload = new Map();
         var eventSource = dom.eventSource;
         var previousActiveElements = activeElements.slice(0);
+
+        currentPath = path;
+        app.path = path;
+        route.set(path);
+
         activeElements = newActiveElements;
         pageTitleElement = $(newActiveElements).filter('[page-title]')[0];
         redirectSource = {};
@@ -496,6 +504,10 @@ function configureRouter(app, options) {
             state.resolve(handleNoop(newPath));
             return;
         }
+        if (state.handled) {
+            return;
+        }
+        state.handled = true;
 
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
         var previous = state.previous;
@@ -504,9 +516,7 @@ function configureRouter(app, options) {
         if (promise) {
             lockedPath = newPath === lockedPath ? null : currentPath;
             promise = resolve(promise).then(function () {
-                let state = pushState(leavePath);
-                setImmediateOnce(handlePathChange);
-                return state;
+                return pushState(leavePath);
             }, function () {
                 throw errorWithCode(ErrorCode.navigationRejected);
             });
@@ -524,7 +534,6 @@ function configureRouter(app, options) {
         // find active elements i.e. with match-path that is equal to or is parent of the new path
         /** @type {HTMLElement[]} */
         var newActiveElements = [root];
-        var oldPath = currentPath;
         var redirectPath;
         registerMatchPathElements();
         batch(true, function () {
@@ -569,8 +578,8 @@ function configureRouter(app, options) {
 
         // prevent infinite redirection loop
         // redirectSource will not be reset until processPageChange is fired
-        if (redirectSource[newPath] && redirectSource[oldPath]) {
-            processPageChange(newPath, oldPath, newActiveElements);
+        if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
+            processPageChange(state, newActiveElements);
             return;
         }
         redirectSource[newPath] = true;
@@ -598,10 +607,6 @@ function configureRouter(app, options) {
         }
 
         console.log('Nagivate', newPath);
-        currentPath = newPath;
-        app.path = newPath;
-        route.set(newPath);
-
         promise = resolve(app.emit('navigate', {
             pathname: newPath,
             oldPathname: lastState.path,
@@ -611,7 +616,7 @@ function configureRouter(app, options) {
         }));
         handleAsync(promise, root, function () {
             if (states[currentIndex] === state) {
-                processPageChange(newPath, oldPath, newActiveElements);
+                processPageChange(state, newActiveElements);
             }
         });
     }
