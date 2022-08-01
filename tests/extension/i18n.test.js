@@ -22,8 +22,8 @@ beforeAll(async () => {
             routeParam: 'language'
         });
         app.on('ready', () => {
-            const unbind = app.on('navigate', () => {
-                initialPath = app.path;
+            const unbind = app.on('navigate', (e) => {
+                initialPath = e.pathname;
                 unbind();
             });
         });
