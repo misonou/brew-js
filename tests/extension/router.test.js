@@ -166,6 +166,34 @@ describe('app.navigate', () => {
         expect(app.path).toEqual('/test-2');
     });
 
+    it('should cancel previous navigation before page load', async () => {
+        let resolve;
+        const promise1 = app.navigate('/test-1');
+        const promise2 = new Promise((resolve_) => {
+            resolve = resolve_;
+        });
+        hookBeforePageEnter(defunctAfterTest(() => {
+            resolve(app.navigate('/test-2'));
+        }));
+        await expect(promise1).rejects.toBeErrorWithCode('brew/navigation-cancelled');
+        await expect(promise2).resolves.toEqual(objectContaining({ path: '/test-2' }));
+        expect(app.path).toEqual('/test-2');
+    });
+
+    it('should report redirected flag for previous navigation when redirecting before page load', async () => {
+        let resolve;
+        const promise1 = app.navigate('/test-1');
+        const promise2 = new Promise((resolve_) => {
+            resolve = resolve_;
+        });
+        hookBeforePageEnter(defunctAfterTest(() => {
+            resolve(app.navigate('/test-2', true));
+        }));
+        await expect(promise1).resolves.toEqual(objectContaining({ path: '/test-2', redirected: true }));
+        await expect(promise2).resolves.toEqual(objectContaining({ path: '/test-2' }));
+        expect(app.path).toEqual('/test-2');
+    });
+
     it('should emit navigate event before triggering a page load', async () => {
         const cb = mockFn();
         bindEvent(root, 'navigate', cb);

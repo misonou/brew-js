@@ -490,7 +490,9 @@ function configureRouter(app, options) {
                 handleAsync(promise, element);
             });
             always(resolveAll(preload), function () {
-                state.resolve();
+                if (states[currentIndex] === state) {
+                    state.resolve();
+                }
             });
         });
     }
