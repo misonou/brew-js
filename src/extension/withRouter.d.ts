@@ -1,6 +1,8 @@
 declare namespace Brew {
     type RouterEventMap = {
         navigate: NavigateEvent;
+        beforepageload: PageEvent;
+        pageload: PageEvent;
         pageenter: PageEvent;
         pageleave: PageEvent;
     }

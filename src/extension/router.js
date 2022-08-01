@@ -363,6 +363,7 @@ function configureRouter(app, options) {
                 });
                 if (states[currentIndex] === state) {
                     lastState = state;
+                    app.emit('pageload', { pathname: state.path }, { handleable: false });
                 }
             },
             reject: function () {
@@ -439,6 +440,7 @@ function configureRouter(app, options) {
         currentPath = path;
         app.path = path;
         route.set(path);
+        app.emit('beforepageload', { pathname: path }, { handleable: false });
 
         activeElements = newActiveElements;
         pageTitleElement = $(newActiveElements).filter('[page-title]')[0];
