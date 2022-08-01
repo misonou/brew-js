@@ -269,7 +269,6 @@ watchable(Route.prototype);
 function configureRouter(app, options) {
     var route;
     var currentPath = '';
-    var observable = {};
     var redirectSource = {};
     var lockedPath;
     var newPath = '';
@@ -621,8 +620,7 @@ function configureRouter(app, options) {
         });
     }
 
-    watch(observable, true);
-    defineObservableProperty(observable, 'path', '', function (newValue) {
+    defineObservableProperty(app, 'path', '', function (newValue) {
         if (!appReady) {
             return currentPath;
         }
@@ -672,7 +670,6 @@ function configureRouter(app, options) {
     defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
-    defineAliasProperty(app, 'path', observable);
 
     app.beforeInit(function () {
         dom.ready.then(function () {
