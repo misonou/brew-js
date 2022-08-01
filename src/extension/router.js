@@ -274,7 +274,7 @@ function configureRouter(app, options) {
     var lockedPath;
     var newPath = '';
     var currentIndex = -1;
-    var lastResult;
+    var lastState = {};
     var states = [];
 
     function createNavigateResult(id, path, originalPath, navigated) {
@@ -290,9 +290,9 @@ function configureRouter(app, options) {
     function handleNoop(path, originalPath) {
         var pathNoQuery = removeQueryAndHash(path);
         for (var i = currentIndex; i >= 0; i--) {
-            if (states[i].result && states[i].pathname === pathNoQuery) {
+            if (states[i].done && states[i].pathname === pathNoQuery) {
                 history.replaceState(history.state, '', toPathname(path));
-                return createNavigateResult(states[i].result, path, originalPath, false);
+                return createNavigateResult(states[i].id, path, originalPath, false);
             }
         }
     }
@@ -303,7 +303,7 @@ function configureRouter(app, options) {
         var pathNoQuery = removeQueryAndHash(path);
         if (currentState && pathNoQuery === currentState.pathname && pathNoQuery === removeQueryAndHash(newPath)) {
             currentState.path = path;
-            if (currentState.result) {
+            if (currentState.done) {
                 return { promise: resolve(handleNoop(path)) };
             } else {
                 history.replaceState(currentState.id, '', toPathname(path));
@@ -323,24 +323,21 @@ function configureRouter(app, options) {
         var state = {
             id: id,
             path: path,
-            pathname: removeQueryAndHash(path),
-            result: '',
+            pathname: pathNoQuery,
+            route: freeze(route.parse(pathNoQuery)),
             previous: currentState,
+            get done() {
+                return resolved;
+            },
             get promise() {
                 return promise || (promise = new Promise(function (resolve_, reject_) {
-                    var wrapper = function (fn) {
-                        return function (value) {
-                            resolved = true;
-                            fn(value);
-                        };
-                    };
-                    resolved = false;
-                    resolvePromise = wrapper(resolve_);
-                    rejectPromise = wrapper(reject_);
+                    resolvePromise = resolve_;
+                    rejectPromise = reject_;
                 }));
             },
             reset: function () {
                 if (resolved) {
+                    resolved = false;
                     promise = null;
                 }
                 return state;
@@ -356,14 +353,14 @@ function configureRouter(app, options) {
                 }
             },
             resolve: function (result) {
-                result = result || createNavigateResult(id, path);
-                state.path = result.path;
-                state.result = state.result || result.id;
-                lastResult = result;
-                resolvePromise(result);
+                resolved = true;
+                resolvePromise(result || createNavigateResult(id, path));
                 each(states, function (i, v) {
                     v.reject();
                 });
+                if (states[currentIndex] === state) {
+                    lastState = state;
+                }
             },
             reject: function () {
                 rejectPromise(errorWithCode(ErrorCode.navigationCancelled));
@@ -607,10 +604,10 @@ function configureRouter(app, options) {
 
         promise = resolve(app.emit('navigate', {
             pathname: newPath,
-            oldPathname: oldPath,
-            oldStateId: lastResult && lastResult.id,
+            oldPathname: lastState.path,
+            oldStateId: lastState.id,
             newStateId: state.id,
-            route: Object.freeze(extend({}, route))
+            route: state.route
         }));
         handleAsync(promise, root, function () {
             if (states[currentIndex] === state) {
