@@ -113,8 +113,10 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     any = _zeta$util.any,
     single = _zeta$util.single,
     kv = _zeta$util.kv,
+    fill = _zeta$util.fill,
     pick = _zeta$util.pick,
     exclude = _zeta$util.exclude,
+    mapObject = _zeta$util.mapObject,
     mapGet = _zeta$util.mapGet,
     mapRemove = _zeta$util.mapRemove,
     arrRemove = _zeta$util.arrRemove,
@@ -131,6 +133,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     setImmediateOnce = _zeta$util.setImmediateOnce,
     throwNotFunction = _zeta$util.throwNotFunction,
     errorWithCode = _zeta$util.errorWithCode,
+    isErrorWithCode = _zeta$util.isErrorWithCode,
     keys = _zeta$util.keys,
     values = _zeta$util.values,
     util_hasOwnProperty = _zeta$util.hasOwnProperty,
@@ -1250,12 +1253,11 @@ watchable(Route.prototype);
 function configureRouter(app, options) {
   var route;
   var currentPath = '';
-  var observable = {};
   var redirectSource = {};
   var lockedPath;
   var newPath = '';
   var currentIndex = -1;
-  var lastResult;
+  var lastState = {};
   var states = [];
 
   function createNavigateResult(id, path, originalPath, navigated) {
@@ -1272,22 +1274,25 @@ function configureRouter(app, options) {
     var pathNoQuery = removeQueryAndHash(path);
 
     for (var i = currentIndex; i >= 0; i--) {
-      if (states[i].result && states[i].pathname === pathNoQuery) {
+      if (states[i].done && states[i].pathname === pathNoQuery) {
         history.replaceState(history.state, '', toPathname(path));
-        return createNavigateResult(states[i].result, path, originalPath, false);
+        return createNavigateResult(states[i].id, path, originalPath, false);
       }
     }
   }
 
   function pushState(path, replace) {
     path = resolvePath(path);
+    newPath = path;
     var currentState = states[currentIndex];
     var pathNoQuery = removeQueryAndHash(path);
 
-    if (currentState && pathNoQuery === currentState.pathname && pathNoQuery === removeQueryAndHash(newPath)) {
+    if (currentState && pathNoQuery === currentState.pathname) {
       currentState.path = path;
 
-      if (currentState.result) {
+      if (currentState.done) {
+        currentPath = path;
+        app.path = path;
         return {
           promise: resolve(handleNoop(path))
         };
@@ -1300,7 +1305,6 @@ function configureRouter(app, options) {
     replace = replace || currentIndex < 0; // @ts-ignore: boolean arithmetics
 
     currentIndex = Math.max(0, currentIndex + !replace);
-    newPath = path;
     var id = randomId();
     var resolvePromise = noop;
     var rejectPromise = noop;
@@ -1309,27 +1313,27 @@ function configureRouter(app, options) {
     var state = {
       id: id,
       path: path,
-      pathname: removeQueryAndHash(path),
-      result: '',
+      pathname: pathNoQuery,
+      route: freeze(route.parse(pathNoQuery)),
       previous: currentState,
+      handled: false,
+
+      get done() {
+        return resolved;
+      },
 
       get promise() {
         return promise || (promise = new Promise(function (resolve_, reject_) {
-          var wrapper = function wrapper(fn) {
-            return function (value) {
-              resolved = true;
-              fn(value);
-            };
-          };
-
-          resolved = false;
-          resolvePromise = wrapper(resolve_);
-          rejectPromise = wrapper(reject_);
+          resolvePromise = resolve_;
+          rejectPromise = reject_;
         }));
       },
 
       reset: function reset() {
+        state.handled = false;
+
         if (resolved) {
+          resolved = false;
           promise = null;
         }
 
@@ -1340,20 +1344,26 @@ function configureRouter(app, options) {
           (other.promise || other.then(function (other) {
             return other.promise;
           })).then(function (data) {
-            state.resolve(createNavigateResult(data.id, data.path, path));
+            state.resolve(createNavigateResult(data.id, data.path, state.path));
           }, rejectPromise);
           rejectPromise = noop;
         }
       },
       resolve: function resolve(result) {
-        result = result || createNavigateResult(id, path);
-        state.path = result.path;
-        state.result = state.result || result.id;
-        lastResult = result;
-        resolvePromise(result);
+        resolved = true;
+        resolvePromise(result || createNavigateResult(id, state.path));
         each(states, function (i, v) {
           v.reject();
         });
+
+        if (states[currentIndex] === state) {
+          lastState = state;
+          app.emit('pageload', {
+            pathname: state.path
+          }, {
+            handleable: false
+          });
+        }
       },
       reject: function reject() {
         rejectPromise(errorWithCode(navigationCancelled));
@@ -1425,11 +1435,20 @@ function configureRouter(app, options) {
     });
   }
 
-  function processPageChange(path, oldPath, newActiveElements) {
-    var state = states[currentIndex];
+  function processPageChange(state, newActiveElements) {
+    var oldPath = currentPath;
+    var path = state.path;
     var preload = new Map();
     var eventSource = zeta_dom_dom.eventSource;
     var previousActiveElements = activeElements.slice(0);
+    currentPath = path;
+    app.path = path;
+    route.set(path);
+    app.emit('beforepageload', {
+      pathname: path
+    }, {
+      handleable: false
+    });
     activeElements = newActiveElements;
     pageTitleElement = jquery(newActiveElements).filter('[page-title]')[0];
     redirectSource = {}; // assign document title from matched active elements and
@@ -1483,7 +1502,9 @@ function configureRouter(app, options) {
         handleAsync(promise, element);
       });
       always(resolveAll(preload), function () {
-        state.resolve();
+        if (states[currentIndex] === state) {
+          state.resolve();
+        }
       });
     });
   }
@@ -1499,8 +1520,13 @@ function configureRouter(app, options) {
     if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
       state.resolve(handleNoop(newPath));
       return;
-    } // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
+    }
 
+    if (state.handled) {
+      return;
+    }
+
+    state.handled = true; // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
 
     var previous = state.previous;
     var leavePath = newPath;
@@ -1509,9 +1535,7 @@ function configureRouter(app, options) {
     if (promise) {
       lockedPath = newPath === lockedPath ? null : currentPath;
       promise = resolve(promise).then(function () {
-        var state = pushState(leavePath);
-        setImmediateOnce(handlePathChange);
-        return state;
+        return pushState(leavePath);
       }, function () {
         throw errorWithCode(navigationRejected);
       });
@@ -1532,7 +1556,6 @@ function configureRouter(app, options) {
     /** @type {HTMLElement[]} */
 
     var newActiveElements = [root];
-    var oldPath = currentPath;
     var redirectPath;
     registerMatchPathElements();
     batch(true, function () {
@@ -1578,8 +1601,8 @@ function configureRouter(app, options) {
     }); // prevent infinite redirection loop
     // redirectSource will not be reset until processPageChange is fired
 
-    if (redirectSource[newPath] && redirectSource[oldPath]) {
-      processPageChange(newPath, oldPath, newActiveElements);
+    if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
+      processPageChange(state, newActiveElements);
       return;
     }
 
@@ -1610,25 +1633,21 @@ function configureRouter(app, options) {
     }
 
     console.log('Nagivate', newPath);
-    currentPath = newPath;
-    app.path = newPath;
-    route.set(newPath);
     promise = resolve(app.emit('navigate', {
       pathname: newPath,
-      oldPathname: oldPath,
-      oldStateId: lastResult && lastResult.id,
+      oldPathname: lastState.path,
+      oldStateId: lastState.id,
       newStateId: state.id,
-      route: Object.freeze(extend({}, route))
+      route: state.route
     }));
     handleAsync(promise, root, function () {
       if (states[currentIndex] === state) {
-        processPageChange(newPath, oldPath, newActiveElements);
+        processPageChange(state, newActiveElements);
       }
     });
   }
 
-  watch(observable, true);
-  defineObservableProperty(observable, 'path', '', function (newValue) {
+  defineObservableProperty(app, 'path', '', function (newValue) {
     if (!appReady) {
       return currentPath;
     }
@@ -1683,7 +1702,6 @@ function configureRouter(app, options) {
   defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
   defineOwnProperty(app, 'route', route, true);
   defineOwnProperty(app, 'routes', freeze(options.routes));
-  defineAliasProperty(app, 'path', observable);
   app.beforeInit(function () {
     zeta_dom_dom.ready.then(function () {
       registerMatchPathElements();
@@ -1924,7 +1942,9 @@ function handleAsync(promise, element, callback) {
  */
 
 function markUpdated(element) {
-  updatedElements.add(element);
+  if (containsOrEquals(dom_root, element)) {
+    updatedElements.add(element);
+  }
 }
 /**
  * @param {boolean=} suppressAnim
@@ -1948,12 +1968,11 @@ function processStateChange(suppressAnim) {
   try {
     groupLog(zeta_dom_dom.eventSource, 'statechange', function () {
       // recursively perform transformation until there is no new element produced
-      processTransform(updatedElements, applyDOMUpdates); // trigger statechange events and perform DOM updates only on attached elements
-      // leave detached elements in future rounds
-
+      processTransform(updatedElements, applyDOMUpdates);
       var arr = jquery.uniqueSort(grep(updatedElements, function (v) {
-        return containsOrEquals(dom_root, v) && updatedElements.delete(v);
+        return containsOrEquals(dom_root, v);
       }));
+      updatedElements.clear();
       each(arr, function (i, v) {
         var state = getComponentState('oldValues', v);
         var oldValues = {};
