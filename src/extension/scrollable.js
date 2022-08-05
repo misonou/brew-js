@@ -206,7 +206,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         watchElements(dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
             $(nodes).filter('[scrollable-target]').each(function (i, v) {
                 var scrollable = $(v).closest('[scrollable]')[0];
-                $(v).addClass(getState(scrollable).childClass);
+                if (scrollable) {
+                    $(v).addClass(getState(scrollable).childClass);
+                }
             });
             $(nodes).filter('[scrollable]').each(function (i, v) {
                 initScrollable(v);
