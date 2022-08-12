@@ -1,5 +1,5 @@
 import { addDetect, app, install } from "src/app";
-import router from "src/extension/router";
+import router from "src/extension/htmlRouter";
 import { setBaseUrl } from "src/util/path";
 import { resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
@@ -179,7 +179,7 @@ describe('app.matchPath', () => {
                 <div id="test2" match-path="/test-nested/default"></div>
             </div>
         `);
-        app.useRouter({
+        app.useHtmlRouter({
             baseUrl: '/',
             routes: ['/*']
         });

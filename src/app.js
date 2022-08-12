@@ -4,7 +4,6 @@ import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
-import { hookBeforePageEnter, matchRoute } from "./extension/router.js";
 import { setVar } from "./var.js";
 import { withBaseUrl } from "./util/path.js";
 
@@ -150,21 +149,8 @@ definePrototype(App, {
         });
         return combineFn(arr);
     },
-    matchPath: function (path, selector, handler) {
-        if (isFunction(selector)) {
-            handler = selector;
-            selector = null;
-        }
-        this.on('mounted', function (e) {
-            var matchPath = e.target.getAttribute('match-path');
-            if (matchPath && matchRoute(path, matchPath) && (!selector || $(e.target).is(selector))) {
-                handler.call(e.target, e.target);
-            }
-        });
-    },
     matchElement: matchElement,
-    beforeUpdate: hookBeforeUpdate,
-    beforePageEnter: hookBeforePageEnter
+    beforeUpdate: hookBeforeUpdate
 });
 watchable(App.prototype);
 

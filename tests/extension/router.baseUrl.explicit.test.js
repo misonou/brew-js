@@ -1,5 +1,6 @@
 import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp } from "../testUtil";
-import router, { hookBeforePageEnter, isElementActive, matchRoute } from "src/extension/router";
+import { matchRoute } from "src/extension/router";
+import router from "src/extension/htmlRouter";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
 import { mountElement } from "src/dom";
@@ -14,12 +15,12 @@ const div = {};
 var initialCanNavigateBack;
 var initialPreviousPath;
 var initialRedirectError;
-/** @type {Brew.AppInstance<Brew.WithRouter>} */
+/** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
 
 beforeAll(async () => {
     app = await initApp(router, app => {
-        app.useRouter({
+        app.useHtmlRouter({
             baseUrl: '/base',
             explicitBaseUrl: true,
             routes: [

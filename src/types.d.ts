@@ -179,21 +179,6 @@ declare namespace Brew {
         when<T>(promise: T | PromiseLike<T>, callback: (value: T) => void): void;
 
         /**
-         * Registers handler to be fired when each element matched the given path is being mounted.
-         * @param path A path that matched the `match-path` attribute of an element. The current route prefix `~/` can be used.
-         * @param handler A callback function where the first argument is the matched element.
-         */
-        matchPath(path: string, handler: (element: Element) => void): void;
-
-        /**
-         * Registers handler to be fired when each element matched the given path is being mounted.
-         * @param path A path that matched the `match-path` attribute of an element. The current route prefix `~/` can be used.
-         * @param selector A valid CSS selector that filters elements.
-         * @param handler A callback function which receives the matched element.
-         */
-        matchPath(path: string, selector: string, handler: (element: Element) => void): void;
-
-        /**
          * Registers handler to be fired when each matched element is being mounted.
          * @param selector A valid CSS selector identifying elements.
          * @param handler A callback function which receives is the matched element.
@@ -212,13 +197,6 @@ declare namespace Brew {
          * @param callback A callback function which receives a list of updates.
          */
         beforeUpdate(callback: (domUpdates: Map<Element, DOMUpdateState>) => PromiseOrEmpty): void;
-
-        /**
-         * Register handler to perform asynchronous operations before page is displayed after navigation.
-         * If the handler returns a promise, the `pageenter` event is delayed until the promise resolves.
-         * @param callback A callback function which receives is the matched element.
-         */
-        beforePageEnter(callback: (element: Element) => PromiseOrEmpty): void;
 
         emit(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
 
