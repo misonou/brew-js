@@ -172,7 +172,7 @@ describe('app.navigate', () => {
         const promise2 = new Promise((resolve_) => {
             resolve = resolve_;
         });
-        hookBeforePageEnter(defunctAfterTest(() => {
+        app.beforePageEnter(defunctAfterTest(() => {
             resolve(app.navigate('/test-2'));
         }));
         await expect(promise1).rejects.toBeErrorWithCode('brew/navigation-cancelled');
@@ -186,7 +186,7 @@ describe('app.navigate', () => {
         const promise2 = new Promise((resolve_) => {
             resolve = resolve_;
         });
-        hookBeforePageEnter(defunctAfterTest(() => {
+        app.beforePageEnter(defunctAfterTest(() => {
             resolve(app.navigate('/test-2', true));
         }));
         await expect(promise1).resolves.toEqual(objectContaining({ path: '/test-2', redirected: true }));
@@ -547,36 +547,36 @@ describe('app.route', () => {
     });
 });
 
-describe('isElementActive', () => {
+describe('app.isElementActive', () => {
     it('should return true if the element does not have a match-path ancestor', () => {
-        expect(isElementActive(root)).toBeTruthy();
-        expect(isElementActive(body)).toBeTruthy();
-        expect(isElementActive(div.root)).toBeTruthy();
+        expect(app.isElementActive(root)).toBeTruthy();
+        expect(app.isElementActive(body)).toBeTruthy();
+        expect(app.isElementActive(div.root)).toBeTruthy();
     });
 
     it('should return true if the element has a direct match-path ancestor that matches current path', async () => {
         await app.navigate('/test-nested');
-        expect(isElementActive(div.nested.children[0])).toBeTruthy();
+        expect(app.isElementActive(div.nested.children[0])).toBeTruthy();
     });
 
     it('should return true if the element has matched descendents', async () => {
         await app.navigate('/test-nested/default');
-        expect(isElementActive(div.nested)).toBeTruthy();
+        expect(app.isElementActive(div.nested)).toBeTruthy();
     });
 
     it('should return false if the element does not match current path', async () => {
         await app.navigate('/test-1');
-        expect(isElementActive(div.test2)).toBeFalsy();
+        expect(app.isElementActive(div.test2)).toBeFalsy();
 
         await app.navigate('/test-nested/default');
-        expect(isElementActive(div.nestedOther)).toBeFalsy();
+        expect(app.isElementActive(div.nestedOther)).toBeFalsy();
     });
 });
 
-describe('hookBeforePageEnter', () => {
+describe('app.beforePageEnter', () => {
     it('should delay page load until all hooks have completed', async () => {
         var resolved;
-        hookBeforePageEnter(defunctAfterTest(async () => {
+        app.beforePageEnter(defunctAfterTest(async () => {
             await delay(100);
             resolved = true;
         }));
@@ -587,8 +587,8 @@ describe('hookBeforePageEnter', () => {
     it('should only fire callback of which the registered route matches current path', async () => {
         const cb1 = mockFn();
         const cb2 = mockFn();
-        hookBeforePageEnter('/test-1', defunctAfterTest(cb1));
-        hookBeforePageEnter('/test-2', defunctAfterTest(cb2));
+        app.beforePageEnter('/test-1', defunctAfterTest(cb1));
+        app.beforePageEnter('/test-2', defunctAfterTest(cb2));
 
         await app.navigate('/test-1');
         expect(cb1).toBeCalledTimes(1);
@@ -730,7 +730,7 @@ describe('processPageChange', () => {
         bindEvent(div.test2, { pageenter: cb, pageleave: cb });
 
         await app.navigate('/test-1');
-        hookBeforePageEnter('/test-2', defunctAfterTest(async () => {
+        app.beforePageEnter('/test-2', defunctAfterTest(async () => {
             await delay(100);
             await app.navigate('/test-1');
         }));
