@@ -1,7 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, map } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 import { hookBeforePageEnter, matchRoute } from "./extension/router.js";
@@ -18,12 +18,6 @@ export var app;
 export var appReady;
 /** @type {boolean} */
 export var appInited;
-
-function processUntilEmpty(arr) {
-    return resolveAll(arr.splice(0), function () {
-        return arr.length && processUntilEmpty(arr);
-    });
-}
 
 function exactTargetWrapper(handler) {
     return function (e) {
@@ -64,7 +58,7 @@ function onElementMounted(e) {
 function App() {
     var self = this;
     _(self, {
-        init: [],
+        init: deferrable(dom.ready),
         options: {}
     });
     defineOwnProperty(self, 'element', root, true);
@@ -90,7 +84,7 @@ definePrototype(App, {
         if (isFunction(promise)) {
             promise = promise.call(this);
         }
-        _(this).init.push(promise);
+        _(this).init.waitFor(promise);
     },
     detect: function (names, callback) {
         var app = this;
@@ -189,11 +183,11 @@ export default function () {
 
     appInited = true;
     setVar(root, { loading: 'initial' });
-    handleAsync(resolveAll([dom.ready, processUntilEmpty(_(app).init)], function () {
+    handleAsync(_(app).init, root, function () {
         appReady = true;
         mountElement(root);
         app.emit('ready');
-    }), root);
+    });
     return app;
 }
 
