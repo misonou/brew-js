@@ -380,6 +380,9 @@ function configureRouter(app, options) {
                 });
             }
         }
+        if (appReady) {
+            setImmediateOnce(handlePathChange);
+        }
         return state;
     }
 
