@@ -1,5 +1,5 @@
 // @ts-nocheck
 
 /** @type {PromiseConstructor} */
-const Promise = window.Promise || require('promise-polyfill').default;
+const Promise = window.Promise || require.resolveWeak('promise-polyfill').default;
 module.exports = Promise;
