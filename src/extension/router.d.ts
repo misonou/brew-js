@@ -9,6 +9,7 @@ export default router;
  * Gets whether a given element is part of the active layout of the current path.
  * @param {Element} v A DOM element.
  * @param {Element[]=} arr
+ * @deprecated Use `app.isElementActive` instead.
  */
 export function isElementActive(v: Element, arr?: Element[] | undefined): boolean;
 

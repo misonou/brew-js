@@ -2,8 +2,7 @@ import { each, keys } from "../include/zeta-dom/util.js";
 import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { preloadImages } from "../util/common.js";
 import { toAbsoluteUrl } from "../util/path.js";
-import { isElementActive } from "./router.js";
-import { addExtension } from "../app.js";
+import { addExtension, isElementActive } from "../app.js";
 import defaults from "../defaults.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');

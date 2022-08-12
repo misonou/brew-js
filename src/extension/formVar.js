@@ -3,8 +3,7 @@ import { each, equal, extend, keys, pick, setImmediateOnce } from "../include/ze
 import { bindUntil, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import { afterDetached, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
 import { getVar, getVarScope, setVar } from "../var.js";
-import { isElementActive } from "./router.js";
-import { addExtension } from "../app.js";
+import { addExtension, isElementActive } from "../app.js";
 import { getFormValues } from "../util/common.js";
 
 export default addExtension(true, 'formVar', function (app) {

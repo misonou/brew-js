@@ -5,9 +5,8 @@ import * as animation from "./anim.js";
 import * as ErrorCode from "./errorCode.js";
 import { declareVar, evalAttr, getVar, setVar } from "./var.js";
 import { addTemplate, handleAsync, preventLeave } from "./dom.js";
-import { isElementActive } from "./extension/router.js";
 import * as domAction from "./domAction.js";
-import brew, { addDetect, addExtension, install } from "./app.js";
+import brew, { addDetect, addExtension, install, isElementActive } from "./app.js";
 import defaults from "./defaults.js";
 import _ from "./domReady.js";
 

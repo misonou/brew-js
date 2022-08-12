@@ -660,6 +660,7 @@ function configureRouter(app, options) {
         matchRoute: matchRoute,
         parseRoute: parseRoute,
         resolvePath: resolvePath,
+        isElementActive: isElementActive,
         navigate: function (path, replace) {
             return pushState(path, replace).promise;
         },

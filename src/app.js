@@ -86,6 +86,9 @@ definePrototype(App, {
         }
         _(this).init.waitFor(promise);
     },
+    isElementActive: function () {
+        return true;
+    },
     detect: function (names, callback) {
         var app = this;
         var supports = {};
@@ -210,4 +213,8 @@ export function addExtension(autoInit, name, callback) {
 
 export function addDetect(name, callback) {
     featureDetections[name] = throwNotFunction(callback);
+}
+
+export function isElementActive(element) {
+    return !app || app.isElementActive(element);
 }

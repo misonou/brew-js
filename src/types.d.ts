@@ -223,5 +223,11 @@ declare namespace Brew {
         emit(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
 
         emit(event: string, target: Element, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
+
+        /**
+         * Gets whether a given element is part of the active layout of the current path.
+         * @param element A DOM element.
+         */
+        isElementActive(element: Element): boolean;
     }
 }

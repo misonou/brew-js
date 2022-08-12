@@ -5,8 +5,7 @@ import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
 import { getVar, setVar } from "../var.js";
-import { isElementActive } from "./router.js";
-import { addExtension } from "../app.js";
+import { addExtension, isElementActive } from "../app.js";
 import { selectorForAttr } from "../util/common.js";
 
 export default addExtension('scrollable', function (app, defaultOptions) {

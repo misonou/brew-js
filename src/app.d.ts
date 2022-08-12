@@ -61,3 +61,5 @@ export function addExtension<T = Zeta.Dictionary, U = Zeta.Dictionary>(name: str
  * @param callback A callback to perform the detection and return the result.
  */
 export function addDetect(name: string, callback: () => boolean | Promise<boolean>): void;
+
+export function isElementActive(): boolean;

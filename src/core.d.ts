@@ -1,6 +1,5 @@
 import { declareVar, evalAttr, getVar, setVar } from "./var";
 import { addTemplate, handleAsync, preventLeave } from "./dom";
-import { isElementActive } from "./extension/router";
 import { addDetect, addExtension, install } from "./app";
 import defaults from "./defaults";
 
@@ -10,7 +9,7 @@ import * as animation from "./anim";
 import * as domAction from "./domAction";
 import * as ErrorCode from "./errorCode.js";
 
-import { AppInit } from "./app";
+import { AppInit, isElementActive } from "./app";
 
 type WithExport<T> = T extends Extension<infer P> ? P : T;
 type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? WithExport<U> & WithExtension<TRest> : {};
