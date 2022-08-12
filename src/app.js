@@ -160,7 +160,6 @@ definePrototype(App, {
         });
     },
     matchElement: matchElement,
-    matchRoute: matchRoute,
     beforeUpdate: hookBeforeUpdate,
     beforePageEnter: hookBeforePageEnter
 });

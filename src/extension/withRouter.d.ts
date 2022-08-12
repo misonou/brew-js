@@ -117,6 +117,14 @@ declare namespace Brew {
          */
         parseRoute(pattern: string): RoutePattern;
         /**
+         * Determines whether a route matches a given path.
+         * @param {string} route
+         * @param {string} path Path to match.
+         * @param {boolean=} ignoreExact Whether to match child paths even though there is no trailing wildcard character in the route.
+         */
+        matchRoute(route: string, path: string, ignoreExact?: boolean): boolean;
+
+        /**
          * Configures router.
          * @param options
          */

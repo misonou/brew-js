@@ -657,6 +657,7 @@ function configureRouter(app, options) {
         get previousPath() {
             return (states[currentIndex - 1] || '').path || null;
         },
+        matchRoute: matchRoute,
         parseRoute: parseRoute,
         resolvePath: resolvePath,
         navigate: function (path, replace) {
