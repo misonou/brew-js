@@ -345,7 +345,7 @@ function configureRouter(app, options) {
                     (other.promise || other.then(function (other) {
                         return other.promise;
                     })).then(function (data) {
-                        state.resolve(createNavigateResult(data.id, data.path, state.path));
+                        state.resolve(createNavigateResult(data.id, data.path, state.path, data.navigated));
                     }, rejectPromise);
                     rejectPromise = noop;
                 }
