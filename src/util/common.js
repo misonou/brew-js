@@ -19,6 +19,15 @@ export function getAttrValues(element) {
     return values;
 }
 
+export function hasAttr(element, name) {
+    return !!element.attributes[name];
+}
+
+export function getAttr(element, name) {
+    var attr = element.attributes[name];
+    return attr && attr.value;
+}
+
 export function setAttr(element, name, value) {
     each(isPlainObject(name) || kv(name, value), function (i, v) {
         element.setAttribute(i, v);

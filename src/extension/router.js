@@ -9,7 +9,7 @@ import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../
 import { animateIn, animateOut } from "../anim.js";
 import { groupLog } from "../util/console.js";
 import { getQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl, removeQueryAndHash } from "../util/path.js";
+import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
 import { evalAttr, resetVar, setVar } from "../var.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -63,11 +63,6 @@ export function matchRoute(route, segments, ignoreExact) {
         segments = toSegments(segments);
     }
     return route.test(segments, ignoreExact);
-}
-
-function toSegments(path) {
-    path = normalizePath(path);
-    return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
 
 function getCurrentQuery() {

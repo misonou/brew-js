@@ -58,3 +58,10 @@ export function toRelativeUrl(url: string): string;
  * @param basePath A parent path to test against.
  */
 export function isSubPathOf(path: string, basePath: string): string | false;
+
+/**
+ * Normalizes a path and returns its segments.
+ * If the path is empty or is the root path `/`, an empty array is returned.
+ * @param path An input path.
+ */
+export function toSegments(path: string): string[];

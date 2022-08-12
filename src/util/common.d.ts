@@ -1,5 +1,9 @@
 export function getAttrValues(element: Element): Zeta.Dictionary<string>;
 
+export function hasAttr(element: Element, name: string): boolean;
+
+export function getAttr(element: Element, name: string): string | undefined;
+
 export function setAttr(element: Element, name: string, value: string): void;
 
 export function setAttr(element: Element, values: Zeta.Dictionary<string>): void;

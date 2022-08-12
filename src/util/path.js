@@ -98,3 +98,11 @@ export function isSubPathOf(a, b) {
     var len = b.length;
     return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
+
+/**
+ * @param {string} path
+ */
+export function toSegments(path) {
+    path = normalizePath(path);
+    return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
+}
