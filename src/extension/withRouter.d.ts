@@ -1,7 +1,7 @@
 declare namespace Brew {
     type RouterEventMap = {
         navigate: NavigateEvent;
-        beforepageload: PageEvent;
+        beforepageload: BeforePageLoadEvent;
         pageload: PageEvent;
         pageenter: PageEvent;
         pageleave: PageEvent;
@@ -23,6 +23,9 @@ declare namespace Brew {
 
     interface PageEvent extends Zeta.ZetaEventBase {
         readonly pathname: string;
+    }
+
+    interface BeforePageLoadEvent extends PageEvent, Zeta.Deferrable {
     }
 
     interface NavigateResult {

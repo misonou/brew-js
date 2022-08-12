@@ -3,7 +3,7 @@ import { bind, containsOrEquals, selectIncludeSelf, setClass } from "../include/
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked } from "../include/zeta-dom/domLock.js";
 import { watchElements } from "../include/zeta-dom/observe.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, resolveAll, each, defineOwnProperty, resolve, createPrivateStore, throwNotFunction, defineAliasProperty, setImmediateOnce, exclude, equal, mapGet, isFunction, isArray, define, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { batch, handleAsync, markUpdated, mountElement, preventLeave } from "../dom.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -428,14 +428,14 @@ function configureRouter(app, options) {
     function processPageChange(state, newActiveElements) {
         var oldPath = currentPath;
         var path = state.path;
-        var preload = new Map();
+        var deferred = deferrable();
         var eventSource = dom.eventSource;
         var previousActiveElements = activeElements.slice(0);
 
         currentPath = path;
         app.path = path;
         route.set(path);
-        app.emit('beforepageload', { pathname: path }, { handleable: false });
+        app.emit('beforepageload', { pathname: path, waitFor: deferred.waitFor }, { handleable: false });
 
         activeElements = newActiveElements;
         pageTitleElement = $(newActiveElements).filter('[page-title]')[0];
@@ -445,6 +445,7 @@ function configureRouter(app, options) {
         document.title = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
 
         batch(true, function () {
+            var preload = new Map();
             groupLog(eventSource, ['pageenter', path], function () {
                 matchByPathElements.forEach(function (element, placeholder) {
                     var matched = activeElements.indexOf(element) >= 0;
@@ -486,11 +487,12 @@ function configureRouter(app, options) {
             each(preload, function (element, promise) {
                 handleAsync(promise, element);
             });
-            always(resolveAll(preload), function () {
-                if (states[currentIndex] === state) {
-                    state.resolve();
-                }
-            });
+            deferred.waitFor(resolveAll(preload));
+        });
+        always(deferred, function () {
+            if (states[currentIndex] === state) {
+                state.resolve();
+            }
         });
     }
 
