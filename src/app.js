@@ -194,11 +194,15 @@ export default function () {
 }
 
 export function install(name, callback) {
+    name = camel('use-' + name);
     throwNotFunction(callback);
-    definePrototype(App, kv(camel('use-' + name), function (options) {
-        var state = _(this);
-        state.options[name] = extend(state.options[name] || {}, options);
-        callback(this, state.options[name]);
+    definePrototype(App, kv(name, function (options) {
+        var dict = _(this).options;
+        if (dict[name]) {
+            throw new Error(name + '() can only be called once');
+        }
+        dict[name] = options || {};
+        callback(this, dict[name]);
     }));
 }
 
