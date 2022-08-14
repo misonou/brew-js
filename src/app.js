@@ -4,7 +4,6 @@ import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
-import { setVar } from "./var.js";
 import { withBaseUrl } from "./util/path.js";
 
 const _ = createPrivateStore();
@@ -170,7 +169,6 @@ export default function () {
     });
 
     appInited = true;
-    setVar(root, { loading: 'initial' });
     handleAsync(_(app).init, root, function () {
         appReady = true;
         mountElement(root);

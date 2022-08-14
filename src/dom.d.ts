@@ -19,6 +19,7 @@ export function hookBeforeUpdate(callback: (domChanges: Map<Element, Brew.DOMUpd
  * @param promise
  * @param element
  * @param callback
+ * @deprecated Use `notifyAsync` from `zeta-dom` instead.
  */
 export function handleAsync(promise: Brew.PromiseOrEmpty, element?: Element | null, callback?: () => any): Promise<any>;
 

@@ -2,13 +2,14 @@ import waterpipe from "./include/external/waterpipe.js"
 import $ from "./include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
+import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolve, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, keys, map, matchWord, errorWithCode } from "./include/zeta-dom/util.js";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, map, matchWord, errorWithCode, makeAsync } from "./include/zeta-dom/util.js";
 import { app, isElementActive } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { toRelativeUrl, withBaseUrl } from "./util/path.js";
-import { getVar, evalAttr, setVar, evaluate, getVarScope, declareVar, resetVar } from "./var.js";
+import { getVar, evalAttr, setVar, evaluate, declareVar, resetVar } from "./var.js";
 import { copyAttr, getAttrValues, selectorForAttr, setAttr } from "./util/common.js";
 import * as ErrorCode from "./errorCode.js";
 
@@ -119,24 +120,10 @@ export function hookBeforeUpdate(callback) {
  */
 export function handleAsync(promise, element, callback) {
     if (!isThenable(promise)) {
-        return resolve((callback || noop)());
+        return makeAsync(callback || noop)();
     }
-    if (element || dom.eventSource !== 'script') {
-        element = element || dom.activeElement;
-        var elm1 = getVarScope('loading', element || root);
-        var elm2 = getVarScope('error', element || root);
-        var counter = getComponentState('handleAsync', elm1);
-        setVar(elm1, { loading: getVar(elm1, 'loading') || true });
-        setVar(elm2, { error: null });
-        counter.value = (counter.value || 0) + 1
-        promise.then(function () {
-            setVar(elm1, { loading: !!--counter.value });
-        }, function (e) {
-            setVar(elm1, { loading: !!--counter.value });
-            setVar(elm2, { error: '' + (e.message || e) });
-        });
-    }
-    return promise.then(callback || null);
+    notifyAsync(element || root, promise);
+    return promise.then(callback);
 }
 
 /**

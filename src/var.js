@@ -11,6 +11,7 @@ const root = dom.root;
 const varAttrs = {
     'var': true,
     'auto-var': true,
+    'loading-scope': { loading: false },
     'error-scope': { error: null }
 };
 const tree = new InheritedNodeTree(root, VarContext, {
