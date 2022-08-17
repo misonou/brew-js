@@ -11,7 +11,7 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 979:
+/***/ 607:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -33,6 +33,7 @@ __webpack_require__.d(path_namespaceObject, {
   "setBaseUrl": function() { return setBaseUrl; },
   "toAbsoluteUrl": function() { return toAbsoluteUrl; },
   "toRelativeUrl": function() { return toRelativeUrl; },
+  "toSegments": function() { return toSegments; },
   "withBaseUrl": function() { return withBaseUrl; }
 });
 
@@ -58,11 +59,13 @@ __webpack_require__.d(common_namespaceObject, {
   "cookie": function() { return common_cookie; },
   "copyAttr": function() { return copyAttr; },
   "deleteCookie": function() { return deleteCookie; },
+  "getAttr": function() { return getAttr; },
   "getAttrValues": function() { return getAttrValues; },
   "getCookie": function() { return getCookie; },
   "getFormValues": function() { return getFormValues; },
   "getJSON": function() { return getJSON; },
   "getQueryParam": function() { return getQueryParam; },
+  "hasAttr": function() { return hasAttr; },
   "loadScript": function() { return loadScript; },
   "preloadImages": function() { return preloadImages; },
   "selectorForAttr": function() { return selectorForAttr; },
@@ -165,8 +168,12 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     reject = _zeta$util.reject,
     always = _zeta$util.always,
     resolveAll = _zeta$util.resolveAll,
+    retryable = _zeta$util.retryable,
+    deferrable = _zeta$util.deferrable,
     catchAsync = _zeta$util.catchAsync,
-    setPromiseTimeout = _zeta$util.setPromiseTimeout;
+    setPromiseTimeout = _zeta$util.setPromiseTimeout,
+    delay = _zeta$util.delay,
+    makeAsync = _zeta$util.makeAsync;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/util.js
 
@@ -280,6 +287,14 @@ function isSubPathOf(a, b) {
   var len = b.length;
   return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
+/**
+ * @param {string} path
+ */
+
+function toSegments(path) {
+  path = normalizePath(path);
+  return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
+}
 // EXTERNAL MODULE: ./src/include/external/jquery.js
 var jquery = __webpack_require__(860);
 // EXTERNAL MODULE: ./src/include/external/promise-polyfill.js
@@ -365,6 +380,13 @@ function getAttrValues(element) {
     values[v.name] = v.value;
   });
   return values;
+}
+function hasAttr(element, name) {
+  return !!element.attributes[name];
+}
+function getAttr(element, name) {
+  var attr = element.attributes[name];
+  return attr && attr.value;
 }
 function setAttr(element, name, value) {
   each(isPlainObject(name) || kv(name, value), function (i, v) {
@@ -882,18 +904,6 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
 
-// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
-
-var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    observe = observe_zeta$dom.observe,
-    registerCleanup = observe_zeta$dom.registerCleanup,
-    createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
-    afterDetached = observe_zeta$dom.afterDetached,
-    watchElements = observe_zeta$dom.watchElements,
-    watchAttributes = observe_zeta$dom.watchAttributes;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
-
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -946,835 +956,6 @@ function groupLog(eventSource, message, callback) {
     }
   }
 }
-// CONCATENATED MODULE: ./src/extension/router.js
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var _ = createPrivateStore();
-
-var matchByPathElements = new Map();
-var parsedRoutes = {};
-var preloadHandlers = [];
-var root = zeta_dom_dom.root;
-/** @type {Element[]} */
-
-var activeElements = [root];
-var pageTitleElement;
-
-var pass = function pass(path) {
-  return path;
-};
-
-var fromPathname = function fromPathname(path) {
-  return isSubPathOf(path, baseUrl) || '/';
-};
-
-var toPathname = function toPathname(path) {
-  return combinePath(baseUrl, path);
-};
-
-var fromRoutePath = pass;
-var toRoutePath = pass;
-/**
- * @param {Element} v
- * @param {Element[]=} arr
- */
-
-function isElementActive(v, arr) {
-  var parent = jquery(v).closest('[match-path]')[0];
-  return !parent || (arr || activeElements).indexOf(parent) >= 0;
-}
-function hookBeforePageEnter(path, callback) {
-  if (isFunction(path)) {
-    callback = path;
-    path = '/*';
-  }
-
-  preloadHandlers.push({
-    route: parseRoute(path),
-    callback: throwNotFunction(callback)
-  });
-}
-function matchRoute(route, segments, ignoreExact) {
-  if (!route || !route.test) {
-    route = parseRoute(route);
-  }
-
-  if (!isArray(segments)) {
-    segments = toSegments(segments);
-  }
-
-  return route.test(segments, ignoreExact);
-}
-
-function toSegments(path) {
-  path = normalizePath(path);
-  return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
-}
-
-function getCurrentQuery() {
-  return location.search + location.hash;
-}
-
-function RoutePattern(props) {
-  extend(this, props);
-}
-
-definePrototype(RoutePattern, Array, {
-  has: function has(name) {
-    return name in this.params;
-  },
-  match: function match(index, value) {
-    if (typeof index === 'string') {
-      index = this.params[index];
-    }
-
-    var part = this[index];
-    return !!part && (part.name ? part.test(value) : iequal(part, value));
-  },
-  test: function test(segments, ignoreExact) {
-    var self = this;
-    return segments.length >= self.minLength && (ignoreExact || !self.exact || segments.length <= self.length) && !any(self, function (v, i) {
-      return segments[i] && !(v.name ? v.test(segments[i]) : iequal(segments[i], v));
-    });
-  }
-});
-
-function parseRoute(path) {
-  path = String(path);
-
-  if (!parsedRoutes[path]) {
-    var tokens = new RoutePattern();
-    var params = {};
-    var minLength;
-    path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
-      if (c && !minLength) {
-        minLength = tokens.length;
-      }
-
-      if (b) {
-        var re = d ? new RegExp('^' + d + '$', 'i') : /./;
-        params[b] = tokens.length;
-        tokens.push({
-          name: b,
-          test: re.test.bind(re)
-        });
-      } else {
-        tokens.push(a.toLowerCase());
-      }
-    });
-    extend(tokens, {
-      pattern: path,
-      params: params,
-      exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
-      minLength: minLength || tokens.length
-    });
-    parsedRoutes[path] = deepFreeze(tokens);
-  }
-
-  return parsedRoutes[path];
-}
-
-function createRouteState(route, segments, params) {
-  route = route || [];
-  segments = segments.map(encodeURIComponent);
-  return {
-    route: route,
-    params: exclude(params, ['remainingSegments']),
-    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-    maxPath: normalizePath(segments.slice(0, route.length).join('/'))
-  };
-}
-
-function matchRouteByParams(routes, params, partial) {
-  var matched = single(routes, function (tokens) {
-    var valid = single(tokens.params, function (v, i) {
-      return params[i] !== null;
-    });
-
-    if (valid && !partial) {
-      valid = !single(params, function (v, i) {
-        return v && !tokens.has(i);
-      });
-    }
-
-    if (!valid) {
-      return;
-    }
-
-    var segments = [];
-
-    for (var i = 0, len = tokens.length; i < len; i++) {
-      var varname = tokens[i].name;
-
-      if (varname && !tokens[i].test(params[varname] || '')) {
-        if (i < tokens.minLength || params[varname]) {
-          return false;
-        }
-
-        break;
-      }
-
-      segments[i] = varname ? params[varname] : tokens[i];
-    }
-
-    return createRouteState(tokens, segments, pick(params, keys(tokens.params)));
-  });
-  return matched || !partial && matchRouteByParams(routes, params, true);
-}
-
-function Route(app, routes, initialPath) {
-  var self = this;
-  var params = {};
-
-  var state = _(self, {
-    routes: routes.map(parseRoute),
-    params: params,
-    app: app
-  });
-
-  each(state.routes, function (i, v) {
-    each(v.params, function (i) {
-      params[i] = null;
-    });
-  });
-  extend(self, params, self.parse(initialPath));
-  state.current = state.lastMatch;
-  state.handleChanges = watch(self, true);
-  Object.preventExtensions(self);
-  Object.getOwnPropertyNames(self).forEach(function (prop) {
-    defineObservableProperty(self, prop, null, function (v) {
-      return isUndefinedOrNull(v) || v === '' ? null : String(v);
-    });
-  });
-  watch(self, function () {
-    var params = exclude(self, ['remainingSegments']);
-    var current = state.current;
-    var previous = current;
-    var routeChanged = !equal(params, current.params);
-
-    if (routeChanged && state.lastMatch) {
-      current = state.lastMatch;
-      state.lastMatch = null;
-      routeChanged = !equal(params, current.params);
-    }
-
-    if (routeChanged) {
-      current = matchRouteByParams(state.routes, params) || previous;
-    }
-
-    state.current = current;
-
-    if (current.route.exact) {
-      self.remainingSegments = '/';
-    }
-
-    self.set(extend({}, state.params, current.params));
-
-    if (current !== previous) {
-      app.path = fromRoutePath(combinePath(current.maxPath, self.remainingSegments));
-    }
-  });
-}
-
-definePrototype(Route, {
-  parse: function parse(path) {
-    var self = this;
-
-    var state = _(self);
-
-    var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
-    var matched = any(state.routes, function (tokens) {
-      return matchRoute(tokens, segments, true);
-    });
-    var params = {};
-
-    if (matched) {
-      for (var i in state.params) {
-        params[i] = segments[matched.params[i]] || null;
-      }
-
-      params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
-    }
-
-    state.lastMatch = createRouteState(matched, segments, params);
-    return params;
-  },
-  set: function set(params) {
-    var self = this;
-
-    if (typeof params === 'string') {
-      if (iequal(params, self.toString())) {
-        return;
-      }
-
-      params = self.parse(params);
-    }
-
-    _(self).handleChanges(function () {
-      extend(self, params);
-    });
-  },
-  replace: function replace(key, value) {
-    var self = this;
-    var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-    return _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
-  },
-  getPath: function getPath(params) {
-    var matched = matchRouteByParams(_(this).routes, params);
-    return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
-  },
-  toJSON: function toJSON() {
-    return extend({}, this);
-  },
-  toString: function toString() {
-    // @ts-ignore: unable to infer this
-    return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
-  }
-});
-watchable(Route.prototype);
-/**
- * @param {Brew.AppInstance<Brew.WithRouter>} app
- * @param {Record<string, any>} options
- */
-
-function configureRouter(app, options) {
-  var route;
-  var currentPath = '';
-  var redirectSource = {};
-  var lockedPath;
-  var newPath = '';
-  var currentIndex = -1;
-  var lastState = {};
-  var states = [];
-
-  function createNavigateResult(id, path, originalPath, navigated) {
-    return Object.freeze({
-      id: id,
-      path: path,
-      navigated: navigated !== false,
-      redirected: !!originalPath,
-      originalPath: originalPath || null
-    });
-  }
-
-  function handleNoop(path, originalPath) {
-    var pathNoQuery = removeQueryAndHash(path);
-
-    for (var i = currentIndex; i >= 0; i--) {
-      if (states[i].done && states[i].pathname === pathNoQuery) {
-        history.replaceState(history.state, '', toPathname(path));
-        return createNavigateResult(states[i].id, path, originalPath, false);
-      }
-    }
-  }
-
-  function pushState(path, replace) {
-    path = resolvePath(path);
-    newPath = path;
-    var currentState = states[currentIndex];
-    var pathNoQuery = removeQueryAndHash(path);
-
-    if (currentState && pathNoQuery === currentState.pathname) {
-      currentState.path = path;
-
-      if (currentState.done) {
-        currentPath = path;
-        app.path = path;
-        return {
-          promise: resolve(handleNoop(path))
-        };
-      } else {
-        history.replaceState(currentState.id, '', toPathname(path));
-        return currentState;
-      }
-    }
-
-    replace = replace || currentIndex < 0; // @ts-ignore: boolean arithmetics
-
-    currentIndex = Math.max(0, currentIndex + !replace);
-    var id = randomId();
-    var resolvePromise = noop;
-    var rejectPromise = noop;
-    var promise, resolved;
-    var previous = states.splice(currentIndex);
-    var state = {
-      id: id,
-      path: path,
-      pathname: pathNoQuery,
-      route: freeze(route.parse(pathNoQuery)),
-      previous: currentState,
-      handled: false,
-
-      get done() {
-        return resolved;
-      },
-
-      get promise() {
-        return promise || (promise = new Promise(function (resolve_, reject_) {
-          resolvePromise = resolve_;
-          rejectPromise = reject_;
-        }));
-      },
-
-      reset: function reset() {
-        state.handled = false;
-
-        if (resolved) {
-          resolved = false;
-          promise = null;
-        }
-
-        return state;
-      },
-      forward: function forward(other) {
-        if (promise && !resolved) {
-          (other.promise || other.then(function (other) {
-            return other.promise;
-          })).then(function (data) {
-            state.resolve(createNavigateResult(data.id, data.path, state.path));
-          }, rejectPromise);
-          rejectPromise = noop;
-        }
-      },
-      resolve: function resolve(result) {
-        resolved = true;
-        resolvePromise(result || createNavigateResult(id, state.path));
-        each(states, function (i, v) {
-          v.reject();
-        });
-
-        if (states[currentIndex] === state) {
-          lastState = state;
-          app.emit('pageload', {
-            pathname: state.path
-          }, {
-            handleable: false
-          });
-        }
-      },
-      reject: function reject() {
-        rejectPromise(errorWithCode(navigationCancelled));
-      }
-    };
-    states[currentIndex] = state;
-    history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-    app.path = path;
-
-    if (previous[0]) {
-      if (replace && !previous[1]) {
-        previous[0].forward(state);
-      } else {
-        setImmediate(function () {
-          each(previous, function (i, v) {
-            v.reject();
-          });
-        });
-      }
-    }
-
-    return state;
-  }
-
-  function popState() {
-    history.back();
-    return --currentIndex;
-  }
-
-  function resolvePath(path, currentPath, isRoutePath) {
-    var parsedState;
-    path = decodeURI(path) || '/';
-    currentPath = currentPath || app.path;
-
-    if (path[0] === '~' || path.indexOf('{') >= 0) {
-      var fullPath = (isRoutePath ? fromRoutePath : pass)(currentPath);
-      parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
-      path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
-        return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
-      });
-    }
-
-    if (path[0] === '~') {
-      path = (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
-    } else if (path[0] !== '/') {
-      path = combinePath(currentPath, path);
-    }
-
-    return normalizePath(path, true);
-  }
-
-  function registerMatchPathElements(container) {
-    jquery('[match-path]', container).each(function (i, v) {
-      if (!matchByPathElements.has(v)) {
-        var placeholder = document.createElement('div');
-        placeholder.setAttribute('style', 'display: none !important');
-        placeholder.setAttribute('match-path', v.getAttribute('match-path') || '');
-
-        if (v.attributes.default) {
-          placeholder.setAttribute('default', '');
-        }
-
-        jquery(v).before(placeholder);
-        jquery(v).detach();
-        setClass(v, 'hidden', true);
-        matchByPathElements.set(placeholder, v);
-        matchByPathElements.set(v, v);
-      }
-    });
-  }
-
-  function processPageChange(state, newActiveElements) {
-    var oldPath = currentPath;
-    var path = state.path;
-    var preload = new Map();
-    var eventSource = zeta_dom_dom.eventSource;
-    var previousActiveElements = activeElements.slice(0);
-    currentPath = path;
-    app.path = path;
-    route.set(path);
-    app.emit('beforepageload', {
-      pathname: path
-    }, {
-      handleable: false
-    });
-    activeElements = newActiveElements;
-    pageTitleElement = jquery(newActiveElements).filter('[page-title]')[0];
-    redirectSource = {}; // assign document title from matched active elements and
-
-    document.title = pageTitleElement ? evalAttr(pageTitleElement, 'page-title', true) : document.title;
-    batch(true, function () {
-      groupLog(eventSource, ['pageenter', path], function () {
-        matchByPathElements.forEach(function (element, placeholder) {
-          var matched = activeElements.indexOf(element) >= 0;
-
-          if (element !== placeholder && matched === previousActiveElements.indexOf(element) < 0) {
-            if (matched) {
-              resetVar(element, false);
-              setVar(element); // animation and pageenter event of inner scope
-              // must be after those of parent scope
-
-              var dependencies = preload.get(jquery(element).parents('[match-path]')[0]);
-              var segments = toSegments(element.getAttribute('match-path'));
-              var promises = preloadHandlers.map(function (v) {
-                if (matchRoute(v.route, segments)) {
-                  return v.callback(element, path);
-                }
-              });
-              promises.push(dependencies);
-              preload.set(element, resolveAll(promises, function () {
-                if (activeElements.indexOf(element) >= 0) {
-                  setClass(element, 'hidden', false);
-                  animateIn(element, 'show', '[match-path]');
-                  app.emit('pageenter', element, {
-                    pathname: path
-                  }, true);
-                }
-              }));
-            } else {
-              app.emit('pageleave', element, {
-                pathname: oldPath
-              }, true);
-              animateOut(element, 'show', '[match-path]').then(function () {
-                if (activeElements.indexOf(element) < 0) {
-                  groupLog(eventSource, ['pageleave', oldPath], function () {
-                    setClass(element, 'hidden', true);
-                    resetVar(element, true);
-                  });
-                }
-              });
-            }
-          }
-        });
-      });
-      each(preload, function (element, promise) {
-        handleAsync(promise, element);
-      });
-      always(resolveAll(preload), function () {
-        if (states[currentIndex] === state) {
-          state.resolve();
-        }
-      });
-    });
-  }
-
-  function handlePathChange() {
-    var state = states[currentIndex];
-
-    if (!state || location.pathname + getCurrentQuery() !== toPathname(newPath)) {
-      pushState(newPath);
-      state = states[currentIndex];
-    }
-
-    if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
-      state.resolve(handleNoop(newPath));
-      return;
-    }
-
-    if (state.handled) {
-      return;
-    }
-
-    state.handled = true; // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
-
-    var previous = state.previous;
-    var leavePath = newPath;
-    var promise = locked(root, true) ? cancelLock(root) : dom_preventLeave();
-
-    if (promise) {
-      lockedPath = newPath === lockedPath ? null : currentPath;
-      promise = resolve(promise).then(function () {
-        return pushState(leavePath);
-      }, function () {
-        throw errorWithCode(navigationRejected);
-      });
-
-      if (states[currentIndex - 1] === previous) {
-        popState();
-      } else {
-        states[currentIndex] = previous;
-        history.replaceState(previous.id, '', toPathname(previous.path));
-      }
-
-      state.forward(promise);
-      return;
-    }
-
-    lockedPath = null; // find active elements i.e. with match-path that is equal to or is parent of the new path
-
-    /** @type {HTMLElement[]} */
-
-    var newActiveElements = [root];
-    var redirectPath;
-    registerMatchPathElements();
-    batch(true, function () {
-      var newRoutePath = toRoutePath(removeQueryAndHash(newPath));
-      var switchElements = jquery('[switch=""]').get();
-      var current;
-
-      while (current = switchElements.shift()) {
-        if (isElementActive(current, newActiveElements)) {
-          var children = jquery(current).children('[match-path]').get().map(function (v) {
-            var element = mapGet(matchByPathElements, v) || v;
-            var children = jquery('[switch=""]', element).get();
-            var path = resolvePath(element.getAttribute('match-path'), newRoutePath, true);
-            return {
-              element: element,
-              path: path.replace(/\/\*$/, ''),
-              exact: !children[0] && path.slice(-2) !== '/*',
-              placeholder: v !== element && v,
-              children: children
-            };
-          });
-          children.sort(function (a, b) {
-            return b.path.localeCompare(a.path);
-          });
-          var matchedPath = single(children, function (v) {
-            return (v.exact ? newRoutePath === v.path : isSubPathOf(newRoutePath, v.path)) && v.path;
-          });
-          each(children, function (i, v) {
-            if (v.path === matchedPath) {
-              var element = v.element;
-              newActiveElements.unshift(element);
-
-              if (v.placeholder) {
-                jquery(v.placeholder).replaceWith(element);
-                markUpdated(element);
-                mountElement(element);
-                switchElements.push.apply(switchElements, v.children);
-              }
-            }
-          });
-        }
-      }
-    }); // prevent infinite redirection loop
-    // redirectSource will not be reset until processPageChange is fired
-
-    if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
-      processPageChange(state, newActiveElements);
-      return;
-    }
-
-    redirectSource[newPath] = true; // redirect to the default view if there is no match because every switch must have a match
-
-    jquery('[switch=""]').each(function (i, v) {
-      if (isElementActive(v, newActiveElements)) {
-        var $children = jquery(v).children('[match-path]');
-        var currentMatched = $children.filter(function (i, v) {
-          return newActiveElements.indexOf(v) >= 0;
-        })[0];
-
-        if (!currentMatched) {
-          redirectPath = fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path'));
-          return false;
-        }
-      }
-    });
-
-    if (redirectPath && redirectPath !== newPath) {
-      if (redirectPath === currentPath) {
-        state.resolve(handleNoop(redirectPath, newPath));
-      } else {
-        state.forward(pushState(redirectPath, true));
-      }
-
-      return;
-    }
-
-    console.log('Nagivate', newPath);
-    promise = resolve(app.emit('navigate', {
-      pathname: newPath,
-      oldPathname: lastState.path,
-      oldStateId: lastState.id,
-      newStateId: state.id,
-      route: state.route
-    }));
-    handleAsync(promise, root, function () {
-      if (states[currentIndex] === state) {
-        processPageChange(state, newActiveElements);
-      }
-    });
-  }
-
-  defineObservableProperty(app, 'path', '', function (newValue) {
-    if (!appReady) {
-      return currentPath;
-    }
-
-    newValue = resolvePath(newValue);
-
-    if (newValue !== currentPath) {
-      newPath = newValue;
-      setImmediateOnce(handlePathChange);
-    }
-
-    return currentPath;
-  });
-  setBaseUrl(options.baseUrl || '');
-
-  if (baseUrl === '/') {
-    fromPathname = pass;
-    toPathname = pass;
-  } else if (options.explicitBaseUrl) {
-    fromRoutePath = toPathname;
-    toRoutePath = fromPathname;
-    fromPathname = pass;
-    toPathname = pass;
-  }
-
-  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
-  var includeQuery = !initialPath;
-  initialPath = fromPathname(initialPath || location.pathname);
-  route = new Route(app, options.routes, initialPath);
-  app.define({
-    get canNavigateBack() {
-      return currentIndex > 0;
-    },
-
-    get previousPath() {
-      return (states[currentIndex - 1] || '').path || null;
-    },
-
-    parseRoute: parseRoute,
-    resolvePath: resolvePath,
-    navigate: function navigate(path, replace) {
-      return pushState(path, replace).promise;
-    },
-    back: function back(defaultPath) {
-      if (currentIndex > 0) {
-        return states[popState()].reset().promise;
-      } else {
-        return !!defaultPath && pushState(defaultPath).promise;
-      }
-    }
-  });
-  defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
-  defineOwnProperty(app, 'route', route, true);
-  defineOwnProperty(app, 'routes', freeze(options.routes));
-  app.beforeInit(function () {
-    zeta_dom_dom.ready.then(function () {
-      registerMatchPathElements();
-      bind(window, 'popstate', function () {
-        var index = single(states, function (v, i) {
-          return v.id === history.state && i + 1;
-        });
-
-        if (index) {
-          currentIndex = index - 1;
-          newPath = states[currentIndex].reset().path;
-          setImmediateOnce(handlePathChange);
-        } else {
-          pushState(fromPathname(location.pathname));
-        }
-      });
-    });
-  });
-  pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
-  app.on('ready', function () {
-    if (currentIndex === 0) {
-      pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
-    }
-
-    handlePathChange();
-  });
-  app.on('pageenter', function (e) {
-    jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
-      if (isElementActive(v)) {
-        // @ts-ignore: known element type
-        if (v.readyState !== 0) {
-          // @ts-ignore: known element type
-          v.currentTime = 0;
-        } // @ts-ignore: known element type
-
-
-        v.play();
-      }
-    });
-  });
-  app.on('pageleave', function (e) {
-    jquery(selectIncludeSelf('form', e.target)).each(function (i, v) {
-      if (!app.emit('reset', v, null, false)) {
-        // @ts-ignore: known element type
-        v.reset();
-      }
-    });
-    jquery(selectIncludeSelf('[x-autoplay]', e.target)).each(function (i, v) {
-      // @ts-ignore: known element type
-      v.pause();
-    });
-  });
-  app.on('statechange', function (e) {
-    if (containsOrEquals(e.target, pageTitleElement)) {
-      document.title = evalAttr(pageTitleElement, 'page-title', true);
-    }
-  });
-  watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
-    jquery(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
-  }, true);
-}
-
-parsedRoutes['/*'] = deepFreeze(new RoutePattern({
-  value: '/*',
-  exact: false,
-  length: 0,
-  minLength: 0,
-  params: {},
-  test: function test() {
-    return true;
-  }
-}));
-/* harmony default export */ const router = (addExtension('router', configureRouter));
 // CONCATENATED MODULE: ./src/dom.js
 
 
@@ -1793,9 +974,9 @@ parsedRoutes['/*'] = deepFreeze(new RoutePattern({
 var IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
-var dom_ = createPrivateStore();
+var _ = createPrivateStore();
 
-var dom_root = zeta_dom_dom.root;
+var root = zeta_dom_dom.root;
 var updatedElements = new Set();
 var pendingDOMUpdates = new Map();
 var preupdateHandlers = [];
@@ -1812,7 +993,7 @@ var batchCounter = 0;
 var stateChangeLock = false;
 
 function getComponentState(ns, element) {
-  var obj = dom_(element) || dom_(element, {});
+  var obj = _(element) || _(element, {});
 
   return obj[ns] || (obj[ns] = {});
 }
@@ -1853,7 +1034,7 @@ function processTransform(elements, applyDOMUpdates) {
 
   do {
     elements = grep(makeArray(elements), function (v) {
-      return containsOrEquals(dom_root, v);
+      return containsOrEquals(root, v);
     });
     exclude = makeArray(transformed);
     jquery(selectIncludeSelf(selectorForAttr(transformationHandlers), elements)).not(exclude).each(function (j, element) {
@@ -1906,43 +1087,18 @@ function hookBeforeUpdate(callback) {
 
 function handleAsync(promise, element, callback) {
   if (!isThenable(promise)) {
-    return resolve((callback || noop)());
+    return makeAsync(callback || noop)();
   }
 
-  if (element || zeta_dom_dom.eventSource !== 'script') {
-    element = element || zeta_dom_dom.activeElement;
-    var elm1 = getVarScope('loading', element || dom_root);
-    var elm2 = getVarScope('error', element || dom_root);
-    var counter = getComponentState('handleAsync', elm1);
-    setVar(elm1, {
-      loading: getVar(elm1, 'loading') || true
-    });
-    setVar(elm2, {
-      error: null
-    });
-    counter.value = (counter.value || 0) + 1;
-    promise.then(function () {
-      setVar(elm1, {
-        loading: !! --counter.value
-      });
-    }, function (e) {
-      setVar(elm1, {
-        loading: !! --counter.value
-      });
-      setVar(elm2, {
-        error: '' + (e.message || e)
-      });
-    });
-  }
-
-  return promise.then(callback || null);
+  notifyAsync(element || root, promise);
+  return promise.then(callback);
 }
 /**
  * @param {Element} element
  */
 
 function markUpdated(element) {
-  if (containsOrEquals(dom_root, element)) {
+  if (containsOrEquals(root, element)) {
     updatedElements.add(element);
   }
 }
@@ -1970,7 +1126,7 @@ function processStateChange(suppressAnim) {
       // recursively perform transformation until there is no new element produced
       processTransform(updatedElements, applyDOMUpdates);
       var arr = jquery.uniqueSort(grep(updatedElements, function (v) {
-        return containsOrEquals(dom_root, v);
+        return containsOrEquals(root, v);
       }));
       updatedElements.clear();
       each(arr, function (i, v) {
@@ -2005,7 +1161,7 @@ function processStateChange(suppressAnim) {
       var visited = [];
       each(arr.reverse(), function (i, v) {
         groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
-          console.log(v === dom_root ? document : v);
+          console.log(v === root ? document : v);
           jquery(selectIncludeSelf(selectorForAttr(renderHandlers), v)).not(visited).each(function (i, element) {
             each(renderHandlers, function (i, v) {
               if (element.attributes[i]) {
@@ -2027,7 +1183,7 @@ function processStateChange(suppressAnim) {
       var animScopes = new Map();
       each(domUpdates, function (element, props) {
         if (!suppressAnim) {
-          var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || dom_root;
+          var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || root;
           var groupElements = animScopes.get(animParent);
 
           if (!groupElements) {
@@ -2120,7 +1276,7 @@ function mountElement(element) {
   }
 
   var mountedElements = [element];
-  var firedOnRoot = element === dom_root;
+  var firedOnRoot = element === root;
   var index = -1,
       index2 = 0;
 
@@ -2141,7 +1297,7 @@ function mountElement(element) {
 
     if (!firedOnRoot) {
       firedOnRoot = true;
-      zeta_dom_dom.emit('mounted', dom_root, {
+      zeta_dom_dom.emit('mounted', root, {
         target: element
       });
     }
@@ -2412,8 +1568,6 @@ addRenderer('set-class', function (element, getState, applyDOMUpdates) {
 
 
 
-
-
 var app_ = createPrivateStore();
 
 var app_root = zeta_dom_dom.root;
@@ -2427,12 +1581,6 @@ var appReady;
 /** @type {boolean} */
 
 var appInited;
-
-function processUntilEmpty(arr) {
-  return resolveAll(arr.splice(0), function () {
-    return arr.length && processUntilEmpty(arr);
-  });
-}
 
 function exactTargetWrapper(handler) {
   return function (e) {
@@ -2475,7 +1623,7 @@ function App() {
   var self = this;
 
   app_(self, {
-    init: [],
+    init: deferrable(zeta_dom_dom.ready),
     options: {}
   });
 
@@ -2504,7 +1652,10 @@ definePrototype(App, {
       promise = promise.call(this);
     }
 
-    app_(this).init.push(promise);
+    app_(this).init.waitFor(promise);
+  },
+  isElementActive: function isElementActive() {
+    return true;
   },
   detect: function detect(names, callback) {
     var app = this;
@@ -2578,24 +1729,8 @@ definePrototype(App, {
     });
     return combineFn(arr);
   },
-  matchPath: function matchPath(path, selector, handler) {
-    if (isFunction(selector)) {
-      handler = selector;
-      selector = null;
-    }
-
-    this.on('mounted', function (e) {
-      var matchPath = e.target.getAttribute('match-path');
-
-      if (matchPath && matchRoute(path, matchPath) && (!selector || jquery(e.target).is(selector))) {
-        handler.call(e.target, e.target);
-      }
-    });
-  },
   matchElement: matchElement,
-  matchRoute: matchRoute,
-  beforeUpdate: hookBeforeUpdate,
-  beforePageEnter: hookBeforePageEnter
+  beforeUpdate: hookBeforeUpdate
 });
 watchable(App.prototype);
 /* harmony default export */ function src_app() {
@@ -2615,23 +1750,25 @@ watchable(App.prototype);
     throwNotFunction(v)(app);
   });
   appInited = true;
-  setVar(app_root, {
-    loading: 'initial'
-  });
-  handleAsync(resolveAll([zeta_dom_dom.ready, processUntilEmpty(app_(app).init)], function () {
+  handleAsync(app_(app).init, app_root, function () {
     appReady = true;
     mountElement(app_root);
     app.emit('ready');
-  }), app_root);
+  });
   return app;
 }
 function install(name, callback) {
+  name = camel('use-' + name);
   throwNotFunction(callback);
-  definePrototype(App, kv(camel('use-' + name), function (options) {
-    var state = app_(this);
+  definePrototype(App, kv(name, function (options) {
+    var dict = app_(this).options;
 
-    state.options[name] = extend(state.options[name] || {}, options);
-    callback(this, state.options[name]);
+    if (dict[name]) {
+      throw new Error(name + '() can only be called once');
+    }
+
+    dict[name] = options || {};
+    callback(this, dict[name]);
   }));
 }
 function addExtension(autoInit, name, callback) {
@@ -2645,6 +1782,9 @@ function addExtension(autoInit, name, callback) {
 }
 function addDetect(name, callback) {
   featureDetections[name] = throwNotFunction(callback);
+}
+function isElementActive(element) {
+  return !app || app.isElementActive(element);
 }
 // CONCATENATED MODULE: ./tmp/zeta-dom/tree.js
 
@@ -2669,6 +1809,9 @@ var var_root = zeta_dom_dom.root;
 var varAttrs = {
   'var': true,
   'auto-var': true,
+  'loading-scope': {
+    loading: false
+  },
   'error-scope': {
     error: null
   }
@@ -2877,6 +2020,18 @@ tree.on('update', function (e) {
     markUpdated(v.element);
   });
 });
+// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
+
+var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    observe = observe_zeta$dom.observe,
+    registerCleanup = observe_zeta$dom.registerCleanup,
+    createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
+    afterDetached = observe_zeta$dom.afterDetached,
+    watchElements = observe_zeta$dom.watchElements,
+    watchAttributes = observe_zeta$dom.watchAttributes;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
+
 // CONCATENATED MODULE: ./src/domAction.js
 
 
@@ -3218,12 +2373,18 @@ zeta_dom_dom.ready.then(function () {
 
 
 
+
+
+
+var ATTR_LOADING_SCOPE = 'loading-scope';
+var ATTR_ERROR_SCOPE = 'error-scope';
+var domReady_root = zeta_dom_dom.root;
 zeta_dom_dom.ready.then(function () {
   jquery('[brew-template]').each(function (i, v) {
     addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
   });
   jquery('apply-attributes').each(function (i, v) {
-    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || zeta_dom_dom.root);
+    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || domReady_root);
     each(v.attributes, function (i, v) {
       if (v.name !== 'elements') {
         $target.each(function (i, w) {
@@ -3248,6 +2409,38 @@ zeta_dom_dom.ready.then(function () {
       e.preventDefault();
     }
   };
+
+  watchElements(domReady_root, selectorForAttr([ATTR_LOADING_SCOPE, ATTR_ERROR_SCOPE]), function (addedNodes) {
+    each(addedNodes, function (i, v) {
+      zeta_dom_dom.lock(v);
+      zeta_dom_dom.on(v, {
+        asyncStart: function asyncStart() {
+          if (hasAttr(v, ATTR_LOADING_SCOPE)) {
+            setVar(v, 'loading', true);
+          }
+
+          if (hasAttr(v, ATTR_ERROR_SCOPE)) {
+            setVar(v, 'error', null);
+          }
+        },
+        asyncEnd: function asyncEnd() {
+          if (hasAttr(v, ATTR_LOADING_SCOPE)) {
+            setVar(v, 'loading', false);
+          }
+        },
+        error: function error(e) {
+          if (hasAttr(v, ATTR_ERROR_SCOPE)) {
+            var error = e.error || {};
+            setVar(v, 'error', error.code || error.message || true);
+          }
+        }
+      });
+    });
+  }, true);
+
+  if (hasAttr(domReady_root, ATTR_LOADING_SCOPE)) {
+    setVar(domReady_root, 'loading', 'initial');
+  }
 });
 /* harmony default export */ const src_domReady = (null);
 // CONCATENATED MODULE: ./src/core.js
@@ -3256,7 +2449,6 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 
 
 
@@ -3322,7 +2514,6 @@ util_define(src_app, method);
   }));
 }));
 // CONCATENATED MODULE: ./src/extension/formVar.js
-
 
 
 
@@ -3580,7 +2771,6 @@ function detectLanguage(languages, defaultLanguage) {
 
 
 
-
 var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 src_defaults.preloadImage = true;
 /* harmony default export */ const preloadImage = (addExtension('preloadImage', function (app) {
@@ -3611,7 +2801,6 @@ src_defaults.preloadImage = true;
   });
 }));
 // CONCATENATED MODULE: ./src/extension/scrollable.js
-
 
 
 
@@ -3819,7 +3008,10 @@ src_defaults.preloadImage = true;
     watchElements(zeta_dom_dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
       jquery(nodes).filter('[scrollable-target]').each(function (i, v) {
         var scrollable = jquery(v).closest('[scrollable]')[0];
-        jquery(v).addClass(getState(scrollable).childClass);
+
+        if (scrollable) {
+          jquery(v).addClass(getState(scrollable).childClass);
+        }
       });
       jquery(nodes).filter('[scrollable]').each(function (i, v) {
         initScrollable(v);
@@ -4132,7 +3324,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(979);
+/******/ 	return __webpack_require__(607);
 /******/ })()
 .default;
 });
