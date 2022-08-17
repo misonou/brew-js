@@ -19,7 +19,7 @@
     "jq-scrollable": "^1.7.0",
     "jquery": "^3.0.0",
     "waterpipe": "^2.4.0",
-    "zeta-dom": ">=0.2.3"
+    "zeta-dom": ">=0.2.10"
   },
   "optionalDependencies": {
     "promise-polyfill": "^8.2.0"
