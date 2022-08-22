@@ -1,43 +1,11 @@
 import { addDetect, app, install } from "src/app";
 import router from "src/extension/htmlRouter";
-import { setBaseUrl } from "src/util/path";
 import { resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
 
 const { objectContaining } = expect;
 
 beforeAll(() => initApp(router));
-
-describe('app', () => {
-    it('should prepend baseUrl to hyperlinks and resources', async () => {
-        setBaseUrl('/foo');
-        const div = await mount(`
-            <div>
-                <img src="/bar.png" />
-                <img data-src="/bar.png" />
-                <video src="/bar.mp4"></video>
-                <a href="/bar"></a>
-                <div data-bg-src="/bar.png"></div>
-            </div>
-        `);
-        expect(div.children[0].src).toEqual('http://localhost/foo/bar.png');
-        expect(div.children[1].src).toEqual('http://localhost/foo/bar.png');
-        expect(div.children[2].src).toEqual('http://localhost/foo/bar.mp4');
-        expect(div.children[3].href).toEqual('http://localhost/foo/bar');
-        expect(div.children[4].style.backgroundImage).toEqual('url(/foo/bar.png)');
-    });
-
-    it('should prevent default action of form submission', async () => {
-        const form = await mount('<form></form>');
-        form.addEventListener('submit', (e) => {
-            expect(e.defaultPrevented).toBeTruthy();
-        });
-        await after(() => {
-            form.submit();
-        });
-        expect.assertions(1);
-    });
-});
 
 describe('app.emit', () => {
     it('should emit event to root element if element is not supplied', async () => {

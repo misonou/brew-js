@@ -1,10 +1,8 @@
 import $ from "./include/external/jquery.js";
 import { each } from "./include/zeta-dom/util.js";
-import { isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import dom from "./include/zeta-dom/dom.js";
 import { addTemplate, preventLeave } from "./dom.js";
-import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
 import { setVar } from "./var.js";
 
@@ -28,15 +26,6 @@ dom.ready.then(function () {
             }
         });
     }).remove();
-
-    // replace inline background-image to prevent browser to load unneccessary images
-    $('[style]').each(function (i, v) {
-        var backgroundImage = isCssUrlValue(v.style.backgroundImage);
-        if (backgroundImage) {
-            v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(toRelativeUrl(backgroundImage))));
-            v.style.backgroundImage = 'none';
-        }
-    });
 
     window.onbeforeunload = function (e) {
         if (preventLeave(true)) {

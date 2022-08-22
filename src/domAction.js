@@ -210,6 +210,10 @@ dom.ready.then(function () {
         });
     });
 
+    $('body').on('submit', 'form:not([action])', function (e) {
+        e.preventDefault();
+    });
+
     $('body').on('click', '[disabled], .disabled, :disabled', function (e) {
         e.preventDefault();
         e.stopImmediatePropagation();

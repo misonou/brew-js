@@ -1,10 +1,11 @@
 import $ from "../include/external/jquery.js";
 import dom from "../include/zeta-dom/dom.js";
+import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "../include/zeta-dom/domUtil.js";
 import { notifyAsync } from "../include/zeta-dom/domLock.js";
 import { watchElements } from "../include/zeta-dom/observe.js";
 import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define } from "../include/zeta-dom/util.js";
-import { removeQueryAndHash, isSubPathOf, toSegments } from "../util/path.js";
+import { removeQueryAndHash, isSubPathOf, toSegments, withBaseUrl, toRelativeUrl } from "../util/path.js";
 import { groupLog } from "../util/console.js";
 import { animateIn, animateOut } from "../anim.js";
 import { batch, markUpdated, mountElement } from "../dom.js";
@@ -199,8 +200,35 @@ function initHtmlRouter(app) {
         }
     });
 
+    app.on('mounted', function (e) {
+        var element = e.target;
+        $(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
+            v.src = withBaseUrl(v.dataset.src);
+            v.removeAttribute('data-src');
+        });
+        $(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
+            v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
+            v.removeAttribute('data-bg-src');
+        });
+        $(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
+            v.src = withBaseUrl(v.getAttribute('src'));
+        });
+        $(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
+            v.href = withBaseUrl(v.getAttribute('href'));
+        });
+    });
+
     dom.ready.then(function () {
         registerMatchPathElements();
+
+        // replace inline background-image to prevent browser to load unneccessary images
+        $('[style]').each(function (i, v) {
+            var backgroundImage = isCssUrlValue(v.style.backgroundImage);
+            if (backgroundImage) {
+                v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(toRelativeUrl(backgroundImage))));
+                v.style.backgroundImage = 'none';
+            }
+        });
     });
 
     watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {

@@ -1,4 +1,4 @@
-import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp } from "../testUtil";
+import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp, mount } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
 import { getVar, resetVar, setVar } from "src/var";
@@ -103,6 +103,25 @@ beforeAll(async () => {
 beforeEach(async () => {
     resetVar(div.preventLeave);
     await app.navigate(initialPath);
+});
+
+describe('app', () => {
+    it('should prepend baseUrl to hyperlinks and resources', async () => {
+        const div = await mount(`
+            <div>
+                <img src="/bar.png" />
+                <img data-src="/bar.png" />
+                <video src="/bar.mp4"></video>
+                <a href="/bar"></a>
+                <div data-bg-src="/bar.png"></div>
+            </div>
+        `);
+        expect(div.children[0].src).toEqual('http://localhost/base/bar.png');
+        expect(div.children[1].src).toEqual('http://localhost/base/bar.png');
+        expect(div.children[2].src).toEqual('http://localhost/base/bar.mp4');
+        expect(div.children[3].href).toEqual('http://localhost/base/bar');
+        expect(div.children[4].style.backgroundImage).toEqual('url(/base/bar.png)');
+    });
 });
 
 describe('app#navigate', () => {

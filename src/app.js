@@ -1,10 +1,8 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
-import { selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
-import { withBaseUrl } from "./util/path.js";
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -25,34 +23,6 @@ function exactTargetWrapper(handler) {
     };
 }
 
-/**
- * @param {Zeta.ZetaEvent} e
- */
-function onElementMounted(e) {
-    var element = e.target;
-    $(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
-        // @ts-ignore: known element type
-        v.src = withBaseUrl(v.getAttribute('src'));
-    });
-    $(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
-        // @ts-ignore: known element type
-        v.href = withBaseUrl(v.getAttribute('href'));
-    });
-    $(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
-        // @ts-ignore: known element type
-        v.src = withBaseUrl(v.dataset.src);
-        v.removeAttribute('data-src');
-    });
-    $(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
-        // @ts-ignore: known element type
-        v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
-        v.removeAttribute('data-bg-src');
-    });
-    $(selectIncludeSelf('form', element)).on('submit', function (e) {
-        e.preventDefault();
-    });
-}
-
 function App() {
     var self = this;
     _(self, {
@@ -63,7 +33,6 @@ function App() {
     defineOwnProperty(self, 'ready', new Promise(function (resolve) {
         self.on('ready', resolve.bind(0, self));
     }), true);
-    self.on('mounted', onElementMounted);
 }
 
 definePrototype(App, {
