@@ -1566,8 +1566,6 @@ addRenderer('set-class', function (element, getState, applyDOMUpdates) {
 
 
 
-
-
 var app_ = createPrivateStore();
 
 var app_root = zeta_dom_dom.root;
@@ -1589,35 +1587,6 @@ function exactTargetWrapper(handler) {
     }
   };
 }
-/**
- * @param {Zeta.ZetaEvent} e
- */
-
-
-function onElementMounted(e) {
-  var element = e.target;
-  jquery(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
-    // @ts-ignore: known element type
-    v.src = withBaseUrl(v.getAttribute('src'));
-  });
-  jquery(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
-    // @ts-ignore: known element type
-    v.href = withBaseUrl(v.getAttribute('href'));
-  });
-  jquery(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
-    // @ts-ignore: known element type
-    v.src = withBaseUrl(v.dataset.src);
-    v.removeAttribute('data-src');
-  });
-  jquery(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
-    // @ts-ignore: known element type
-    v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
-    v.removeAttribute('data-bg-src');
-  });
-  jquery(selectIncludeSelf('form', element)).on('submit', function (e) {
-    e.preventDefault();
-  });
-}
 
 function App() {
   var self = this;
@@ -1631,7 +1600,6 @@ function App() {
   defineOwnProperty(self, 'ready', new Promise(function (resolve) {
     self.on('ready', resolve.bind(0, self));
   }), true);
-  self.on('mounted', onElementMounted);
 }
 
 definePrototype(App, {
@@ -2267,6 +2235,9 @@ zeta_dom_dom.ready.then(function () {
       });
     });
   });
+  jquery('body').on('submit', 'form:not([action])', function (e) {
+    e.preventDefault();
+  });
   jquery('body').on('click', '[disabled], .disabled, :disabled', function (e) {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -2374,8 +2345,6 @@ zeta_dom_dom.ready.then(function () {
 
 
 
-
-
 var ATTR_LOADING_SCOPE = 'loading-scope';
 var ATTR_ERROR_SCOPE = 'error-scope';
 var domReady_root = zeta_dom_dom.root;
@@ -2392,16 +2361,7 @@ zeta_dom_dom.ready.then(function () {
         });
       }
     });
-  }).remove(); // replace inline background-image to prevent browser to load unneccessary images
-
-  jquery('[style]').each(function (i, v) {
-    var backgroundImage = isCssUrlValue(v.style.backgroundImage);
-
-    if (backgroundImage) {
-      v.setAttribute('data-bg-src', decodeURIComponent(withBaseUrl(toRelativeUrl(backgroundImage))));
-      v.style.backgroundImage = 'none';
-    }
-  });
+  }).remove();
 
   window.onbeforeunload = function (e) {
     if (dom_preventLeave(true)) {
@@ -3088,17 +3048,25 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
+
 /* harmony default export */ const viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
+  var visualViewport = window.visualViewport;
   var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
   var aspectRatio, viewportWidth, viewportHeight;
 
   function checkViewportSize(triggerEvent) {
-    var availWidth = screen.availWidth;
-    var availHeight = screen.availHeight;
+    if (visualViewport) {
+      viewportWidth = visualViewport.width;
+      viewportHeight = visualViewport.height;
+    } else {
+      var availWidth = screen.availWidth;
+      var availHeight = screen.availHeight;
+      viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
+      viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
+    }
+
     var previousAspectRatio = aspectRatio;
-    viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
-    viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
     aspectRatio = viewportWidth / viewportHeight;
     setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
 
@@ -3134,12 +3102,18 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
   app.on('orientationchange', function () {
     animateIn(zeta_dom_dom.root, 'orientationchange');
   });
-  jquery(window).on('resize', function () {
-    setTimeoutOnce(checkViewportSize);
-  });
-  jquery(function () {
+
+  if (visualViewport) {
+    bind(visualViewport, 'resize', checkViewportSize);
     checkViewportSize(false);
-  });
+  } else {
+    jquery(window).on('resize', function () {
+      setTimeoutOnce(checkViewportSize);
+    });
+    jquery(function () {
+      checkViewportSize(false);
+    });
+  }
 }));
 // CONCATENATED MODULE: ./src/entry.js
 
