@@ -4,7 +4,7 @@ import { parseCSS, isCssUrlValue } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, map, matchWord, errorWithCode, makeAsync } from "./include/zeta-dom/util.js";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, map, matchWord, errorWithCode, makeAsync, setImmediateOnce } from "./include/zeta-dom/util.js";
 import { app, isElementActive } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
@@ -322,6 +322,8 @@ export function mountElement(element) {
             v.handler.call(w, w);
         });
     });
+    markUpdated(element);
+    setImmediateOnce(processStateChange);
 }
 
 /**
