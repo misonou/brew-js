@@ -1,5 +1,6 @@
 /// <reference path="./types.d.ts" />
 /// <reference path="./extension/withConfig.d.ts" />
+/// <reference path="./extension/withHtmlRouter.d.ts" />
 /// <reference path="./extension/withI18n.d.ts" />
 /// <reference path="./extension/withLogin.d.ts" />
 /// <reference path="./extension/withRouter.d.ts" />
