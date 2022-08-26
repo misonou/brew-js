@@ -89,6 +89,16 @@ describe('template directive', () => {
         // @ts-ignore
         expect($('button', div).get().map(v => v.disabled)).toEqual([true, false, false]);
     });
+
+    it('should support rich-text child content', async () => {
+        const div = await mount(`
+            <div var="{ html: null }" template>{{&html}}&lt;b&gt;</div>
+        `);
+        await after(() => {
+            setVar(div, 'html', '<b>test</b>');
+        });
+        expect(div.innerHTML).toBe('<b>test</b>&lt;b&gt;');
+    });
 });
 
 describe('switch directive', () => {

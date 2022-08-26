@@ -43,6 +43,8 @@ function updateDOM(element, props, suppressEvent) {
             setClass(element, v);
         } else if (j === '$$text') {
             element.textContent = v;
+        } else if (j === '$$html') {
+            element.innerHTML = v;
         } else if (j === 'style') {
             $(element).css(v);
         } else if (matchWord(j, BOOL_ATTRS)) {
@@ -514,7 +516,9 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
             }
         });
         if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
-            templates.$$text = element.textContent;
+            templates.$$html = element.textContent.replace(/(\{\{(?:\}(?!\})|[^}])*\}*\}\})|</g, function (v, a) {
+                return a || '&lt;';
+            });
         }
         state.templates = templates;
     }
@@ -522,7 +526,7 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
     var props = {};
     each(templates, function (i, w) {
         var value = evaluate(w, context, element, i, !matchWord(i, BOOL_ATTRS));
-        if ((i === '$$text' ? element.textContent : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
+        if ((i === '$$html' ? element.innerHTML : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
             props[i] = value;
         }
     });

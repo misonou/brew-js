@@ -25,6 +25,10 @@ declare namespace Brew {
          * Gets the new inline text content.
          */
         $$text?: string;
+        /**
+         * Gets the new inline HTML content.
+         */
+        $$html?: string;
     }
 
     interface VarContext extends Zeta.InheritedNode {
