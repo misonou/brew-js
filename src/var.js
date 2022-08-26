@@ -174,7 +174,7 @@ export function getVar(element, name) {
  */
 export function evaluate(template, context, element, attrName, templateMode) {
     var options = { globals: { app: app } };
-    var result = templateMode ? htmlDecode(waterpipe(template, extend({}, context), options)) : waterpipe.eval(template, extend({}, context), options);
+    var result = templateMode ? waterpipe(template, extend({}, context), options) : waterpipe.eval(template, extend({}, context), options);
     return result;
 }
 
@@ -189,7 +189,8 @@ export function evalAttr(element, attrName, templateMode, context) {
     if (!str) {
         return templateMode ? '' : null;
     }
-    return evaluate(str, context || getVar(element), element, attrName, templateMode);
+    var value = evaluate(str, context || getVar(element), element, attrName, templateMode);
+    return templateMode ? htmlDecode(value) : value;
 }
 
 tree.on('update', function (e) {
