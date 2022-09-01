@@ -1,5 +1,5 @@
 import { declareVar, evalAttr, getVar, setVar } from "./var";
-import { addTemplate, handleAsync, preventLeave } from "./dom";
+import { addRenderer, addTemplate, addTransformer, handleAsync, preventLeave } from "./dom";
 import { addDetect, addExtension, install } from "./app";
 import defaults from "./defaults";
 
@@ -48,6 +48,8 @@ const method = {
     install,
     addDetect,
     addExtension,
+    addRenderer,
+    addTransformer,
     addTemplate
 };
 const brew: AppInit & AppInitExtension & typeof method;
