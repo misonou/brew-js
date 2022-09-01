@@ -66,6 +66,7 @@ export function preventLeave(suppressPrompt?: boolean): Brew.PromiseOrEmpty;
  * Adds a named template that is later applied to element with `apply-template` attribute.
  * @param name Name of the template.
  * @param template A DOM node or a valid HTML string. It should not be a DocumentFragment, nor an HTML string containing multiple root elements.
+ * @deprecated
  */
 export function addTemplate(name: string, template: Node | JQuery.htmlString): void;
 

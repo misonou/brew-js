@@ -1,4 +1,2 @@
-import { Extension } from "../core";
-
-declare const formVar: Extension<{}>;
-export default formVar;
+import template from "./template";
+export default template;

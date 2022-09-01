@@ -1,7 +1,7 @@
 import brew from "./core.js";
 
 import lib1 from "./extension/config.js";
-import lib2 from "./extension/formVar.js";
+import lib2 from "./extension/template.js";
 import lib3 from "./extension/i18n.js";
 import lib4 from "./extension/login.js";
 import lib5 from "./extension/preloadImage.js";

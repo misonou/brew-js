@@ -1,19 +1,21 @@
 import $ from "jquery";
-import { uniqueName, root, after, mount, initApp } from "./testUtil";
-import { addTemplate } from "src/dom";
-import { setVar } from "src/var";
+import { uniqueName, root, after, mount, initApp } from "../testUtil";
+import { getVar, setVar } from "src/var";
+import template from "src/extension/template";
 
-beforeAll(() => initApp());
+beforeAll(() => {
+    $(`
+        <div brew-template="template-1" class="template-1"></div>
+        <div brew-template="template-2" class="template-2"></div>
+    `).appendTo(document.body);
+    return initApp(template);
+});
 
 describe('apply-template directive', () => {
     it("should re-apply template when value of parent variable has changed", async () => {
         // fix @ 86c464d
         const varname = uniqueName();
-        const templateName1 = uniqueName();
-        const templateName2 = uniqueName();
-        addTemplate(templateName1, '<div class="template-1"></div>');
-        addTemplate(templateName2, '<div class="template-2"></div>');
-        setVar(root, varname, templateName1);
+        setVar(root, varname, 'template-1');
 
         const div = await mount(`
             <div apply-template="${varname}"></div>
@@ -21,7 +23,7 @@ describe('apply-template directive', () => {
         expect(div.getAttribute('class')).toBe('template-1');
 
         await after(() => {
-            setVar(root, varname, templateName2);
+            setVar(root, varname, 'template-2');
         });
         expect(div.getAttribute('class')).toBe('template-2');
     });
@@ -109,5 +111,80 @@ describe('switch directive', () => {
                 <div switch="${uniqueName()}"></div>
             `);
         }).not.toThrow();
+    });
+});
+
+describe('form-var directive', () => {
+    it('should update variable when input value was changed', async () => {
+        const varname = uniqueName();
+        const form = await mount(`
+            <form form-var>
+                <input type="text" name="${varname}" value="1">
+            </form>
+        `);
+        expect(getVar(form, varname)).toBe('1');
+
+        await after(() => {
+            form.children[0].setAttribute('value', '2');
+        });
+        expect(getVar(form, varname)).toBe('2');
+    });
+
+    it('should update value object when input value was changed through attribute', async () => {
+        // fix @ 6a3ef92
+        const varname = uniqueName();
+        const form = await mount(`
+            <form form-var="${varname}">
+                <input type="text" name="field" value="1">
+            </form>
+        `);
+        const values1 = getVar(form, varname);
+        expect(values1).toEqual({ field: '1' });
+
+        await after(() => {
+            form.children[0].setAttribute('value', '2');
+        });
+        const values2 = getVar(form, varname);
+        expect(values2).toEqual({ field: '2' });
+        expect(values1).not.toBe(values2);
+    });
+
+    it('should keep custom properties on value object', async () => {
+        // fix @ 3f818d1
+        const varname = uniqueName();
+        const form = await mount(`
+            <form form-var="${varname}">
+                <input type="text" name="field" value="1">
+            </form>
+        `);
+
+        await after(() => {
+            setVar(form, varname, { ...getVar(form, varname), customData: '3' });
+        });
+        expect(getVar(form, varname)).toEqual({ field: '1', customData: '3' });
+
+        await after(() => {
+            form.children[0].setAttribute('value', '2');
+        });
+        expect(getVar(form, varname)).toEqual({ field: '2', customData: '3' });
+    });
+
+    it('should add entry to data object when input is added', async () => {
+        const varname = uniqueName();
+        const form = await mount(`
+            <form form-var="${varname}">
+                <input type="text" name="field1" value="1">
+            </form>
+        `);
+        const values1 = getVar(form, varname);
+
+        await after(() => {
+            $(form).append('<input type="text" name="field2" value="1">');
+        });
+        const values2 = getVar(form, varname);
+        expect(values1).toHaveProperty('field1');
+        expect(values1).not.toHaveProperty('field2');
+        expect(values2).toHaveProperty('field1');
+        expect(values2).toHaveProperty('field2');
     });
 });

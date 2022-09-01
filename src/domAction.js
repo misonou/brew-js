@@ -1,19 +1,18 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, any, catchAsync, errorWithCode, mapRemove } from "./include/zeta-dom/util.js";
+import { always, any, catchAsync, mapRemove } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
 import { preventLeave } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
-import { throwNotFunction, isFunction, camel, resolveAll, each, mapGet, reject, isThenable, makeArray, randomId } from "./include/zeta-dom/util.js";
+import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
-import { getFormValues, selectorForAttr } from "./util/common.js";
+import { selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
-import * as ErrorCode from "./errorCode.js";
 
 const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
@@ -123,48 +122,6 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     return promise;
 }
 
-addAsyncAction('validate', function (e) {
-    var target = selectClosestRelative(this.getAttribute('validate') || '', e.target);
-    if (target) {
-        // @ts-ignore: type inference issue
-        var valid = dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
-        if (!valid) {
-            e.stopImmediatePropagation();
-            e.preventDefault();
-        } else if (isThenable(valid)) {
-            return valid.then(function (valid) {
-                if (!valid) {
-                    throw errorWithCode(ErrorCode.validationFailed);
-                }
-            });
-        }
-    }
-});
-
-addAsyncAction('context-method', function (e) {
-    var self = e.currentTarget;
-    var method = camel(self.getAttribute('context-method') || '');
-    if (isFunction(app[method])) {
-        var formSelector = self.getAttribute('context-form');
-        // @ts-ignore: acceptable if self.form is undefined
-        var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
-        var params;
-        var valid = true;
-        if (form) {
-            valid = dom.emit('validate', form) || form.checkValidity();
-            params = [getFormValues(form)];
-        } else {
-            params = makeArray(evalAttr(self, 'method-args'));
-        }
-        return resolveAll(valid, function (valid) {
-            if (!valid) {
-                throw errorWithCode(ErrorCode.validationFailed);
-            }
-            return app[method].apply(app, params);
-        });
-    }
-});
-
 dom.ready.then(function () {
     var tabindexMap = new WeakMap();
     var tabRoot = root;
@@ -196,7 +153,10 @@ dom.ready.then(function () {
     watchElements(root, SELECTOR_FOCUSABLE, setTabIndex, true);
 
     app.on('mounted', function (e) {
-        $(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
+        var selector = selectorForAttr(asyncActions);
+        if (selector) {
+            $(selectIncludeSelf(selector, e.target)).attr('async-action', '');
+        }
     });
 
     app.on('navigate', function () {
