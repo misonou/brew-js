@@ -1,5 +1,12 @@
 export function getAttrValues(element: Element): Zeta.Dictionary<string>;
 
+/**
+ * Gets whether a given attribute is a boolean-mapped attribute for an element.
+ * @param element A DOM element.
+ * @param name Name of attribute to test.
+ */
+export function isBoolAttr(element: Element, name: string): boolean;
+
 export function hasAttr(element: Element, name: string): boolean;
 
 export function getAttr(element: Element, name: string): string | undefined;

@@ -10,11 +10,10 @@ import { animateOut, animateIn } from "./anim.js";
 import { groupLog, writeLog } from "./util/console.js";
 import { toRelativeUrl, withBaseUrl } from "./util/path.js";
 import { getVar, evalAttr, setVar, evaluate, declareVar, resetVar } from "./var.js";
-import { copyAttr, getAttrValues, selectorForAttr, setAttr } from "./util/common.js";
+import { copyAttr, getAttrValues, isBoolAttr, selectorForAttr, setAttr } from "./util/common.js";
 import * as ErrorCode from "./errorCode.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
-const BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -47,7 +46,7 @@ function updateDOM(element, props, suppressEvent) {
             element.innerHTML = v;
         } else if (j === 'style') {
             $(element).css(v);
-        } else if (matchWord(j, BOOL_ATTRS)) {
+        } else if (isBoolAttr(element, j)) {
             element[j] = !!v;
         } else {
             element.setAttribute(j, v);
@@ -512,7 +511,7 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
         templates = {};
         each(element.attributes, function (i, w) {
             if (w.value.indexOf('{{') >= 0) {
-                templates[w.name] = matchWord(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
+                templates[w.name] = isBoolAttr(element, w.name) ? w.value.replace(/^{{|}}$/g, '') : w.value;
             }
         });
         if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
@@ -525,7 +524,7 @@ addRenderer('template', function (element, getState, applyDOMUpdates) {
     var context = getVar(element);
     var props = {};
     each(templates, function (i, w) {
-        var value = evaluate(w, context, element, i, !matchWord(i, BOOL_ATTRS));
+        var value = evaluate(w, context, element, i, !isBoolAttr(element, i));
         if ((i === '$$html' ? element.innerHTML : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
             props[i] = value;
         }

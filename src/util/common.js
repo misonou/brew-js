@@ -19,6 +19,10 @@ export function getAttrValues(element) {
     return values;
 }
 
+export function isBoolAttr(element, name) {
+    return matchWord(name, 'allowfullscreen async autofocus autoplay checked controls default defer disabled formnovalidate ismap itemscope loop multiple muted nomodule novalidate open playsinline readonly required reversed selected truespeed') && name in element;
+}
+
 export function hasAttr(element, name) {
     return !!element.attributes[name];
 }
