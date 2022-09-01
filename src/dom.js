@@ -1,14 +1,13 @@
 import $ from "./include/external/jquery.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
-import { notifyAsync } from "./include/zeta-dom/domLock.js";
+import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, errorWithCode, makeAsync, setImmediateOnce } from "./include/zeta-dom/util.js";
-import { app, isElementActive } from "./app.js";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce } from "./include/zeta-dom/util.js";
+import { app } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
-import { getVar, evalAttr } from "./var.js";
+import { getVar } from "./var.js";
 import { isBoolAttr, selectorForAttr } from "./util/common.js";
-import * as ErrorCode from "./errorCode.js";
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -337,28 +336,7 @@ export function mountElement(element) {
  * @param {boolean=} suppressPrompt
  */
 export function preventLeave(suppressPrompt) {
-    var element = any($('[prevent-leave]').get(), function (v) {
-        var state = getComponentState('preventLeave', v);
-        var allowLeave = state.allowLeave;
-        if (isElementActive(v) || allowLeave) {
-            var preventLeave = evalAttr(v, 'prevent-leave');
-            if (!preventLeave && allowLeave) {
-                delete state.allowLeave;
-            }
-            return preventLeave && !allowLeave;
-        }
-    });
-    if (element && !suppressPrompt) {
-        return resolveAll(dom.emit('preventLeave', element, null, true), function (result) {
-            if (result) {
-                var state = getComponentState('preventLeave', element);
-                state.allowLeave = true;
-            } else {
-                throw errorWithCode(ErrorCode.navigationRejected);
-            }
-        });
-    }
-    return !!element;
+    return suppressPrompt ? locked(root) : cancelLock(root);
 }
 
 export function addTemplate(name, template) {

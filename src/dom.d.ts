@@ -59,6 +59,7 @@ export function mountElement(element: Element): void;
  * such handler will be executed.
  * The returned promise will be rejected if user rejected to leave.
  * @param suppressPrompt Not to trigger dialog to user.
+ * @deprecated Use `locked` and `cancelLock` from `zeta-dom` instead.
  */
 export function preventLeave(suppressPrompt?: boolean): Brew.PromiseOrEmpty;
 

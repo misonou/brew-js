@@ -1,6 +1,7 @@
 import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp, mount } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
+import template from "src/extension/template";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
 import { mountElement } from "src/dom";
@@ -19,7 +20,7 @@ var initialRedirectError;
 var app;
 
 beforeAll(async () => {
-    app = await initApp(router, app => {
+    app = await initApp(router, template, app => {
         app.useHtmlRouter({
             baseUrl: '/base',
             explicitBaseUrl: true,

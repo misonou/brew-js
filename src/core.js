@@ -8,7 +8,6 @@ import { addRenderer, addTemplate, addTransformer, handleAsync, preventLeave } f
 import * as domAction from "./domAction.js";
 import brew, { addDetect, addExtension, install, isElementActive } from "./app.js";
 import defaults from "./defaults.js";
-import _ from "./domReady.js";
 
 function with_() {
     var fn = this.bind.apply(brew, [0].concat(map(arguments, function (v) {

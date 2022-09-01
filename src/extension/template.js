@@ -2,9 +2,10 @@ import waterpipe from "../include/external/waterpipe.js"
 import $ from "../include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { bindUntil, selectClosestRelative, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
-import { camel, each, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
+import { camel, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
 import { afterDetached, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
 import dom from "../include/zeta-dom/dom.js";
+import { preventLeave } from "../include/zeta-dom/domLock.js";
 import { addExtension, isElementActive } from "../app.js";
 import { addRenderer, addTransformer, matchElement, mountElement } from "../dom.js";
 import { addAsyncAction } from "../domAction.js";
@@ -192,6 +193,28 @@ export default addExtension(true, 'template', function (app) {
 
     addRenderer('set-class', function (element, getState, applyDOMUpdates) {
         applyDOMUpdates(element, { $$class: evalAttr(element, 'set-class') });
+    });
+
+    addRenderer('prevent-leave', function (element, getState) {
+        var state = getState(element);
+        var value = evalAttr(element, 'prevent-leave');
+        if (either(value, state.value)) {
+            state.value = value;
+            if (value) {
+                var promise = new Promise(function (resolve) {
+                    state.resolve = resolve;
+                });
+                preventLeave(element, promise, function () {
+                    return resolve(app.emit('preventLeave', element, null, true)).then(function (result) {
+                        if (!result) {
+                            throw errorWithCode(ErrorCode.navigationRejected);
+                        }
+                    });
+                });
+            } else {
+                state.resolve();
+            }
+        }
     });
 
     addAsyncAction('validate', function (e) {
