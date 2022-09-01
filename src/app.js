@@ -1,6 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
+import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 
