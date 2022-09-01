@@ -44,7 +44,7 @@ export function selectorForAttr(attr) {
     if (isPlainObject(attr)) {
         attr = keys(attr);
     }
-    return '[' + attr.join('],[') + ']';
+    return attr[0] ? '[' + attr.join('],[') + ']' : '';
 }
 
 /**
