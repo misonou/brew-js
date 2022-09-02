@@ -1,6 +1,6 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable, grep, isArray } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
@@ -8,6 +8,8 @@ import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountEl
 const _ = createPrivateStore();
 const root = dom.root;
 const featureDetections = {};
+const dependencies = {};
+const extensions = {};
 
 /** @type {Brew.AppInstance} */
 export var app;
@@ -24,11 +26,45 @@ function exactTargetWrapper(handler) {
     };
 }
 
+function initExtension(app, name, deps, options, callback) {
+    deps = grep(deps, function (v) {
+        return !extensions[v.replace(/^\?/, '')];
+    });
+    var counter = deps.length || 1;
+    var wrapper = function (loaded) {
+        if (!counter) {
+            throw new Error('Extension' + name + 'is already initiated');
+        }
+        if (loaded && !--counter) {
+            extensions[name] = true;
+            callback(app, options || {});
+            if (dependencies[name]) {
+                combineFn(dependencies[name].splice(0))(true);
+            }
+        }
+    };
+    if (deps[0]) {
+        each(deps, function (i, v) {
+            var key = v.replace(/^\?/, '');
+            var arr = dependencies[key] || (dependencies[key] = []);
+            arr.push(key === v ? wrapper : wrapper.bind(0, true));
+        });
+    } else {
+        wrapper(true);
+    }
+}
+
+function defineUseMethod(name, deps, callback) {
+    var method = camel('use-' + name);
+    definePrototype(App, kv(method, function (options) {
+        initExtension(this, name, deps, options, callback);
+    }));
+}
+
 function App() {
     var self = this;
     _(self, {
-        init: deferrable(dom.ready),
-        options: {}
+        init: deferrable(dom.ready)
     });
     defineOwnProperty(self, 'element', root, true);
     defineOwnProperty(self, 'ready', new Promise(function (resolve) {
@@ -137,6 +173,9 @@ export default function () {
     each(arguments, function (i, v) {
         throwNotFunction(v)(app);
     });
+    each(dependencies, function (i, v) {
+        combineFn(v)();
+    });
 
     appInited = true;
     handleAsync(_(app).init, root, function () {
@@ -148,25 +187,19 @@ export default function () {
 }
 
 export function install(name, callback) {
-    name = camel('use-' + name);
-    throwNotFunction(callback);
-    definePrototype(App, kv(name, function (options) {
-        var dict = _(this).options;
-        if (dict[name]) {
-            throw new Error(name + '() can only be called once');
-        }
-        dict[name] = options || {};
-        callback(this, dict[name]);
-    }));
+    defineUseMethod(name, [], throwNotFunction(callback));
 }
 
-export function addExtension(autoInit, name, callback) {
-    if (autoInit === true) {
-        return function (app) {
-            callback(app, {});
-        };
-    }
-    return install.bind(0, autoInit, name);
+export function addExtension(autoInit, name, deps, callback) {
+    callback = throwNotFunction(callback || deps || name);
+    deps = isArray(deps) || isArray(name) || [];
+    return function (app) {
+        if (autoInit === true) {
+            initExtension(app, name, deps, {}, callback);
+        } else {
+            defineUseMethod(autoInit, deps, callback);
+        }
+    };
 }
 
 export function addDetect(name, callback) {

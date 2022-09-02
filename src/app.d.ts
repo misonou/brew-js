@@ -47,6 +47,14 @@ export function install(name: string, callback: (this: Brew.AppInstance<Zeta.Dic
 export function addExtension<T = Zeta.Dictionary>(autoInit: true, name: string, callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: {}) => void): Extension<T>;
 
 /**
+ * Registers an extension that will be initialized when passed to {@link brew.with}.
+ * @param name Name of the extension.
+ * @param deps A list of dependencies. Extension names can be prefixed with `?` for optional dependencies.
+ * @param callback A callback to initialize the extension.
+ */
+export function addExtension<T = Zeta.Dictionary>(autoInit: true, name: string, deps: string[], callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: {}) => void): Extension<T>;
+
+/**
  * Registers an extension to the app.
  * A method of the name `use{Name}` in camel-case is automatically generated,
  * for which when called, the given initialization callback will be invoked.
@@ -54,6 +62,16 @@ export function addExtension<T = Zeta.Dictionary>(autoInit: true, name: string, 
  * @param callback A callback to initialize the extension.
  */
 export function addExtension<T = Zeta.Dictionary, U = Zeta.Dictionary>(name: string, callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: U) => void): Extension<T>;
+
+/**
+ * Registers an extension to the app.
+ * A method of the name `use{Name}` in camel-case is automatically generated,
+ * for which when called, the given initialization callback will be invoked.
+ * @param name Name of the extension.
+ * @param deps A list of dependencies. Extension names can be prefixed with `?` for optional dependencies.
+ * @param callback A callback to initialize the extension.
+ */
+export function addExtension<T = Zeta.Dictionary, U = Zeta.Dictionary>(name: string, deps: string[], callback: (this: Brew.AppInstance<T>, app: Brew.AppInstance<T>, options: U) => void): Extension<T>;
 
 /**
  * Adds a feature detection.
