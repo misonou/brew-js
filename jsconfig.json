@@ -7,11 +7,11 @@
         "noImplicitAny": false,
         "noImplicitThis": false,
         "noImplicitReturns": false,
+        "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
             "src/*": ["./src/*"],
             "zeta-dom/*": ["../zeta-dom/src/*", "node_modules/zeta-dom/*"],
-            "@jest/globals": ["node_modules/@jest/globals/build/index"],
         }
     },
     "exclude": ["build"]

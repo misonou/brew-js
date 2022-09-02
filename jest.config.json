@@ -1,11 +1,17 @@
 {
     "testEnvironment": "./tests/environment",
     "transform": {},
+    "clearMocks": true,
     "setupFilesAfterEnv": [
         "<rootDir>/tests/setup.cjs"
     ],
     "modulePathIgnorePatterns": [
         "<rootDir>/build/"
+    ],
+    "collectCoverageFrom": [
+        "src/**/*.js",
+        "!src/include/**",
+        "!src/{entry,errorCode,libCheck}.js"
     ],
     "moduleNameMapper": {
         "^src/(.*)$": "<rootDir>/src/$1",
