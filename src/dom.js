@@ -317,7 +317,9 @@ export function mountElement(element) {
         each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
             if (!v.disposed) {
                 $(selectIncludeSelf(v.target, element)).each(function (i, w) {
-                    v.unbindHandlers.push(app.on(w, v.handlers));
+                    if (index < 0) {
+                        v.unbindHandlers.push(app.on(w, v.handlers));
+                    }
                     if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
                         mountedElements.push(w);
                     }
