@@ -4,7 +4,7 @@ declare namespace Brew {
     /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */
-    type HTTPMethod = 'get' | 'post' | 'delete';
+    type HTTPMethod = 'get' | 'post' | 'put' | 'delete';
     type EventHandler<E extends string, M> = Zeta.ZetaEventHandler<E, M>;
     type EventHandlers<T extends string, M> = { [E in T]: EventHandler<E, M> }
     type AppInstance<T = {}> = App<T> & T & Brew.EventDispatcher;
