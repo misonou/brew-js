@@ -337,7 +337,9 @@ export default addExtension(true, 'template', function (app) {
 
     dom.ready.then(function () {
         $('[brew-template]').each(function (i, v) {
-            templates[getAttr(v, 'brew-template') || ''] = v.cloneNode(true);
+            var clone = v.cloneNode(true);
+            clone.removeAttribute('brew-template');
+            templates[getAttr(v, 'brew-template')] = clone;
         });
 
         $('apply-attributes').each(function (i, v) {

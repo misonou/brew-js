@@ -7,11 +7,25 @@ beforeAll(() => {
     $(`
         <div brew-template="template-1" class="template-1"></div>
         <div brew-template="template-2" class="template-2"></div>
+        <div brew-template="template-3">
+            <div><content for=".foo"></content></div>
+            <div><content></content></div>
+        </div>
     `).appendTo(document.body);
     return initApp(template);
 });
 
 describe('apply-template directive', () => {
+    it('should replace <content> slot with matched elements', async () => {
+        const div = await mount(`
+            <div apply-template="template-3">
+                <p class="foo">foo</p>
+                <p class="bar">bar</p>
+            </div>
+        `);
+        expect(div).toMatchSnapshot();
+    });
+
     it("should re-apply template when value of parent variable has changed", async () => {
         // fix @ 86c464d
         const varname = uniqueName();

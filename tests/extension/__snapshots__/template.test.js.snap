@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`apply-template directive should replace <content> slot with matched elements 1`] = `
+<div
+  apply-template="template-3"
+>
+  
+            
+  <div>
+    <p
+      class="foo"
+    >
+      foo
+    </p>
+  </div>
+  
+            
+  <div>
+    
+                
+    
+                
+    <p
+      class="bar"
+    >
+      bar
+    </p>
+    
+            
+  </div>
+  
+        
+</div>
+`;
