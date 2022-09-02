@@ -1,9 +1,8 @@
 import { bind } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
-import { cancelLock, locked } from "../include/zeta-dom/domLock.js";
+import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
-import { handleAsync, preventLeave } from "../dom.js";
 import { getQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
 import * as ErrorCode from "../errorCode.js";
@@ -414,7 +413,7 @@ function configureRouter(app, options) {
         // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
         var previous = state.previous;
         var leavePath = newPath;
-        var promise = locked(root, true) ? cancelLock(root) : preventLeave();
+        var promise = locked(root) && cancelLock(root);
         if (promise) {
             lockedPath = newPath === lockedPath ? null : currentPath;
             promise = resolve(promise).then(function () {
@@ -449,7 +448,8 @@ function configureRouter(app, options) {
             newStateId: state.id,
             route: state.route
         }));
-        handleAsync(promise, root, function () {
+        notifyAsync(root, promise);
+        promise.then(function () {
             if (states[currentIndex] === state) {
                 processPageChange(state);
             }

@@ -1,11 +1,11 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, createPrivateStore, combineFn, deferrable, grep, isArray } from "./include/zeta-dom/util.js";
+import { notifyAsync } from "./include/zeta-dom/domLock.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
-import { addSelectHandlers, handleAsync, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
+import { addSelectHandlers, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 
-const _ = createPrivateStore();
 const root = dom.root;
 const featureDetections = {};
 const dependencies = {};
@@ -17,6 +17,8 @@ export var app;
 export var appReady;
 /** @type {boolean} */
 export var appInited;
+/** @type {Promise<void> & Zeta.Deferrable} */
+var appInit;
 
 function exactTargetWrapper(handler) {
     return function (e) {
@@ -63,9 +65,6 @@ function defineUseMethod(name, deps, callback) {
 
 function App() {
     var self = this;
-    _(self, {
-        init: deferrable(dom.ready)
-    });
     defineOwnProperty(self, 'element', root, true);
     defineOwnProperty(self, 'ready', new Promise(function (resolve) {
         self.on('ready', resolve.bind(0, self));
@@ -88,7 +87,7 @@ definePrototype(App, {
         if (isFunction(promise)) {
             promise = promise.call(this);
         }
-        _(this).init.waitFor(promise);
+        appInit.waitFor(promise);
     },
     isElementActive: function () {
         return true;
@@ -160,9 +159,10 @@ definePrototype(App, {
 watchable(App.prototype);
 
 export default function () {
-    if (appInited) {
+    if (appInit) {
         throw new Error('brew() can only be called once');
     }
+    appInit = deferrable(dom.ready);
     app = new App();
     each(defaults, function (i, v) {
         var fn = v && isFunction(app[camel('use-' + i)]);
@@ -178,7 +178,8 @@ export default function () {
     });
 
     appInited = true;
-    handleAsync(_(app).init, root, function () {
+    notifyAsync(root, appInit);
+    appInit.then(function () {
         appReady = true;
         mountElement(root);
         app.emit('ready');

@@ -5,11 +5,10 @@ import { always, any, catchAsync, mapRemove } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
-import { preventLeave } from "./include/zeta-dom/domLock.js";
+import { notifyAsync, preventLeave } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
-import { handleAsync } from "./dom.js";
 import { animateIn, animateOut } from "./anim.js";
 import { selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
@@ -198,7 +197,8 @@ dom.ready.then(function () {
             if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
-                handleAsync(returnValue).then(function () {
+                notifyAsync(element, returnValue);
+                returnValue.then(function () {
                     dispatchDOMMouseEvent(e);
                 }, function (e) {
                     executedAsyncActions.delete(element);

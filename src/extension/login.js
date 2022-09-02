@@ -1,7 +1,7 @@
 import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "../include/zeta-dom/util.js";
+import { cancelLock } from "../include/zeta-dom/domLock.js";
 import { cookie } from "../util/common.js";
 import { addExtension } from "../app.js";
-import { preventLeave } from "../dom.js";
 
 export default addExtension('login', function (app, options) {
     options = extend({
@@ -61,7 +61,7 @@ export default addExtension('login', function (app, options) {
             }
             callback = isFunction(callback || nextPath);
             nextPath = typeof nextPath === 'string' && nextPath;
-            return resolve(preventLeave()).then(function () {
+            return cancelLock(app.element).then(function () {
                 return options.logout();
             }).then(function () {
                 handleLogout();
