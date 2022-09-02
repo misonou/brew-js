@@ -2,7 +2,7 @@ import $ from "./include/external/jquery.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce } from "./include/zeta-dom/util.js";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
@@ -110,10 +110,19 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
  * @param {any[]} unbindHandlers
  */
 export function addSelectHandlers(target, handlers, unbindHandlers) {
-    selectorHandlers.push({
+    var obj = {
         target: target,
         handlers: handlers,
         unbindHandlers: unbindHandlers
+    };
+    selectorHandlers.push(obj);
+    unbindHandlers.push(function () {
+        // remove entries from array in next event loop
+        // to prevent misindexing in mountElement
+        obj.disposed = true;
+        setImmediate(function () {
+            arrRemove(selectorHandlers, obj);
+        });
     });
 }
 
@@ -306,12 +315,14 @@ export function mountElement(element) {
     var index = -1, index2 = 0;
     while (index < selectorHandlers.length) {
         each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
-            $(selectIncludeSelf(v.target, element)).each(function (i, w) {
-                v.unbindHandlers.push(app.on(w, v.handlers));
-                if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
-                    mountedElements.push(w);
-                }
-            });
+            if (!v.disposed) {
+                $(selectIncludeSelf(v.target, element)).each(function (i, w) {
+                    v.unbindHandlers.push(app.on(w, v.handlers));
+                    if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
+                        mountedElements.push(w);
+                    }
+                });
+            }
         });
         index = selectorHandlers.length;
         each($.uniqueSort(mountedElements.slice(index2)), function (i, v) {
