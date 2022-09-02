@@ -3,13 +3,10 @@ import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { preloadImages } from "../util/common.js";
 import { toAbsoluteUrl } from "../util/path.js";
 import { addExtension, isElementActive } from "../app.js";
-import defaults from "../defaults.js";
 
 const IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 
-defaults.preloadImage = true;
-
-export default addExtension('preloadImage', function (app) {
+export default addExtension(true, 'preloadImage', ['?htmlRouter'], function (app) {
     app.beforeUpdate(function (domUpdates) {
         var urls = {};
         each(domUpdates, function (element, props) {
@@ -30,7 +27,9 @@ export default addExtension('preloadImage', function (app) {
         });
         return preloadImages(keys(urls), 200);
     });
-    app.beforePageEnter(function (element) {
-        return preloadImages(element, 1000);
-    });
+    if (app.beforePageEnter) {
+        app.beforePageEnter(function (element) {
+            return preloadImages(element, 1000);
+        });
+    }
 });
