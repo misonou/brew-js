@@ -4,13 +4,14 @@ import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js"
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, isSubPathOf, baseUrl, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
+import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
 import * as ErrorCode from "../errorCode.js";
 
 const _ = createPrivateStore();
 const parsedRoutes = {};
 const root = dom.root;
 
+var baseUrl;
 var pass = function (path) {
     return path;
 };
@@ -468,7 +469,7 @@ function configureRouter(app, options) {
         return currentPath;
     });
 
-    setBaseUrl(options.baseUrl || '');
+    baseUrl = normalizePath(options.baseUrl);
     if (baseUrl === '/') {
         fromPathname = pass;
         toPathname = pass;
@@ -477,6 +478,8 @@ function configureRouter(app, options) {
         toRoutePath = fromPathname;
         fromPathname = pass;
         toPathname = pass;
+    } else {
+        setBaseUrl(baseUrl);
     }
     var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
     var includeQuery = !initialPath;

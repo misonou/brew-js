@@ -107,7 +107,7 @@ beforeEach(async () => {
 });
 
 describe('app', () => {
-    it('should prepend baseUrl to hyperlinks and resources', async () => {
+    it('should not prepend baseUrl to hyperlinks and resources', async () => {
         const div = await mount(`
             <div>
                 <img src="/bar.png" />
@@ -117,11 +117,11 @@ describe('app', () => {
                 <div data-bg-src="/bar.png"></div>
             </div>
         `);
-        expect(div.children[0].src).toEqual('http://localhost/base/bar.png');
-        expect(div.children[1].src).toEqual('http://localhost/base/bar.png');
-        expect(div.children[2].src).toEqual('http://localhost/base/bar.mp4');
-        expect(div.children[3].href).toEqual('http://localhost/base/bar');
-        expect(div.children[4].style.backgroundImage).toEqual('url(/base/bar.png)');
+        expect(div.children[0].src).toEqual('http://localhost/bar.png');
+        expect(div.children[1].src).toEqual('http://localhost/bar.png');
+        expect(div.children[2].src).toEqual('http://localhost/bar.mp4');
+        expect(div.children[3].href).toEqual('http://localhost/bar');
+        expect(div.children[4].style.backgroundImage).toEqual('url(/bar.png)');
     });
 });
 
