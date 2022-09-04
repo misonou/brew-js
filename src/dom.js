@@ -6,7 +6,7 @@ import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, t
 import { app } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
-import { getVar } from "./var.js";
+import { getVar, resetVar } from "./var.js";
 import { isBoolAttr, selectorForAttr } from "./util/common.js";
 
 const _ = createPrivateStore();
@@ -302,6 +302,7 @@ export function mountElement(element) {
     // suppress domchange event before element is mounted
     var prevStateChangeLock = stateChangeLock;
     stateChangeLock = true;
+    resetVar(element);
     try {
         processTransform(element, function (element, props) {
             updateDOM(element, props, true);
