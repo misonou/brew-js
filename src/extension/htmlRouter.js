@@ -50,8 +50,9 @@ function registerMatchPathElements(container) {
 
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
+ * @param {Brew.RouterOptions} options
  */
-function initHtmlRouter(app) {
+function initHtmlRouter(app, options) {
     var newActiveElements;
 
     app.on('navigate', function (e) {
@@ -213,9 +214,13 @@ function initHtmlRouter(app) {
         $(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
             v.src = withBaseUrl(v.getAttribute('src'));
         });
-        $(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
-            v.href = withBaseUrl(v.getAttribute('href'));
-        });
+        if (!options.explicitBaseUrl) {
+            $(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
+                var href = v.getAttribute('href');
+                v.dataset.href = href;
+                v.href = withBaseUrl(href);
+            });
+        }
     });
 
     dom.ready.then(function () {
@@ -265,5 +270,5 @@ function initHtmlRouter(app) {
 export default addExtension('htmlRouter', function (app, options) {
     Router();
     app.useRouter(options);
-    initHtmlRouter(app);
+    initHtmlRouter(app, options);
 });

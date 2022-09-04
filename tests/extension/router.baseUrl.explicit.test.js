@@ -7,6 +7,7 @@ import { addAnimateIn, addAnimateOut } from "src/anim";
 import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
 import dom from "zeta-dom/dom";
+import { fireEvent, screen } from "@testing-library/dom";
 
 const { stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
@@ -122,6 +123,15 @@ describe('app', () => {
         expect(div.children[2].src).toEqual('http://localhost/bar.mp4');
         expect(div.children[3].href).toEqual('http://localhost/bar');
         expect(div.children[4].style.backgroundImage).toEqual('url(/bar.png)');
+    });
+
+    it('should navigate to correct path when clicking link', async () => {
+        await mount(`
+            <a data-testid="link1" href="/base/foo">Test</a>
+        `);
+        await after(() => fireEvent.click(screen.getByTestId('link1')));
+        expect(app.path).toBe('/base/foo');
+        expect(location.pathname).toBe('/base/foo');
     });
 });
 
