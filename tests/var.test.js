@@ -18,6 +18,18 @@ describe('getVar', () => {
         var elm = document.createElement('div');
         expect(() => getVar(elm)).not.toThrow();
     });
+
+    it('should return own variables and second argument is true', async () => {
+        const { child1, child2 } = await mount(`
+            <div var="{ foo: 1 }">
+                <div id="child1">
+                    <div id="child2" var="{ bar: 1 }"></div>
+                </div>
+            </div>
+        `);
+        expect(getVar(child1, true)).toEqual({});
+        expect(getVar(child2, true)).toEqual({ bar: 1 });
+    });
 });
 
 describe('declareVar', () => {
@@ -30,6 +42,15 @@ describe('declareVar', () => {
         expect(getVar(root, varname)).toBe(1);
         expect(getVar(body, varname)).toBe(2);
         expect(getVarScope(varname, body)).toBe(body);
+    });
+});
+
+describe('getDeclaredVar', () => {
+    it('should not throw if attribute evaluates to non-object', async () => {
+        const div = await mount(`
+            <div var="1"></div>
+        `);
+        expect(getVar(div, true)).toEqual({});
     });
 });
 

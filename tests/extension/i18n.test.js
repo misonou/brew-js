@@ -3,6 +3,9 @@ import router from "src/extension/router";
 import i18n from "src/extension/i18n";
 import { jest } from "@jest/globals";
 
+const getLanguage = jest.spyOn(window.navigator, 'language', 'get').mockReturnValue('en-US');
+const getLanguages = jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['en-US', 'en', 'es', 'ja']);
+
 var initialPath;
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 var app;
@@ -28,11 +31,6 @@ beforeAll(async () => {
             });
         });
     });
-});
-
-beforeEach(() => {
-    jest.spyOn(window.navigator, 'language', 'get').mockReturnValue('en-US');
-    jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['en-US', 'en', 'es', 'ja']);
 });
 
 beforeEach(async () => {
@@ -141,8 +139,8 @@ describe('app.detectLanguage', () => {
     });
 
     it('should match language of navigator.language when languages is unavailable', () => {
-        jest.spyOn(window.navigator, 'language', 'get').mockReturnValue('ja');
-        jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(undefined);
+        getLanguage.mockReturnValueOnce('ja');
+        getLanguages.mockReturnValueOnce(undefined);
         expect(app.detectLanguage(['ja', 'en'])).toBe('ja');
     });
 
@@ -152,5 +150,9 @@ describe('app.detectLanguage', () => {
 
     it('should return default language when none of the languages match', () => {
         expect(app.detectLanguage(['fr'], 'pt')).toBe('pt');
+    });
+
+    it('should return browser\'s primary language when no languages is given', () => {
+        expect(app.detectLanguage()).toBe('en-US');
     });
 });

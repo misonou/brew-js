@@ -13,5 +13,15 @@ expect.extend({
             return { pass: false, message: () => `Expected code property to be ${message} but it was ${received.message}` };
         }
         return { pass: true, message: () => '' };
+    },
+    toHaveClassName(received, className) {
+        var isNot = this.isNot;
+        if (!(received instanceof Element)) {
+            return { pass: false, message: () => `Expected to be instance of Element` };
+        }
+        if (!received.classList.contains(className)) {
+            return { pass: false, message: () => `Expected element to have class "${className}" but it has "${received.className}"` };
+        }
+        return { pass: true, message: () => isNot ? `Expected element not to have class "${className}" but it has "${received.className}"` : '' };
     }
 });

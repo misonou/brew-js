@@ -1,4 +1,4 @@
-import { baseUrl, combinePath, isSubPathOf, normalizePath, removeQueryAndHash, setBaseUrl, withBaseUrl } from "src/util/path";
+import { baseUrl, combinePath, isSubPathOf, normalizePath, removeQueryAndHash, setBaseUrl, toAbsoluteUrl, toRelativeUrl, withBaseUrl } from "src/util/path";
 
 const initialBaseUrl = baseUrl;
 
@@ -178,5 +178,40 @@ describe('isSubPathOf', () => {
         expect(isSubPathOf('/foo/', 'foo')).toBeFalsy();
         expect(isSubPathOf('foo', '/foo')).toBeFalsy();
         expect(isSubPathOf('foo/', '/foo')).toBeFalsy();
+    });
+});
+
+describe('toAbsoluteUrl', () => {
+    it('should return absolute URL', () => {
+        setBaseUrl('/bar');
+        expect(toAbsoluteUrl('/')).toBe('http://localhost/bar');
+        expect(toAbsoluteUrl('/foo')).toBe('http://localhost/bar/foo');
+        expect(toAbsoluteUrl('/foo?a=1')).toBe('http://localhost/bar/foo?a=1');
+
+        setBaseUrl('/');
+        expect(toAbsoluteUrl('/')).toBe('http://localhost/');
+        expect(toAbsoluteUrl('/foo')).toBe('http://localhost/foo');
+        expect(toAbsoluteUrl('/foo?a=1')).toBe('http://localhost/foo?a=1');
+    });
+
+    it('should return same absolute URL', () => {
+        expect(toAbsoluteUrl('http://test.com/')).toBe('http://test.com/');
+        expect(toAbsoluteUrl('http://test.com/bar/')).toBe('http://test.com/bar/');
+    });
+});
+
+describe('toRelativeUrl', () => {
+    it('should return url without origin', () => {
+        expect(toRelativeUrl('http://localhost')).toBe('/');
+        expect(toRelativeUrl('http://localhost/')).toBe('/');
+        expect(toRelativeUrl('http://localhost/foo')).toBe('/foo');
+        expect(toRelativeUrl('http://localhost/foo?a=1')).toBe('/foo?a=1');
+    });
+
+    it('should return absolute url of different origin', () => {
+        expect(toRelativeUrl('http://test.com')).toBe('http://test.com');
+        expect(toRelativeUrl('http://test.com/')).toBe('http://test.com/');
+        expect(toRelativeUrl('http://test.com/foo')).toBe('http://test.com/foo');
+        expect(toRelativeUrl('http://test.com/foo?a=1')).toBe('http://test.com/foo?a=1');
     });
 });

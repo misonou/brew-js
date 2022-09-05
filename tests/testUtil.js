@@ -4,6 +4,7 @@ import { mountElement } from "src/dom";
 import { noop } from "zeta-dom/util";
 import dom from "zeta-dom/dom";
 import { jest } from "@jest/globals";
+import { removeNode, selectIncludeSelf } from "zeta-dom/domUtil";
 
 const consoleGroupCollapsed = console.groupCollapsed;
 const consoleWarn = console.warn;
@@ -46,12 +47,28 @@ export function initBody(html) {
     return dict;
 }
 
-export async function mount(html) {
+export async function mount(html, callback) {
     const elm = $(html)[0];
+    cleanupAfterTest(() => {
+        removeNode(elm);
+    });
+    if (callback) {
+        dom.on(elm, 'mounted', function () {
+            callback(this);
+        });
+    }
     await after(() => {
         body.appendChild(elm);
         mountElement(elm);
     });
+    const arr = selectIncludeSelf('[id]', elm);
+    if (arr[0]) {
+        const dict = {};
+        arr.forEach(v => {
+            dict[v.id] = v;
+        });
+        return dict;
+    }
     return elm;
 }
 
@@ -135,6 +152,5 @@ beforeEach(() => {
     }
 });
 afterEach(() => {
-    jest.clearAllMocks();
     cleanup.splice(0).forEach(v => v());
 });

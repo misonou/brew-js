@@ -7,6 +7,7 @@ import { jest } from "@jest/globals";
 
 const { stringMatching, objectContaining } = expect;
 const fetchSpy = mockFn();
+const setAttribute = jest.spyOn(HTMLImageElement.prototype, 'setAttribute');
 
 jest.spyOn($, 'ajax');
 window.__fetchSpy__ = fetchSpy;
@@ -286,11 +287,27 @@ describe('preloadImages', () => {
         await expect(preloadImages([])).resolves.toBeUndefined();
     });
 
-    xit('should load image by image element', async () => {
+    it('should preload image by image element', async () => {
         await preloadImages(['/foo/bar.jpg', '/foo/bar.png']);
-        verifyCalls(fetchSpy, [
-            ['fetch', 'http://localhost/foo/bar.jpg'],
-            ['fetch', 'http://localhost/foo/bar.png'],
+        verifyCalls(setAttribute, [
+            ['src', '/foo/bar.jpg'],
+            ['src', '/foo/bar.png'],
         ]);
+    });
+
+    it('should preload all images found in DOM tree', async () => {
+        const elm = $(`
+            <div class="img">
+                <img src="/foo/bar.jpg"/>
+                <img src="/foo/bar.png"/>
+                <img src="/foo/bar.png"/>
+                <style>
+                    .img { background-image: url('/foo/baz.jpg') }
+                </style>
+            </div>
+        `).appendTo(document.body)[0];
+
+        await preloadImages(elm);
+        expect(setAttribute).toBeCalledTimes(3);
     });
 });
