@@ -87,7 +87,7 @@ export function toAbsoluteUrl(url) {
  * @param {string} url
  */
 export function toRelativeUrl(url) {
-    return url.substr(0, location.origin.length) === location.origin ? url.substr(location.origin.length) : url;
+    return isSubPathOf(url, location.origin) || url;
 }
 
 /**
