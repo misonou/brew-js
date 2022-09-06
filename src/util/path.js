@@ -96,7 +96,7 @@ export function toRelativeUrl(url) {
  */
 export function isSubPathOf(a, b) {
     var len = b.length;
-    return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
+    return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
 
 /**

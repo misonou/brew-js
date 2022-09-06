@@ -173,6 +173,18 @@ describe('isSubPathOf', () => {
         expect(isSubPathOf('http://test.com/foo/', 'http://test.com/foo')).toBeTruthy();
     });
 
+    it('should work with query string and hash', () => {
+        expect(isSubPathOf('/?a=1', '/')).toBeTruthy();
+        expect(isSubPathOf('/foo?a=1', '/')).toBeTruthy();
+        expect(isSubPathOf('/foo?a=1', '/foo')).toBeTruthy();
+        expect(isSubPathOf('/foo/?a=1', '/foo')).toBeTruthy();
+
+        expect(isSubPathOf('/#a=1', '/')).toBeTruthy();
+        expect(isSubPathOf('/foo#a=1', '/')).toBeTruthy();
+        expect(isSubPathOf('/foo#a=1', '/foo')).toBeTruthy();
+        expect(isSubPathOf('/foo/#a=1', '/foo')).toBeTruthy();
+    });
+
     it('expects normalized paths', () => {
         expect(isSubPathOf('/foo', 'foo')).toBeFalsy();
         expect(isSubPathOf('/foo/', 'foo')).toBeFalsy();
