@@ -45,7 +45,7 @@ function handleAnimation(element, elements, promises, trigger) {
 
 function animateElement(element, cssClass, eventName, customAnimation) {
     var promises = [runCSSTransition(element, cssClass), dom.emit(eventName, element)];
-    var delay = parseFloat($(element).css('transition-delay'));
+    var delay = parseFloat($(element).css('transition-delay')) || 0;
     each(customAnimation, function (i, v) {
         if (element.attributes[i]) {
             var attrValue = element.getAttribute(i);
