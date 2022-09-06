@@ -11,7 +11,7 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 32:
+/***/ 167:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -66,6 +66,7 @@ __webpack_require__.d(common_namespaceObject, {
   "getJSON": function() { return getJSON; },
   "getQueryParam": function() { return getQueryParam; },
   "hasAttr": function() { return hasAttr; },
+  "isBoolAttr": function() { return isBoolAttr; },
   "loadScript": function() { return loadScript; },
   "preloadImages": function() { return preloadImages; },
   "selectorForAttr": function() { return selectorForAttr; },
@@ -276,7 +277,7 @@ function toAbsoluteUrl(url) {
  */
 
 function toRelativeUrl(url) {
-  return url.substr(0, location.origin.length) === location.origin ? url.substr(location.origin.length) : url;
+  return isSubPathOf(url, location.origin) || url;
 }
 /**
  * @param {string} a
@@ -381,6 +382,9 @@ function getAttrValues(element) {
   });
   return values;
 }
+function isBoolAttr(element, name) {
+  return matchWord(name, 'allowfullscreen async autofocus autoplay checked controls default defer disabled formnovalidate ismap itemscope loop multiple muted nomodule novalidate open playsinline readonly required reversed selected truespeed') && name in element;
+}
 function hasAttr(element, name) {
   return !!element.attributes[name];
 }
@@ -403,7 +407,7 @@ function selectorForAttr(attr) {
     attr = keys(attr);
   }
 
-  return '[' + attr.join('],[') + ']';
+  return attr[0] ? '[' + attr.join('],[') + ']' : '';
 }
 /**
  * @param {HTMLFormElement} form
@@ -476,7 +480,7 @@ function common_cookie(name, expiry) {
  */
 
 function api(options, extra) {
-  var httpMethods = 'get post delete';
+  var httpMethods = 'get post put delete';
 
   if (typeof options === 'string' && matchWord(options, httpMethods)) {
     extra = extend({}, typeof extra === 'string' ? {
@@ -731,7 +735,7 @@ function handleAnimation(element, elements, promises, trigger) {
 
 function animateElement(element, cssClass, eventName, customAnimation) {
   var promises = [runCSSTransition(element, cssClass), zeta_dom_dom.emit(eventName, element)];
-  var delay = parseFloat(jquery(element).css('transition-delay'));
+  var delay = parseFloat(jquery(element).css('transition-delay')) || 0;
   each(customAnimation, function (i, v) {
     if (element.attributes[i]) {
       var attrValue = element.getAttribute(i);
@@ -889,10 +893,6 @@ function addAnimateOut(name, callback) {
 }
 // EXTERNAL MODULE: ./src/include/external/waterpipe.js
 var waterpipe = __webpack_require__(256);
-// CONCATENATED MODULE: ./src/defaults.js
-/** @deprecated @type {Zeta.Dictionary} */
-var defaults = {};
-/* harmony default export */ const src_defaults = (defaults);
 // CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
 
 var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
@@ -904,6 +904,20 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
 
+// CONCATENATED MODULE: ./src/libCheck.js
+
+var BREW_KEY = '__BREW__';
+
+if (window[BREW_KEY]) {
+  throw new Error('Another copy of brew-js is instantiated. Please check your dependencies.');
+}
+
+defineHiddenProperty(window, BREW_KEY, true, true);
+/* harmony default export */ const libCheck = (null);
+// CONCATENATED MODULE: ./src/defaults.js
+/** @deprecated @type {Zeta.Dictionary} */
+var defaults = {};
+/* harmony default export */ const src_defaults = (defaults);
 // CONCATENATED MODULE: ./src/util/console.js
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -968,12 +982,6 @@ function groupLog(eventSource, message, callback) {
 
 
 
-
-
-
-var IMAGE_STYLE_PROPS = 'background-image'.split(' ');
-var BOOL_ATTRS = 'checked selected disabled readonly multiple ismap';
-
 var _ = createPrivateStore();
 
 var root = zeta_dom_dom.root;
@@ -988,7 +996,6 @@ var transformationHandlers = {};
 /** @type {Zeta.Dictionary<Brew.DOMProcessorCallback>} */
 
 var renderHandlers = {};
-var templates = {};
 var batchCounter = 0;
 var stateChangeLock = false;
 
@@ -1008,7 +1015,7 @@ function updateDOM(element, props, suppressEvent) {
       element.innerHTML = v;
     } else if (j === 'style') {
       jquery(element).css(v);
-    } else if (matchWord(j, BOOL_ATTRS)) {
+    } else if (isBoolAttr(element, j)) {
       element[j] = !!v;
     } else {
       element.setAttribute(j, v);
@@ -1031,6 +1038,12 @@ function mergeDOMUpdates(dict, props) {
 }
 
 function processTransform(elements, applyDOMUpdates) {
+  var selector = selectorForAttr(transformationHandlers);
+
+  if (!selector) {
+    return;
+  }
+
   var transformed = new Set();
   var exclude;
 
@@ -1039,7 +1052,7 @@ function processTransform(elements, applyDOMUpdates) {
       return containsOrEquals(root, v);
     });
     exclude = makeArray(transformed);
-    jquery(selectIncludeSelf(selectorForAttr(transformationHandlers), elements)).not(exclude).each(function (j, element) {
+    jquery(selectIncludeSelf(selector, elements)).not(exclude).each(function (j, element) {
       each(transformationHandlers, function (i, v) {
         if (element.attributes[i]) {
           v(element, getComponentState.bind(0, i), applyDOMUpdates);
@@ -1049,6 +1062,29 @@ function processTransform(elements, applyDOMUpdates) {
     });
   } while (exclude.length !== transformed.size);
 }
+
+function processRender(elements, updatedProps, applyDOMUpdates) {
+  var selector = selectorForAttr(renderHandlers);
+
+  if (!selector) {
+    return;
+  }
+
+  var visited = [];
+  each(elements.reverse(), function (i, v) {
+    groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
+      console.log(v === root ? document : v);
+      jquery(selectIncludeSelf(selector, v)).not(visited).each(function (i, element) {
+        each(renderHandlers, function (i, v) {
+          if (element.attributes[i]) {
+            v(element, getComponentState.bind(0, i), applyDOMUpdates);
+          }
+        });
+        visited.push(element);
+      });
+    });
+  });
+}
 /**
  * @param {string} target
  * @param {Zeta.Dictionary} handlers
@@ -1057,10 +1093,19 @@ function processTransform(elements, applyDOMUpdates) {
 
 
 function addSelectHandlers(target, handlers, unbindHandlers) {
-  selectorHandlers.push({
+  var obj = {
     target: target,
     handlers: handlers,
     unbindHandlers: unbindHandlers
+  };
+  selectorHandlers.push(obj);
+  unbindHandlers.push(function () {
+    // remove entries from array in next event loop
+    // to prevent misindexing in mountElement
+    obj.disposed = true;
+    setImmediate(function () {
+      arrRemove(selectorHandlers, obj);
+    });
   });
 }
 /**
@@ -1160,20 +1205,7 @@ function processStateChange(suppressAnim) {
           }
         }
       });
-      var visited = [];
-      each(arr.reverse(), function (i, v) {
-        groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
-          console.log(v === root ? document : v);
-          jquery(selectIncludeSelf(selectorForAttr(renderHandlers), v)).not(visited).each(function (i, element) {
-            each(renderHandlers, function (i, v) {
-              if (element.attributes[i]) {
-                v(element, getComponentState.bind(0, i), applyDOMUpdates);
-              }
-            });
-            visited.push(element);
-          });
-        });
-      });
+      processRender(arr, updatedProps, applyDOMUpdates);
     }); // perform any async task that is related or required by the DOM changes
 
     var preupdatePromise = resolveAll(preupdateHandlers.map(function (v) {
@@ -1183,8 +1215,9 @@ function processStateChange(suppressAnim) {
 
     preupdatePromise.then(function () {
       var animScopes = new Map();
-      each(domUpdates, function (element, props) {
-        if (!suppressAnim) {
+
+      if (!suppressAnim) {
+        each(updatedProps, function (element) {
           var animParent = jquery(element).filter('[match-path]')[0] || jquery(element).parents('[match-path]')[0] || root;
           var groupElements = animScopes.get(animParent);
 
@@ -1217,10 +1250,13 @@ function processStateChange(suppressAnim) {
             animScopes.set(animParent, groupElements);
           }
 
-          var dict = mapGet(pendingDOMUpdates, element, Object);
-          mergeDOMUpdates(dict, props);
+          mapGet(pendingDOMUpdates, element, Object);
           groupElements.push(element);
-        } else if (pendingDOMUpdates.has(element)) {
+        });
+      }
+
+      each(domUpdates, function (element, props) {
+        if (pendingDOMUpdates.has(element)) {
           mergeDOMUpdates(pendingDOMUpdates.get(element), props);
         } else {
           updateDOM(element, props);
@@ -1268,6 +1304,7 @@ function mountElement(element) {
   // suppress domchange event before element is mounted
   var prevStateChangeLock = stateChangeLock;
   stateChangeLock = true;
+  resetVar(element);
 
   try {
     processTransform(element, function (element, props) {
@@ -1284,13 +1321,17 @@ function mountElement(element) {
 
   while (index < selectorHandlers.length) {
     each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
-      jquery(selectIncludeSelf(v.target, element)).each(function (i, w) {
-        v.unbindHandlers.push(app.on(w, v.handlers));
+      if (!v.disposed) {
+        jquery(selectIncludeSelf(v.target, element)).each(function (i, w) {
+          if (index < 0) {
+            v.unbindHandlers.push(app.on(w, v.handlers));
+          }
 
-        if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
-          mountedElements.push(w);
-        }
-      });
+          if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
+            mountedElements.push(w);
+          }
+        });
+      }
     });
     index = selectorHandlers.length;
     each(jquery.uniqueSort(mountedElements.slice(index2)), function (i, v) {
@@ -1320,36 +1361,10 @@ function mountElement(element) {
  */
 
 function dom_preventLeave(suppressPrompt) {
-  var element = any(jquery('[prevent-leave]').get(), function (v) {
-    var state = getComponentState('preventLeave', v);
-    var allowLeave = state.allowLeave;
-
-    if (isElementActive(v) || allowLeave) {
-      var preventLeave = evalAttr(v, 'prevent-leave');
-
-      if (!preventLeave && allowLeave) {
-        delete state.allowLeave;
-      }
-
-      return preventLeave && !allowLeave;
-    }
-  });
-
-  if (element && !suppressPrompt) {
-    return resolveAll(zeta_dom_dom.emit('preventLeave', element, null, true), function (result) {
-      if (result) {
-        var state = getComponentState('preventLeave', element);
-        state.allowLeave = true;
-      } else {
-        throw errorWithCode(navigationRejected);
-      }
-    });
-  }
-
-  return !!element;
+  return suppressPrompt ? locked(root) : cancelLock(root);
 }
 function addTemplate(name, template) {
-  templates[name] = jquery(template)[0];
+  jquery(template).clone().attr('brew-template', name).appendTo(document.body);
 }
 function addTransformer(name, callback) {
   transformationHandlers[name] = throwNotFunction(callback);
@@ -1357,214 +1372,6 @@ function addTransformer(name, callback) {
 function addRenderer(name, callback) {
   renderHandlers[name] = throwNotFunction(callback);
 }
-/* --------------------------------------
- * Built-in transformers and renderers
- * -------------------------------------- */
-
-addTransformer('apply-template', function (element, getState) {
-  var state = getState(element);
-  var templateName = element.getAttribute('apply-template');
-  var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
-  var currentTemplate = state.template;
-
-  if (!state.attributes) {
-    extend(state, {
-      attributes: getAttrValues(element),
-      childNodes: makeArray(element.childNodes)
-    });
-  }
-
-  if (template && template !== currentTemplate) {
-    state.template = template;
-    template = template.cloneNode(true); // reset attributes on the apply-template element
-    // before applying new attributes
-
-    if (currentTemplate) {
-      each(currentTemplate.attributes, function (i, v) {
-        element.removeAttribute(v.name);
-      });
-    }
-
-    setAttr(element, state.attributes);
-    copyAttr(template, element);
-    var $contents = jquery(state.childNodes).detach();
-    jquery(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
-    jquery(selectIncludeSelf('content[for]', template)).each(function (i, v) {
-      jquery(v).replaceWith($contents.filter(v.getAttribute('for') || ''));
-    });
-    jquery(element).empty().append(template.childNodes);
-  }
-});
-addTransformer('auto-var', function (element) {
-  setVar(element, evalAttr(element, 'auto-var'));
-});
-addTransformer('foreach', function (element, getState) {
-  var state = getState(element);
-  var templateNodes = state.template || (state.template = jquery(element).contents().detach().filter(function (i, v) {
-    return v.nodeType === 1 || /\S/.test(v.data || '');
-  }).get());
-  var currentNodes = state.nodes || [];
-  var oldItems = state.data || [];
-  var newItems = makeArray(evalAttr(element, 'foreach'));
-
-  if (newItems.length !== oldItems.length || newItems.some(function (v, i) {
-    return oldItems[i] !== v;
-  })) {
-    var newChildren = map(newItems, function (v) {
-      var currentIndex = oldItems.indexOf(v);
-
-      if (currentIndex >= 0) {
-        oldItems.splice(currentIndex, 1);
-        return currentNodes.splice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
-      }
-
-      var parts = jquery(templateNodes).clone().get();
-      var nested = jquery(selectIncludeSelf('[foreach]', parts));
-
-      if (nested[0]) {
-        jquery(selectIncludeSelf('[foreach]', templateNodes)).each(function (i, v) {
-          getState(nested[i]).template = getState(v).template;
-        });
-      }
-
-      each(parts, function (i, w) {
-        if (w.nodeType === 1) {
-          jquery(element).append(w);
-          declareVar(w, {
-            foreach: v
-          });
-          mountElement(w);
-        }
-      });
-      return parts;
-    });
-    extend(state, {
-      nodes: newChildren,
-      data: newItems.slice()
-    });
-    jquery(currentNodes).detach();
-    jquery(element).append(newChildren);
-  }
-});
-addTransformer('switch', function (element, getState, applyDOMUpdates) {
-  var varname = element.getAttribute('switch') || '';
-
-  if (!isElementActive(element) || !varname) {
-    return;
-  }
-
-  var state = getState(element);
-
-  if (state.matched === undefined) {
-    declareVar(element, 'matched', function () {
-      return state.matched && getVar(state.matched, true);
-    });
-  }
-
-  var context = getVar(element);
-  var matchValue = waterpipe.eval(varname, context);
-  var $target = jquery('[match-' + varname + ']', element).filter(function (i, w) {
-    return jquery(w).parents('[switch]')[0] === element;
-  });
-  var resetOnChange = !matchWord('switch', element.getAttribute('keep-child-state') || '');
-  var previous = state.matched;
-  var matched;
-  var itemValues = new Map();
-  $target.each(function (i, v) {
-    var thisValue = waterpipe.eval('"null" ?? ' + v.getAttribute('match-' + varname), getVar(v));
-    itemValues.set(v, thisValue);
-
-    if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
-      matched = v;
-      return false;
-    }
-  });
-  matched = matched || $target.filter('[default]')[0] || $target[0] || null;
-
-  if (previous !== matched) {
-    groupLog('switch', [element, varname, '→', matchValue], function (console) {
-      console.log('Matched: ', matched || '(none)');
-
-      if (matched) {
-        if (resetOnChange) {
-          resetVar(matched);
-        }
-
-        setVar(matched);
-      }
-
-      if (previous && resetOnChange) {
-        resetVar(previous, true);
-      }
-
-      $target.each(function (i, v) {
-        applyDOMUpdates(v, {
-          $$class: {
-            active: v === matched
-          }
-        });
-      });
-    });
-  } else {
-    writeLog('switch', [element, varname, '→', matchValue, '(unchanged)']);
-
-    if (varname in context && itemValues.get(matched) !== undefined) {
-      setVar(element, varname, itemValues.get(matched));
-    }
-  }
-
-  state.matched = matched;
-});
-addRenderer('template', function (element, getState, applyDOMUpdates) {
-  var state = getState(element);
-  var templates = state.templates;
-
-  if (!templates) {
-    templates = {};
-    each(element.attributes, function (i, w) {
-      if (w.value.indexOf('{{') >= 0) {
-        templates[w.name] = matchWord(w.name, BOOL_ATTRS) ? w.value.replace(/^{{|}}$/g, '') : w.value;
-      }
-    });
-
-    if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
-      templates.$$html = element.textContent.replace(/(\{\{(?:\}(?!\})|[^}])*\}*\}\})|</g, function (v, a) {
-        return a || '&lt;';
-      });
-    }
-
-    state.templates = templates;
-  }
-
-  var context = getVar(element);
-  var props = {};
-  each(templates, function (i, w) {
-    var value = evaluate(w, context, element, i, !matchWord(i, BOOL_ATTRS));
-
-    if ((i === '$$html' ? element.innerHTML : (element.getAttribute(i) || '').replace(/["']/g, '')) !== value) {
-      props[i] = value;
-    }
-  });
-  applyDOMUpdates(element, props);
-});
-addRenderer('set-style', function (element, getState, applyDOMUpdates) {
-  var style = parseCSS(evalAttr(element, 'set-style', true));
-  each(IMAGE_STYLE_PROPS, function (i, v) {
-    var imageUrl = isCssUrlValue(style[v]);
-
-    if (imageUrl) {
-      style[v] = 'url("' + withBaseUrl(toRelativeUrl(imageUrl)) + '")';
-    }
-  });
-  applyDOMUpdates(element, {
-    style: style
-  });
-});
-addRenderer('set-class', function (element, getState, applyDOMUpdates) {
-  applyDOMUpdates(element, {
-    $$class: evalAttr(element, 'set-class')
-  });
-});
 // CONCATENATED MODULE: ./src/app.js
 
 
@@ -1572,10 +1379,11 @@ addRenderer('set-class', function (element, getState, applyDOMUpdates) {
 
 
 
-var app_ = createPrivateStore();
 
 var app_root = zeta_dom_dom.root;
 var featureDetections = {};
+var dependencies = {};
+var extensions = {};
 /** @type {Brew.AppInstance} */
 
 var app;
@@ -1585,6 +1393,9 @@ var appReady;
 /** @type {boolean} */
 
 var appInited;
+/** @type {Promise<void> & Zeta.Deferrable} */
+
+var appInit;
 
 function exactTargetWrapper(handler) {
   return function (e) {
@@ -1594,14 +1405,47 @@ function exactTargetWrapper(handler) {
   };
 }
 
+function initExtension(app, name, deps, options, callback) {
+  deps = grep(deps, function (v) {
+    return !extensions[v.replace(/^\?/, '')];
+  });
+  var counter = deps.length || 1;
+
+  var wrapper = function wrapper(loaded) {
+    if (!counter) {
+      throw new Error('Extension' + name + 'is already initiated');
+    }
+
+    if (loaded && ! --counter) {
+      extensions[name] = true;
+      callback(app, options || {});
+
+      if (dependencies[name]) {
+        combineFn(dependencies[name].splice(0))(true);
+      }
+    }
+  };
+
+  if (deps[0]) {
+    each(deps, function (i, v) {
+      var key = v.replace(/^\?/, '');
+      var arr = dependencies[key] || (dependencies[key] = []);
+      arr.push(key === v ? wrapper : wrapper.bind(0, true));
+    });
+  } else {
+    wrapper(true);
+  }
+}
+
+function defineUseMethod(name, deps, callback) {
+  var method = camel('use-' + name);
+  definePrototype(App, kv(method, function (options) {
+    initExtension(this, name, deps, options, callback);
+  }));
+}
+
 function App() {
   var self = this;
-
-  app_(self, {
-    init: deferrable(zeta_dom_dom.ready),
-    options: {}
-  });
-
   defineOwnProperty(self, 'element', app_root, true);
   defineOwnProperty(self, 'ready', new Promise(function (resolve) {
     self.on('ready', resolve.bind(0, self));
@@ -1626,7 +1470,7 @@ definePrototype(App, {
       promise = promise.call(this);
     }
 
-    app_(this).init.waitFor(promise);
+    appInit.waitFor(promise);
   },
   isElementActive: function isElementActive() {
     return true;
@@ -1708,10 +1552,11 @@ definePrototype(App, {
 });
 watchable(App.prototype);
 /* harmony default export */ function src_app() {
-  if (appInited) {
+  if (appInit) {
     throw new Error('brew() can only be called once');
   }
 
+  appInit = deferrable(zeta_dom_dom.ready);
   app = new App();
   each(src_defaults, function (i, v) {
     var fn = v && isFunction(app[camel('use-' + i)]);
@@ -1723,8 +1568,12 @@ watchable(App.prototype);
   each(arguments, function (i, v) {
     throwNotFunction(v)(app);
   });
+  each(dependencies, function (i, v) {
+    combineFn(v)();
+  });
   appInited = true;
-  handleAsync(app_(app).init, app_root, function () {
+  notifyAsync(app_root, appInit);
+  appInit.then(function () {
     appReady = true;
     mountElement(app_root);
     app.emit('ready');
@@ -1732,27 +1581,18 @@ watchable(App.prototype);
   return app;
 }
 function install(name, callback) {
-  name = camel('use-' + name);
-  throwNotFunction(callback);
-  definePrototype(App, kv(name, function (options) {
-    var dict = app_(this).options;
-
-    if (dict[name]) {
-      throw new Error(name + '() can only be called once');
-    }
-
-    dict[name] = options || {};
-    callback(this, dict[name]);
-  }));
+  defineUseMethod(name, [], throwNotFunction(callback));
 }
-function addExtension(autoInit, name, callback) {
-  if (autoInit === true) {
-    return function (app) {
-      callback(app, {});
-    };
-  }
-
-  return install.bind(0, autoInit, name);
+function addExtension(autoInit, name, deps, callback) {
+  callback = throwNotFunction(callback || deps || name);
+  deps = isArray(deps) || isArray(name) || [];
+  return function (app) {
+    if (autoInit === true) {
+      initExtension(app, name, deps, {}, callback);
+    } else {
+      defineUseMethod(autoInit, deps, callback);
+    }
+  };
 }
 function addDetect(name, callback) {
   featureDetections[name] = throwNotFunction(callback);
@@ -2022,8 +1862,6 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 
 
-
-
 var SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 var SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 var domAction_root = zeta_dom_dom.root;
@@ -2152,52 +1990,6 @@ function openFlyout(selector, states, source, closeIfOpened) {
   }));
   return promise;
 }
-addAsyncAction('validate', function (e) {
-  var target = selectClosestRelative(this.getAttribute('validate') || '', e.target);
-
-  if (target) {
-    // @ts-ignore: type inference issue
-    var valid = zeta_dom_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
-
-    if (!valid) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-    } else if (isThenable(valid)) {
-      return valid.then(function (valid) {
-        if (!valid) {
-          throw errorWithCode(validationFailed);
-        }
-      });
-    }
-  }
-});
-addAsyncAction('context-method', function (e) {
-  var self = e.currentTarget;
-  var method = camel(self.getAttribute('context-method') || '');
-
-  if (isFunction(app[method])) {
-    var formSelector = self.getAttribute('context-form'); // @ts-ignore: acceptable if self.form is undefined
-
-    var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
-    var params;
-    var valid = true;
-
-    if (form) {
-      valid = zeta_dom_dom.emit('validate', form) || form.checkValidity();
-      params = [getFormValues(form)];
-    } else {
-      params = makeArray(evalAttr(self, 'method-args'));
-    }
-
-    return resolveAll(valid, function (valid) {
-      if (!valid) {
-        throw errorWithCode(validationFailed);
-      }
-
-      return app[method].apply(app, params);
-    });
-  }
-});
 zeta_dom_dom.ready.then(function () {
   var tabindexMap = new WeakMap();
   var tabRoot = domAction_root;
@@ -2230,7 +2022,11 @@ zeta_dom_dom.ready.then(function () {
   });
   watchElements(domAction_root, SELECTOR_FOCUSABLE, setTabIndex, true);
   app.on('mounted', function (e) {
-    jquery(selectIncludeSelf(selectorForAttr(asyncActions), e.target)).attr('async-action', '');
+    var selector = selectorForAttr(asyncActions);
+
+    if (selector) {
+      jquery(selectIncludeSelf(selector, e.target)).attr('async-action', '');
+    }
   });
   app.on('navigate', function () {
     setTimeout(function () {
@@ -2270,7 +2066,8 @@ zeta_dom_dom.ready.then(function () {
       if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
         e.stopImmediatePropagation();
         e.preventDefault();
-        handleAsync(returnValue).then(function () {
+        notifyAsync(element, returnValue);
+        returnValue.then(function () {
           dispatchDOMMouseEvent(e);
         }, function (e) {
           executedAsyncActions.delete(element);
@@ -2344,79 +2141,12 @@ zeta_dom_dom.ready.then(function () {
     }
   });
 });
-// CONCATENATED MODULE: ./src/domReady.js
-
-
-
-
-
-
-
-var ATTR_LOADING_SCOPE = 'loading-scope';
-var ATTR_ERROR_SCOPE = 'error-scope';
-var domReady_root = zeta_dom_dom.root;
-zeta_dom_dom.ready.then(function () {
-  jquery('[brew-template]').each(function (i, v) {
-    addTemplate(v.getAttribute('brew-template') || '', v.cloneNode(true));
-  });
-  jquery('apply-attributes').each(function (i, v) {
-    var $target = jquery(v.getAttribute('elements') || '', v.parentNode || domReady_root);
-    each(v.attributes, function (i, v) {
-      if (v.name !== 'elements') {
-        $target.each(function (i, w) {
-          w.setAttribute(v.name, v.value);
-        });
-      }
-    });
-  }).remove();
-
-  window.onbeforeunload = function (e) {
-    if (dom_preventLeave(true)) {
-      e.returnValue = '';
-      e.preventDefault();
-    }
-  };
-
-  watchElements(domReady_root, selectorForAttr([ATTR_LOADING_SCOPE, ATTR_ERROR_SCOPE]), function (addedNodes) {
-    each(addedNodes, function (i, v) {
-      zeta_dom_dom.lock(v);
-      zeta_dom_dom.on(v, {
-        asyncStart: function asyncStart() {
-          if (hasAttr(v, ATTR_LOADING_SCOPE)) {
-            setVar(v, 'loading', true);
-          }
-
-          if (hasAttr(v, ATTR_ERROR_SCOPE)) {
-            setVar(v, 'error', null);
-          }
-        },
-        asyncEnd: function asyncEnd() {
-          if (hasAttr(v, ATTR_LOADING_SCOPE)) {
-            setVar(v, 'loading', false);
-          }
-        },
-        error: function error(e) {
-          if (hasAttr(v, ATTR_ERROR_SCOPE)) {
-            var error = e.error || {};
-            setVar(v, 'error', error.code || error.message || true);
-          }
-        }
-      });
-    });
-  }, true);
-
-  if (hasAttr(domReady_root, ATTR_LOADING_SCOPE)) {
-    setVar(domReady_root, 'loading', 'initial');
-  }
-});
-/* harmony default export */ const src_domReady = (null);
 // CONCATENATED MODULE: ./src/core.js
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 
 
 
@@ -2457,6 +2187,8 @@ var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpre
   install: install,
   addDetect: addDetect,
   addExtension: addExtension,
+  addRenderer: addRenderer,
+  addTransformer: addTransformer,
   addTemplate: addTemplate,
   with: with_
 });
@@ -2480,7 +2212,7 @@ util_define(src_app, method);
     }
   }));
 }));
-// CONCATENATED MODULE: ./src/extension/formVar.js
+// CONCATENATED MODULE: ./src/extension/template.js
 
 
 
@@ -2488,14 +2220,298 @@ util_define(src_app, method);
 
 
 
-/* harmony default export */ const formVar = (addExtension(true, 'formVar', function (app) {
-  app.matchElement('form[form-var]', function (form) {
-    var varname = form.getAttribute('form-var');
+
+
+
+
+
+
+
+
+
+var IMAGE_STYLE_PROPS = 'background-image';
+var templates = {};
+var template_root = zeta_dom_dom.root;
+/* harmony default export */ const template = (addExtension(true, 'template', function (app) {
+  addTransformer('apply-template', function (element, getState) {
+    var state = getState(element);
+    var templateName = getAttr(element, 'apply-template');
+    var template = templates[templateName] || templates[evalAttr(element, 'apply-template')];
+    var currentTemplate = state.template;
+
+    if (!state.attributes) {
+      extend(state, {
+        attributes: getAttrValues(element),
+        childNodes: makeArray(element.childNodes)
+      });
+    }
+
+    if (template && template !== currentTemplate) {
+      state.template = template;
+      template = template.cloneNode(true); // reset attributes on the apply-template element
+      // before applying new attributes
+
+      if (currentTemplate) {
+        each(currentTemplate.attributes, function (i, v) {
+          element.removeAttribute(v.name);
+        });
+      }
+
+      setAttr(element, state.attributes);
+      copyAttr(template, element);
+      var $contents = jquery(state.childNodes).detach();
+      jquery(selectIncludeSelf('content:not([for])', template)).replaceWith($contents);
+      jquery(selectIncludeSelf('content[for]', template)).each(function (i, v) {
+        jquery(v).replaceWith($contents.filter(getAttr(v, 'for') || ''));
+      });
+      jquery(element).empty().append(template.childNodes);
+    }
+  });
+  addTransformer('auto-var', function (element) {
+    setVar(element, evalAttr(element, 'auto-var'));
+  });
+  addTransformer('foreach', function (element, getState) {
+    var state = getState(element);
+    var templateNodes = state.template || (state.template = jquery(element).contents().detach().filter(function (i, v) {
+      return v.nodeType === 1 || /\S/.test(v.data || '');
+    }).get());
+    var currentNodes = state.nodes || [];
+    var oldItems = state.data || [];
+    var newItems = makeArray(evalAttr(element, 'foreach'));
+
+    if (newItems.length !== oldItems.length || newItems.some(function (v, i) {
+      return oldItems[i] !== v;
+    })) {
+      var newChildren = map(newItems, function (v) {
+        var currentIndex = oldItems.indexOf(v);
+
+        if (currentIndex >= 0) {
+          oldItems.splice(currentIndex, 1);
+          return currentNodes.splice(currentIndex * templateNodes.length, (currentIndex + 1) * templateNodes.length);
+        }
+
+        var parts = jquery(templateNodes).clone().get();
+        var nested = jquery(selectIncludeSelf('[foreach]', parts));
+
+        if (nested[0]) {
+          jquery(selectIncludeSelf('[foreach]', templateNodes)).each(function (i, v) {
+            getState(nested[i]).template = getState(v).template;
+          });
+        }
+
+        each(parts, function (i, w) {
+          if (w.nodeType === 1) {
+            jquery(element).append(w);
+            declareVar(w, {
+              foreach: v
+            });
+            mountElement(w);
+          }
+        });
+        return parts;
+      });
+      extend(state, {
+        nodes: newChildren,
+        data: newItems.slice()
+      });
+      jquery(currentNodes).detach();
+      jquery(element).append(newChildren);
+    }
+  });
+  addTransformer('switch', function (element, getState, applyDOMUpdates) {
+    var varname = getAttr(element, 'switch') || '';
+
+    if (!isElementActive(element) || !varname) {
+      return;
+    }
+
+    var state = getState(element);
+
+    if (state.matched === undefined) {
+      declareVar(element, 'matched', function () {
+        return state.matched && getVar(state.matched, true);
+      });
+    }
+
+    var context = getVar(element);
+    var matchValue = waterpipe.eval(varname, context);
+    var $target = jquery('[match-' + varname + ']', element).filter(function (i, w) {
+      return jquery(w).parents('[switch]')[0] === element;
+    });
+    var resetOnChange = !matchWord('switch', getAttr(element, 'keep-child-state') || '');
+    var previous = state.matched;
+    var matched;
+    var itemValues = new Map();
+    $target.each(function (i, v) {
+      var thisValue = waterpipe.eval('"null" ?? ' + getAttr(v, 'match-' + varname), getVar(v));
+      itemValues.set(v, thisValue);
+
+      if (waterpipe.eval('$0 == $1', [matchValue, thisValue])) {
+        matched = v;
+        return false;
+      }
+    });
+    matched = matched || $target.filter('[default]')[0] || $target[0] || null;
+
+    if (previous !== matched) {
+      groupLog('switch', [element, varname, '→', matchValue], function (console) {
+        console.log('Matched: ', matched || '(none)');
+
+        if (matched) {
+          if (resetOnChange) {
+            resetVar(matched);
+          }
+
+          setVar(matched);
+        }
+
+        if (previous && resetOnChange) {
+          resetVar(previous, true);
+        }
+
+        $target.each(function (i, v) {
+          applyDOMUpdates(v, {
+            $$class: {
+              active: v === matched
+            }
+          });
+        });
+      });
+    } else {
+      writeLog('switch', [element, varname, '→', matchValue, '(unchanged)']);
+
+      if (varname in context && itemValues.get(matched) !== undefined) {
+        setVar(element, varname, itemValues.get(matched));
+      }
+    }
+
+    state.matched = matched;
+  });
+  addRenderer('template', function (element, getState, applyDOMUpdates) {
+    var state = getState(element);
+    var templates = state.templates;
+
+    if (!templates) {
+      templates = {};
+      each(element.attributes, function (i, w) {
+        if (w.value.indexOf('{{') >= 0) {
+          templates[w.name] = isBoolAttr(element, w.name) ? w.value.replace(/^{{|}}$/g, '') : w.value;
+        }
+      });
+
+      if (!element.childElementCount && (element.textContent || '').indexOf('{{') >= 0) {
+        templates.$$html = element.textContent.replace(/(\{\{(?:\}(?!\})|[^}])*\}*\}\})|</g, function (v, a) {
+          return a || '&lt;';
+        });
+      }
+
+      state.templates = templates;
+    }
+
+    var context = getVar(element);
+    var props = {};
+    each(templates, function (i, w) {
+      var value = evaluate(w, context, element, i, !isBoolAttr(element, i));
+
+      if ((i === '$$html' ? element.innerHTML : (getAttr(element, i) || '').replace(/["']/g, '')) !== value) {
+        props[i] = value;
+      }
+    });
+    applyDOMUpdates(element, props);
+  });
+  addRenderer('set-style', function (element, getState, applyDOMUpdates) {
+    var style = parseCSS(evalAttr(element, 'set-style', true));
+    each(IMAGE_STYLE_PROPS, function (i, v) {
+      var imageUrl = isCssUrlValue(style[v]);
+
+      if (imageUrl) {
+        style[v] = 'url("' + withBaseUrl(toRelativeUrl(imageUrl)) + '")';
+      }
+    });
+    applyDOMUpdates(element, {
+      style: style
+    });
+  });
+  addRenderer('set-class', function (element, getState, applyDOMUpdates) {
+    applyDOMUpdates(element, {
+      $$class: evalAttr(element, 'set-class')
+    });
+  });
+  addRenderer('prevent-leave', function (element, getState) {
+    var state = getState(element);
+    var value = evalAttr(element, 'prevent-leave');
+
+    if (either(value, state.value)) {
+      state.value = value;
+
+      if (value) {
+        var promise = new Promise(function (resolve) {
+          state.resolve = resolve;
+        });
+        preventLeave(element, promise, function () {
+          return resolve(app.emit('preventLeave', element, null, true)).then(function (result) {
+            if (!result) {
+              throw errorWithCode(navigationRejected);
+            }
+          });
+        });
+      } else {
+        state.resolve();
+      }
+    }
+  });
+  addAsyncAction('validate', function (e) {
+    var target = selectClosestRelative(getAttr(this, 'validate') || '', e.target);
+
+    if (target) {
+      // @ts-ignore: type inference issue
+      var valid = zeta_dom_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
+
+      if (!valid) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      } else if (isThenable(valid)) {
+        return valid.then(function (valid) {
+          if (!valid) {
+            throw errorWithCode(validationFailed);
+          }
+        });
+      }
+    }
+  });
+  addAsyncAction('context-method', function (e) {
+    var self = e.currentTarget;
+    var method = camel(getAttr(self, 'context-method') || '');
+
+    if (isFunction(app[method])) {
+      var formSelector = getAttr(self, 'context-form'); // @ts-ignore: acceptable if self.form is undefined
+
+      var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
+      var params;
+      var valid = true;
+
+      if (form) {
+        valid = zeta_dom_dom.emit('validate', form) || form.checkValidity();
+        params = [getFormValues(form)];
+      } else {
+        params = makeArray(evalAttr(self, 'method-args'));
+      }
+
+      return resolveAll(valid, function (valid) {
+        if (!valid) {
+          throw errorWithCode(validationFailed);
+        }
+
+        return app[method].apply(app, params);
+      });
+    }
+  });
+  matchElement('form[form-var]', function (form) {
+    var varname = getAttr(form, 'form-var');
     var values = {};
 
     var update = function update(updateField) {
       if (updateField) {
-        // @ts-ignore: form must be HTMLFormElement
         values = getFormValues(form);
       }
 
@@ -2523,14 +2539,12 @@ util_define(src_app, method);
       });
       update(true);
     }, true);
-    app.on(form, 'reset', function () {
+    zeta_dom_dom.on(form, 'reset', function () {
       if (varname) {
         if (!isElementActive(getVarScope(varname, form))) {
-          // @ts-ignore: form must be HTMLFormElement
           form.reset();
         }
       } else {
-        // @ts-ignore: form must be HTMLFormElement
         each(form.elements, function (i, v) {
           if (!isElementActive(getVarScope(v.name, form))) {
             v.value = null;
@@ -2541,10 +2555,54 @@ util_define(src_app, method);
       return true;
     });
   });
+  matchElement('[loading-scope]', function (element) {
+    zeta_dom_dom.lock(element);
+    zeta_dom_dom.on(element, {
+      asyncStart: function asyncStart() {
+        setVar(element, 'loading', true);
+      },
+      asyncEnd: function asyncEnd() {
+        setVar(element, 'loading', false);
+      }
+    });
+  });
+  matchElement('[error-scope]', function (element) {
+    zeta_dom_dom.lock(element);
+    zeta_dom_dom.on(element, {
+      asyncStart: function asyncStart() {
+        setVar(element, 'error', null);
+      },
+      error: function error(e) {
+        var error = e.error || {};
+        setVar(element, 'error', error.code || error.message || true);
+      }
+    });
+  });
   app.on('pageenter', function (e) {
     jquery(selectIncludeSelf('form[form-var]', e.target)).each(function (i, v) {
       jquery(':input:eq(0)', v).trigger('change');
     });
+  });
+  zeta_dom_dom.ready.then(function () {
+    jquery('[brew-template]').each(function (i, v) {
+      var clone = v.cloneNode(true);
+      clone.removeAttribute('brew-template');
+      templates[getAttr(v, 'brew-template')] = clone;
+    });
+    jquery('apply-attributes').each(function (i, v) {
+      var $target = jquery(getAttr(v, 'elements') || '', v.parentNode || template_root);
+      each(v.attributes, function (i, v) {
+        if (v.name !== 'elements') {
+          $target.each(function (i, w) {
+            w.setAttribute(v.name, v.value);
+          });
+        }
+      });
+    }).remove();
+
+    if (hasAttr(template_root, 'loading-scope')) {
+      setVar(template_root, 'loading', 'initial');
+    }
   });
 }));
 // CONCATENATED MODULE: ./src/extension/i18n.js
@@ -2708,7 +2766,7 @@ function detectLanguage(languages, defaultLanguage) {
 
       callback = isFunction(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
-      return resolve(dom_preventLeave()).then(function () {
+      return cancelLock(app.element).then(function () {
         return options.logout();
       }).then(function () {
         handleLogout();
@@ -2737,10 +2795,8 @@ function detectLanguage(languages, defaultLanguage) {
 
 
 
-
 var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
-src_defaults.preloadImage = true;
-/* harmony default export */ const preloadImage = (addExtension('preloadImage', function (app) {
+/* harmony default export */ const preloadImage = (addExtension(true, 'preloadImage', ['?htmlRouter'], function (app) {
   app.beforeUpdate(function (domUpdates) {
     var urls = {};
     each(domUpdates, function (element, props) {
@@ -2763,9 +2819,12 @@ src_defaults.preloadImage = true;
     });
     return preloadImages(keys(urls), 200);
   });
-  app.beforePageEnter(function (element) {
-    return preloadImages(element, 1000);
-  });
+
+  if (app.beforePageEnter) {
+    app.beforePageEnter(function (element) {
+      return preloadImages(element, 1000);
+    });
+  }
 }));
 // CONCATENATED MODULE: ./src/extension/scrollable.js
 
@@ -3132,22 +3191,22 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
-
 var router_ = createPrivateStore();
 
 var parsedRoutes = {};
 var router_root = zeta_dom_dom.root;
+var router_baseUrl;
 
 var pass = function pass(path) {
   return path;
 };
 
 var fromPathname = function fromPathname(path) {
-  return isSubPathOf(path, baseUrl) || '/';
+  return isSubPathOf(path, router_baseUrl) || '/';
 };
 
 var toPathname = function toPathname(path) {
-  return combinePath(baseUrl, path);
+  return combinePath(router_baseUrl, path);
 };
 
 var fromRoutePath = pass;
@@ -3600,7 +3659,7 @@ function configureRouter(app, options) {
 
     var previous = state.previous;
     var leavePath = newPath;
-    var promise = locked(router_root, true) ? cancelLock(router_root) : dom_preventLeave();
+    var promise = locked(router_root) && cancelLock(router_root);
 
     if (promise) {
       lockedPath = newPath === lockedPath ? null : currentPath;
@@ -3638,7 +3697,8 @@ function configureRouter(app, options) {
       newStateId: state.id,
       route: state.route
     }));
-    handleAsync(promise, router_root, function () {
+    notifyAsync(router_root, promise);
+    promise.then(function () {
       if (states[currentIndex] === state) {
         processPageChange(state);
       }
@@ -3659,9 +3719,9 @@ function configureRouter(app, options) {
 
     return currentPath;
   });
-  setBaseUrl(options.baseUrl || '');
+  router_baseUrl = normalizePath(options.baseUrl);
 
-  if (baseUrl === '/') {
+  if (router_baseUrl === '/') {
     fromPathname = pass;
     toPathname = pass;
   } else if (options.explicitBaseUrl) {
@@ -3669,6 +3729,8 @@ function configureRouter(app, options) {
     toRoutePath = fromPathname;
     fromPathname = pass;
     toPathname = pass;
+  } else {
+    setBaseUrl(router_baseUrl);
   }
 
   var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
@@ -3792,10 +3854,11 @@ function registerMatchPathElements(container) {
 }
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
+ * @param {Brew.RouterOptions} options
  */
 
 
-function initHtmlRouter(app) {
+function initHtmlRouter(app, options) {
   var newActiveElements;
   app.on('navigate', function (e) {
     // find active elements i.e. with match-path that is equal to or is parent of the new path
@@ -3958,9 +4021,14 @@ function initHtmlRouter(app) {
     jquery(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
       v.src = withBaseUrl(v.getAttribute('src'));
     });
-    jquery(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
-      v.href = withBaseUrl(v.getAttribute('href'));
-    });
+
+    if (!options.explicitBaseUrl) {
+      jquery(selectIncludeSelf('a[href^="/"]', element)).each(function (i, v) {
+        var href = v.getAttribute('href');
+        v.dataset.href = href;
+        v.href = withBaseUrl(href);
+      });
+    }
   });
   zeta_dom_dom.ready.then(function () {
     registerMatchPathElements(); // replace inline background-image to prevent browser to load unneccessary images
@@ -4010,7 +4078,7 @@ function initHtmlRouter(app) {
 /* harmony default export */ const htmlRouter = (addExtension('htmlRouter', function (app, options) {
   router();
   app.useRouter(options);
-  initHtmlRouter(app);
+  initHtmlRouter(app, options);
 }));
 // CONCATENATED MODULE: ./src/entry.js
 
@@ -4028,7 +4096,7 @@ function exportAppToGlobal(app) {
   window.app = app;
 }
 
-/* harmony default export */ const entry = (core.with(exportAppToGlobal, config, formVar, i18n, login, preloadImage, scrollable, viewport, router, htmlRouter));
+/* harmony default export */ const entry = (core.with(exportAppToGlobal, config, template, i18n, login, preloadImage, scrollable, viewport, router, htmlRouter));
 
 /***/ }),
 
@@ -4197,7 +4265,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(32);
+/******/ 	return __webpack_require__(167);
 /******/ })()
 .default;
 });
