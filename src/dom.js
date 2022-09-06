@@ -226,8 +226,8 @@ export function processStateChange(suppressAnim) {
         // also wait for animation completed if suppressAnim is off
         preupdatePromise.then(function () {
             var animScopes = new Map();
-            each(domUpdates, function (element, props) {
-                if (!suppressAnim) {
+            if (!suppressAnim) {
+                each(updatedProps, function (element) {
                     var animParent = $(element).filter('[match-path]')[0] || $(element).parents('[match-path]')[0] || root;
                     var groupElements = animScopes.get(animParent);
                     if (!groupElements) {
@@ -252,10 +252,12 @@ export function processStateChange(suppressAnim) {
                         });
                         animScopes.set(animParent, groupElements);
                     }
-                    var dict = mapGet(pendingDOMUpdates, element, Object);
-                    mergeDOMUpdates(dict, props);
+                    mapGet(pendingDOMUpdates, element, Object);
                     groupElements.push(element);
-                } else if (pendingDOMUpdates.has(element)) {
+                });
+            }
+            each(domUpdates, function (element, props) {
+                if (pendingDOMUpdates.has(element)) {
                     mergeDOMUpdates(pendingDOMUpdates.get(element), props);
                 } else {
                     updateDOM(element, props);
