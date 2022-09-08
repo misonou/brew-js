@@ -7,10 +7,11 @@ import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSe
 import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
-import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable, randomId } from "./include/zeta-dom/util.js";
+import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { selectorForAttr } from "./util/common.js";
+import { isSubPathOf } from "./util/path.js";
 import { evalAttr, setVar } from "./var.js";
 
 const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
@@ -21,6 +22,10 @@ const flyoutStates = new Map();
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 const asyncActions = {};
+
+function isSameWindow(target) {
+    return !target || target === '_self' || target === window.name;
+}
 
 /**
  * @param {string} attr
@@ -204,36 +209,19 @@ dom.ready.then(function () {
         }
     });
 
-    $('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
+    $('body').on('click', 'a[href]:not([download]), [data-href]', function (e) {
         if (e.isDefaultPrevented()) {
             return;
         }
         var self = e.currentTarget;
         var href = self.getAttribute('data-href') || self.getAttribute('href');
-        e.preventDefault();
         e.stopPropagation();
-        if (self.getAttribute('target') === '_blank') {
-            window.open(href, randomId());
-        } else {
-            var navigate = function () {
-                if (!('navigate' in app) || /^([a-z0-9]+:|\/\/)/.test(href)) {
-                    location.href = href;
-                } else {
-                    // @ts-ignore: app.navigate checked for truthiness
-                    app.navigate(href);
-                }
-            };
-            var modalParent = $(self).closest('[is-modal]')[0];
-            if (modalParent) {
-                // handle links inside modal popup
-                // this will return the promise which is resolved after modal popup is closed and release the lock
-                openFlyout(modalParent).then(navigate);
-                closeFlyout(modalParent);
-            } else {
-                // @ts-ignore: app.navigate checked for truthiness
-                navigate();
-                closeFlyout();
-            }
+        if (!isSameWindow(self.target)) {
+            return;
+        }
+        if ('navigate' in app && isSubPathOf(href, app.basePath)) {
+            e.preventDefault();
+            app.navigate(href);
         }
     });
 
