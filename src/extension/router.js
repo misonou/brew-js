@@ -486,6 +486,9 @@ function configureRouter(app, options) {
     var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
     var includeQuery = !initialPath;
     initialPath = fromPathname(initialPath || location.pathname);
+    if (!isSubPathOf(initialPath, basePath)) {
+        initialPath = basePath;
+    }
     route = new Route(app, options.routes, initialPath);
 
     app.define({
