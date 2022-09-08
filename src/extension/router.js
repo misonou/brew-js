@@ -1,7 +1,7 @@
 import { bind } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
@@ -263,6 +263,9 @@ function configureRouter(app, options) {
 
     function pushState(path, replace) {
         path = resolvePath(path);
+        if (!isSubPathOf(path, basePath)) {
+            return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
+        }
         newPath = path;
         var currentState = states[currentIndex];
         var pathNoQuery = removeQueryAndHash(path);

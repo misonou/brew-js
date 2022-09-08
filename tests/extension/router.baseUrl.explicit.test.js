@@ -372,6 +372,11 @@ describe('app#navigate', () => {
         expect(r1.path).toBe('/base/test-1?a=2');
         expect(r1.redirected).toBe(false);
     });
+
+    it('should not navigate for path not starting with baseUrl', async () => {
+        await expect(app.navigate('/test-1')).rejects.toBeErrorWithCode('brew/navigation-rejected');
+        await expect(app.navigate('/test-1?a=1')).rejects.toBeErrorWithCode('brew/navigation-rejected');
+    });
 });
 
 describe('app#back', () => {
