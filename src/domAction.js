@@ -5,7 +5,7 @@ import { always, any, catchAsync, mapRemove } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
-import { notifyAsync, preventLeave } from "./include/zeta-dom/domLock.js";
+import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable, randomId } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
@@ -101,7 +101,6 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     });
     animateIn(element, 'open');
     if (element.attributes['is-modal']) {
-        preventLeave(element, promise);
         setModal(element);
     }
     var closeHandler = function (e) {

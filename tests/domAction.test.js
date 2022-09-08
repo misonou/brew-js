@@ -48,11 +48,10 @@ describe('openFlyout', () => {
         expect(getVar(flyout, 'foo')).toBe('bar');
     });
 
-    it('should set modal and prevent leaving if is-modal is present', async () => {
+    it('should set modal if is-modal is present', async () => {
         const flyout = await mount(`<div is-flyout is-modal></div>`);
         openFlyout(flyout);
         expect(dom.modalElement).toBe(flyout);
-        expect(locked(root)).toBe(true);
     });
 
     it('should close flyout and resolve with value from triggering element when closeIfOpened is true', async () => {
