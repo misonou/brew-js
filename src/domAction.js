@@ -157,14 +157,11 @@ dom.ready.then(function () {
         }
     });
 
-    app.on('navigate', function () {
-        setTimeout(function () {
-            flyoutStates.forEach(function (v, i) {
-                // @ts-ignore: extended app property
-                if (v.path !== app.path) {
-                    closeFlyout(i);
-                }
-            });
+    app.on('beforepageload', function () {
+        flyoutStates.forEach(function (v, i) {
+            if (v.path !== app.path) {
+                closeFlyout(i);
+            }
         });
     });
 
