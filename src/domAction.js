@@ -1,11 +1,11 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, any, catchAsync, mapRemove } from "./include/zeta-dom/util.js";
+import { always, any, catchAsync, grep, mapRemove, matchWord, pipe } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
-import { notifyAsync } from "./include/zeta-dom/domLock.js";
+import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
@@ -222,6 +222,12 @@ dom.ready.then(function () {
         if ('navigate' in app && isSubPathOf(href, app.basePath)) {
             e.preventDefault();
             app.navigate(href);
+        } else if (locked(root)) {
+            e.preventDefault();
+            cancelLock(root).then(function () {
+                var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
+                window.open(href, '_self', features.join(','));
+            });
         }
     });
 
