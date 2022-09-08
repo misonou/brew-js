@@ -1,4 +1,4 @@
-import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp, mount } from "../testUtil";
+import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp, mount, cleanupAfterTest } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
@@ -6,6 +6,7 @@ import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
 import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
+import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { fireEvent, screen } from "@testing-library/dom";
 
@@ -104,6 +105,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
     resetVar(div.preventLeave);
+    dom.cancelLock(root, true);
     await app.navigate(initialPath);
 });
 
@@ -249,15 +251,17 @@ describe('app#navigate', () => {
     });
 
     it('should cancel current navigation when navigating to other path in navigate event', async () => {
+        let promise;
         const cb = mockFn(e => {
             if (e.pathname === '/base/test-1') {
-                app.navigate('/base/test-2');
+                promise = app.navigate('/base/test-2');
             }
         });
         bindEvent(root, 'navigate', cb);
         await expect(app.navigate('/base/test-1')).rejects.toBeErrorWithCode('brew/navigation-cancelled');
 
         expect(cb).toBeCalledTimes(2);
+        await promise;
         expect(app.path).toEqual('/base/test-2');
     });
 
@@ -301,7 +305,7 @@ describe('app#navigate', () => {
 
     it('should cancel navigation when user prevented leaving', async () => {
         await app.navigate('/base/test-prevent-leave');
-        setVar(div.preventLeave, 'isPreventLeave', true);
+        await after(() => setVar(div.preventLeave, 'isPreventLeave', true));
 
         const cb = mockFn(() => false);
         bindEvent(div.preventLeave, 'preventLeave', () => {
@@ -313,7 +317,7 @@ describe('app#navigate', () => {
 
     it('should resume navigation when user allowed leaving', async () => {
         await app.navigate('/base/test-prevent-leave');
-        setVar(div.preventLeave, 'isPreventLeave', true);
+        await after(() => setVar(div.preventLeave, 'isPreventLeave', true));
 
         const cb = mockFn(() => true);
         bindEvent(div.preventLeave, 'preventLeave', () => {
@@ -396,7 +400,7 @@ describe('app#back', () => {
         const promise2 = app.navigate('/base/test-2');
         await app.back();
 
-        await expect(promise1).resolves.toEqual(objectContaining({ path: '/base/test-1' }));
+        await expect(promise1).rejects.toBeErrorWithCode('brew/navigation-cancelled');
         await expect(promise2).rejects.toBeErrorWithCode('brew/navigation-cancelled');
     });
 
@@ -810,6 +814,20 @@ describe('popstate event', () => {
         await delay(100);
         expect(app.path).toEqual('/base/test-1');
         expect(history.state).toEqual(stringMatching(reStateId));
+    });
+
+    it('should cancel popstate if navigation is rejected', async () => {
+        await app.navigate('/base/test-1');
+        const stateId = history.state;
+        const cb = mockFn();
+        cleanupAfterTest(bind(window, 'popstate', cb));
+        dom.preventLeave(root, new Promise(() => { }));
+
+        history.back();
+        await delay(100);
+        expect(cb).toBeCalledTimes(2);
+        expect(app.path).toEqual('/base/test-1');
+        expect(history.state).toEqual(stateId);
     });
 });
 

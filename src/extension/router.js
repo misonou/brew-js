@@ -239,9 +239,8 @@ function configureRouter(app, options) {
     var basePath = '/';
     var currentPath = '';
     var redirectSource = {};
-    var lockedPath;
-    var newPath = '';
     var currentIndex = -1;
+    var pendingState;
     var lastState = {};
     var states = [];
 
@@ -265,13 +264,34 @@ function configureRouter(app, options) {
         }
     }
 
+    function applyState(state, replace, callback) {
+        if (pendingState && pendingState !== state) {
+            if (replace) {
+                pendingState.forward(state);
+            } else {
+                pendingState.reject();
+            }
+        }
+        pendingState = state;
+        if (appReady && locked(root)) {
+            cancelLock(root).then(function () {
+                if (pendingState === state && callback()) {
+                    setImmediateOnce(handlePathChange);
+                }
+            }, function () {
+                state.reject(errorWithCode(ErrorCode.navigationRejected));
+            });
+        } else if (callback()) {
+            setImmediateOnce(handlePathChange);
+        }
+    }
+
     function pushState(path, replace) {
         path = resolvePath(path);
         if (!isSubPathOf(path, basePath)) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
         }
-        newPath = path;
-        var currentState = states[currentIndex];
+        var currentState = pendingState || states[currentIndex];
         var pathNoQuery = removeQueryAndHash(path);
         if (currentState && pathNoQuery === currentState.pathname) {
             currentState.path = path;
@@ -284,21 +304,18 @@ function configureRouter(app, options) {
                 return currentState;
             }
         }
-        replace = replace || currentIndex < 0;
-        // @ts-ignore: boolean arithmetics
-        currentIndex = Math.max(0, currentIndex + !replace);
 
         var id = randomId();
+        var index = Math.max(0, currentIndex + !replace);
         var resolvePromise = noop;
         var rejectPromise = noop;
         var promise, resolved;
-        var previous = states.splice(currentIndex);
         var state = {
             id: id,
             path: path,
             pathname: pathNoQuery,
             route: freeze(route.parse(pathNoQuery)),
-            previous: currentState,
+            previous: states[currentIndex],
             handled: false,
             get done() {
                 return resolved;
@@ -319,53 +336,55 @@ function configureRouter(app, options) {
             },
             forward: function (other) {
                 if (promise && !resolved) {
-                    (other.promise || other.then(function (other) {
-                        return other.promise;
-                    })).then(function (data) {
+                    other.promise.then(function (data) {
                         state.resolve(createNavigateResult(data.id, data.path, state.path, data.navigated));
-                    }, rejectPromise);
-                    rejectPromise = noop;
+                    }, state.reject);
                 }
             },
             resolve: function (result) {
                 resolved = true;
                 resolvePromise(result || createNavigateResult(id, state.path));
-                each(states, function (i, v) {
-                    v.reject();
-                });
-                if (states[currentIndex] === state) {
+                if (pendingState === state) {
+                    pendingState = null;
                     lastState = state;
                     app.emit('pageload', { pathname: state.path }, { handleable: false });
                 }
             },
-            reject: function () {
-                rejectPromise(errorWithCode(ErrorCode.navigationCancelled));
+            reject: function (error) {
+                promise = null;
+                rejectPromise(error || errorWithCode(ErrorCode.navigationCancelled));
+                if (pendingState === state) {
+                    pendingState = null;
+                }
             }
         };
-        states[currentIndex] = state;
-        history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-        app.path = path;
-
-        if (previous[0]) {
-            if (replace && !previous[1]) {
-                previous[0].forward(state);
-            } else {
-                setImmediate(function () {
-                    each(previous, function (i, v) {
-                        v.reject();
-                    });
-                });
+        applyState(state, replace, function () {
+            currentIndex = index;
+            if (!replace) {
+                states.splice(currentIndex);
             }
-        }
-        if (appReady) {
-            setImmediateOnce(handlePathChange);
-        }
+            states[currentIndex] = state;
+            history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+            return true;
+        });
         return state;
     }
 
-    function popState() {
-        history.back();
-        return --currentIndex;
+    function popState(index, isNative) {
+        var state = states[index].reset();
+        var step = index - currentIndex;
+        var isLocked = locked(root);
+        if (isLocked && isNative && step) {
+            history.go(-step);
+        }
+        applyState(state, false, function () {
+            currentIndex = index;
+            if (!isNative || isLocked) {
+                history.go(step);
+            }
+            return isNative && !isLocked;
+        });
+        return state;
     }
 
     function resolvePath(path, currentPath, isRoutePath) {
@@ -405,11 +424,11 @@ function configureRouter(app, options) {
     }
 
     function handlePathChange() {
-        var state = states[currentIndex];
-        if (!state || (location.pathname + getCurrentQuery()) !== toPathname(newPath)) {
-            pushState(newPath);
-            state = states[currentIndex];
+        if (!appReady) {
+            return;
         }
+        var state = states[currentIndex];
+        var newPath = state.path;
         if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
             state.resolve(handleNoop(newPath));
             return;
@@ -419,30 +438,9 @@ function configureRouter(app, options) {
         }
         state.handled = true;
 
-        // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
-        var previous = state.previous;
-        var leavePath = newPath;
-        var promise = locked(root) && cancelLock(root);
-        if (promise) {
-            lockedPath = newPath === lockedPath ? null : currentPath;
-            promise = resolve(promise).then(function () {
-                return pushState(leavePath);
-            }, function () {
-                throw errorWithCode(ErrorCode.navigationRejected);
-            });
-            if (states[currentIndex - 1] === previous) {
-                popState();
-            } else {
-                states[currentIndex] = previous;
-                history.replaceState(previous.id, '', toPathname(previous.path));
-            }
-            state.forward(promise);
-            return;
-        }
-        lockedPath = null;
-
         // prevent infinite redirection loop
         // redirectSource will not be reset until processPageChange is fired
+        var previous = state.previous;
         if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
             processPageChange(state);
             return;
@@ -450,7 +448,7 @@ function configureRouter(app, options) {
         redirectSource[newPath] = true;
 
         console.log('Nagivate', newPath);
-        promise = resolve(app.emit('navigate', {
+        var promise = resolve(app.emit('navigate', {
             pathname: newPath,
             oldPathname: lastState.path,
             oldStateId: lastState.id,
@@ -471,8 +469,7 @@ function configureRouter(app, options) {
         }
         newValue = resolvePath(newValue);
         if (newValue !== currentPath) {
-            newPath = newValue;
-            setImmediateOnce(handlePathChange);
+            pushState(newValue);
         }
         return currentPath;
     });
@@ -513,7 +510,7 @@ function configureRouter(app, options) {
         },
         back: function (defaultPath) {
             if (currentIndex > 0) {
-                return states[popState()].reset().promise;
+                return popState(currentIndex - 1).promise;
             } else {
                 return !!defaultPath && pushState(defaultPath).promise;
             }
@@ -524,21 +521,15 @@ function configureRouter(app, options) {
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
 
-    app.beforeInit(function () {
-        dom.ready.then(function () {
-            bind(window, 'popstate', function () {
-                var index = single(states, function (v, i) {
-                    return v.id === history.state && i + 1;
-                });
-                if (index) {
-                    currentIndex = index - 1;
-                    newPath = states[currentIndex].reset().path;
-                    setImmediateOnce(handlePathChange);
-                } else {
-                    pushState(fromPathname(location.pathname));
-                }
-            });
+    bind(window, 'popstate', function () {
+        var index = states.findIndex(function (v, i) {
+            return v.id === history.state;
         });
+        if (index >= 0) {
+            popState(index, true);
+        } else {
+            pushState(fromPathname(location.pathname));
+        }
     });
 
     pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
