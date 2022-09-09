@@ -213,7 +213,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 initScrollable(v);
                 $(v).scrollable(focusable(v) ? 'enable' : 'disable');
             });
-        });
+        }, true);
     });
 
     // update scroller on events other than window resize
