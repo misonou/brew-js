@@ -61,6 +61,12 @@ declare namespace Brew {
          */
         path: string;
         /**
+         * Gets the base path that can navigate to through the app instance.
+         * Note that it is not the same as the path containing the HTML document, and
+         * only when {@link RouterOptions.explicitBaseUrl} is true will affect the value, default is the root path `/`.
+         */
+        readonly basePath: string;
+        /**
          * Gets the initial path before the app is initialized.
          */
         readonly initialPath: string;

@@ -106,6 +106,10 @@ beforeEach(async () => {
 });
 
 describe('app', () => {
+    it('should set correct basePath', () => {
+        expect(app.basePath).toBe('/');
+    });
+
     it('should prepend baseUrl to hyperlinks and resources', async () => {
         const div = await mount(`
             <div>

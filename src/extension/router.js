@@ -232,6 +232,7 @@ watchable(Route.prototype);
  */
 function configureRouter(app, options) {
     var route;
+    var basePath = '/';
     var currentPath = '';
     var redirectSource = {};
     var lockedPath;
@@ -478,6 +479,7 @@ function configureRouter(app, options) {
         toRoutePath = fromPathname;
         fromPathname = pass;
         toPathname = pass;
+        basePath = baseUrl;
     } else {
         setBaseUrl(baseUrl);
     }
@@ -507,6 +509,7 @@ function configureRouter(app, options) {
             }
         }
     });
+    defineOwnProperty(app, 'basePath', basePath, true);
     defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
