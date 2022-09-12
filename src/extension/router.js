@@ -209,8 +209,12 @@ definePrototype(Route, {
     },
     replace: function (key, value) {
         var self = this;
-        var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-        return _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+        var result;
+        _(self).handleChanges(function () {
+            var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
+            result = _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+        });
+        return result;
     },
     getPath: function (params) {
         var matched = matchRouteByParams(_(this).routes, params);
