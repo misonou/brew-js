@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("promise-polyfill"), require("waterpipe"));
+		module.exports = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", ["zeta-dom", "jQuery", "jq-scrollable", "promise-polyfill", "waterpipe"], factory);
+		define("brew", ["zeta-dom", "jQuery", "jq-scrollable", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("promise-polyfill"), require("waterpipe"));
+		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), (function webpackLoadOptionalExternalModule() { try { return require("jq-scrollable"); } catch(e) {} }()), require("waterpipe"));
 	else
-		root["brew"] = factory(root["zeta"], root["jQuery"], root["jq-scrollable"], root["promise-polyfill"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__804__, __WEBPACK_EXTERNAL_MODULE__160__) {
+		root["brew"] = factory(root["zeta"], root["jQuery"], root["jq-scrollable"], root["waterpipe"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__160__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -286,7 +286,7 @@ function toRelativeUrl(url) {
 
 function isSubPathOf(a, b) {
   var len = b.length;
-  return a.substr(0, len) === b && (!a[len] || a[len] === '/' || b[len - 1] === '/') && normalizePath(a.slice(len));
+  return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && normalizePath(a.slice(len));
 }
 /**
  * @param {string} path
@@ -1862,6 +1862,7 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 
 
+
 var SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 var SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 var domAction_root = zeta_dom_dom.root;
@@ -1870,10 +1871,15 @@ var executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 
 var asyncActions = {};
+
+function isSameWindow(target) {
+  return !target || target === '_self' || target === window.name;
+}
 /**
  * @param {string} attr
  * @param {(this: Element, e: JQuery.UIEventBase) => Brew.PromiseOrEmpty} callback
  */
+
 
 function addAsyncAction(attr, callback) {
   asyncActions[attr] = throwNotFunction(callback);
@@ -1966,7 +1972,6 @@ function openFlyout(selector, states, source, closeIfOpened) {
   animateIn(element, 'open');
 
   if (element.attributes['is-modal']) {
-    preventLeave(element, promise);
     setModal(element);
   }
 
@@ -2028,14 +2033,11 @@ zeta_dom_dom.ready.then(function () {
       jquery(selectIncludeSelf(selector, e.target)).attr('async-action', '');
     }
   });
-  app.on('navigate', function () {
-    setTimeout(function () {
-      flyoutStates.forEach(function (v, i) {
-        // @ts-ignore: extended app property
-        if (v.path !== app.path) {
-          closeFlyout(i);
-        }
-      });
+  app.on('beforepageload', function () {
+    flyoutStates.forEach(function (v, i) {
+      if (v.path !== app.path) {
+        closeFlyout(i);
+      }
     });
   });
   jquery('body').on('submit', 'form:not([action])', function (e) {
@@ -2076,40 +2078,28 @@ zeta_dom_dom.ready.then(function () {
       }
     }
   });
-  jquery('body').on('click', 'a[href]:not([rel]), [data-href]', function (e) {
+  jquery('body').on('click', 'a[href]:not([download]), [data-href]', function (e) {
     if (e.isDefaultPrevented()) {
       return;
     }
 
     var self = e.currentTarget;
     var href = self.getAttribute('data-href') || self.getAttribute('href');
-    e.preventDefault();
     e.stopPropagation();
 
-    if (self.getAttribute('target') === '_blank') {
-      window.open(href, randomId());
-    } else {
-      var navigate = function navigate() {
-        if (!('navigate' in app) || /^([a-z0-9]+:|\/\/)/.test(href)) {
-          location.href = href;
-        } else {
-          // @ts-ignore: app.navigate checked for truthiness
-          app.navigate(href);
-        }
-      };
+    if (!isSameWindow(self.target)) {
+      return;
+    }
 
-      var modalParent = jquery(self).closest('[is-modal]')[0];
-
-      if (modalParent) {
-        // handle links inside modal popup
-        // this will return the promise which is resolved after modal popup is closed and release the lock
-        openFlyout(modalParent).then(navigate);
-        closeFlyout(modalParent);
-      } else {
-        // @ts-ignore: app.navigate checked for truthiness
-        navigate();
-        closeFlyout();
-      }
+    if ('navigate' in app && isSubPathOf(href, app.basePath)) {
+      e.preventDefault();
+      app.navigate(href);
+    } else if (locked(domAction_root)) {
+      e.preventDefault();
+      cancelLock(domAction_root).then(function () {
+        var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
+        window.open(href, '_self', features.join(','));
+      });
     }
   });
   jquery('body').on('click', '[set-var]:not([match-path])', function (e) {
@@ -3043,7 +3033,7 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
         initScrollable(v);
         jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
       });
-    });
+    }, true);
   }); // update scroller on events other than window resize
 
   function refresh() {
@@ -3428,8 +3418,14 @@ definePrototype(Route, {
   },
   replace: function replace(key, value) {
     var self = this;
-    var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-    return router_(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+    var result;
+
+    router_(self).handleChanges(function () {
+      var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
+      result = router_(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+    });
+
+    return result;
   },
   getPath: function getPath(params) {
     var matched = matchRouteByParams(router_(this).routes, params);
@@ -3451,11 +3447,11 @@ watchable(Route.prototype);
 
 function configureRouter(app, options) {
   var route;
+  var basePath = '/';
   var currentPath = '';
   var redirectSource = {};
-  var lockedPath;
-  var newPath = '';
   var currentIndex = -1;
+  var pendingState;
   var lastState = {};
   var states = [];
 
@@ -3469,52 +3465,17 @@ function configureRouter(app, options) {
     });
   }
 
-  function handleNoop(path, originalPath) {
-    var pathNoQuery = removeQueryAndHash(path);
-
-    for (var i = currentIndex; i >= 0; i--) {
-      if (states[i].done && states[i].pathname === pathNoQuery) {
-        history.replaceState(history.state, '', toPathname(path));
-        return createNavigateResult(states[i].id, path, originalPath, false);
-      }
-    }
-  }
-
-  function pushState(path, replace) {
-    path = resolvePath(path);
-    newPath = path;
-    var currentState = states[currentIndex];
-    var pathNoQuery = removeQueryAndHash(path);
-
-    if (currentState && pathNoQuery === currentState.pathname) {
-      currentState.path = path;
-
-      if (currentState.done) {
-        currentPath = path;
-        app.path = path;
-        return {
-          promise: resolve(handleNoop(path))
-        };
-      } else {
-        history.replaceState(currentState.id, '', toPathname(path));
-        return currentState;
-      }
-    }
-
-    replace = replace || currentIndex < 0; // @ts-ignore: boolean arithmetics
-
-    currentIndex = Math.max(0, currentIndex + !replace);
-    var id = randomId();
+  function createState(id, path) {
     var resolvePromise = noop;
     var rejectPromise = noop;
+    var pathNoQuery = removeQueryAndHash(path);
     var promise, resolved;
-    var previous = states.splice(currentIndex);
     var state = {
       id: id,
       path: path,
       pathname: pathNoQuery,
       route: freeze(route.parse(pathNoQuery)),
-      previous: currentState,
+      previous: states[currentIndex],
       handled: false,
 
       get done() {
@@ -3540,22 +3501,17 @@ function configureRouter(app, options) {
       },
       forward: function forward(other) {
         if (promise && !resolved) {
-          (other.promise || other.then(function (other) {
-            return other.promise;
-          })).then(function (data) {
+          other.promise.then(function (data) {
             state.resolve(createNavigateResult(data.id, data.path, state.path, data.navigated));
-          }, rejectPromise);
-          rejectPromise = noop;
+          }, state.reject);
         }
       },
       resolve: function resolve(result) {
         resolved = true;
         resolvePromise(result || createNavigateResult(id, state.path));
-        each(states, function (i, v) {
-          v.reject();
-        });
 
-        if (states[currentIndex] === state) {
+        if (pendingState === state) {
+          pendingState = null;
           lastState = state;
           app.emit('pageload', {
             pathname: state.path
@@ -3564,36 +3520,116 @@ function configureRouter(app, options) {
           });
         }
       },
-      reject: function reject() {
-        rejectPromise(errorWithCode(navigationCancelled));
+      reject: function reject(error) {
+        promise = null;
+        rejectPromise(error || errorWithCode(navigationCancelled));
+
+        if (pendingState === state) {
+          pendingState = null;
+        }
       }
     };
-    states[currentIndex] = state;
-    history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-    app.path = path;
-
-    if (previous[0]) {
-      if (replace && !previous[1]) {
-        previous[0].forward(state);
-      } else {
-        setImmediate(function () {
-          each(previous, function (i, v) {
-            v.reject();
-          });
-        });
-      }
-    }
-
-    if (appReady) {
-      setImmediateOnce(handlePathChange);
-    }
-
     return state;
   }
 
-  function popState() {
-    history.back();
-    return --currentIndex;
+  function updatePath(state, path) {
+    if (removeQueryAndHash(path) === state.pathname) {
+      state.path = path;
+
+      if (history.state === state.id) {
+        history.replaceState(state.id, '', toPathname(path));
+
+        if (state.done) {
+          currentPath = path;
+          app.path = path;
+        }
+      }
+
+      return true;
+    }
+  }
+
+  function applyState(state, replace, callback) {
+    if (pendingState && pendingState !== state) {
+      if (replace) {
+        pendingState.forward(state);
+      } else {
+        pendingState.reject();
+      }
+    }
+
+    pendingState = state;
+
+    if (appReady && locked(router_root)) {
+      cancelLock(router_root).then(function () {
+        if (pendingState === state && callback()) {
+          setImmediateOnce(handlePathChange);
+        }
+      }, function () {
+        state.reject(errorWithCode(navigationRejected));
+      });
+    } else if (callback()) {
+      setImmediateOnce(handlePathChange);
+    }
+  }
+
+  function pushState(path, replace) {
+    path = resolvePath(path);
+
+    if (!isSubPathOf(path, basePath)) {
+      return {
+        promise: reject(errorWithCode(navigationRejected))
+      };
+    }
+
+    var currentState = pendingState || states[currentIndex];
+
+    if (currentState && updatePath(currentState, path)) {
+      if (currentState.done) {
+        return {
+          promise: resolve(createNavigateResult(currentState.id, path, null, false))
+        };
+      }
+
+      return currentState;
+    }
+
+    var id = randomId();
+    var index = Math.max(0, currentIndex + !replace);
+    var state = createState(id, path);
+    applyState(state, replace, function () {
+      currentIndex = index;
+
+      if (!replace) {
+        states.splice(currentIndex);
+      }
+
+      states[currentIndex] = state;
+      history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+      return true;
+    });
+    return state;
+  }
+
+  function popState(index, isNative) {
+    var state = states[index].reset();
+    var step = index - currentIndex;
+    var isLocked = locked(router_root);
+
+    if (isLocked && isNative && step) {
+      history.go(-step);
+    }
+
+    applyState(state, false, function () {
+      currentIndex = index;
+
+      if (!isNative || isLocked) {
+        history.go(step);
+      }
+
+      return isNative && !isLocked;
+    });
+    return state;
   }
 
   function resolvePath(path, currentPath, isRoutePath) {
@@ -3639,15 +3675,15 @@ function configureRouter(app, options) {
   }
 
   function handlePathChange() {
-    var state = states[currentIndex];
-
-    if (!state || location.pathname + getCurrentQuery() !== toPathname(newPath)) {
-      pushState(newPath);
-      state = states[currentIndex];
+    if (!appReady) {
+      return;
     }
 
-    if (currentIndex > 0 && removeQueryAndHash(newPath) === removeQueryAndHash(currentPath)) {
-      state.resolve(handleNoop(newPath));
+    var state = states[currentIndex];
+    var newPath = state.path;
+
+    if (lastState && state.pathname === removeQueryAndHash(currentPath) && updatePath(lastState, newPath)) {
+      state.resolve(createNavigateResult(lastState.id, newPath, null, false));
       return;
     }
 
@@ -3655,33 +3691,10 @@ function configureRouter(app, options) {
       return;
     }
 
-    state.handled = true; // forbid navigation when DOM is locked (i.e. [is-modal] from openFlyout) or leaving is prevented
+    state.handled = true; // prevent infinite redirection loop
+    // redirectSource will not be reset until processPageChange is fired
 
     var previous = state.previous;
-    var leavePath = newPath;
-    var promise = locked(router_root) && cancelLock(router_root);
-
-    if (promise) {
-      lockedPath = newPath === lockedPath ? null : currentPath;
-      promise = resolve(promise).then(function () {
-        return pushState(leavePath);
-      }, function () {
-        throw errorWithCode(navigationRejected);
-      });
-
-      if (states[currentIndex - 1] === previous) {
-        popState();
-      } else {
-        states[currentIndex] = previous;
-        history.replaceState(previous.id, '', toPathname(previous.path));
-      }
-
-      state.forward(promise);
-      return;
-    }
-
-    lockedPath = null; // prevent infinite redirection loop
-    // redirectSource will not be reset until processPageChange is fired
 
     if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
       processPageChange(state);
@@ -3690,7 +3703,7 @@ function configureRouter(app, options) {
 
     redirectSource[newPath] = true;
     console.log('Nagivate', newPath);
-    promise = resolve(app.emit('navigate', {
+    var promise = resolve(app.emit('navigate', {
       pathname: newPath,
       oldPathname: lastState.path,
       oldStateId: lastState.id,
@@ -3713,8 +3726,7 @@ function configureRouter(app, options) {
     newValue = resolvePath(newValue);
 
     if (newValue !== currentPath) {
-      newPath = newValue;
-      setImmediateOnce(handlePathChange);
+      pushState(newValue);
     }
 
     return currentPath;
@@ -3729,6 +3741,7 @@ function configureRouter(app, options) {
     toRoutePath = fromPathname;
     fromPathname = pass;
     toPathname = pass;
+    basePath = router_baseUrl;
   } else {
     setBaseUrl(router_baseUrl);
   }
@@ -3736,6 +3749,11 @@ function configureRouter(app, options) {
   var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
   var includeQuery = !initialPath;
   initialPath = fromPathname(initialPath || location.pathname);
+
+  if (!isSubPathOf(initialPath, basePath)) {
+    initialPath = basePath;
+  }
+
   route = new Route(app, options.routes, initialPath);
   app.define({
     get canNavigateBack() {
@@ -3754,31 +3772,26 @@ function configureRouter(app, options) {
     },
     back: function back(defaultPath) {
       if (currentIndex > 0) {
-        return states[popState()].reset().promise;
+        return popState(currentIndex - 1).promise;
       } else {
         return !!defaultPath && pushState(defaultPath).promise;
       }
     }
   });
+  defineOwnProperty(app, 'basePath', basePath, true);
   defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
   defineOwnProperty(app, 'route', route, true);
   defineOwnProperty(app, 'routes', freeze(options.routes));
-  app.beforeInit(function () {
-    zeta_dom_dom.ready.then(function () {
-      bind(window, 'popstate', function () {
-        var index = single(states, function (v, i) {
-          return v.id === history.state && i + 1;
-        });
-
-        if (index) {
-          currentIndex = index - 1;
-          newPath = states[currentIndex].reset().path;
-          setImmediateOnce(handlePathChange);
-        } else {
-          pushState(fromPathname(location.pathname));
-        }
-      });
+  bind(window, 'popstate', function () {
+    var index = states.findIndex(function (v, i) {
+      return v.id === history.state;
     });
+
+    if (index >= 0) {
+      popState(index, true);
+    } else {
+      pushState(fromPathname(location.pathname));
+    }
   });
   pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
   app.on('ready', function () {
@@ -4122,7 +4135,7 @@ try {
 // @ts-nocheck
 
 /** @type {PromiseConstructor} */
-var Promise = window.Promise || __webpack_require__(804).default;
+var Promise = window.Promise || __webpack_require__.c[/*require.resolve*/(null /* weak dependency, without id */)].default;
 
 module.exports = Promise;
 
@@ -4183,14 +4196,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__172__;
 
 /***/ }),
 
-/***/ 804:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__804__;
-
-/***/ }),
-
 /***/ 160:
 /***/ (function(module) {
 
@@ -4220,17 +4225,23 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
+/******/ 	
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = __webpack_module_cache__;
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/define property getters */
@@ -4262,7 +4273,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	}();
 /******/ 	
 /************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
+/******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(167);
