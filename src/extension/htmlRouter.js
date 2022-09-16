@@ -90,7 +90,6 @@ function initHtmlRouter(app, options) {
                             newActiveElements.unshift(element);
                             if (v.placeholder) {
                                 $(v.placeholder).replaceWith(element);
-                                markUpdated(element);
                                 mountElement(element);
                                 switchElements.push.apply(switchElements, v.children);
                             }
@@ -135,6 +134,7 @@ function initHtmlRouter(app, options) {
                         if (matched) {
                             resetVar(element, false);
                             setVar(element);
+                            markUpdated(element);
                             // animation and pageenter event of inner scope
                             // must be after those of parent scope
                             var dependencies = preload.get($(element).parents('[match-path]')[0]);
