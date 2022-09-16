@@ -80,8 +80,24 @@ export function getVar(element: Element, ownKeys: true): any;
  * @param element Source element for debug use.
  * @param attrName Source attribute name for debug use.
  * @param templateMode When specified to `true`, the attribute is evaluated as a template instead of an expression.
+ * @deprecated Use {@link evalExpression} or {@link evalTemplate} instead.
  */
 export function evaluate(template: string, context: any, element: Element, attrName: string, templateMode?: boolean): any;
+
+/**
+ * Evaluates an expression.
+ * @param template A valid waterpipe expression.
+ * @param context Context object of which the template or expression is evaluated against.
+ */
+export function evalExpression(template: string, context: any): any;
+
+/**
+ * Evaluates a template.
+ * @param template A valid waterpipe template.
+ * @param context Context object of which the template or expression is evaluated against.
+ * @param html Whether to parse and return as valid HTML content.
+ */
+export function evalTemplate(template: string, context: any, html?: boolean): string;
 
 /**
  * Evaluates attribute value of an element as a template or an expression.

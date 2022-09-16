@@ -1,11 +1,11 @@
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, htmlDecode, isFunction, isPlainObject, keys, kv, noop, pick, setImmediateOnce, trim } from "./include/zeta-dom/util.js";
+import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, isFunction, isPlainObject, kv, noop, pick, setImmediateOnce, trim } from "./include/zeta-dom/util.js";
 import dom from "./include/zeta-dom/dom.js";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { InheritedNodeTree } from "./include/zeta-dom/tree.js";
-import { selectorForAttr } from "./util/common.js";
+import { getAttr, selectorForAttr } from "./util/common.js";
 
 const root = dom.root;
 const varAttrs = {
@@ -17,6 +17,11 @@ const varAttrs = {
 const tree = new InheritedNodeTree(root, VarContext, {
     selector: selectorForAttr(varAttrs)
 });
+const globals = {
+    get app() {
+        return app;
+    }
+};
 
 /**
  * @class
@@ -173,24 +178,24 @@ export function getVar(element, name) {
  * @param {boolean=} templateMode
  */
 export function evaluate(template, context, element, attrName, templateMode) {
-    var options = { globals: { app: app } };
-    var result = templateMode ? waterpipe(template, extend({}, context), options) : waterpipe.eval(template, extend({}, context), options);
-    return result;
+    return (templateMode ? evalTemplate : evalExpression)(template, context);
+}
+
+export function evalExpression(template, context) {
+    return template ? waterpipe.eval(template, extend({}, context), { globals }) : null;
+}
+
+export function evalTemplate(template, context, html) {
+    return template ? waterpipe(template, extend({}, context), { globals, html: !!html }) : '';
 }
 
 /**
  * @param {Element} element
  * @param {string} attrName
  * @param {boolean=} templateMode
- * @param {VarContext=} context
  */
-export function evalAttr(element, attrName, templateMode, context) {
-    var str = element.getAttribute(attrName);
-    if (!str) {
-        return templateMode ? '' : null;
-    }
-    var value = evaluate(str, context || getVar(element), element, attrName, templateMode);
-    return templateMode ? htmlDecode(value) : value;
+export function evalAttr(element, attrName, templateMode) {
+    return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), getVar(element));
 }
 
 tree.on('update', function (e) {
