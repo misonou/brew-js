@@ -7,8 +7,11 @@ import { getQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
 import * as ErrorCode from "../errorCode.js";
 
+const SESSION_KEY = 'brew.history.';
+
 const _ = createPrivateStore();
 const parsedRoutes = {};
+const sessionStorage = window.sessionStorage;
 const root = dom.root;
 
 var baseUrl;
@@ -239,7 +242,8 @@ function configureRouter(app, options) {
     var basePath = '/';
     var currentPath = '';
     var redirectSource = {};
-    var currentIndex = -1;
+    var currentIndex = 0;
+    var indexOffset = 0;
     var pendingState;
     var lastState = {};
     var states = [];
@@ -254,7 +258,7 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path) {
+    function createState(id, path, index) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
@@ -262,6 +266,7 @@ function configureRouter(app, options) {
         var state = {
             id: id,
             path: path,
+            index: index,
             pathname: pathNoQuery,
             route: freeze(route.parse(pathNoQuery)),
             previous: states[currentIndex],
@@ -361,7 +366,7 @@ function configureRouter(app, options) {
 
         var id = randomId();
         var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path);
+        var state = createState(id, path, indexOffset + index);
         applyState(state, replace, function () {
             currentIndex = index;
             if (!replace) {
@@ -369,6 +374,9 @@ function configureRouter(app, options) {
             }
             states[currentIndex] = state;
             history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+            sessionStorage.setItem(SESSION_KEY + baseUrl, JSON.stringify(states.map(function (v) {
+                return [v.id, v.path, v.index];
+            })));
             return true;
         });
         return state;
@@ -376,7 +384,7 @@ function configureRouter(app, options) {
 
     function popState(index, isNative) {
         var state = states[index].reset();
-        var step = index - currentIndex;
+        var step = state.index - states[currentIndex].index;
         var isLocked = locked(root);
         if (isLocked && isNative && step) {
             history.go(-step);
@@ -536,10 +544,28 @@ function configureRouter(app, options) {
         }
     });
 
-    pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+    try {
+        each(JSON.parse(sessionStorage.getItem(SESSION_KEY + baseUrl) || '[]'), function (i, v) {
+            states.push(createState.apply(0, v));
+            currentIndex = i;
+        });
+    } catch (e) { }
+
+    var initialState;
+    var index = states.findIndex(function (v) {
+        return v.id === history.state;
+    });
+    if (index >= 0) {
+        currentIndex = index;
+        indexOffset = states[index].index - currentIndex;
+    } else {
+        currentIndex = states.length;
+        indexOffset = history.length - currentIndex;
+        initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+    }
     app.on('ready', function () {
-        if (currentIndex === 0) {
-            pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+        if (pendingState === initialState && includeQuery) {
+            pushState(initialPath + getCurrentQuery(), true);
         }
         handlePathChange();
     });
