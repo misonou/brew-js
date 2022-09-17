@@ -120,7 +120,7 @@ declare namespace Brew {
     /* -------------------------------------------------------------
      * App
      * ------------------------------------------------------------- */
-    type BrewEventName = 'ready' | 'animationstart' | 'animationcomplete' | 'domchange' | 'statechange' | 'preventLeave' | 'mounted' | 'validate' | 'reset';
+    type BrewEventName = 'ready' | 'animationstart' | 'animationcomplete' | 'domchange' | 'statechange' | 'flyoutshow' | 'flyouthide' | 'preventLeave' | 'mounted' | 'validate' | 'reset';
 
     type BrewEventMap = {
         animationstart: AnimationEvent;
