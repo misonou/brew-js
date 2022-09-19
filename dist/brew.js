@@ -899,6 +899,7 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     lock = domLock_zeta$dom.lock,
     locked = domLock_zeta$dom.locked,
     cancelLock = domLock_zeta$dom.cancelLock,
+    subscribeAsync = domLock_zeta$dom.subscribeAsync,
     notifyAsync = domLock_zeta$dom.notifyAsync,
     preventLeave = domLock_zeta$dom.preventLeave;
 
@@ -1633,6 +1634,12 @@ var varAttrs = {
 var tree = new InheritedNodeTree(var_root, VarContext, {
   selector: selectorForAttr(varAttrs)
 });
+var globals = {
+  get app() {
+    return app;
+  }
+
+};
 /**
  * @class
  * @this {Brew.VarContext}
@@ -1805,30 +1812,27 @@ function getVar(element, name) {
  */
 
 function evaluate(template, context, element, attrName, templateMode) {
-  var options = {
-    globals: {
-      app: app
-    }
-  };
-  var result = templateMode ? waterpipe(template, extend({}, context), options) : waterpipe.eval(template, extend({}, context), options);
-  return result;
+  return (templateMode ? evalTemplate : evalExpression)(template, context);
+}
+function evalExpression(template, context) {
+  return template ? waterpipe.eval(template, extend({}, context), {
+    globals: globals
+  }) : null;
+}
+function evalTemplate(template, context, html) {
+  return template ? waterpipe(template, extend({}, context), {
+    globals: globals,
+    html: !!html
+  }) : '';
 }
 /**
  * @param {Element} element
  * @param {string} attrName
  * @param {boolean=} templateMode
- * @param {VarContext=} context
  */
 
-function evalAttr(element, attrName, templateMode, context) {
-  var str = element.getAttribute(attrName);
-
-  if (!str) {
-    return templateMode ? '' : null;
-  }
-
-  var value = evaluate(str, context || getVar(element), element, attrName, templateMode);
-  return templateMode ? htmlDecode(value) : value;
+function evalAttr(element, attrName, templateMode) {
+  return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), getVar(element));
 }
 tree.on('update', function (e) {
   each(e.updatedNodes, function (i, v) {
@@ -1912,6 +1916,7 @@ function closeFlyout(flyout, value) {
         closing: false,
         visible: false
       });
+      zeta_dom_dom.emit('flyouthide', v);
     });
   }));
 }
@@ -1993,6 +1998,7 @@ function openFlyout(selector, states, source, closeIfOpened) {
     focusout: closeHandler,
     gesture: closeHandler
   }));
+  zeta_dom_dom.emit('flyoutshow', element);
   return promise;
 }
 zeta_dom_dom.ready.then(function () {
@@ -3180,10 +3186,12 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
+var SESSION_KEY = 'brew.history.';
 
 var router_ = createPrivateStore();
 
 var parsedRoutes = {};
+var sessionStorage = window.sessionStorage;
 var router_root = zeta_dom_dom.root;
 var router_baseUrl;
 
@@ -3450,7 +3458,8 @@ function configureRouter(app, options) {
   var basePath = '/';
   var currentPath = '';
   var redirectSource = {};
-  var currentIndex = -1;
+  var currentIndex = 0;
+  var indexOffset = 0;
   var pendingState;
   var lastState = {};
   var states = [];
@@ -3465,7 +3474,7 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path) {
+  function createState(id, path, index) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
@@ -3473,6 +3482,7 @@ function configureRouter(app, options) {
     var state = {
       id: id,
       path: path,
+      index: index,
       pathname: pathNoQuery,
       route: freeze(route.parse(pathNoQuery)),
       previous: states[currentIndex],
@@ -3596,7 +3606,7 @@ function configureRouter(app, options) {
 
     var id = randomId();
     var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path);
+    var state = createState(id, path, indexOffset + index);
     applyState(state, replace, function () {
       currentIndex = index;
 
@@ -3606,6 +3616,9 @@ function configureRouter(app, options) {
 
       states[currentIndex] = state;
       history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+      sessionStorage.setItem(SESSION_KEY + router_baseUrl, JSON.stringify(states.map(function (v) {
+        return [v.id, v.path, v.index];
+      })));
       return true;
     });
     return state;
@@ -3613,7 +3626,7 @@ function configureRouter(app, options) {
 
   function popState(index, isNative) {
     var state = states[index].reset();
-    var step = index - currentIndex;
+    var step = state.index - states[currentIndex].index;
     var isLocked = locked(router_root);
 
     if (isLocked && isNative && step) {
@@ -3793,10 +3806,31 @@ function configureRouter(app, options) {
       pushState(fromPathname(location.pathname));
     }
   });
-  pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+
+  try {
+    each(JSON.parse(sessionStorage.getItem(SESSION_KEY + router_baseUrl) || '[]'), function (i, v) {
+      states.push(createState.apply(0, v));
+      currentIndex = i;
+    });
+  } catch (e) {}
+
+  var initialState;
+  var index = states.findIndex(function (v) {
+    return v.id === history.state;
+  });
+
+  if (index >= 0) {
+    currentIndex = index;
+    indexOffset = states[index].index - currentIndex;
+  } else {
+    currentIndex = states.length;
+    indexOffset = history.length - currentIndex;
+    initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+  }
+
   app.on('ready', function () {
-    if (currentIndex === 0) {
-      pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+    if (pendingState === initialState && includeQuery) {
+      pushState(initialPath + getCurrentQuery(), true);
     }
 
     handlePathChange();
@@ -3911,7 +3945,6 @@ function initHtmlRouter(app, options) {
 
               if (v.placeholder) {
                 jquery(v.placeholder).replaceWith(element);
-                markUpdated(element);
                 mountElement(element);
                 switchElements.push.apply(switchElements, v.children);
               }
@@ -3953,7 +3986,8 @@ function initHtmlRouter(app, options) {
           if (element !== placeholder && matched === previousActiveElements.indexOf(element) < 0) {
             if (matched) {
               resetVar(element, false);
-              setVar(element); // animation and pageenter event of inner scope
+              setVar(element);
+              markUpdated(element); // animation and pageenter event of inner scope
               // must be after those of parent scope
 
               var dependencies = preload.get(jquery(element).parents('[match-path]')[0]);
