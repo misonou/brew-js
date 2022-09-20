@@ -4,7 +4,7 @@ import waterpipe from "./include/external/waterpipe.js"
 import { always, any, catchAsync, grep, mapRemove, matchWord, pipe } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focused, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
+import dom, { focus, focused, releaseFocus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
@@ -48,6 +48,7 @@ export function closeFlyout(flyout, value) {
         if (state) {
             flyoutStates.delete(v);
             releaseModal(v);
+            releaseFocus(v);
             state.resolve(value);
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
@@ -96,7 +97,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     });
     if (source) {
         setClass(source, 'target-opened', true);
-        retainFocus(element, source);
+        retainFocus(source, element);
     }
     if (states) {
         setVar(element, states);
