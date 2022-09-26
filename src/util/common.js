@@ -2,7 +2,7 @@ import $ from "../include/external/jquery.js";
 import Promise from "../include/external/promise-polyfill.js";
 import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta-dom/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, each, errorWithCode, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, setPromiseTimeout, values, watchOnce } from "../include/zeta-dom/util.js";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "../include/zeta-dom/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -272,5 +272,5 @@ export function preloadImages(urls, ms) {
     if (preloadUrls.length) {
         console.log('Preload image', { urls: preloadUrls });
     }
-    return setPromiseTimeout(resolveAll(values(preloadImagesCache)), ms, true);
+    return Promise.race([delay(ms), resolveAll(values(preloadImagesCache))]);
 }

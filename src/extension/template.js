@@ -1,9 +1,9 @@
 import waterpipe from "../include/external/waterpipe.js"
 import $ from "../include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
-import { bindUntil, selectClosestRelative, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import { bind, selectClosestRelative, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import { camel, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
-import { afterDetached, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
+import { registerCleanup, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
 import dom from "../include/zeta-dom/dom.js";
 import { preventLeave } from "../include/zeta-dom/domLock.js";
 import { addExtension, isElementActive } from "../app.js";
@@ -280,11 +280,9 @@ export default addExtension(true, 'template', function (app) {
         });
         watchElements(form, ':input', function (addedInputs) {
             each(addedInputs, function (i, v) {
-                var detached = afterDetached(v, form);
-                bindUntil(detached, v, 'change input', function () {
+                registerCleanup(v, bind(v, 'change input', function () {
                     setImmediateOnce(update);
-                });
-                detached.then(update.bind(null, true));
+                }));
             });
             update(true);
         }, true);
@@ -305,7 +303,7 @@ export default addExtension(true, 'template', function (app) {
     });
 
     matchElement('[loading-scope]', function (element) {
-        dom.lock(element);
+        dom.subscribeAsync(element);
         dom.on(element, {
             asyncStart: function () {
                 setVar(element, 'loading', true);
@@ -317,7 +315,7 @@ export default addExtension(true, 'template', function (app) {
     });
 
     matchElement('[error-scope]', function (element) {
-        dom.lock(element);
+        dom.subscribeAsync(element);
         dom.on(element, {
             asyncStart: function () {
                 setVar(element, 'error', null);
