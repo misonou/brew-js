@@ -11,20 +11,7 @@ import * as ErrorCode from "./errorCode.js";
 
 import { AppInit, isElementActive } from "./app";
 
-type WithExport<T> = T extends Extension<infer P> ? P : T;
-type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? WithExport<U> & WithExtension<TRest> : {};
-
 declare const SYMBOL_INTERFACE: unique symbol;
-
-interface AppInitExtension {
-    /**
-     * Uses the supplied extensions.
-     * Extension can be either a function returned by {@link addExtension},
-     * or an object which its properties are copied to the app instance.
-     * @param args A list of extensions.
-     */
-    with<T extends any[]>(...args: T): AppInit<WithExtension<T>>;
-}
 
 export interface Extension<T> {
     (): void;
@@ -52,5 +39,5 @@ const method = {
     addTransformer,
     addTemplate
 };
-const brew: AppInit & AppInitExtension & typeof method;
+const brew: AppInit & typeof method;
 export default brew;

@@ -1,5 +1,8 @@
 import brew, { Extension } from "./core";
 
+type WithExport<T> = T extends Extension<infer P> ? P : T;
+type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? WithExport<U> & WithExtension<TRest> : {};
+
 export interface AppInit<U = {}> {
     /**
      * Initialize an app instance.
@@ -8,6 +11,14 @@ export interface AppInit<U = {}> {
      * @param init Callback to initialize before app starts.
      */
     <T = {}>(init: (app: Brew.AppInstance<T & U>) => void): Brew.AppInstance<T & U>;
+
+    /**
+     * Uses the supplied extensions.
+     * Extension can be either a function returned by {@link addExtension},
+     * or an object which its properties are copied to the app instance.
+     * @param args A list of extensions.
+     */
+    with<T extends any[]>(...args: T): AppInit<WithExtension<T>>;
 };
 
 declare const init: AppInit;

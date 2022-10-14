@@ -1,7 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
@@ -10,6 +10,7 @@ const root = dom.root;
 const featureDetections = {};
 const dependencies = {};
 const extensions = {};
+const initList = [];
 
 /** @type {Brew.AppInstance} */
 export var app;
@@ -158,7 +159,7 @@ definePrototype(App, {
 });
 watchable(App.prototype);
 
-export default function () {
+function init(callback) {
     if (appInit) {
         throw new Error('brew() can only be called once');
     }
@@ -170,9 +171,14 @@ export default function () {
             fn.call(app, v);
         }
     });
-    each(arguments, function (i, v) {
-        throwNotFunction(v)(app);
+    each(initList, function (i, v) {
+        if (isPlainObject(v)) {
+            define(app, v);
+        } else {
+            throwNotFunction(v)(app);
+        }
     });
+    throwNotFunction(callback)(app);
     each(dependencies, function (i, v) {
         combineFn(v)();
     });
@@ -186,6 +192,13 @@ export default function () {
     });
     return app;
 }
+
+define(init, {
+    with: function () {
+        initList.push.apply(initList, arguments);
+        return this;
+    }
+});
 
 export function install(name, callback) {
     defineUseMethod(name, [], throwNotFunction(callback));
@@ -210,3 +223,5 @@ export function addDetect(name, callback) {
 export function isElementActive(element) {
     return !app || app.isElementActive(element);
 }
+
+export default init;

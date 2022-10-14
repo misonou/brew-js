@@ -32,7 +32,8 @@ export async function after(callback) {
 }
 
 export function initApp(...callbacks) {
-    brew(...callbacks);
+    const init = callbacks.pop();
+    brew.with(...callbacks)(init);
     return app.ready;
 }
 
