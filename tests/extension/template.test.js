@@ -22,6 +22,10 @@ beforeAll(async () => {
             <div><content for=".foo"></content></div>
             <div><content></content></div>
         </div>
+        <div brew-template="template-4">
+            <b></b>
+            <content></conten>
+        </div>
     `).appendTo(document.body);
     app = await initApp(template);
     app.testMethod = mockFn();
@@ -58,6 +62,20 @@ describe('apply-template directive', () => {
             setVar(root, varname, 'template-2');
         });
         expect(div.getAttribute('class')).toBe('template-2');
+    });
+
+    it('should not repeatively apply template to foreach element', async () => {
+        const div = await mount(`
+            <div foreach="items">
+                <div apply-template="template-4">
+                    <i></i>
+                </div>
+            </div>
+        `);
+        await after(() => {
+            setVar(div, 'items', [1, 2, 3]);
+        });
+        expect(div).toMatchSnapshot();
     });
 });
 

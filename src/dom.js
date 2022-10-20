@@ -74,7 +74,7 @@ function processTransform(elements, applyDOMUpdates) {
         exclude = makeArray(transformed);
         $(selectIncludeSelf(selector, elements)).not(exclude).each(function (j, element) {
             each(transformationHandlers, function (i, v) {
-                if (element.attributes[i]) {
+                if (element.attributes[i] && containsOrEquals(root, element)) {
                     v(element, getComponentState.bind(0, i), applyDOMUpdates);
                     transformed.add(element);
                 }

@@ -1,5 +1,54 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`apply-template directive should not repeatively apply template to foreach element 1`] = `
+<div
+  foreach="items"
+>
+  <div
+    apply-template="template-4"
+  >
+    
+            
+    <b />
+    
+            
+    
+                    
+    <i />
+    
+                
+  </div>
+  <div
+    apply-template="template-4"
+  >
+    
+            
+    <b />
+    
+            
+    
+                    
+    <i />
+    
+                
+  </div>
+  <div
+    apply-template="template-4"
+  >
+    
+            
+    <b />
+    
+            
+    
+                    
+    <i />
+    
+                
+  </div>
+</div>
+`;
+
 exports[`apply-template directive should replace <content> slot with matched elements 1`] = `
 <div
   apply-template="template-3"
