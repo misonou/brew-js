@@ -54,6 +54,18 @@ describe('openFlyout', () => {
         expect(dom.modalElement).toBe(flyout);
     });
 
+    it('should retain focus when element is not currently focusable', async () => {
+        const { modal, flyout } = await mount(`
+            <div>
+                <div id="modal"></div>
+                <div id="flyout" is-flyout></div>
+            </div>
+        `);
+        dom.setModal(modal);
+        openFlyout(flyout);
+        expect(dom.focusedElements).toEqual([flyout, modal, root]);
+    });
+
     it('should close flyout and resolve with value from triggering element when closeIfOpened is true', async () => {
         const { flyout, button } = await mount(`
             <div id="flyout" is-flyout>
