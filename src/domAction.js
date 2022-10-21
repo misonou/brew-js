@@ -188,10 +188,17 @@ dom.ready.then(function () {
         e.stopImmediatePropagation();
     });
 
-    $('body').on('click', '[async-action]', function (e) {
+    $('body').on('click', '[async-action]', function handleAsyncAction(e) {
         var element = e.currentTarget;
         var executed = mapGet(executedAsyncActions, element, Array);
         var callback = null;
+        var next = function (next) {
+            if (focusable(element)) {
+                next(e);
+            } else {
+                mapRemove(executedAsyncActions, element);
+            }
+        };
         each(asyncActions, function (i, v) {
             if (element.attributes[i] && executed.indexOf(v) < 0) {
                 callback = v;
@@ -204,16 +211,20 @@ dom.ready.then(function () {
             executed.push(callback);
             // @ts-ignore: type inference issue
             var returnValue = callback.call(element, e);
-            if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                notifyAsync(element, returnValue);
-                returnValue.then(function () {
-                    dispatchDOMMouseEvent(e);
-                }, function (e) {
-                    executedAsyncActions.delete(element);
-                    console.warn('Action threw an error:', e);
-                });
+            if (!e.isImmediatePropagationStopped()) {
+                if (isThenable(returnValue)) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    notifyAsync(element, returnValue);
+                    returnValue.then(function () {
+                        next(dispatchDOMMouseEvent);
+                    }, function (e) {
+                        executedAsyncActions.delete(element);
+                        console.warn('Action threw an error:', e);
+                    });
+                } else {
+                    next(handleAsyncAction);
+                }
             }
         }
     });

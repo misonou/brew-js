@@ -1,20 +1,25 @@
 import { fireEvent } from "@testing-library/dom";
 import $ from "jquery";
 import router from "src/extension/router";
-import { closeFlyout, openFlyout } from "src/domAction";
+import { addAsyncAction, closeFlyout, openFlyout } from "src/domAction";
 import { getVar, setVar } from "src/var";
 import dom from "zeta-dom/dom";
 import { locked } from "zeta-dom/domLock";
-import { initApp, delay, mount, root, mockFn } from "./testUtil";
+import { initApp, delay, mount, root, mockFn, after } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 var app;
+
+const cb1 = mockFn();
+const cb2 = mockFn();
 
 beforeAll(async () => {
     app = await initApp(router, app => {
         app.useRouter({
             routes: ['/*']
         });
+        addAsyncAction('async-action-1', cb1);
+        addAsyncAction('async-action-2', cb2);
     });
 });
 
@@ -230,5 +235,84 @@ describe('set-var directive', () => {
 
         fireEvent.click(child);
         expect(getVar(parent, 'foo')).toBe('bar');
+    });
+});
+
+describe('async-action directive', () => {
+    it('should invoke next handler immediately if current handler return non-promise', async () => {
+        const button = await mount(`
+            <button async-action-1 async-action-2></button>
+        `);
+        fireEvent.click(button);
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).toBeCalledTimes(1);
+    });
+
+    it('should invoke next handler after return promise is resolved', async () => {
+        let resolve;
+        const promise = new Promise(res_ => resolve = res_);
+        const button = await mount(`
+            <button async-action-1 async-action-2></button>
+        `);
+        cb1.mockReturnValueOnce(promise);
+        fireEvent.click(button);
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).not.toBeCalled();
+
+        await after(resolve);
+        expect(cb2).toBeCalledTimes(1);
+    });
+
+    it('should not invoke next handler after return promise is rejected', async () => {
+        let reject;
+        const promise = new Promise((_, rej_) => reject = rej_);
+        const button = await mount(`
+            <button async-action-1 async-action-2></button>
+        `);
+        cb1.mockReturnValueOnce(promise);
+        fireEvent.click(button);
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).not.toBeCalled();
+
+        await after(reject);
+        expect(cb2).not.toBeCalled();
+    });
+
+    it('should not invoke next handler if stopImmediatePropagation is called', async () => {
+        const button = await mount(`
+            <button async-action-1 async-action-2></button>
+        `);
+        cb1.mockImplementationOnce(e => {
+            e.stopImmediatePropagation();
+        });
+        fireEvent.click(button);
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).not.toBeCalled();
+    });
+
+    it('should reset when element is no longer focusable', async () => {
+        const { button, modal } = await mount(`
+            <div id="wrapper">
+                <button id="button" async-action-1 async-action-2></button>
+                <div id="modal"></div>
+            </div>
+        `);
+        cb1.mockImplementationOnce(() => {
+            dom.setModal(modal);
+        });
+        await after(() => {
+            fireEvent.click(button);
+        });
+        expect(dom.modalElement).toBe(modal);
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).not.toBeCalled();
+
+        cb1.mockClear();
+        dom.releaseModal(modal);
+        await after(() => {
+            fireEvent.click(button);
+        });
+        expect(cb1).toBeCalledTimes(1);
+        expect(cb2).toBeCalledTimes(1);
     });
 });
