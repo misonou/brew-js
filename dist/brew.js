@@ -664,7 +664,7 @@ function preloadImages(urls, ms) {
     });
   }
 
-  return setPromiseTimeout(resolveAll(values(preloadImagesCache)), ms, true);
+  return promise_polyfill.race([delay(ms), resolveAll(values(preloadImagesCache))]);
 }
 // CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
@@ -1055,7 +1055,7 @@ function processTransform(elements, applyDOMUpdates) {
     exclude = makeArray(transformed);
     jquery(selectIncludeSelf(selector, elements)).not(exclude).each(function (j, element) {
       each(transformationHandlers, function (i, v) {
-        if (element.attributes[i]) {
+        if (element.attributes[i] && containsOrEquals(root, element)) {
           v(element, getComponentState.bind(0, i), applyDOMUpdates);
           transformed.add(element);
         }
@@ -1385,6 +1385,7 @@ var app_root = zeta_dom_dom.root;
 var featureDetections = {};
 var dependencies = {};
 var extensions = {};
+var initList = [];
 /** @type {Brew.AppInstance} */
 
 var app;
@@ -1552,7 +1553,8 @@ definePrototype(App, {
   beforeUpdate: hookBeforeUpdate
 });
 watchable(App.prototype);
-/* harmony default export */ function src_app() {
+
+function init(callback) {
   if (appInit) {
     throw new Error('brew() can only be called once');
   }
@@ -1566,9 +1568,14 @@ watchable(App.prototype);
       fn.call(app, v);
     }
   });
-  each(arguments, function (i, v) {
-    throwNotFunction(v)(app);
+  each(initList, function (i, v) {
+    if (isPlainObject(v)) {
+      util_define(app, v);
+    } else {
+      throwNotFunction(v)(app);
+    }
   });
+  throwNotFunction(callback)(app);
   each(dependencies, function (i, v) {
     combineFn(v)();
   });
@@ -1581,6 +1588,14 @@ watchable(App.prototype);
   });
   return app;
 }
+
+util_define(init, {
+  with: function _with() {
+    initList.push.apply(initList, arguments);
+    return this;
+  }
+});
+
 function install(name, callback) {
   defineUseMethod(name, [], throwNotFunction(callback));
 }
@@ -1601,6 +1616,7 @@ function addDetect(name, callback) {
 function isElementActive(element) {
   return !app || app.isElementActive(element);
 }
+/* harmony default export */ const src_app = (init);
 // CONCATENATED MODULE: ./tmp/zeta-dom/tree.js
 
 var TraversableNode = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.TraversableNode,
@@ -1847,7 +1863,8 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
     afterDetached = observe_zeta$dom.afterDetached,
     watchElements = observe_zeta$dom.watchElements,
-    watchAttributes = observe_zeta$dom.watchAttributes;
+    watchAttributes = observe_zeta$dom.watchAttributes,
+    watchOwnAttributes = observe_zeta$dom.watchOwnAttributes;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
 
@@ -1903,6 +1920,7 @@ function closeFlyout(flyout, value) {
     if (state) {
       flyoutStates.delete(v);
       releaseModal(v);
+      releaseFocus(v);
       state.resolve(value);
 
       if (state.source) {
@@ -1949,6 +1967,12 @@ function openFlyout(selector, states, source, closeIfOpened) {
     return prev.promise;
   }
 
+  var focusFriend = source;
+
+  if (!focusFriend && !focusable(element)) {
+    focusFriend = zeta_dom_dom.modalElement;
+  }
+
   var resolve;
   var promise = new promise_polyfill(function (resolve_) {
     resolve = resolve_;
@@ -1961,9 +1985,12 @@ function openFlyout(selector, states, source, closeIfOpened) {
     path: app.path
   });
 
+  if (focusFriend) {
+    retainFocus(focusFriend, element);
+  }
+
   if (source) {
     setClass(source, 'target-opened', true);
-    retainFocus(element, source);
   }
 
   if (states) {
@@ -2053,10 +2080,19 @@ zeta_dom_dom.ready.then(function () {
     e.preventDefault();
     e.stopImmediatePropagation();
   });
-  jquery('body').on('click', '[async-action]', function (e) {
+  jquery('body').on('click', '[async-action]', function handleAsyncAction(e) {
     var element = e.currentTarget;
     var executed = mapGet(executedAsyncActions, element, Array);
     var callback = null;
+
+    var next = function next(_next) {
+      if (focusable(element)) {
+        _next(e);
+      } else {
+        mapRemove(executedAsyncActions, element);
+      }
+    };
+
     each(asyncActions, function (i, v) {
       if (element.attributes[i] && executed.indexOf(v) < 0) {
         callback = v;
@@ -2071,16 +2107,20 @@ zeta_dom_dom.ready.then(function () {
 
       var returnValue = callback.call(element, e);
 
-      if (isThenable(returnValue) && !e.isImmediatePropagationStopped()) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        notifyAsync(element, returnValue);
-        returnValue.then(function () {
-          dispatchDOMMouseEvent(e);
-        }, function (e) {
-          executedAsyncActions.delete(element);
-          console.warn('Action threw an error:', e);
-        });
+      if (!e.isImmediatePropagationStopped()) {
+        if (isThenable(returnValue)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          notifyAsync(element, returnValue);
+          returnValue.then(function () {
+            next(dispatchDOMMouseEvent);
+          }, function (e) {
+            executedAsyncActions.delete(element);
+            console.warn('Action threw an error:', e);
+          });
+        } else {
+          next(handleAsyncAction);
+        }
       }
     }
   });
@@ -2155,20 +2195,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-function with_() {
-  var fn = this.bind.apply(src_app, [0].concat(map(arguments, function (v) {
-    if (isPlainObject(v)) {
-      return function (app) {
-        util_define(app, v);
-      };
-    }
-
-    return isFunction(v) || noop;
-  })));
-  util_define(fn, method);
-  return fn;
-}
-
 var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   ErrorCode: errorCode_namespaceObject,
   defaults: src_defaults
@@ -2185,8 +2211,7 @@ var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpre
   addExtension: addExtension,
   addRenderer: addRenderer,
   addTransformer: addTransformer,
-  addTemplate: addTemplate,
-  with: with_
+  addTemplate: addTemplate
 });
 
 util_define(src_app, method);
@@ -2527,11 +2552,9 @@ var template_root = zeta_dom_dom.root;
     });
     watchElements(form, ':input', function (addedInputs) {
       each(addedInputs, function (i, v) {
-        var detached = afterDetached(v, form);
-        bindUntil(detached, v, 'change input', function () {
+        registerCleanup(v, bind(v, 'change input', function () {
           setImmediateOnce(update);
-        });
-        detached.then(update.bind(null, true));
+        }));
       });
       update(true);
     }, true);
@@ -2552,7 +2575,7 @@ var template_root = zeta_dom_dom.root;
     });
   });
   matchElement('[loading-scope]', function (element) {
-    zeta_dom_dom.lock(element);
+    zeta_dom_dom.subscribeAsync(element);
     zeta_dom_dom.on(element, {
       asyncStart: function asyncStart() {
         setVar(element, 'loading', true);
@@ -2563,7 +2586,7 @@ var template_root = zeta_dom_dom.root;
     });
   });
   matchElement('[error-scope]', function (element) {
-    zeta_dom_dom.lock(element);
+    zeta_dom_dom.subscribeAsync(element);
     zeta_dom_dom.on(element, {
       asyncStart: function asyncStart() {
         setVar(element, 'error', null);
