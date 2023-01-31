@@ -111,7 +111,7 @@ function matchRouteByParams(routes, params, partial) {
         });
         if (valid && !partial) {
             valid = !single(params, function (v, i) {
-                return v && !tokens.has(i);
+                return v && i !== 'remainingSegments' && !tokens.has(i);
             });
         }
         if (!valid) {

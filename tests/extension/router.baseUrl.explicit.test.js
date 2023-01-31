@@ -27,7 +27,7 @@ beforeAll(async () => {
             baseUrl: '/base',
             explicitBaseUrl: true,
             routes: [
-                '/foo/baz/*',
+                '/foo/{baz:baz}/*',
                 '/foo/{id?:[a-z]+}',
                 '/{bar:bar}/{id?:[a-z]+}',
                 '/{bar:bar}/{optional?:[a-z]+}',
@@ -562,6 +562,15 @@ describe('app#route', () => {
         expect(app.route.optional).toBe('foo');
     });
 
+    it('should match path by params correctly', () => {
+        expect(app.route.getPath({ id: 'bar' })).toEqual('/base/foo/bar');
+        expect(app.route.getPath({ id: 'bar', remainingSegments: '/' })).toEqual('/base/foo/bar');
+        expect(app.route.getPath({ id: 'bar', remainingSegments: '/baz' })).toEqual('/base/foo/bar');
+        expect(app.route.getPath({ baz: 'baz' })).toEqual('/base/foo/baz');
+        expect(app.route.getPath({ baz: 'baz', remainingSegments: '/' })).toEqual('/base/foo/baz');
+        expect(app.route.getPath({ baz: 'baz', remainingSegments: '/baz' })).toEqual('/base/foo/baz/baz');
+    });
+
     it('should discard parameter changes if there is no matching route', async () => {
         const cb = mockFn();
         bindEvent('navigate', cb);
@@ -584,6 +593,7 @@ describe('app#route', () => {
         const result = {
             another: null,
             bar: null,
+            baz: null,
             id: 'bar',
             optional: null,
             remainingSegments: "/",
