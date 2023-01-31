@@ -496,9 +496,12 @@ describe('app.route', () => {
     });
 
     it('should trigger navigation when parameter changes', async () => {
-        app.route.id = 'bar';
-        await delay(100);
-        expect(app.path).toEqual('/foo/bar');
+        await after(() => app.route.baz = 'baz');
+        expect(app.path).toEqual('/foo/baz');
+        expect(app.route.remainingSegments).toBe('/');
+
+        await after(() => app.route.remainingSegments = '/buzz');
+        expect(app.path).toEqual('/foo/baz/buzz');
     });
 
     it('should normalize route parameter', async () => {
@@ -512,6 +515,18 @@ describe('app.route', () => {
         expect(app.route.another).toBe('true');
         app.route.another = 0;
         expect(app.route.another).toBe('0');
+
+        await app.navigate('/foo/baz');
+        app.route.remainingSegments = '';
+        expect(app.route.remainingSegments).toBe('/');
+        app.route.remainingSegments = undefined;
+        expect(app.route.remainingSegments).toBe('/');
+        app.route.remainingSegments = false;
+        expect(app.route.remainingSegments).toBe('/false');
+        app.route.remainingSegments = true;
+        expect(app.route.remainingSegments).toBe('/true');
+        app.route.remainingSegments = 0;
+        expect(app.route.remainingSegments).toBe('/0');
     });
 
     it('should match route in declaring order', async () => {

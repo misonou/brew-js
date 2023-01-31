@@ -157,25 +157,18 @@ function Route(app, routes, initialPath) {
         });
     });
     watch(self, function () {
-        var params = exclude(self, ['remainingSegments']);
-        var current = state.current;
-        var previous = current;
-        var routeChanged = !equal(params, current.params);
-        if (routeChanged && state.lastMatch) {
-            current = state.lastMatch;
-            state.lastMatch = null;
-            routeChanged = !equal(params, current.params);
+        var current = state.lastMatch;
+        if (!equal(current.params, exclude(self, ['remainingSegments']))) {
+            current = matchRouteByParams(state.routes, self) || state.current;
         }
-        if (routeChanged) {
-            current = matchRouteByParams(state.routes, params) || previous;
-        }
+        var remainingSegments = current.route.exact ? '/' : normalizePath(self.remainingSegments);
+        var newPath = fromRoutePath(combinePath(current.maxPath, remainingSegments));
         state.current = current;
-        if (current.route.exact) {
-            self.remainingSegments = '/';
-        }
-        self.set(extend({}, state.params, current.params));
-        if (current !== previous) {
-            app.path = fromRoutePath(combinePath(current.maxPath, self.remainingSegments));
+        self.set(extend({}, state.params, current.params, {
+            remainingSegments: remainingSegments
+        }));
+        if (!iequal(newPath, removeQueryAndHash(app.path))) {
+            app.path = newPath;
         }
     });
 }
