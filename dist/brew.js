@@ -135,6 +135,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     setIntervalSafe = _zeta$util.setIntervalSafe,
     setImmediate = _zeta$util.setImmediate,
     setImmediateOnce = _zeta$util.setImmediateOnce,
+    util_throws = _zeta$util.throws,
     throwNotFunction = _zeta$util.throwNotFunction,
     errorWithCode = _zeta$util.errorWithCode,
     isErrorWithCode = _zeta$util.isErrorWithCode,
@@ -3326,7 +3327,7 @@ function matchRouteByParams(routes, params, partial) {
 
     if (valid && !partial) {
       valid = !single(params, function (v, i) {
-        return v && !tokens.has(i);
+        return v && i !== 'remainingSegments' && !tokens.has(i);
       });
     }
 
@@ -3380,31 +3381,21 @@ function Route(app, routes, initialPath) {
     });
   });
   watch(self, function () {
-    var params = exclude(self, ['remainingSegments']);
-    var current = state.current;
-    var previous = current;
-    var routeChanged = !equal(params, current.params);
+    var current = state.lastMatch;
 
-    if (routeChanged && state.lastMatch) {
-      current = state.lastMatch;
-      state.lastMatch = null;
-      routeChanged = !equal(params, current.params);
+    if (!equal(current.params, exclude(self, ['remainingSegments']))) {
+      current = matchRouteByParams(state.routes, self) || state.current;
     }
 
-    if (routeChanged) {
-      current = matchRouteByParams(state.routes, params) || previous;
-    }
-
+    var remainingSegments = current.route.exact ? '/' : normalizePath(self.remainingSegments);
+    var newPath = fromRoutePath(combinePath(current.maxPath, remainingSegments));
     state.current = current;
+    self.set(extend({}, state.params, current.params, {
+      remainingSegments: remainingSegments
+    }));
 
-    if (current.route.exact) {
-      self.remainingSegments = '/';
-    }
-
-    self.set(extend({}, state.params, current.params));
-
-    if (current !== previous) {
-      app.path = fromRoutePath(combinePath(current.maxPath, self.remainingSegments));
+    if (!iequal(newPath, removeQueryAndHash(app.path))) {
+      app.path = newPath;
     }
   });
 }
