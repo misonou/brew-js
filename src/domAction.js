@@ -173,7 +173,7 @@ dom.ready.then(function () {
 
     app.on('beforepageload', function () {
         flyoutStates.forEach(function (v, i) {
-            if (v.path !== app.path) {
+            if (v.path && v.path !== app.path) {
                 closeFlyout(i);
             }
         });
