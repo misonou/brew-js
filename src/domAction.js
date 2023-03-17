@@ -3,7 +3,7 @@ import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
 import { always, any, catchAsync, grep, mapRemove, matchWord, pipe } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
-import { setClass, selectClosestRelative, dispatchDOMMouseEvent, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
+import { setClass, selectClosestRelative, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
@@ -16,12 +16,18 @@ import { evalAttr, setVar } from "./var.js";
 
 const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
+const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 
 const root = dom.root;
 const flyoutStates = new Map();
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 const asyncActions = {};
+
+function disableEvent(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+}
 
 function isSameWindow(target) {
     return !target || target === '_self' || target === window.name;
@@ -179,17 +185,16 @@ dom.ready.then(function () {
         });
     });
 
-    $('body').on('submit', 'form:not([action])', function (e) {
-        e.preventDefault();
-    });
-
-    $('body').on('click', '[disabled], .disabled, :disabled', function (e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-    });
-
-    $('body').on('click', '[async-action]', function handleAsyncAction(e) {
+    /**
+     * @param {JQuery.UIEventBase} e
+     */
+    function handleAsyncAction(e) {
         var element = e.currentTarget;
+        if (matchSelector(element, SELECTOR_DISABLED)) {
+            mapRemove(executedAsyncActions, element);
+            disableEvent(e);
+            return;
+        }
         var executed = mapGet(executedAsyncActions, element, Array);
         var callback = null;
         var next = function (next) {
@@ -209,12 +214,10 @@ dom.ready.then(function () {
             executedAsyncActions.delete(element);
         } else {
             executed.push(callback);
-            // @ts-ignore: type inference issue
             var returnValue = callback.call(element, e);
             if (!e.isImmediatePropagationStopped()) {
                 if (isThenable(returnValue)) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
+                    disableEvent(e);
                     notifyAsync(element, returnValue);
                     returnValue.then(function () {
                         next(dispatchDOMMouseEvent);
@@ -227,7 +230,18 @@ dom.ready.then(function () {
                 }
             }
         }
+    }
+
+    watchElements(root, '[async-action]', function (added, removed) {
+        $(added).on('click', handleAsyncAction);
+        $(removed).off('click', handleAsyncAction);
     });
+
+    $('body').on('submit', 'form:not([action])', function (e) {
+        e.preventDefault();
+    });
+
+    $('body').on('click', SELECTOR_DISABLED, disableEvent);
 
     $('body').on('click', 'a[href]:not([download]), [data-href]', function (e) {
         if (e.isDefaultPrevented()) {
