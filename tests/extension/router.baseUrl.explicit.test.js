@@ -336,6 +336,12 @@ describe('app#navigate', () => {
         expect(initialRedirectError).toBeUndefined();
     });
 
+    it('should update location pathname correctly', async () => {
+        expect(location.pathname).toBe('/base');
+        await app.navigate('/base/test-1');
+        expect(location.pathname).toBe('/base/test-1');
+    });
+
     it('should handle query string in path', async () => {
         const cb = mockFn();
         bindEvent(root, 'navigate', cb);
@@ -493,6 +499,20 @@ describe('app#resolvePath', () => {
         await app.navigate(initialPath);
         expect(app.resolvePath('/base/foo/{id?}', '/base/base/foo')).toEqual('/base/foo');
         expect(app.resolvePath('/base/foo/{id?}/baz', '/base/base/foo')).toEqual('/base/foo/null/baz');
+    });
+});
+
+describe('app#isAppPath', () => {
+    it('should return true for absolute path starting with base URL', () => {
+        expect(app.isAppPath('/base')).toBe(true);
+        expect(app.isAppPath('/base/xxx')).toBe(true);
+        expect(app.isAppPath('/')).toBe(false);
+        expect(app.isAppPath('/xxx')).toBe(false);
+    });
+
+    it('should return false for absolute URL', () => {
+        expect(app.isAppPath('http://a.com/')).toBe(false);
+        expect(app.isAppPath(location.origin + '/base')).toBe(false);
     });
 });
 

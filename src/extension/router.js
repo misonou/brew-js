@@ -1,10 +1,10 @@
 import { bind } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
-import { getQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments } from "../util/path.js";
+import { getQueryParam, setQueryParam } from "../util/common.js";
+import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";
 import * as ErrorCode from "../errorCode.js";
 
 const SESSION_KEY = 'brew.history.';
@@ -15,8 +15,11 @@ const sessionStorage = window.sessionStorage;
 const root = dom.root;
 
 var baseUrl;
-var pass = function (path) {
-    return path;
+var constant = function (value) {
+    return pipe.bind(0, value);
+};
+var isAppPath = function (path) {
+    return !!isSubPathOf(path, baseUrl);
 };
 var fromPathname = function (path) {
     return isSubPathOf(path, baseUrl) || '/';
@@ -24,8 +27,8 @@ var fromPathname = function (path) {
 var toPathname = function (path) {
     return combinePath(baseUrl, path);
 };
-export var fromRoutePath = pass;
-export var toRoutePath = pass;
+export var fromRoutePath = pipe;
+export var toRoutePath = pipe;
 
 export function matchRoute(route, segments, ignoreExact) {
     if (!route || !route.test) {
@@ -39,6 +42,10 @@ export function matchRoute(route, segments, ignoreExact) {
 
 function getCurrentQuery() {
     return location.search + location.hash;
+}
+
+function getCurrentPathAndQuery() {
+    return location.pathname + getCurrentQuery();
 }
 
 function RoutePattern(props) {
@@ -397,14 +404,14 @@ function configureRouter(app, options) {
         path = decodeURI(path) || '/';
         currentPath = currentPath || app.path;
         if (path[0] === '~' || path.indexOf('{') >= 0) {
-            var fullPath = (isRoutePath ? fromRoutePath : pass)(currentPath);
+            var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
             parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
             path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
                 return parsedState.params[a] || ((b && i + v.length === path.length) ? '' : 'null');
             });
         }
         if (path[0] === '~') {
-            path = (isRoutePath ? pass : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
+            path = (isRoutePath ? pipe : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
         } else if (path[0] !== '/') {
             path = combinePath(currentPath, path);
         }
@@ -480,21 +487,41 @@ function configureRouter(app, options) {
     });
 
     baseUrl = normalizePath(options.baseUrl);
-    if (baseUrl === '/') {
-        fromPathname = pass;
-        toPathname = pass;
+    if (options.urlMode === 'none') {
+        baseUrl = '/';
+        isAppPath = constant(false);
+        fromPathname = constant(baseUrl);
+        toPathname = getCurrentPathAndQuery;
+    } else if (options.urlMode === 'query') {
+        baseUrl = '/';
+        isAppPath = function (path) {
+            return (path || '')[0] === '?' || /^\/($|[?#])/.test(isSubPathOf(path, location.pathname) || '');
+        };
+        fromPathname = function () {
+            return getQueryParam(options.queryParam) || baseUrl;
+        };
+        toPathname = function (path) {
+            path = parsePath(path);
+            return setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
+        };
+    } else if (baseUrl === '/') {
+        fromPathname = pipe;
+        toPathname = pipe;
     } else if (options.explicitBaseUrl) {
         fromRoutePath = toPathname;
         toRoutePath = fromPathname;
-        fromPathname = pass;
-        toPathname = pass;
+        fromPathname = pipe;
+        toPathname = pipe;
         basePath = baseUrl;
     } else {
+        isAppPath = function (path) {
+            return (path || '')[0] === '/';
+        };
         setBaseUrl(baseUrl);
     }
     var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
     var includeQuery = !initialPath;
-    initialPath = fromPathname(initialPath || location.pathname);
+    initialPath = initialPath || fromPathname(location.pathname);
     if (!isSubPathOf(initialPath, basePath)) {
         initialPath = basePath;
     }
@@ -510,6 +537,7 @@ function configureRouter(app, options) {
         matchRoute: matchRoute,
         parseRoute: parseRoute,
         resolvePath: resolvePath,
+        isAppPath: isAppPath,
         navigate: function (path, replace) {
             return pushState(path, replace).promise;
         },

@@ -11,7 +11,6 @@ import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable }
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { selectorForAttr } from "./util/common.js";
-import { isSubPathOf } from "./util/path.js";
 import { evalAttr, setVar } from "./var.js";
 
 const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
@@ -253,7 +252,7 @@ dom.ready.then(function () {
         if (!isSameWindow(self.target)) {
             return;
         }
-        if ('navigate' in app && isSubPathOf(href, app.basePath)) {
+        if ('navigate' in app && app.isAppPath(href)) {
             e.preventDefault();
             app.navigate(href);
         } else if (locked(root)) {

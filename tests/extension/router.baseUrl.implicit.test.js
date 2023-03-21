@@ -335,6 +335,12 @@ describe('app.navigate', () => {
         expect(initialRedirectError).toBeUndefined();
     });
 
+    it('should update location pathname correctly', async () => {
+        expect(location.pathname).toBe('/base');
+        await app.navigate('/test-1');
+        expect(location.pathname).toBe('/base/test-1');
+    });
+
     it('should handle query string in path', async () => {
         const cb = mockFn();
         bindEvent(root, 'navigate', cb);
@@ -487,6 +493,18 @@ describe('app.resolvePath', () => {
         await app.navigate(initialPath);
         expect(app.resolvePath('/foo/{id?}', '/foo')).toEqual('/foo');
         expect(app.resolvePath('/foo/{id?}/baz', '/foo')).toEqual('/foo/null/baz');
+    });
+});
+
+describe('app.isAppPath', () => {
+    it('should return true for absolute path', () => {
+        expect(app.isAppPath('/')).toBe(true);
+        expect(app.isAppPath('/xxx')).toBe(true);
+    });
+
+    it('should return false for absolute URL', () => {
+        expect(app.isAppPath('http://a.com/')).toBe(false);
+        expect(app.isAppPath(location.origin)).toBe(false);
     });
 });
 

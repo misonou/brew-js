@@ -129,6 +129,12 @@ declare namespace Brew {
          * @param {boolean=} ignoreExact Whether to match child paths even though there is no trailing wildcard character in the route.
          */
         matchRoute(route: string, path: string, ignoreExact?: boolean): boolean;
+        /**
+         * Determines whether a path should be processed by the router.
+         * The result is always false if an absolute URL (i.e. beginning with http: or https:) is given.
+         * @param path A path or url.
+         */
+        isAppPath(path: string): boolean;
 
         /**
          * Configures router.
@@ -238,11 +244,18 @@ declare namespace Brew {
 
     interface RouterOptions {
         /**
+         * Specifies how the router will update URL in browser's address bar.
+         * Default is "pathname".
+         */
+        urlMode?: 'pathname' | 'query' | 'none';
+        /**
          * Specifies base path of the app, that is excluded in route matching and always appears in address bar.
+         * Value is ignored if {@link RouterOptions.urlMode} is not "pathname".
          */
         baseUrl?: string;
         /**
          * Specifies base path must be explicitly included in {@link WithRouter.path} and related method like {@link WithRouter.navigate}.
+         * Value is ignored if {@link RouterOptions.urlMode} is not "pathname".
          */
         explicitBaseUrl?: boolean;
         /**
