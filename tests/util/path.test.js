@@ -155,11 +155,11 @@ describe('withBaseUrl', () => {
 });
 
 describe('isSubPathOf', () => {
-    it('should return true if first path is equal to or is a sub-path of the second path', () => {
-        expect(isSubPathOf('/', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo', '/foo')).toBeTruthy();
-        expect(isSubPathOf('/foo/', '/foo')).toBeTruthy();
+    it('should return normalized sub-path if first path is equal to or is a sub-path of the second path', () => {
+        expect(isSubPathOf('/', '/')).toBe('/');
+        expect(isSubPathOf('/foo', '/')).toBe('/foo');
+        expect(isSubPathOf('/foo', '/foo')).toBe('/');
+        expect(isSubPathOf('/foo/', '/foo')).toBe('/');
 
         expect(isSubPathOf('/', '/bar')).toBeFalsy();
         expect(isSubPathOf('/foo', '/bar')).toBeFalsy();
@@ -167,22 +167,22 @@ describe('isSubPathOf', () => {
     });
 
     it('should work on full URL', () => {
-        expect(isSubPathOf('http://test.com/', 'http://test.com/')).toBeTruthy();
-        expect(isSubPathOf('http://test.com/foo', 'http://test.com/')).toBeTruthy();
-        expect(isSubPathOf('http://test.com/foo', 'http://test.com/foo')).toBeTruthy();
-        expect(isSubPathOf('http://test.com/foo/', 'http://test.com/foo')).toBeTruthy();
+        expect(isSubPathOf('http://test.com/', 'http://test.com/')).toBe('/');
+        expect(isSubPathOf('http://test.com/foo', 'http://test.com/')).toBe('/foo');
+        expect(isSubPathOf('http://test.com/foo', 'http://test.com/foo')).toBe('/');
+        expect(isSubPathOf('http://test.com/foo/', 'http://test.com/foo')).toBe('/');
     });
 
     it('should work with query string and hash', () => {
-        expect(isSubPathOf('/?a=1', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo?a=1', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo?a=1', '/foo')).toBeTruthy();
-        expect(isSubPathOf('/foo/?a=1', '/foo')).toBeTruthy();
+        expect(isSubPathOf('/?a=1', '/')).toBe('/?a=1');
+        expect(isSubPathOf('/foo?a=1', '/')).toBe('/foo?a=1');
+        expect(isSubPathOf('/foo?a=1', '/foo')).toBe('/?a=1');
+        expect(isSubPathOf('/foo/?a=1', '/foo')).toBe('/?a=1');
 
-        expect(isSubPathOf('/#a=1', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo#a=1', '/')).toBeTruthy();
-        expect(isSubPathOf('/foo#a=1', '/foo')).toBeTruthy();
-        expect(isSubPathOf('/foo/#a=1', '/foo')).toBeTruthy();
+        expect(isSubPathOf('/#a=1', '/')).toBe('/#a=1');
+        expect(isSubPathOf('/foo#a=1', '/')).toBe('/foo#a=1');
+        expect(isSubPathOf('/foo#a=1', '/foo')).toBe('/#a=1');
+        expect(isSubPathOf('/foo/#a=1', '/foo')).toBe('/#a=1');
     });
 
     it('expects normalized paths', () => {
