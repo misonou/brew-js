@@ -1,6 +1,6 @@
 import $ from "jquery";
 import { catchAsync } from "zeta-dom/util";
-import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, preloadImages, setAttr, setCookie } from "src/util/common";
+import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, preloadImages, setAttr, setCookie, setQueryParam } from "src/util/common";
 import { setBaseUrl } from "src/util/path";
 import { after, mockFn, mockXHROnce, verifyCalls, _ } from "../testUtil";
 import { jest } from "@jest/globals";
@@ -77,6 +77,36 @@ describe('getQueryParam', () => {
     it('should decode URL-encoded characters', () => {
         history.replaceState(null, '', '?foo=%3F%25%3D%20');
         expect(getQueryParam('foo')).toEqual('?%= ');
+    });
+});
+
+describe('setQueryParam', () => {
+    it('should add specified param', () => {
+        history.replaceState(null, '', '');
+        expect(setQueryParam('foo', 'baz')).toBe('?foo=baz');
+        history.replaceState(null, '', '?');
+        expect(setQueryParam('foo', 'baz')).toBe('?foo=baz');
+        history.replaceState(null, '', '?q=1');
+        expect(setQueryParam('foo', 'baz')).toBe('?q=1&foo=baz');
+    });
+
+    it('should update specified param', () => {
+        history.replaceState(null, '', '?foo=bar');
+        expect(setQueryParam('foo', 'baz')).toBe('?foo=baz');
+        history.replaceState(null, '', '?foo=bar&q=1');
+        expect(setQueryParam('foo', 'baz')).toBe('?foo=baz&q=1');
+        history.replaceState(null, '', '?q=1&foo=bar');
+        expect(setQueryParam('foo', 'baz')).toBe('?q=1&foo=baz');
+    });
+
+    it('should be case-insensitive', () => {
+        history.replaceState(null, '', '?foo=bar');
+        expect(setQueryParam('FOO', 'baz')).toBe('?FOO=baz');
+    });
+
+    it('should decode URL-encoded characters', () => {
+        history.replaceState(null, '', '');
+        expect(setQueryParam('foo', '?%= ')).toEqual('?foo=%3F%25%3D%20');
     });
 });
 

@@ -23,6 +23,8 @@ export function getFormValues(form: HTMLFormElement): Zeta.Dictionary;
 
 export function getQueryParam(name: string): string;
 
+export function setQueryParam(name: string, value: string, current?: string): string;
+
 export function getCookie(name: string): string;
 
 export function setCookie(name: string, value: string, expiry?: number): string;

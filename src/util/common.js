@@ -76,6 +76,18 @@ export function getQueryParam(name) {
 
 /**
  * @param {string} name
+ * @param {string} value
+ * @param {string=} current
+ */
+export function setQueryParam(name, value, current) {
+    var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
+    return (current || location.search).replace(re, function (v, a, i, n) {
+        return (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value);
+    });
+}
+
+/**
+ * @param {string} name
  */
 export function getCookie(name) {
     return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;

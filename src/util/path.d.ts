@@ -20,6 +20,12 @@ export function setBaseUrl(baseUrl: string): void;
 export function combinePath(path: string, child: string): string;
 
 /**
+ * Parses a given path to URL parts.
+ * @param path An input path.
+ */
+export function parsePath(path: string): HTMLHyperlinkElementUtils;
+
+/**
  * Returns a path that always starts with a slash but without a trailing slash.
  * For empty path, the result is always a single slash (`/`).
  * @param path An input path.
