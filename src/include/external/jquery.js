@@ -1,9 +1,4 @@
-// @ts-nocheck
+import jQuery from "jquery";
+import _ from "jq-scrollable";
+export default jQuery;
 
-/** @type {JQueryStatic} */
-const jQuery = window.jQuery || require('jquery');
-module.exports = jQuery;
-
-try {
-    require('jq-scrollable');
-} catch (e) {}
