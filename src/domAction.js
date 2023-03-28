@@ -163,7 +163,7 @@ dom.ready.then(function () {
         }) || root;
         if (newRoot !== tabRoot) {
             tabRoot = newRoot;
-            setTabIndex();
+            setTimeout(setTabIndex);
         }
     });
 
