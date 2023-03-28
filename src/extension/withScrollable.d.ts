@@ -6,6 +6,7 @@ declare namespace Brew {
         scrollStart: ScrollableEvent;
         scrollMove: ScrollableEvent;
         scrollStop: ScrollableEvent;
+        scrollProgressChange: ScrollableEvent;
     }
 
     interface ScrollableEvent extends ZetaEvent {
@@ -26,6 +27,6 @@ declare namespace Brew {
          * Enables auto scrollable area initialization and scrolling events.
          * Requires the scrollable plugin https://github.com/misonou/jquery-scrollable.
          */
-        useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'handle' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd'>>): void;
+        useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'handle' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd' | 'scrollProgressChange'>>): void;
     }
 }

@@ -56,6 +56,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             },
             scrollEnd: function (e) {
                 app.emit('scrollStop', container, e, true);
+            },
+            scrollProgressChange: function (e) {
+                app.emit('scrollProgressChange', container, e, true);
             }
         }));
 
