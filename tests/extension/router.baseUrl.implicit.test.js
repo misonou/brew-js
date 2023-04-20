@@ -424,6 +424,44 @@ describe('app.back', () => {
     });
 });
 
+describe('app.snapshot', () => {
+    it('should push a new state to history stack', async () => {
+        const stateId = history.state;
+        const currentPath = app.path;
+        expect(app.snapshot()).toBe(true);
+        expect(app.path).toBe(currentPath);
+        expect(history.state).not.toBe(stateId);
+    });
+
+    it('should keep previousPath untouched', async () => {
+        const currentPath = app.path;
+        await app.navigate('/test-1');
+        expect(app.previousPath).toBe(currentPath);
+        expect(app.snapshot()).toBe(true);
+        expect(app.previousPath).toBe(currentPath);
+    });
+
+    it('should have no effect when navigating', async () => {
+        var resolve;
+        var promise = new Promise(resolve_ => resolve = resolve_);
+        bindEvent('navigate', () => promise);
+
+        const result = app.navigate('/test-1');
+        const stateId = history.state;
+        expect(app.snapshot()).toBe(false);
+        expect(history.state).toBe(stateId);
+
+        resolve();
+        await expect(result).resolves.toEqual({
+            id: stateId,
+            path: '/test-1',
+            navigated: true,
+            redirected: false,
+            originalPath: null
+        });
+    });
+});
+
 describe('app.path', () => {
     it('should trigger navigation when being set with new value', async () => {
         const cb = mockFn();

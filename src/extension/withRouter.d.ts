@@ -106,6 +106,12 @@ declare namespace Brew {
          * or is rejected if the navigation is cancelled due to another navigation or due to user actions.
          */
         back(defaultPath?: string): Promise<NavigateResult> | false;
+        /**
+         * Push a new state to history stack without navigation.
+         * Note that it only works when the app is not navigating.
+         * @returns Whether a new state is pushed to history stack.
+         */
+        snapshot(): boolean;
 
         /**
          * Resolves given path by substituting current route parameters.
