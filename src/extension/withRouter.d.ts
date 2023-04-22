@@ -87,6 +87,11 @@ declare namespace Brew {
          */
         readonly canNavigateBack: boolean;
         /**
+         * Gets if user can move forward to next page (or screen)
+         * without leaving the single-page app.
+         */
+        readonly canNavigateForward: boolean;
+        /**
          * Gets the path that will be navigated to if user click 'Back' on browser or by calling `app.back()`.
          */
         readonly previousPath: string | null;

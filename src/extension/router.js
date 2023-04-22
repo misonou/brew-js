@@ -533,6 +533,9 @@ function configureRouter(app, options) {
         get canNavigateBack() {
             return currentIndex > 0;
         },
+        get canNavigateForward() {
+            return currentIndex < states.length - 1;
+        },
         get previousPath() {
             return states[currentIndex].previousPath || null;
         },

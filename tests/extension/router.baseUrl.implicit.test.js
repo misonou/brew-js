@@ -16,6 +16,7 @@ const initialPath = '/';
 const div = {};
 
 var initialCanNavigateBack;
+var initialCanNavigateForward;
 var initialPreviousPath;
 var initialRedirectError;
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
@@ -35,6 +36,7 @@ beforeAll(async () => {
             ]
         });
         initialCanNavigateBack = app.canNavigateBack;
+        initialCanNavigateForward = app.canNavigateForward;
         initialPreviousPath = app.previousPath;
         try {
             app.navigate('/test-1', true).catch(() => { });
@@ -477,6 +479,19 @@ describe('app.path', () => {
 describe('app.canNavigateBack', () => {
     it('should be initially false', () => {
         expect(initialCanNavigateBack).toBeFalsy();
+    });
+});
+
+describe('app.canNavigateForward', () => {
+    it('should be initially false', () => {
+        expect(initialCanNavigateForward).toBeFalsy();
+    });
+
+    it('should return true after navigating back', async () => {
+        expect(app.canNavigateForward).toBe(false);
+        await app.navigate('/test-1');
+        await app.back();
+        expect(app.canNavigateForward).toBe(true);
     });
 });
 
