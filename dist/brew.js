@@ -3572,10 +3572,11 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path, index) {
+  function createState(id, path, index, keepPreviousPath) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
+    var previous = states[currentIndex];
     var promise, resolved;
     var state = {
       id: id,
@@ -3583,7 +3584,8 @@ function configureRouter(app, options) {
       index: index,
       pathname: pathNoQuery,
       route: freeze(route.parse(pathNoQuery)),
-      previous: states[currentIndex],
+      previous: previous,
+      previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
       handled: false,
 
       get done() {
@@ -3657,7 +3659,7 @@ function configureRouter(app, options) {
     }
   }
 
-  function applyState(state, replace, callback) {
+  function applyState(state, replace, snapshot, callback) {
     if (pendingState && pendingState !== state) {
       if (replace) {
         pendingState.forward(state);
@@ -3668,7 +3670,7 @@ function configureRouter(app, options) {
 
     pendingState = state;
 
-    if (appReady && locked(router_root)) {
+    if (appReady && !snapshot && locked(router_root)) {
       cancelLock(router_root).then(function () {
         if (pendingState === state && callback()) {
           setImmediateOnce(handlePathChange);
@@ -3681,7 +3683,7 @@ function configureRouter(app, options) {
     }
   }
 
-  function pushState(path, replace) {
+  function pushState(path, replace, snapshot) {
     path = resolvePath(path);
 
     if (!isSubPathOf(path, basePath)) {
@@ -3692,7 +3694,7 @@ function configureRouter(app, options) {
 
     var currentState = pendingState || states[currentIndex];
 
-    if (currentState && updatePath(currentState, path)) {
+    if (currentState && !snapshot && updatePath(currentState, path)) {
       if (currentState.done) {
         return {
           promise: resolve(createNavigateResult(currentState.id, path, null, false))
@@ -3704,8 +3706,8 @@ function configureRouter(app, options) {
 
     var id = randomId();
     var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path, indexOffset + index);
-    applyState(state, replace, function () {
+    var state = createState(id, path, indexOffset + index, replace || snapshot);
+    applyState(state, replace, snapshot, function () {
       currentIndex = index;
 
       if (!replace) {
@@ -3731,7 +3733,7 @@ function configureRouter(app, options) {
       history.go(-step);
     }
 
-    applyState(state, false, function () {
+    applyState(state, false, false, function () {
       currentIndex = index;
 
       if (!isNative || isLocked) {
@@ -3895,14 +3897,21 @@ function configureRouter(app, options) {
       return currentIndex > 0;
     },
 
+    get canNavigateForward() {
+      return currentIndex < states.length - 1;
+    },
+
     get previousPath() {
-      return (states[currentIndex - 1] || '').path || null;
+      return states[currentIndex].previousPath || null;
     },
 
     matchRoute: matchRoute,
     parseRoute: parseRoute,
     resolvePath: resolvePath,
     isAppPath: isAppPath,
+    snapshot: function snapshot() {
+      return !pendingState && !!pushState(currentPath, false, true);
+    },
     navigate: function navigate(path, replace) {
       return pushState(path, replace).promise;
     },
