@@ -87,8 +87,8 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 var origY = $(container).scrollable('scrollTop');
                 $(container).scrollable('scrollBy', e.x, e.y, 200);
                 return {
-                    x: origX - $(container).scrollable('scrollLeft'),
-                    y: origY - $(container).scrollable('scrollTop')
+                    x: $(container).scrollable('scrollLeft') - origX,
+                    y: $(container).scrollable('scrollTop') - origY
                 };
             }
         }));
