@@ -146,6 +146,23 @@ declare namespace Brew {
          * @param path A path or url.
          */
         isAppPath(path: string): boolean;
+        /**
+         * Converts an app path to a path that can be processed by the browser,
+         * e.g. to be used in `href` attribute of an anchor element or be passed to `window.open`.
+         * @param path A path to be converted. It must be an absolute path, i.e. starting with `/`.
+         */
+        toHref(path: string): string;
+        /**
+         * Converts a browser path, e.g. to be used in `href` attribute of an anchor element or be passed to `window.open`,
+         * to a path that can be processed by the app.
+         *
+         * This method is intended to be in junction with {@link WithRouter.toHref}.
+         * It does not gurantee the return value if the given path is not a valid app path,
+         * thus it is recommended to check the input using {@link WithRouter.isAppPath} first.
+         *
+         * @param path A path to be converted. It must be an absolute path, i.e. starting with `/`.
+         */
+        fromHref(path: string): string;
 
         /**
          * Configures router.

@@ -543,6 +543,8 @@ function configureRouter(app, options) {
         parseRoute: parseRoute,
         resolvePath: resolvePath,
         isAppPath: isAppPath,
+        toHref: toPathname,
+        fromHref: fromPathname,
         snapshot: function () {
             return !pendingState && !!pushState(currentPath, false, true);
         },
