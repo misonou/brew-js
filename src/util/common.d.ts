@@ -21,7 +21,7 @@ export function selectorForAttr(attr: string[] | Zeta.Dictionary): string;
 
 export function getFormValues(form: HTMLFormElement): Zeta.Dictionary;
 
-export function getQueryParam(name: string): string;
+export function getQueryParam(name: string, current?: string): string | false;
 
 export function setQueryParam(name: string, value: string, current?: string): string;
 

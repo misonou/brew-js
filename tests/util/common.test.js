@@ -67,16 +67,19 @@ describe('copyAttr', () => {
 describe('getQueryParam', () => {
     it('should return false if query param does not exist', () => {
         expect(getQueryParam('xxx')).toEqual(false);
+        expect(getQueryParam('xxx', '?foo=baz')).toEqual(false);
     });
 
     it('should be case-insensitive', () => {
         history.replaceState(null, '', '?foo=bar');
         expect(getQueryParam('FOO')).toEqual('bar');
+        expect(getQueryParam('FOO', '?foo=baz')).toEqual('baz');
     });
 
     it('should decode URL-encoded characters', () => {
         history.replaceState(null, '', '?foo=%3F%25%3D%20');
         expect(getQueryParam('foo')).toEqual('?%= ');
+        expect(getQueryParam('foo', '?foo=baz%3F%25%3D%20')).toEqual('baz?%= ');
     });
 });
 

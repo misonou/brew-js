@@ -70,8 +70,8 @@ export function getFormValues(form) {
 /**
  * @param {string} name
  */
-export function getQueryParam(name) {
-    return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(location.search) && decodeURIComponent(RegExp.$1);
+export function getQueryParam(name, current) {
+    return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(current || location.search) && decodeURIComponent(RegExp.$1);
 }
 
 /**
