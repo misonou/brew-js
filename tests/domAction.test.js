@@ -1,10 +1,10 @@
 import { fireEvent } from "@testing-library/dom";
-import $ from "jquery";
+import { jest } from "@jest/globals";
 import router from "src/extension/router";
 import { addAsyncAction, closeFlyout, openFlyout } from "src/domAction";
 import { getVar, setVar } from "src/var";
 import dom from "zeta-dom/dom";
-import { locked } from "zeta-dom/domLock";
+import { lock } from "zeta-dom/domLock";
 import { initApp, delay, mount, root, mockFn, after } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
@@ -21,6 +21,8 @@ beforeAll(async () => {
         addAsyncAction('async-action-1', cb1);
         addAsyncAction('async-action-2', cb2);
     });
+    jest.spyOn(app, 'fromHref');
+    jest.spyOn(window, 'open');
 });
 
 beforeEach(async () => {
@@ -314,5 +316,75 @@ describe('async-action directive', () => {
         });
         expect(cb1).toBeCalledTimes(1);
         expect(cb2).toBeCalledTimes(1);
+    });
+});
+
+describe('href directive', () => {
+    it('should trigger app navigation', async () => {
+        const { link } = await mount(`
+            <a id="link" href="/test"></a>
+        `);
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(app.path).toBe('/test');
+    });
+
+    it('should call fromHref to resolve app path', async () => {
+        const { link } = await mount(`
+            <a id="link" href="http://localhost/test"></a>
+        `);
+        fireEvent.click(link);
+        expect(app.fromHref).toBeCalledWith('/test');
+    });
+
+    it('should leave the app if it is not an app path', async () => {
+        const { link } = await mount(`
+            <a id="link" href="http://google.com/"></a>
+        `);
+        // create a cancellable lock so that window.open will be called
+        lock(link, new Promise(() => { }), true);
+
+        const stateId = history.state;
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(app.fromHref).not.toBeCalled();
+        expect(app.path).toBe('/');
+        expect(history.state).toBe(stateId);
+        expect(window.open).toBeCalledWith('http://google.com/', '_self', '');
+    });
+
+    it('should respect noreferrer and noopener in rel attribute', async () => {
+        const { link } = await mount(`
+            <a id="link" rel="noreferrer noopener" href="http://www.www.com/test"></a>
+        `);
+        // create a cancellable lock so that window.open will be called
+        lock(link, new Promise(() => { }), true);
+
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(window.open).toBeCalledWith('http://www.www.com/test', '_self', 'noreferrer,noopener');
+    });
+});
+
+describe('data-href directive', () => {
+    it('should trigger app navigation', async () => {
+        const { link } = await mount(`
+            <button id="link" data-href="/test"></button>
+        `);
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(app.path).toBe('/test');
+    });
+
+    it('should not call fromHref to resolve app path', async () => {
+        const { link } = await mount(`
+            <button id="link" data-href="/test"></button>
+        `);
+        fireEvent.click(link);
+        expect(app.fromHref).not.toBeCalled();
     });
 });

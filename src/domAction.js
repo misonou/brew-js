@@ -247,19 +247,20 @@ dom.ready.then(function () {
             return;
         }
         var self = e.currentTarget;
-        var href = self.getAttribute('data-href') || self.getAttribute('href');
+        var href = (self.origin === location.origin ? '' : self.origin) + self.pathname + self.search + self.hash;
+        var dataHref = self.getAttribute('data-href');
         e.stopPropagation();
         if (!isSameWindow(self.target)) {
             return;
         }
-        if ('navigate' in app && app.isAppPath(href)) {
+        if ('navigate' in app && (dataHref || app.isAppPath(href))) {
             e.preventDefault();
-            app.navigate(href);
+            app.navigate(dataHref || app.fromHref(href));
         } else if (locked(root)) {
             e.preventDefault();
             cancelLock(root).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
-                window.open(href, '_self', features.join(','));
+                window.open(dataHref || href, '_self', features.join(','));
             });
         }
     });
