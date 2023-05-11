@@ -915,13 +915,13 @@ describe('popstate event', () => {
     });
 
     it('should handle invalid history state', async () => {
-        await app.navigate('/base/test-1');
+        await app.navigate('/base/test-1?a=1#b=1');
         history.replaceState('xxxxxxxx', '');
         await app.navigate('/base/test-2');
 
         history.back();
         await delay(100);
-        expect(app.path).toEqual('/base/test-1');
+        expect(app.path).toEqual('/base/test-1?a=1#b=1');
         expect(history.state).toEqual(stringMatching(reStateId));
     });
 

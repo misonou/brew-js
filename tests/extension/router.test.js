@@ -897,13 +897,13 @@ describe('popstate event', () => {
     });
 
     it('should handle invalid history state', async () => {
-        await app.navigate('/test-1');
+        await app.navigate('/test-1?a=1#b=1');
         history.replaceState('xxxxxxxx', '');
         await app.navigate('/test-2');
 
         history.back();
         await delay(100);
-        expect(app.path).toEqual('/test-1');
+        expect(app.path).toEqual('/test-1?a=1#b=1');
         expect(history.state).toEqual(stringMatching(reStateId));
     });
 

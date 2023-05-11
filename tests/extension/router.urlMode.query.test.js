@@ -1,9 +1,10 @@
-import { root, _, initApp, mockFn, bindEvent } from "../testUtil";
+import { root, _, initApp, mockFn, bindEvent, delay } from "../testUtil";
 import router from "src/extension/router";
 import template from "src/extension/template";
 import dom from "zeta-dom/dom";
 
-const { objectContaining } = expect;
+const { stringMatching, objectContaining } = expect;
+const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/';
 
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
@@ -107,6 +108,19 @@ describe('app.fromHref', () => {
 
     it('should preserve hash', () => {
         expect(app.fromHref('?path=/foo#a=1')).toBe('/foo#a=1');
+    });
+});
+
+describe('popstate event', () => {
+    it('should handle invalid history state', async () => {
+        await app.navigate('/test-1?a=1#b=1');
+        history.replaceState('xxxxxxxx', '');
+        await app.navigate('/test-2');
+
+        history.back();
+        await delay(100);
+        expect(app.path).toEqual('/test-1?a=1#b=1');
+        expect(history.state).toEqual(stringMatching(reStateId));
     });
 });
 

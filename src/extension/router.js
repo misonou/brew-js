@@ -575,7 +575,7 @@ function configureRouter(app, options) {
         if (index >= 0) {
             popState(index, true);
         } else {
-            pushState(fromPathname(location.pathname));
+            pushState(fromPathname(getCurrentPathAndQuery()));
         }
     });
 
