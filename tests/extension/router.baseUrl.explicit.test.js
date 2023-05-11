@@ -569,6 +569,15 @@ describe('app#isAppPath', () => {
     });
 });
 
+describe('app.fromHref', () => {
+    it('should return absolute path under baseUrl as is', () => {
+        expect(app.fromHref('/base')).toBe('/base');
+        expect(app.fromHref('/base/foo')).toBe('/base/foo');
+        expect(app.fromHref('/base/foo?foo=bar')).toBe('/base/foo?foo=bar');
+        expect(app.fromHref('/base/foo#a=1')).toBe('/base/foo#a=1');
+    });
+});
+
 describe('app#route', () => {
     it('should have properties named with all possible route parameters', () => {
         expect(app.route).toHaveProperty('id');

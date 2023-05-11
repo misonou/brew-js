@@ -86,3 +86,39 @@ describe('app.isAppPath', () => {
         expect(app.isAppPath(location.origin + '?path=/')).toBe(false);
     });
 });
+
+describe('app.fromHref', () => {
+    it('should return normalized path', () => {
+        expect(app.fromHref('?path=foo')).toBe('/foo');
+        expect(app.fromHref('?path=%2Ffoo')).toBe('/foo');
+        expect(app.fromHref('?path=%2Ffoo%2F')).toBe('/foo');
+    });
+
+    it('should return root path if query parameter is not present', () => {
+        expect(app.fromHref('?')).toBe('/');
+    });
+
+    it('should preserve other query parameters', () => {
+        expect(app.fromHref('?foo=bar')).toBe('/?foo=bar');
+        expect(app.fromHref('?path=/foo&foo=bar')).toBe('/foo?foo=bar');
+        expect(app.fromHref('?foo=bar&path=/foo')).toBe('/foo?foo=bar');
+        expect(app.fromHref('?foo=bar&path=/foo&a=1')).toBe('/foo?foo=bar&a=1');
+    });
+
+    it('should preserve hash', () => {
+        expect(app.fromHref('?path=/foo#a=1')).toBe('/foo#a=1');
+    });
+});
+
+describe('popstate event', () => {
+    it('should handle invalid history state', async () => {
+        await app.navigate('/test-1?a=1#b=1');
+        history.replaceState('xxxxxxxx', '');
+        await app.navigate('/test-2');
+
+        history.back();
+        await delay(100);
+        expect(app.path).toEqual('/test-1?a=1#b=1');
+        expect(history.state).toEqual(stringMatching(reStateId));
+    });
+});

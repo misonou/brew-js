@@ -561,6 +561,22 @@ describe('app.isAppPath', () => {
     });
 });
 
+describe('app.fromHref', () => {
+    it('should return child path under baseUrl ', () => {
+        expect(app.fromHref('/base')).toBe('/');
+        expect(app.fromHref('/base/foo')).toBe('/foo');
+        expect(app.fromHref('/base/foo?foo=bar')).toBe('/foo?foo=bar');
+        expect(app.fromHref('/base/foo#a=1')).toBe('/foo#a=1');
+    });
+
+    it('should return root path if path is not under baseUrl', () => {
+        expect(app.fromHref('/')).toBe('/');
+        expect(app.fromHref('/foo')).toBe('/');
+        expect(app.fromHref('/foo?foo=bar')).toBe('/');
+        expect(app.fromHref('/foo#a=1')).toBe('/');
+    });
+});
+
 describe('app.route', () => {
     it('should have properties named with all possible route parameters', () => {
         expect(app.route).toHaveProperty('id');

@@ -54,3 +54,12 @@ describe('app.isAppPath', () => {
         expect(app.isAppPath(location.origin)).toBe(false);
     });
 });
+
+describe('app.fromHref', () => {
+    it('should return root path', () => {
+        expect(app.fromHref('/')).toBe('/');
+        expect(app.fromHref('/foo')).toBe('/');
+        expect(app.fromHref('/foo?foo=bar')).toBe('/');
+        expect(app.fromHref('/foo#a=1')).toBe('/');
+    });
+});
