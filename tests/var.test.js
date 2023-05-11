@@ -2,6 +2,10 @@ import { uniqueName, root, mount, body } from "./testUtil";
 import { declareVar, getVar, getVarScope, resetVar, setVar } from "src/var";
 
 describe('getVar', () => {
+    it('should throw during initialization', () => {
+        expect(() => getVar(root)).not.toThrow();
+    });
+
     it('should return new object every time', () => {
         const a = getVar(root);
         const b = getVar(root);

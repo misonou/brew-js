@@ -14,14 +14,15 @@ const varAttrs = {
     'loading-scope': { loading: false },
     'error-scope': { error: null }
 };
-const tree = new InheritedNodeTree(root, VarContext, {
-    selector: selectorForAttr(varAttrs)
-});
 const globals = {
     get app() {
         return app;
     }
 };
+const tree = new InheritedNodeTree(root, VarContext, {
+    selector: selectorForAttr(varAttrs)
+});
+var inited = true;
 
 /**
  * @class
@@ -157,7 +158,7 @@ export function resetVar(element, resetToNull) {
  * @param {string|boolean=} name
  */
 export function getVar(element, name) {
-    var values = hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element) || {};
+    var values = inited && (hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element)) || {};
     if (name !== true) {
         return name ? values[name] : extend({}, values);
     }

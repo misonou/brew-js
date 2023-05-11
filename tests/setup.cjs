@@ -1,6 +1,9 @@
 window.waterpipe = require('waterpipe');
 window.jQuery = require('jquery');
 
+// for testing getVar
+document.documentElement.setAttribute('var', '{ }');
+
 expect.extend({
     toBeErrorWithCode(received, code, message) {
         if (!(received instanceof Error)) {
