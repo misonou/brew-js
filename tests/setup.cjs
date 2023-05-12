@@ -17,6 +17,13 @@ expect.extend({
         }
         return { pass: true, message: () => '' };
     },
+    sameObject(received, actual) {
+        if (typeof actual !== 'object' || actual === null) {
+            throw new Error('actual must be object');
+        }
+        const pass = actual === received;
+        return { pass, message: () => '' };
+    },
     toHaveClassName(received, className) {
         var isNot = this.isNot;
         if (!(received instanceof Element)) {

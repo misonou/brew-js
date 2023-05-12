@@ -9,7 +9,7 @@ import { catchAsync, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 
-const { stringMatching, objectContaining } = expect;
+const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/';
 const div = {};
@@ -372,6 +372,19 @@ describe('app.navigate', () => {
         expect(r1).toEqual(r2);
         expect(r1.path).toBe('/test-1?a=2');
         expect(r1.redirected).toBe(false);
+    });
+
+    it('should pass data to navigate and beforepageload event', async () => {
+        const data = {};
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+        bindEvent(root, 'beforepageload', cb);
+
+        await app.navigate('/test-1', false, data);
+        verifyCalls(cb, [
+            [objectContaining({ type: 'navigate', data: sameObject(data) }), _],
+            [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
+        ]);
     });
 });
 

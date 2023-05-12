@@ -19,6 +19,10 @@ declare namespace Brew {
          */
         readonly newStateId: string;
         readonly route: Readonly<RouteParam>;
+        /**
+         * Gets the data passed to {@link WithRouter.navigate}.
+         */
+        readonly data: any;
     }
 
     interface PageEvent extends Zeta.ZetaEventBase {
@@ -26,6 +30,10 @@ declare namespace Brew {
     }
 
     interface BeforePageLoadEvent extends PageEvent, Zeta.Deferrable {
+        /**
+         * Gets the data passed to {@link WithRouter.navigate}.
+         */
+        readonly data: any;
     }
 
     interface NavigateResult {
@@ -100,10 +108,11 @@ declare namespace Brew {
          * Navigate to the specified path.
          * @param path Path to navigate.
          * @param replace If given true, visit of current page in the history stack will be replaced.
+         * @param data Additional data to be passed to `navigate` and `beforepageload` events.
          * @returns A promise that is fulfilled when the call has caused a page load, or is a no-op
          * or is rejected if the navigation is cancelled due to another navigation or due to user actions.
          */
-        navigate(path: string, replace?: boolean): Promise<NavigateResult>;
+        navigate(path: string, replace?: boolean, data?: any): Promise<NavigateResult>;
         /**
          * Navigate to the previous path in history stack.
          * @param defaultPath Path to navigate when there is no previous path.

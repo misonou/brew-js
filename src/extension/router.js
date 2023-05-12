@@ -258,7 +258,7 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path, index, keepPreviousPath) {
+    function createState(id, path, index, keepPreviousPath, data) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
@@ -270,6 +270,7 @@ function configureRouter(app, options) {
             index: index,
             pathname: pathNoQuery,
             route: freeze(route.parse(pathNoQuery)),
+            data: data,
             previous: previous,
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
             handled: false,
@@ -353,7 +354,7 @@ function configureRouter(app, options) {
         }
     }
 
-    function pushState(path, replace, snapshot) {
+    function pushState(path, replace, snapshot, data) {
         path = resolvePath(path);
         if (!isSubPathOf(path, basePath)) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
@@ -368,7 +369,7 @@ function configureRouter(app, options) {
 
         var id = randomId();
         var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path, indexOffset + index, replace || snapshot);
+        var state = createState(id, path, indexOffset + index, replace || snapshot, data);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
@@ -427,7 +428,11 @@ function configureRouter(app, options) {
         currentPath = path;
         app.path = path;
         route.set(path);
-        app.emit('beforepageload', { pathname: path, waitFor: deferred.waitFor }, { handleable: false });
+        app.emit('beforepageload', {
+            pathname: path,
+            data: state.data,
+            waitFor: deferred.waitFor
+        }, { handleable: false });
 
         always(deferred, function () {
             if (states[currentIndex] === state) {
@@ -467,7 +472,8 @@ function configureRouter(app, options) {
             oldPathname: lastState.path,
             oldStateId: lastState.id,
             newStateId: state.id,
-            route: state.route
+            route: state.route,
+            data: state.data
         }));
         notifyAsync(root, promise);
         promise.then(function () {
@@ -549,8 +555,8 @@ function configureRouter(app, options) {
         snapshot: function () {
             return !pendingState && !!pushState(currentPath, false, true);
         },
-        navigate: function (path, replace) {
-            return pushState(path, replace).promise;
+        navigate: function (path, replace, data) {
+            return pushState(path, replace, false, data).promise;
         },
         back: function (defaultPath) {
             if (currentIndex > 0) {
