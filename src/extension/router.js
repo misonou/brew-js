@@ -514,7 +514,7 @@ function configureRouter(app, options) {
         };
         toPathname = function (path) {
             path = parsePath(path);
-            return setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
+            return location.pathname + setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
         };
     } else if (baseUrl === '/') {
         fromPathname = pipe;
