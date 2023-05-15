@@ -520,9 +520,6 @@ function configureRouter(app, options) {
         toPathname = pipe;
         basePath = baseUrl;
     } else {
-        isAppPath = function (path) {
-            return (path || '')[0] === '/';
-        };
         setBaseUrl(baseUrl);
     }
     var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));

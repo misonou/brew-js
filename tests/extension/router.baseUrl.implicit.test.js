@@ -550,9 +550,11 @@ describe('app.resolvePath', () => {
 });
 
 describe('app.isAppPath', () => {
-    it('should return true for absolute path', () => {
-        expect(app.isAppPath('/')).toBe(true);
-        expect(app.isAppPath('/xxx')).toBe(true);
+    it('should return true for absolute path starting with base URL', () => {
+        expect(app.isAppPath('/base')).toBe(true);
+        expect(app.isAppPath('/base/xxx')).toBe(true);
+        expect(app.isAppPath('/')).toBe(false);
+        expect(app.isAppPath('/xxx')).toBe(false);
     });
 
     it('should return false for absolute URL', () => {
