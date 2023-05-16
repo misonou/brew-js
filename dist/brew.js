@@ -1,3 +1,4 @@
+/*! brew-js v0.4.10 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -447,8 +448,8 @@ function getFormValues(form) {
  * @param {string} name
  */
 
-function getQueryParam(name) {
-  return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(location.search) && decodeURIComponent(RegExp.$1);
+function getQueryParam(name, current) {
+  return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(current || location.search) && decodeURIComponent(RegExp.$1);
 }
 /**
  * @param {string} name
@@ -1705,15 +1706,16 @@ var varAttrs = {
     error: null
   }
 };
-var tree = new InheritedNodeTree(var_root, VarContext, {
-  selector: selectorForAttr(varAttrs)
-});
 var globals = {
   get app() {
     return app;
   }
 
 };
+var tree = new InheritedNodeTree(var_root, VarContext, {
+  selector: selectorForAttr(varAttrs)
+});
+var inited = true;
 /**
  * @class
  * @this {Brew.VarContext}
@@ -1862,7 +1864,7 @@ function resetVar(element, resetToNull) {
  */
 
 function getVar(element, name) {
-  var values = hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element) || {};
+  var values = inited && (hasDataAttributes(element) ? tree.setNode(element) : tree.getNode(element)) || {};
 
   if (name !== true) {
     return name ? values[name] : extend({}, values);
@@ -2204,21 +2206,22 @@ zeta_dom_dom.ready.then(function () {
     }
 
     var self = e.currentTarget;
-    var href = self.getAttribute('data-href') || self.getAttribute('href');
+    var href = (self.origin === location.origin ? '' : self.origin) + self.pathname + self.search + self.hash;
+    var dataHref = self.getAttribute('data-href');
     e.stopPropagation();
 
     if (!isSameWindow(self.target)) {
       return;
     }
 
-    if ('navigate' in app && app.isAppPath(href)) {
+    if ('navigate' in app && (dataHref || app.isAppPath(href))) {
       e.preventDefault();
-      app.navigate(href);
+      app.navigate(dataHref || app.fromHref(href));
     } else if (locked(domAction_root)) {
       e.preventDefault();
       cancelLock(domAction_root).then(function () {
         var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
-        window.open(href, '_self', features.join(','));
+        window.open(dataHref || href, '_self', features.join(','));
       });
     }
   });
@@ -3004,8 +3007,8 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
         var origY = jquery(container).scrollable('scrollTop');
         jquery(container).scrollable('scrollBy', e.x, e.y, 200);
         return {
-          x: origX - jquery(container).scrollable('scrollLeft'),
-          y: origY - jquery(container).scrollable('scrollTop')
+          x: jquery(container).scrollable('scrollLeft') - origX,
+          y: jquery(container).scrollable('scrollTop') - origY
         };
       }
     }));
@@ -3572,7 +3575,7 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path, index, keepPreviousPath) {
+  function createState(id, path, index, keepPreviousPath, data) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
@@ -3584,6 +3587,7 @@ function configureRouter(app, options) {
       index: index,
       pathname: pathNoQuery,
       route: freeze(route.parse(pathNoQuery)),
+      data: data,
       previous: previous,
       previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
       handled: false,
@@ -3683,7 +3687,7 @@ function configureRouter(app, options) {
     }
   }
 
-  function pushState(path, replace, snapshot) {
+  function pushState(path, replace, snapshot, data) {
     path = resolvePath(path);
 
     if (!isSubPathOf(path, basePath)) {
@@ -3706,7 +3710,7 @@ function configureRouter(app, options) {
 
     var id = randomId();
     var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path, indexOffset + index, replace || snapshot);
+    var state = createState(id, path, indexOffset + index, replace || snapshot, data);
     applyState(state, replace, snapshot, function () {
       currentIndex = index;
 
@@ -3775,6 +3779,7 @@ function configureRouter(app, options) {
     route.set(path);
     app.emit('beforepageload', {
       pathname: path,
+      data: state.data,
       waitFor: deferred.waitFor
     }, {
       handleable: false
@@ -3821,7 +3826,8 @@ function configureRouter(app, options) {
       oldPathname: lastState.path,
       oldStateId: lastState.id,
       newStateId: state.id,
-      route: state.route
+      route: state.route,
+      data: state.data
     }));
     notifyAsync(router_root, promise);
     promise.then(function () {
@@ -3858,13 +3864,17 @@ function configureRouter(app, options) {
       return (path || '')[0] === '?' || /^\/($|[?#])/.test(isSubPathOf(path, location.pathname) || '');
     };
 
-    fromPathname = function fromPathname() {
-      return getQueryParam(options.queryParam) || router_baseUrl;
+    fromPathname = function fromPathname(path) {
+      var parts = parsePath(path);
+      var value = getQueryParam(options.queryParam, parts.search);
+      var l = RegExp.leftContext;
+      var r = RegExp.rightContext;
+      return normalizePath(value || '') + (value === false ? parts.search : l + (l || !r ? r : '?' + r.slice(1))) + parts.hash;
     };
 
     toPathname = function toPathname(path) {
       path = parsePath(path);
-      return setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
+      return location.pathname + setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
     };
   } else if (router_baseUrl === '/') {
     fromPathname = pipe;
@@ -3876,10 +3886,6 @@ function configureRouter(app, options) {
     toPathname = pipe;
     basePath = router_baseUrl;
   } else {
-    isAppPath = function isAppPath(path) {
-      return (path || '')[0] === '/';
-    };
-
     setBaseUrl(router_baseUrl);
   }
 
@@ -3909,11 +3915,13 @@ function configureRouter(app, options) {
     parseRoute: parseRoute,
     resolvePath: resolvePath,
     isAppPath: isAppPath,
+    toHref: toPathname,
+    fromHref: fromPathname,
     snapshot: function snapshot() {
       return !pendingState && !!pushState(currentPath, false, true);
     },
-    navigate: function navigate(path, replace) {
-      return pushState(path, replace).promise;
+    navigate: function navigate(path, replace, data) {
+      return pushState(path, replace, false, data).promise;
     },
     back: function back(defaultPath) {
       if (currentIndex > 0) {
@@ -3935,7 +3943,7 @@ function configureRouter(app, options) {
     if (index >= 0) {
       popState(index, true);
     } else {
-      pushState(fromPathname(location.pathname));
+      pushState(fromPathname(getCurrentPathAndQuery()));
     }
   });
 
