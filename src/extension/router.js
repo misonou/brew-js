@@ -542,8 +542,14 @@ function configureRouter(app, options) {
     if (!isSubPathOf(initialPath, basePath)) {
         initialPath = basePath;
     }
+    var navigationType = ({ 1: 'reload', 2: 'back_forward' })[performance.navigation.type];
+    if (navigationType) {
+        options.resume = false;
+    } else if (options.resume) {
+        navigationType = 'resume';
+    }
     route = new Route(app, options.routes, initialPath);
-    storage = createObjectStorage(sessionStorage, 'brew.router.' + parsePath(toPathname('/')).pathname);
+    storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
 
     app.define({
         get canNavigateBack() {
@@ -596,6 +602,9 @@ function configureRouter(app, options) {
         });
     } catch (e) { }
 
+    if (navigationType === 'resume') {
+        history.replaceState(storage.get('c'), '');
+    }
     var initialState;
     var index = getHistoryIndex(history.state);
     if (index >= 0) {

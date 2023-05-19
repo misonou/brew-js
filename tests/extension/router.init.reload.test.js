@@ -8,11 +8,11 @@ const stateId1 = randomId();
 const stateId2 = randomId();
 
 const navigationType = jest.spyOn(Object.getPrototypeOf(performance.navigation), 'type', 'get');
-navigationType.mockReturnValue(performance.navigation.TYPE_BACK_FORWARD);
+navigationType.mockReturnValue(performance.navigation.TYPE_RELOAD);
 
 beforeAll(async () => {
     var store = createObjectStorage(sessionStorage, 'brew.router./');
-    store.set('c', stateId2);
+    store.set('c', stateId1);
     store.set('s', [
         [stateId1, '/foo', 0, false, { a: 1 }],
         [stateId2, '/bar', 1, false, null],

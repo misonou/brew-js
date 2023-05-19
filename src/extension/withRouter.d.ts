@@ -313,5 +313,16 @@ declare namespace Brew {
          * "/path/*"                   // wildcard matching all extra segments
          */
         routes?: readonly string[];
+        /**
+         * Specifies whether to resume previous router state when the page is temporarily left.
+         * The option is ignored when the page is being reload, or by back or forward action.
+         *
+         * When set to `true`, it will resume of history of the same page, where the key is the pathname resolved from app's root path,
+         * i.e. the `baseUrl` option in `pathname` mode, or `location.pathname` in `query` or `none` mode.
+         *
+         * To resume history from another page, specify the pathname of the that page.
+         * For example, from the page of another language which the path is not controlled by in app router.
+         */
+        resume?: boolean | string;
     }
 }
