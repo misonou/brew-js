@@ -604,7 +604,7 @@ function configureRouter(app, options) {
         initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
     }
     app.on('ready', function () {
-        if (pendingState === initialState && includeQuery) {
+        if (initialState && pendingState === initialState && includeQuery) {
             pushState(initialPath + getCurrentQuery(), true);
         }
         handlePathChange();
