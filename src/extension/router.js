@@ -5,13 +5,11 @@ import { extend, watch, defineObservableProperty, any, definePrototype, iequal, 
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";
+import { createObjectStorage } from "../util/storage.js";
 import * as ErrorCode from "../errorCode.js";
-
-const SESSION_KEY = 'brew.history.';
 
 const _ = createPrivateStore();
 const parsedRoutes = {};
-const sessionStorage = window.sessionStorage;
 const root = dom.root;
 
 var baseUrl;
@@ -247,6 +245,7 @@ function configureRouter(app, options) {
     var pendingState;
     var lastState = {};
     var states = [];
+    var storage;
 
     function createNavigateResult(id, path, originalPath, navigated) {
         return Object.freeze({
@@ -264,6 +263,7 @@ function configureRouter(app, options) {
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
         var promise, resolved;
+        var savedState = [id, path, index, keepPreviousPath, data];
         var state = {
             id: id,
             path: path,
@@ -313,6 +313,9 @@ function configureRouter(app, options) {
                 if (pendingState === state) {
                     pendingState = null;
                 }
+            },
+            toJSON: function () {
+                return savedState;
             }
         };
         return state;
@@ -377,9 +380,8 @@ function configureRouter(app, options) {
             }
             states[currentIndex] = state;
             history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-            sessionStorage.setItem(SESSION_KEY + baseUrl, JSON.stringify(states.map(function (v) {
-                return [v.id, v.path, v.index];
-            })));
+            storage.set('c', id);
+            storage.set('s', states);
             return true;
         });
         return state;
@@ -541,6 +543,7 @@ function configureRouter(app, options) {
         initialPath = basePath;
     }
     route = new Route(app, options.routes, initialPath);
+    storage = createObjectStorage(sessionStorage, 'brew.router.' + parsePath(toPathname('/')).pathname);
 
     app.define({
         get canNavigateBack() {
@@ -587,7 +590,7 @@ function configureRouter(app, options) {
     });
 
     try {
-        each(JSON.parse(sessionStorage.getItem(SESSION_KEY + baseUrl) || '[]'), function (i, v) {
+        each(storage.get('s'), function (i, v) {
             states.push(createState.apply(0, v));
             currentIndex = i;
         });

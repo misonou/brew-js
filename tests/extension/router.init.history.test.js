@@ -1,15 +1,18 @@
 import { _, initApp, mockFn } from "../testUtil";
 import router from "src/extension/router";
+import { createObjectStorage } from "src/util/storage";
 import { randomId } from "zeta-dom/util";
 
 const stateId1 = randomId();
 const stateId2 = randomId();
 
 beforeAll(async () => {
-    sessionStorage.setItem('brew.history./', JSON.stringify([
-        [stateId1, '/foo', 0],
-        [stateId2, '/bar', 1],
-    ]));
+    var store = createObjectStorage(sessionStorage, 'brew.router./');
+    store.set('c', stateId2);
+    store.set('s', [
+        [stateId1, '/foo', 0, false, { a: 1 }],
+        [stateId2, '/bar', 1, false, null],
+    ]);
     history.replaceState(stateId1, '');
 });
 
@@ -33,7 +36,8 @@ describe('router', () => {
         expect(history.state).toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             pathname: '/foo',
-            newStateId: stateId1
+            newStateId: stateId1,
+            data: { a: 1 }
         }), _);
     });
 });
