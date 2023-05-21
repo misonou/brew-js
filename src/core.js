@@ -1,6 +1,7 @@
 import { define } from "./include/zeta-dom/util.js";
 import * as path from "./util/path.js";
 import * as commonUtil from "./util/common.js";
+import * as storageUtil from "./util/storage.js";
 import * as animation from "./anim.js";
 import * as ErrorCode from "./errorCode.js";
 import { declareVar, evalAttr, getVar, setVar } from "./var.js";
@@ -13,6 +14,7 @@ const method = {
     ErrorCode,
     defaults,
     ...commonUtil,
+    ...storageUtil,
     ...path,
     ...animation,
     ...domAction,

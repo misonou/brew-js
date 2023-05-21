@@ -19,6 +19,7 @@
   "dependencies": {
     "jq-scrollable": "^1.7.0",
     "jquery": "^3.0.0",
+    "lz-string": "^1.5.0",
     "waterpipe": "^2.7.0",
     "zeta-dom": ">=0.3.1"
   },

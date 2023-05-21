@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ObjectStorage.delete should not double free empty line 1`] = `
+"{\\"obj\\":4,\\"data\\":1}
+[\\"#2\\",\\"#3\\",\\"#5\\",\\"#6\\"]
+{\\"a\\":\\"__item_1__\\"}
+{\\"a\\":\\"__item_2__\\"}
+{}
+{\\"a\\":\\"__item_3__\\"}
+{\\"a\\":\\"__item_4__\\"}"
+`;
+
+exports[`ObjectStorage.delete should remove all unreachable objects from backing storage 1`] = `
+"{\\"test2\\":2}
+
+{\\"a\\":\\"#3\\"}
+{\\"a\\":\\"__this_should_still_exist_\\"}"
+`;

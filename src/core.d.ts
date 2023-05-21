@@ -5,6 +5,7 @@ import defaults from "./defaults";
 
 import * as path from "./util/path";
 import * as commonUtil from "./util/common";
+import * as storageUtil from "./util/storage";
 import * as animation from "./anim";
 import * as domAction from "./domAction";
 import * as ErrorCode from "./errorCode.js";
@@ -22,6 +23,7 @@ const method = {
     ErrorCode,
     defaults,
     ...commonUtil,
+    ...storageUtil,
     ...path,
     ...animation,
     ...domAction,
