@@ -30,6 +30,7 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@jest/globals": "^27.5.1",
+    "@misonou/test-utils": "^1.0.3",
     "@testing-library/dom": "^8.17.1",
     "@types/jest": "^27.5.2",
     "babel-loader": "^8.2.1",
