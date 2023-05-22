@@ -559,7 +559,7 @@ function configureRouter(app, options) {
         toHref: toPathname,
         fromHref: fromPathname,
         snapshot: function () {
-            return !pendingState && !!pushState(currentPath, false, true);
+            return !pendingState && !!pushState(currentPath, false, true, states[currentIndex].data);
         },
         navigate: function (path, replace, data) {
             return pushState(path, replace, false, data).promise;

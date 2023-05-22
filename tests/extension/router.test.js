@@ -465,6 +465,24 @@ describe('app.snapshot', () => {
             originalPath: null
         });
     });
+
+    it('should carry data from previous state', async () => {
+        const data = {};
+        await app.navigate('/test-1', false, data);
+        app.snapshot();
+
+        const stateId = history.state;
+        await app.navigate('/test-2');
+
+        const cb = mockFn();
+        bindEvent('navigate', cb);
+        await app.back();
+        expect(cb).toBeCalledWith(objectContaining({
+            pathname: '/test-1',
+            newStateId: stateId,
+            data: sameObject(data)
+        }), _);
+    });
 });
 
 describe('app.path', () => {

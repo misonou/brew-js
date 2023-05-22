@@ -10,7 +10,7 @@ import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { fireEvent, screen } from "@testing-library/dom";
 
-const { stringMatching, objectContaining } = expect;
+const { stringMatching, objectContaining, sameObject } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/base';
 const div = {};
@@ -467,6 +467,24 @@ describe('app#snapshot', () => {
             redirected: false,
             originalPath: null
         });
+    });
+
+    it('should carry data from previous state', async () => {
+        const data = {};
+        await app.navigate('/base/test-1', false, data);
+        app.snapshot();
+
+        const stateId = history.state;
+        await app.navigate('/base/test-2');
+
+        const cb = mockFn();
+        bindEvent('navigate', cb);
+        await app.back();
+        expect(cb).toBeCalledWith(objectContaining({
+            pathname: '/base/test-1',
+            newStateId: stateId,
+            data: sameObject(data)
+        }), _);
     });
 });
 
