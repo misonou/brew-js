@@ -173,11 +173,34 @@ declare namespace Brew {
          */
         fromHref(path: string): string;
 
+        readonly historyStorage: {
+            /**
+             * Gets the storage instance for current page step.
+             */
+            readonly current: HistoryStorage;
+            /**
+             * Gets the storage for a specific page step in history.
+             * @param stateId A unique string identifying the point in history, exposed in properties like `history.state` or {@link NavigateResult.id}.
+             * @returns The storage instance associated to the specific page step; or `null` if `stateId` is invalid.
+             */
+            for(stateId: string): HistoryStorage | null;
+        };
+
         /**
          * Configures router.
          * @param options
          */
         useRouter(options: RouterOptions): void;
+    }
+
+    /**
+     * A map for storing and retrieving states associated to a specific page step in history.
+     *
+     * Only string and symbol keys are allowed, where other type are coerced into string.
+     * Also entries with symbol as key are not persisted into session storage.
+     */
+    class HistoryStorage extends Map<string | symbol, any> {
+        toJSON(): object;
     }
 
     interface RoutePattern {

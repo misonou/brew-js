@@ -13,6 +13,7 @@ beforeAll(async () => {
         [stateId1, '/foo', 0, false, { a: 1 }],
         [stateId2, '/bar', 1, false, null],
     ]);
+    store.set(stateId1, { foo: 'foo' });
 });
 
 describe('router', () => {
@@ -39,5 +40,6 @@ describe('router', () => {
             newStateId: stateId1,
             data: { a: 1 }
         }), _);
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
     });
 });

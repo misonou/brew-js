@@ -9,10 +9,12 @@ import { createObjectStorage } from "../util/storage.js";
 import * as ErrorCode from "../errorCode.js";
 
 const _ = createPrivateStore();
+const mapProto = Map.prototype;
 const parsedRoutes = {};
 const root = dom.root;
 
 var baseUrl;
+var storage;
 var constant = function (value) {
     return pipe.bind(0, value);
 };
@@ -45,6 +47,49 @@ function getCurrentQuery() {
 function getCurrentPathAndQuery() {
     return location.pathname + getCurrentQuery();
 }
+
+function HistoryStorage(obj) {
+    var map = new Map(Object.entries(obj));
+    Object.setPrototypeOf(map, HistoryStorage.prototype);
+    return map;
+}
+
+function stringOrSymbol(key) {
+    return typeof key === 'symbol' ? key : String(key);
+}
+
+definePrototype(HistoryStorage, Map, {
+    has: function (k) {
+        return mapProto.has.call(this, stringOrSymbol(k));
+    },
+    get: function (k) {
+        return mapProto.get.call(this, stringOrSymbol(k));
+    },
+    set: function (k, v) {
+        var self = this;
+        k = stringOrSymbol(k);
+        if (self.get(k) !== v) {
+            storage.persist(self);
+        }
+        return mapProto.set.call(self, k, v);
+    },
+    delete: function (k) {
+        var self = this;
+        var result = mapProto.delete.call(self, stringOrSymbol(k));
+        if (result) {
+            storage.persist(self);
+        }
+        return result;
+    },
+    clear: function () {
+        var self = this;
+        mapProto.clear.call(self);
+        storage.persist(self);
+    },
+    toJSON: function () {
+        return Object.fromEntries(this.entries());
+    }
+});
 
 function RoutePattern(props) {
     extend(this, props);
@@ -245,7 +290,6 @@ function configureRouter(app, options) {
     var pendingState;
     var lastState = {};
     var states = [];
-    var storage;
 
     function createNavigateResult(id, path, originalPath, navigated) {
         return Object.freeze({
@@ -263,6 +307,7 @@ function configureRouter(app, options) {
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
         var promise, resolved;
+        var storageMap;
         var savedState = [id, path, index, keepPreviousPath, data];
         var state = {
             id: id,
@@ -282,6 +327,13 @@ function configureRouter(app, options) {
                     resolvePromise = resolve_;
                     rejectPromise = reject_;
                 }));
+            },
+            get storage() {
+                if (!storageMap) {
+                    storageMap = storage.revive(id, HistoryStorage) || new HistoryStorage({});
+                    storage.set(id, storageMap);
+                }
+                return storageMap;
             },
             reset: function () {
                 state.handled = false;
@@ -376,7 +428,9 @@ function configureRouter(app, options) {
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
-                states.splice(currentIndex);
+                each(states.splice(currentIndex), function (i, v) {
+                    storage.delete(v.id);
+                });
             }
             states[currentIndex] = state;
             history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
@@ -579,6 +633,15 @@ function configureRouter(app, options) {
             } else {
                 return !!defaultPath && pushState(defaultPath).promise;
             }
+        },
+        historyStorage: {
+            get current() {
+                return states[currentIndex].storage;
+            },
+            for: function (stateId) {
+                var state = states[getHistoryIndex(stateId)];
+                return state ? state.storage : null;
+            }
         }
     });
     defineOwnProperty(app, 'basePath', basePath, true);
@@ -602,7 +665,9 @@ function configureRouter(app, options) {
         });
     } catch (e) { }
 
-    if (navigationType === 'resume') {
+    if (navigationType === 'reload') {
+        storage.delete(history.state);
+    } else if (navigationType === 'resume') {
         history.replaceState(storage.get('c'), '');
     }
     var initialState;

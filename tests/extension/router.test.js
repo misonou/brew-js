@@ -763,6 +763,62 @@ describe('app.beforePageEnter', () => {
     });
 });
 
+describe('app.historyStorage', () => {
+    it('should persist value to session storage', async () => {
+        expect(sessionStorage['brew.router./']).not.toMatch(/__this_should_appear__/);
+
+        await after(() => app.historyStorage.current.set('foo', '__this_should_appear__'));
+        expect(sessionStorage['brew.router./']).toMatch(/__this_should_appear__/);
+    });
+
+    it('should delete value from session storage', async () => {
+        await after(() => app.historyStorage.current.set('foo', '__this_should_appear__'));
+        expect(sessionStorage['brew.router./']).toMatch(/__this_should_appear__/);
+
+        await after(() => app.historyStorage.current.delete('foo'));
+        expect(sessionStorage['brew.router./']).not.toMatch(/__this_should_appear__/);
+    });
+
+    it('should convert key other than string or symbol to string', async () => {
+        const store = app.historyStorage.current;
+        const sym = Symbol();
+        store.clear();
+        store.set({}, 'foo');
+        store.set({ toString() { return 'bar' } }, 'bar');
+        store.set(1, 'num');
+        store.set(sym, 'sym');
+
+        expect([...store.entries()]).toEqual([
+            ['[object Object]', 'foo'],
+            ['bar', 'bar'],
+            ['1', 'num'],
+            [sym, 'sym'],
+        ]);
+
+        expect(store.has({})).toBe(true);
+        expect(store.has({ toString() { return 'bar' } })).toBe(true);
+        expect(store.has(1)).toBe(true);
+        expect(store.has(sym)).toBe(true);
+
+        expect(store.get({})).toBe('foo');
+        expect(store.get({ toString() { return 'bar' } })).toBe('bar');
+        expect(store.get(1)).toBe('num');
+        expect(store.get(sym)).toBe('sym');
+    });
+
+    it('should return instance to get/set values for other state', async () => {
+        const stateId = history.state;
+        const store = app.historyStorage.current;
+
+        await app.navigate('/test-1');
+        expect(app.historyStorage.for(stateId)).toBe(store);
+    });
+
+    it('should return null for invalid state ID', async () => {
+        expect(app.historyStorage.for('')).toBeNull();
+    });
+});
+
 describe('matchRoute', () => {
     it('should match path without optional segments', () => {
         expect(matchRoute('/foo/{id?}', '/foo')).toBeTruthy();
