@@ -402,6 +402,12 @@ function configureRouter(app, options) {
         return state;
     }
 
+    function getHistoryIndex(stateId) {
+        return states.findIndex(function (v, i) {
+            return v.id === stateId;
+        });
+    }
+
     function resolvePath(path, currentPath, isRoutePath) {
         var parsedState;
         path = decodeURI(path) || '/';
@@ -572,9 +578,7 @@ function configureRouter(app, options) {
     defineOwnProperty(app, 'routes', freeze(options.routes));
 
     bind(window, 'popstate', function () {
-        var index = states.findIndex(function (v, i) {
-            return v.id === history.state;
-        });
+        var index = getHistoryIndex(history.state);
         if (index >= 0) {
             popState(index, true);
         } else {
@@ -590,9 +594,7 @@ function configureRouter(app, options) {
     } catch (e) { }
 
     var initialState;
-    var index = states.findIndex(function (v) {
-        return v.id === history.state;
-    });
+    var index = getHistoryIndex(history.state);
     if (index >= 0) {
         currentIndex = index;
         indexOffset = states[index].index - currentIndex;
