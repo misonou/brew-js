@@ -7,7 +7,31 @@ declare namespace Brew {
         pageleave: PageEvent;
     }
 
-    interface NavigateEvent extends Zeta.ZetaAsyncHandleableEvent {
+    type NavigationType = 'navigate' | 'reload' | 'back_forward' | 'resume';
+
+    interface RouterEvent {
+        /**
+         * Gets the path where user is navigating to.
+         */
+        readonly pathname: string;
+        /**
+         * Gets the data passed to {@link WithRouter.navigate}.
+         */
+        readonly data: any;
+        /**
+         * Gets how user has triggered navigation.
+         *
+         * It takes on the following four values, the first three being semantically the same as {@link NavigationTimingType}.
+         *
+         * - `navigate`     - User has directly visited the page through address bar or hyperlinks, or any navigation within the app.
+         * - `reload`       - User has reloaded the page through browser.
+         * - `back_forward` - User has moved back or forward through browser history.
+         * - `resume`       - User has briefly left the page and now resumed the previous page in this app, when router is initialized with `resume` option.
+         */
+        readonly navigationType: NavigationType;
+    }
+
+    interface NavigateEvent extends RouterEvent, Zeta.ZetaAsyncHandleableEvent {
         readonly pathname: string;
         readonly oldPathname: string;
         /**
@@ -19,21 +43,23 @@ declare namespace Brew {
          */
         readonly newStateId: string;
         readonly route: Readonly<RouteParam>;
-        /**
-         * Gets the data passed to {@link WithRouter.navigate}.
-         */
         readonly data: any;
+        readonly navigationType: NavigationType;
+    }
+
+    interface BeforePageLoadEvent extends RouterEvent, Zeta.Deferrable {
+        readonly pathname: string;
+        readonly data: any;
+        readonly navigationType: NavigationType;
+        waitFor(...args: Promise<any>[]): boolean;
     }
 
     interface PageEvent extends Zeta.ZetaEventBase {
-        readonly pathname: string;
-    }
-
-    interface BeforePageLoadEvent extends PageEvent, Zeta.Deferrable {
         /**
-         * Gets the data passed to {@link WithRouter.navigate}.
+         * Gets the path associating to the page that triggered the event.
+         * It does not necessarily equal to the current path, i.e. {@link WithRouter.path}.
          */
-        readonly data: any;
+        readonly pathname: string;
     }
 
     interface NavigateResult {

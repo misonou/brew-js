@@ -239,7 +239,11 @@ describe('app#navigate', () => {
         bindEvent(root, 'navigate', cb);
         await app.navigate('/base/test-1');
 
-        expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/base/test-1' }), _);
+        expect(cb).nthCalledWith(1, objectContaining({
+            type: 'navigate',
+            pathname: '/base/test-1',
+            navigationType: 'navigate',
+        }), _);
     });
 
     it('should delay page load by async action in navigate event', async () => {
@@ -429,6 +433,19 @@ describe('app#back', () => {
         var promise = app.back('/base/test-1');
         expect(promise).toBeInstanceOf(Promise);
         catchAsync(promise);
+    });
+
+    it('should emit navigate event with navigationType being back_forward', async () => {
+        await app.navigate('/base/test-1');
+
+        const cb = mockFn();
+        bindEvent(root, 'navigate', cb);
+        await app.back();
+        expect(cb).nthCalledWith(1, objectContaining({
+            type: 'navigate',
+            pathname: '/base',
+            navigationType: 'back_forward',
+        }), _);
     });
 });
 

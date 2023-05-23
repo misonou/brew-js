@@ -316,6 +316,7 @@ function configureRouter(app, options) {
             pathname: pathNoQuery,
             route: freeze(route.parse(pathNoQuery)),
             data: data,
+            type: 'navigate',
             previous: previous,
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
             handled: false,
@@ -449,6 +450,7 @@ function configureRouter(app, options) {
             history.go(-step);
         }
         applyState(state, false, false, function () {
+            state.type = 'back_forward';
             currentIndex = index;
             if (!isNative || isLocked) {
                 history.go(step);
@@ -491,6 +493,7 @@ function configureRouter(app, options) {
         app.path = path;
         route.set(path);
         app.emit('beforepageload', {
+            navigationType: state.type,
             pathname: path,
             data: state.data,
             waitFor: deferred.waitFor
@@ -530,6 +533,7 @@ function configureRouter(app, options) {
 
         console.log('Nagivate', newPath);
         var promise = resolve(app.emit('navigate', {
+            navigationType: state.type,
             pathname: newPath,
             oldPathname: lastState.path,
             oldStateId: lastState.id,
@@ -675,6 +679,7 @@ function configureRouter(app, options) {
     if (index >= 0) {
         currentIndex = index;
         indexOffset = states[index].index - currentIndex;
+        states[currentIndex].type = navigationType;
     } else {
         currentIndex = states.length;
         indexOffset = history.length - currentIndex;

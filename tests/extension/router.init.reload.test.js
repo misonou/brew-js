@@ -42,6 +42,7 @@ describe('router', () => {
         expect(app.path).toBe('/foo')
         expect(history.state).toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
+            navigationType: 'reload',
             pathname: '/foo',
             newStateId: stateId1,
             data: { a: 1 }
