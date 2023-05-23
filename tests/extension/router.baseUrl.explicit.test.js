@@ -503,6 +503,15 @@ describe('app#snapshot', () => {
             data: sameObject(data)
         }), _);
     });
+
+    it('should produce frame navigable even when dom is locked', async () => {
+        const data = {};
+        await app.navigate('/base/test-1', false, data);
+        app.snapshot();
+
+        dom.lock(root, new Promise(() => { }));
+        await expect(app.back()).resolves.toBeTruthy();
+    });
 });
 
 describe('app#path', () => {

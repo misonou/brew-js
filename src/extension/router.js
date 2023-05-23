@@ -319,6 +319,7 @@ function configureRouter(app, options) {
             type: 'navigate',
             previous: previous,
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
+            pageId: previous && keepPreviousPath ? previous.pageId : id,
             handled: false,
             get done() {
                 return resolved;
@@ -445,11 +446,12 @@ function configureRouter(app, options) {
     function popState(index, isNative) {
         var state = states[index].reset();
         var step = state.index - states[currentIndex].index;
-        var isLocked = locked(root);
+        var snapshot = states[index].pageId === states[currentIndex].pageId;
+        var isLocked = !snapshot && locked(root);
         if (isLocked && isNative && step) {
             history.go(-step);
         }
-        applyState(state, false, false, function () {
+        applyState(state, false, snapshot, function () {
             state.type = 'back_forward';
             currentIndex = index;
             if (!isNative || isLocked) {
