@@ -400,13 +400,13 @@ function configureRouter(app, options) {
         pendingState = state;
         if (appReady && !snapshot && locked(root)) {
             cancelLock(root).then(function () {
-                if (pendingState === state && callback()) {
+                if (pendingState === state && callback() !== false) {
                     setImmediateOnce(handlePathChange);
                 }
             }, function () {
                 state.reject(errorWithCode(ErrorCode.navigationRejected));
             });
-        } else if (callback()) {
+        } else if (callback() !== false) {
             setImmediateOnce(handlePathChange);
         }
     }
@@ -438,7 +438,6 @@ function configureRouter(app, options) {
             history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
             storage.set('c', id);
             storage.set('s', states);
-            return true;
         });
         return state;
     }
@@ -448,16 +447,24 @@ function configureRouter(app, options) {
         var step = state.index - states[currentIndex].index;
         var snapshot = states[index].pageId === states[currentIndex].pageId;
         var isLocked = !snapshot && locked(root);
-        if (isLocked && isNative && step) {
+        if (isLocked && isNative) {
             history.go(-step);
         }
         applyState(state, false, snapshot, function () {
             state.type = 'back_forward';
             currentIndex = index;
+            if (isLocked && isNative && history.state === state.id) {
+                // lock is cancelled before popstate event take place
+                // history.go has no effect until then
+                var unbind = bind(window, 'popstate', function () {
+                    unbind();
+                    history.go(step);
+                });
+                return false;
+            }
             if (!isNative || isLocked) {
                 history.go(step);
             }
-            return isNative && !isLocked;
         });
         return state;
     }
@@ -657,10 +664,10 @@ function configureRouter(app, options) {
 
     bind(window, 'popstate', function () {
         var index = getHistoryIndex(history.state);
-        if (index >= 0) {
-            popState(index, true);
-        } else {
+        if (index < 0) {
             pushState(fromPathname(getCurrentPathAndQuery()));
+        } else if (index !== currentIndex) {
+            popState(index, true);
         }
     });
 

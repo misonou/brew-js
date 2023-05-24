@@ -396,6 +396,7 @@ describe('app.back', () => {
         await app.back();
         expect(app.path).toEqual('/test-1');
 
+        await delay(100);
         history.forward();
         await delay(100);
         expect(app.path).toEqual('/test-2');
