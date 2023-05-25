@@ -301,14 +301,16 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path, index, keepPreviousPath, data) {
+    function createState(id, path, index, keepPreviousPath, data, storageMap) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
         var promise, resolved;
-        var storageMap;
         var savedState = [id, path, index, keepPreviousPath, data];
+        if (storageMap) {
+            storage.set(id, storageMap);
+        }
         var state = {
             id: id,
             path: path,
@@ -332,8 +334,7 @@ function configureRouter(app, options) {
             },
             get storage() {
                 if (!storageMap) {
-                    storageMap = storage.revive(id, HistoryStorage) || new HistoryStorage({});
-                    storage.set(id, storageMap);
+                    storageMap = storage.revive(id, HistoryStorage) || (storage.set(id, new HistoryStorage({})), storage.get(id));
                 }
                 return storageMap;
             },
@@ -411,7 +412,7 @@ function configureRouter(app, options) {
         }
     }
 
-    function pushState(path, replace, snapshot, data) {
+    function pushState(path, replace, snapshot, data, storageMap) {
         path = resolvePath(path);
         if (!isSubPathOf(path, basePath)) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
@@ -423,10 +424,14 @@ function configureRouter(app, options) {
             }
             return currentState;
         }
+        if (snapshot && currentState) {
+            data = currentState.data;
+            storageMap = new HistoryStorage(currentState.storage.toJSON());
+        }
 
         var id = randomId();
         var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path, indexOffset + index, replace || snapshot, data);
+        var state = createState(id, path, indexOffset + index, replace || snapshot, data, storageMap);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
@@ -636,7 +641,7 @@ function configureRouter(app, options) {
         toHref: toPathname,
         fromHref: fromPathname,
         snapshot: function () {
-            return !pendingState && !!pushState(currentPath, false, true, states[currentIndex].data);
+            return !pendingState && !!pushState(currentPath, false, true);
         },
         navigate: function (path, replace, data) {
             return pushState(path, replace, false, data).promise;

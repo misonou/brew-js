@@ -519,6 +519,15 @@ describe('app.snapshot', () => {
         }), _);
     });
 
+    it('should clone history storage from previous state', async () => {
+        const data = {};
+        const { id } = await app.navigate('/test-1');
+        app.historyStorage.current.set('foo', data);
+        app.snapshot();
+        expect(app.historyStorage.current.get('foo')).toBe(data);
+        expect(app.historyStorage.for(id)).not.toBe(app.historyStorage.current);
+    });
+
     it('should produce frame navigable even when dom is locked', async () => {
         const data = {};
         await app.navigate('/test-1', false, data);
