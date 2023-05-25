@@ -46,5 +46,8 @@ describe('router', () => {
             newStateId: stateId1,
             data: { a: 1 }
         }), _);
+
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage1.get('c')).toBe(stateId1);
     });
 });

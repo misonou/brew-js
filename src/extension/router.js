@@ -465,6 +465,7 @@ function configureRouter(app, options) {
             if (!isNative || isLocked) {
                 history.go(step);
             }
+            storage.set('c', state.id);
         });
         return state;
     }
@@ -694,6 +695,8 @@ function configureRouter(app, options) {
         indexOffset = history.length - currentIndex;
         initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
     }
+    storage.set('c', states[currentIndex].id);
+
     app.on('ready', function () {
         if (initialState && pendingState === initialState && includeQuery) {
             pushState(initialPath + getCurrentQuery(), true);

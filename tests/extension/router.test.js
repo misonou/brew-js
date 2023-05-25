@@ -8,6 +8,7 @@ import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
+import { createObjectStorage } from "src/util/storage";
 
 const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
@@ -390,6 +391,12 @@ describe('app.navigate', () => {
             [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
         ]);
     });
+
+    it('should update current state ID in session storage', async () => {
+        const { id } = await app.navigate('/test-1');
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage1.get('c')).toBe(id);
+    });
 });
 
 describe('app.back', () => {
@@ -444,6 +451,16 @@ describe('app.back', () => {
             pathname: '/',
             navigationType: 'back_forward',
         }), _);
+    });
+
+    it('should update current state ID in session storage', async () => {
+        const { id: id1 } = await app.navigate('/test-1');
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage1.get('c')).toBe(id1);
+
+        const { id: id2 } = await app.back();
+        const storage2 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage2.get('c')).toBe(id2);
     });
 });
 
@@ -1033,6 +1050,17 @@ describe('popstate event', () => {
         expect(cb).toBeCalledTimes(2);
         expect(app.path).toEqual('/test-1');
         expect(history.state).toEqual(stateId);
+    });
+
+    it('should update current state ID in session storage', async () => {
+        const { id: id1 } = await app.navigate('/test-1');
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage1.get('c')).toBe(id1);
+
+        history.back();
+        await delay(100);
+        const storage2 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage2.get('c')).toBe(history.state);
     });
 });
 
