@@ -692,8 +692,14 @@ function configureRouter(app, options) {
     var initialState;
     var index = getHistoryIndex(history.state);
     if (index >= 0) {
-        currentIndex = index;
-        indexOffset = states[index].index - currentIndex;
+        if (navigationType === 'resume') {
+            currentIndex = index;
+            indexOffset = history.length - currentIndex - 1;
+            pushState(states[index].path, false, true);
+        } else {
+            currentIndex = index;
+            indexOffset = states[index].index - currentIndex;
+        }
         states[currentIndex].type = navigationType;
     } else {
         currentIndex = states.length;

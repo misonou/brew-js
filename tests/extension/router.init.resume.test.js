@@ -34,11 +34,10 @@ describe('router', () => {
         });
 
         expect(app.path).toBe('/foo')
-        expect(history.state).toBe(stateId1);
+        expect(history.state).not.toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'resume',
             pathname: '/foo',
-            newStateId: stateId1,
             data: { a: 1 }
         }), _);
         expect(app.historyStorage.current.get('foo')).toBe('foo');
