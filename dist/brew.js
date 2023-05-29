@@ -1,4 +1,4 @@
-/*! brew-js v0.5.0 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.1 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -3840,14 +3840,18 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path, index, keepPreviousPath, data) {
+  function createState(id, path, index, keepPreviousPath, data, storageMap) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
     var previous = states[currentIndex];
     var promise, resolved;
-    var storageMap;
     var savedState = [id, path, index, keepPreviousPath, data];
+
+    if (storageMap) {
+      storage.set(id, storageMap);
+    }
+
     var state = {
       id: id,
       path: path,
@@ -3874,8 +3878,7 @@ function configureRouter(app, options) {
 
       get storage() {
         if (!storageMap) {
-          storageMap = storage.revive(id, HistoryStorage) || new HistoryStorage({});
-          storage.set(id, storageMap);
+          storageMap = storage.revive(id, HistoryStorage) || (storage.set(id, new HistoryStorage({})), storage.get(id));
         }
 
         return storageMap;
@@ -3957,18 +3960,18 @@ function configureRouter(app, options) {
 
     if (appReady && !snapshot && locked(router_root)) {
       cancelLock(router_root).then(function () {
-        if (pendingState === state && callback()) {
+        if (pendingState === state && callback() !== false) {
           setImmediateOnce(handlePathChange);
         }
       }, function () {
         state.reject(errorWithCode(navigationRejected));
       });
-    } else if (callback()) {
+    } else if (callback() !== false) {
       setImmediateOnce(handlePathChange);
     }
   }
 
-  function pushState(path, replace, snapshot, data) {
+  function pushState(path, replace, snapshot, data, storageMap) {
     path = resolvePath(path);
 
     if (!isSubPathOf(path, basePath)) {
@@ -3989,9 +3992,14 @@ function configureRouter(app, options) {
       return currentState;
     }
 
+    if (snapshot && currentState) {
+      data = currentState.data;
+      storageMap = new HistoryStorage(currentState.storage.toJSON());
+    }
+
     var id = randomId();
     var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path, indexOffset + index, replace || snapshot, data);
+    var state = createState(id, path, indexOffset + index, replace || snapshot, data, storageMap);
     applyState(state, replace, snapshot, function () {
       currentIndex = index;
 
@@ -4005,7 +4013,6 @@ function configureRouter(app, options) {
       history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
       storage.set('c', id);
       storage.set('s', states);
-      return true;
     });
     return state;
   }
@@ -4016,7 +4023,7 @@ function configureRouter(app, options) {
     var snapshot = states[index].pageId === states[currentIndex].pageId;
     var isLocked = !snapshot && locked(router_root);
 
-    if (isLocked && isNative && step) {
+    if (isLocked && isNative) {
       history.go(-step);
     }
 
@@ -4024,11 +4031,21 @@ function configureRouter(app, options) {
       state.type = 'back_forward';
       currentIndex = index;
 
+      if (isLocked && isNative && history.state === state.id) {
+        // lock is cancelled before popstate event take place
+        // history.go has no effect until then
+        var unbind = bind(window, 'popstate', function () {
+          unbind();
+          history.go(step);
+        });
+        return false;
+      }
+
       if (!isNative || isLocked) {
         history.go(step);
       }
 
-      return isNative && !isLocked;
+      storage.set('c', state.id);
     });
     return state;
   }
@@ -4222,7 +4239,7 @@ function configureRouter(app, options) {
     toHref: toPathname,
     fromHref: fromPathname,
     snapshot: function snapshot() {
-      return !pendingState && !!pushState(currentPath, false, true, states[currentIndex].data);
+      return !pendingState && !!pushState(currentPath, false, true);
     },
     navigate: function navigate(path, replace, data) {
       return pushState(path, replace, false, data).promise;
@@ -4252,10 +4269,10 @@ function configureRouter(app, options) {
   bind(window, 'popstate', function () {
     var index = getHistoryIndex(history.state);
 
-    if (index >= 0) {
-      popState(index, true);
-    } else {
+    if (index < 0) {
       pushState(fromPathname(getCurrentPathAndQuery()));
+    } else if (index !== currentIndex) {
+      popState(index, true);
     }
   });
 
@@ -4268,6 +4285,10 @@ function configureRouter(app, options) {
 
   if (navigationType === 'reload') {
     storage.delete(history.state);
+
+    if (options.urlMode === 'none') {
+      history.replaceState('', '');
+    }
   } else if (navigationType === 'resume') {
     history.replaceState(storage.get('c'), '');
   }
@@ -4276,8 +4297,15 @@ function configureRouter(app, options) {
   var index = getHistoryIndex(history.state);
 
   if (index >= 0) {
-    currentIndex = index;
-    indexOffset = states[index].index - currentIndex;
+    if (navigationType === 'resume') {
+      currentIndex = index;
+      indexOffset = history.length - currentIndex - 1;
+      pushState(states[index].path, false, true);
+    } else {
+      currentIndex = index;
+      indexOffset = states[index].index - currentIndex;
+    }
+
     states[currentIndex].type = navigationType;
   } else {
     currentIndex = states.length;
@@ -4285,6 +4313,7 @@ function configureRouter(app, options) {
     initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
   }
 
+  storage.set('c', states[currentIndex].id);
   app.on('ready', function () {
     if (initialState && pendingState === initialState && includeQuery) {
       pushState(initialPath + getCurrentQuery(), true);
