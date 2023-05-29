@@ -29,7 +29,6 @@ describe('router', () => {
                 app.useRouter({
                     // resume option should be ignore when navigation type is not TYPE_NAVIGATE
                     resume: true,
-                    urlMode: 'none',
                     routes: [
                         '/*'
                     ]

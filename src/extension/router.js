@@ -686,6 +686,9 @@ function configureRouter(app, options) {
 
     if (navigationType === 'reload') {
         storage.delete(history.state);
+        if (options.urlMode === 'none') {
+            history.replaceState('', '');
+        }
     } else if (navigationType === 'resume') {
         history.replaceState(storage.get('c'), '');
     }
