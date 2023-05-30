@@ -281,6 +281,7 @@ watchable(Route.prototype);
  * @param {Record<string, any>} options
  */
 function configureRouter(app, options) {
+    var sessionId = randomId();
     var route;
     var basePath = '/';
     var currentPath = '';
@@ -301,13 +302,13 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path, index, keepPreviousPath, data, storageMap) {
+    function createState(id, path, index, keepPreviousPath, data, sessionId, storageMap) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
         var promise, resolved;
-        var savedState = [id, path, index, keepPreviousPath, data];
+        var savedState = [id, path, index, keepPreviousPath, data, sessionId];
         if (storageMap) {
             storage.set(id, storageMap);
         }
@@ -322,6 +323,7 @@ function configureRouter(app, options) {
             previous: previous,
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
             pageId: previous && keepPreviousPath ? previous.pageId : id,
+            sessionId: sessionId,
             handled: false,
             get done() {
                 return resolved;
@@ -431,7 +433,7 @@ function configureRouter(app, options) {
 
         var id = randomId();
         var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path, indexOffset + index, replace || snapshot, data, storageMap);
+        var state = createState(id, path, indexOffset + index, replace || snapshot, data, sessionId, storageMap);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
@@ -626,10 +628,10 @@ function configureRouter(app, options) {
 
     app.define({
         get canNavigateBack() {
-            return currentIndex > 0;
+            return (states[currentIndex - 1] || '').sessionId === sessionId;
         },
         get canNavigateForward() {
-            return currentIndex < states.length - 1;
+            return (states[currentIndex + 1] || '').sessionId === sessionId;
         },
         get previousPath() {
             return states[currentIndex].previousPath || null;
@@ -702,6 +704,7 @@ function configureRouter(app, options) {
         } else {
             currentIndex = index;
             indexOffset = states[index].index - currentIndex;
+            sessionId = states[index].sessionId || sessionId;
         }
         states[currentIndex].type = navigationType;
     } else {

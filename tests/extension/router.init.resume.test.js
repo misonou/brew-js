@@ -5,13 +5,14 @@ import { randomId } from "zeta-dom/util";
 
 const stateId1 = randomId();
 const stateId2 = randomId();
+const sessionId = randomId();
 
 beforeAll(async () => {
     var store = createObjectStorage(sessionStorage, 'brew.router./');
     store.set('c', stateId1);
     store.set('s', [
-        [stateId1, '/foo', 0, false, { a: 1 }],
-        [stateId2, '/bar', 1, false, null],
+        [stateId1, '/foo', 0, false, { a: 1 }, sessionId],
+        [stateId2, '/bar', 1, false, null, sessionId],
     ]);
     store.set(stateId1, { foo: 'foo' });
 });
@@ -34,6 +35,7 @@ describe('router', () => {
         });
 
         expect(app.path).toBe('/foo')
+        expect(app.canNavigateForward).toBe(false);
         expect(history.state).not.toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'resume',
