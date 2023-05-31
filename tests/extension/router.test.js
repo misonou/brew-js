@@ -226,7 +226,7 @@ describe('app.navigate', () => {
 
     it('should emit navigate event before triggering a page load', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/test-1');
 
         expect(cb).nthCalledWith(1, objectContaining({
@@ -238,7 +238,7 @@ describe('app.navigate', () => {
 
     it('should delay page load by async action in navigate event', async () => {
         var resolved;
-        bindEvent(root, 'navigate', async () => {
+        bindEvent(app, 'navigate', async () => {
             await delay(100);
             resolved = true;
         });
@@ -253,7 +253,7 @@ describe('app.navigate', () => {
                 promise = app.navigate('/test-2');
             }
         });
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await expect(app.navigate('/test-1')).rejects.toBeErrorWithCode('brew/navigation-cancelled');
 
         expect(cb).toBeCalledTimes(2);
@@ -263,7 +263,7 @@ describe('app.navigate', () => {
 
     it('should prevent infinite redirection loop in navigate event', async () => {
         var i = 0;
-        bindEvent(root, 'navigate', e => {
+        bindEvent(app, 'navigate', e => {
             if (++i > 10) {
                 return;
             }
@@ -340,7 +340,7 @@ describe('app.navigate', () => {
 
     it('should handle query string in path', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/test-1?a=1');
         expect(location.search).toBe('?a=1');
         expect(location.hash).toBe('');
@@ -349,7 +349,7 @@ describe('app.navigate', () => {
 
     it('should handle hash in path', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/test-1#a=1');
         expect(location.search).toBe('');
         expect(location.hash).toBe('#a=1');
@@ -358,7 +358,7 @@ describe('app.navigate', () => {
 
     it('should not trigger navigation if pathname is the same', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/?a=1');
         await app.navigate('/#a=1');
         expect(cb).not.toBeCalled();
@@ -366,7 +366,7 @@ describe('app.navigate', () => {
 
     it('should report latest query string or hash in event data and navigation result', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
 
         const p1 = app.navigate('/test-1?a=1');
         const p2 = app.navigate('/test-1?a=2');
@@ -382,8 +382,8 @@ describe('app.navigate', () => {
     it('should pass data to navigate and beforepageload event', async () => {
         const data = {};
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
-        bindEvent(root, 'beforepageload', cb);
+        bindEvent(app, 'navigate', cb);
+        bindEvent(app, 'beforepageload', cb);
 
         await app.navigate('/test-1', false, data);
         verifyCalls(cb, [
@@ -444,7 +444,7 @@ describe('app.back', () => {
         await app.navigate('/test-1');
 
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.back();
         expect(cb).nthCalledWith(1, objectContaining({
             type: 'navigate',
@@ -484,7 +484,7 @@ describe('app.snapshot', () => {
     it('should have no effect when navigating', async () => {
         var resolve;
         var promise = new Promise(resolve_ => resolve = resolve_);
-        bindEvent('navigate', () => promise);
+        bindEvent(app, 'navigate', () => promise);
 
         const result = app.navigate('/test-1');
         const stateId = history.state;
@@ -510,7 +510,7 @@ describe('app.snapshot', () => {
         await app.navigate('/test-2');
 
         const cb = mockFn();
-        bindEvent('navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.back();
         expect(cb).toBeCalledWith(objectContaining({
             pathname: '/test-1',
@@ -541,7 +541,7 @@ describe('app.snapshot', () => {
 describe('app.path', () => {
     it('should trigger navigation when being set with new value', async () => {
         const cb = mockFn();
-        bindEvent('navigate', cb);
+        bindEvent(app, 'navigate', cb);
         app.path = '/test-1';
         await delay(100);
 
@@ -736,7 +736,7 @@ describe('app.route', () => {
 
     it('should discard parameter changes if there is no matching route', async () => {
         const cb = mockFn();
-        bindEvent('navigate', cb);
+        bindEvent(app, 'navigate', cb);
 
         app.route.id = 'bar123';
         expect(app.route.id).toBeNull();
@@ -1022,7 +1022,7 @@ describe('popstate event', () => {
         await app.navigate('/test-1');
         const stateId = history.state;
         const cb = mockFn();
-        bindEvent('navigate', cb);
+        bindEvent(app, 'navigate', cb);
 
         history.back();
         await delay(100);

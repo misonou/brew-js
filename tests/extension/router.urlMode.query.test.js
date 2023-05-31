@@ -51,7 +51,7 @@ describe('app.navigate', () => {
 
     it('should handle query string in path', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/test-1?a=1');
         expect(location.search).toBe(serializeQueryString({ a: 1, path: '/test-1' }));
         expect(location.hash).toBe('');
@@ -60,7 +60,7 @@ describe('app.navigate', () => {
 
     it('should handle hash in path', async () => {
         const cb = mockFn();
-        bindEvent(root, 'navigate', cb);
+        bindEvent(app, 'navigate', cb);
         await app.navigate('/test-1#a=1');
         expect(location.search).toBe(serializeQueryString({ path: '/test-1' }));
         expect(location.hash).toBe('#a=1');

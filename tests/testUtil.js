@@ -83,9 +83,12 @@ export function waitForEvent(target, event) {
     });
 }
 
-export function bindEvent(...args) {
-    // @ts-ignore
-    cleanup.push(dom.on(...args));
+export function bindEvent(target, ...args) {
+    if (target === app) {
+        cleanup.push(app.on(...args));
+    } else {
+        cleanup.push(dom.on(target, ...args));
+    }
 }
 
 export function defunctAfterTest(callback) {
