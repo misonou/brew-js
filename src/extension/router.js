@@ -686,7 +686,7 @@ function configureRouter(app, options) {
         });
     } catch (e) { }
 
-    if (navigationType === 'reload') {
+    if (navigationType === 'reload' && !options.resumeOnReload) {
         storage.delete(history.state);
         if (options.urlMode === 'none') {
             history.replaceState('', '');

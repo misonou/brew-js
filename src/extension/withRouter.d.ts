@@ -373,5 +373,13 @@ declare namespace Brew {
          * For example, from the page of another language which the path is not controlled by in app router.
          */
         resume?: boolean | string;
+        /**
+         * Specifies whether to resume previous router state when the page is reloaded.
+         * The option is ignored when the page is landed through address bar or hyperlinks, or by back or forward action.
+         *
+         * In default behavior, i.e. when it is `false`, either the history storage is cleared,
+         * or if `urlMode` is `none`, the app is reset to initial path.
+         */
+        resumeOnReload?: boolean;
     }
 }
