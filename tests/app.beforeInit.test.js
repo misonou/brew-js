@@ -13,7 +13,9 @@ describe('app.beforeInit', () => {
                 });
             });
         });
+        expect(app.readyState).toBe('init');
         await app.ready;
+        expect(app.readyState).toBe('ready');
         expect(resolved).toBeTruthy();
     });
 });

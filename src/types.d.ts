@@ -162,6 +162,11 @@ declare namespace Brew {
         readonly ready: Promise<App<T>>;
 
         /**
+         * Gets the ready state of the app instance.
+         */
+        readonly readyState: 'init' | 'ready' | 'error';
+
+        /**
          * Defines properties and methods on the app instance.
          * @param props
          */
@@ -191,6 +196,11 @@ declare namespace Brew {
 
         /**
          * Postpones app start until the promise is fulfilled.
+         *
+         * When all operations have completed, {@link AppInstance.readyState} will be set to `ready`
+         * and {@link AppInstance.ready} will resolve. When error is thrown in callback or a promise rejects,
+         * the app will halt and never be started, whereas {@link AppInstance.readyState} will be set to `error`.
+         *
          * @param promise A promise-like object or a callback that returns promise-like object when called.
          */
         beforeInit(promise: PromiseLike<any> | (() => PromiseOrEmpty)): void;

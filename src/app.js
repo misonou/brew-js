@@ -1,7 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 import { addSelectHandlers, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
@@ -20,6 +20,7 @@ export var appReady;
 export var appInited;
 /** @type {Promise<void> & Zeta.Deferrable} */
 var appInit;
+var setReadyState;
 
 function exactTargetWrapper(handler) {
     return function (e) {
@@ -70,6 +71,7 @@ function App() {
     defineOwnProperty(self, 'ready', new Promise(function (resolve) {
         self.on('ready', resolve.bind(0, self));
     }), true);
+    setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
 }
 
 definePrototype(App, {
@@ -86,9 +88,12 @@ definePrototype(App, {
     },
     beforeInit: function (promise) {
         if (isFunction(promise)) {
-            promise = promise.call(this);
+            promise = makeAsync(promise).call(this);
         }
-        appInit.waitFor(promise);
+        appInit.waitFor(promise.then(null, function (error) {
+            console.error('Failed to initialize', error);
+            setReadyState('error');
+        }));
     },
     isElementActive: function () {
         return true;
@@ -160,6 +165,7 @@ definePrototype(App, {
 watchable(App.prototype);
 
 function init(callback) {
+    throwNotFunction(callback);
     if (appInit) {
         throw new Error('brew() can only be called once');
     }
@@ -178,7 +184,7 @@ function init(callback) {
             throwNotFunction(v)(app);
         }
     });
-    throwNotFunction(callback)(app);
+    app.beforeInit(makeAsync(callback)(app));
     each(dependencies, function (i, v) {
         combineFn(v)();
     });
@@ -186,9 +192,12 @@ function init(callback) {
     appInited = true;
     notifyAsync(root, appInit);
     appInit.then(function () {
-        appReady = true;
-        mountElement(root);
-        app.emit('ready');
+        if (app.readyState === 'init') {
+            appReady = true;
+            mountElement(root);
+            setReadyState('ready');
+            app.emit('ready');
+        }
     });
     return app;
 }
