@@ -5,6 +5,11 @@ export interface ObjectStorage {
     keys(): string[];
 
     /**
+     * Gets whether the specified key is present in storage.
+     */
+    has(key: string): boolean;
+
+    /**
      * Restores non-primitive objects from storage.
      *
      * Unlike {@link ObjectStorage.get}, if the same key has been restored before,

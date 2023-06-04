@@ -136,6 +136,9 @@ export function createObjectStorage(storage, key) {
         keys: function () {
             return keys(entries);
         },
+        has: function (key) {
+            return !!entries[key];
+        },
         get: function (key) {
             return revive(key);
         },

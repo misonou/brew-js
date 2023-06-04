@@ -26,6 +26,21 @@ describe('ObjectStorage', () => {
     });
 });
 
+describe('ObjectStorage.has', () => {
+    it('should return boolean indicating presence of specified key', async () => {
+        const data = { foo: 'bar' };
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('test', data);
+        expect(store.has('test')).toBe(true);
+        expect(store.has('foo')).toBe(false);
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.has('test')).toBe(true);
+        expect(store2.has('foo')).toBe(false);
+    });
+});
+
 describe('ObjectStorage.set', () => {
     it('should serialize object to backing storage', async () => {
         const data = { foo: 'bar' };
