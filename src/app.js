@@ -164,13 +164,18 @@ definePrototype(App, {
 });
 watchable(App.prototype);
 
+const defaultApp = new App();
+app = {
+    on: defaultApp.on.bind(defaultApp)
+};
+
 function init(callback) {
     throwNotFunction(callback);
     if (appInit) {
         throw new Error('brew() can only be called once');
     }
     appInit = deferrable(dom.ready);
-    app = new App();
+    app = defaultApp;
     each(defaults, function (i, v) {
         var fn = v && isFunction(app[camel('use-' + i)]);
         if (fn) {
