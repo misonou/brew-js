@@ -1,4 +1,4 @@
-/*! brew-js v0.5.1 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.2 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -870,6 +870,9 @@ function createObjectStorage(storage, key) {
     keys: function keys() {
       return util_keys(entries);
     },
+    has: function has(key) {
+      return !!entries[key];
+    },
     get: function get(key) {
       return _revive(key);
     },
@@ -1671,6 +1674,7 @@ var appInited;
 /** @type {Promise<void> & Zeta.Deferrable} */
 
 var appInit;
+var setReadyState;
 
 function exactTargetWrapper(handler) {
   return function (e) {
@@ -1725,6 +1729,7 @@ function App() {
   defineOwnProperty(self, 'ready', new Promise(function (resolve) {
     self.on('ready', resolve.bind(0, self));
   }), true);
+  setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
 }
 
 definePrototype(App, {
@@ -1742,10 +1747,13 @@ definePrototype(App, {
   },
   beforeInit: function beforeInit(promise) {
     if (isFunction(promise)) {
-      promise = promise.call(this);
+      promise = makeAsync(promise).call(this);
     }
 
-    appInit.waitFor(promise);
+    appInit.waitFor(promise.then(null, function (error) {
+      console.error('Failed to initialize', error);
+      setReadyState('error');
+    }));
   },
   isElementActive: function isElementActive() {
     return true;
@@ -1826,14 +1834,20 @@ definePrototype(App, {
   beforeUpdate: hookBeforeUpdate
 });
 watchable(App.prototype);
+var defaultApp = new App();
+app = {
+  on: defaultApp.on.bind(defaultApp)
+};
 
 function init(callback) {
+  throwNotFunction(callback);
+
   if (appInit) {
     throw new Error('brew() can only be called once');
   }
 
   appInit = deferrable(zeta_dom_dom.ready);
-  app = new App();
+  app = defaultApp;
   each(src_defaults, function (i, v) {
     var fn = v && isFunction(app[camel('use-' + i)]);
 
@@ -1848,16 +1862,19 @@ function init(callback) {
       throwNotFunction(v)(app);
     }
   });
-  throwNotFunction(callback)(app);
+  app.beforeInit(makeAsync(callback)(app));
   each(dependencies, function (i, v) {
     combineFn(v)();
   });
   appInited = true;
   notifyAsync(app_root, appInit);
   appInit.then(function () {
-    appReady = true;
-    mountElement(app_root);
-    app.emit('ready');
+    if (app.readyState === 'init') {
+      appReady = true;
+      mountElement(app_root);
+      setReadyState('ready');
+      app.emit('ready');
+    }
   });
   return app;
 }
@@ -3820,6 +3837,7 @@ watchable(Route.prototype);
  */
 
 function configureRouter(app, options) {
+  var sessionId = randomId();
   var route;
   var basePath = '/';
   var currentPath = '';
@@ -3840,13 +3858,13 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path, index, keepPreviousPath, data, storageMap) {
+  function createState(id, path, index, keepPreviousPath, data, sessionId, storageMap) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
     var previous = states[currentIndex];
     var promise, resolved;
-    var savedState = [id, path, index, keepPreviousPath, data];
+    var savedState = [id, path, index, keepPreviousPath, data, sessionId];
 
     if (storageMap) {
       storage.set(id, storageMap);
@@ -3863,6 +3881,7 @@ function configureRouter(app, options) {
       previous: previous,
       previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
       pageId: previous && keepPreviousPath ? previous.pageId : id,
+      sessionId: sessionId,
       handled: false,
 
       get done() {
@@ -3999,7 +4018,7 @@ function configureRouter(app, options) {
 
     var id = randomId();
     var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path, indexOffset + index, replace || snapshot, data, storageMap);
+    var state = createState(id, path, indexOffset + index, replace || snapshot, data, sessionId, storageMap);
     applyState(state, replace, snapshot, function () {
       currentIndex = index;
 
@@ -4221,11 +4240,11 @@ function configureRouter(app, options) {
   storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
   app.define({
     get canNavigateBack() {
-      return currentIndex > 0;
+      return (states[currentIndex - 1] || '').sessionId === sessionId;
     },
 
     get canNavigateForward() {
-      return currentIndex < states.length - 1;
+      return (states[currentIndex + 1] || '').sessionId === sessionId;
     },
 
     get previousPath() {
@@ -4283,7 +4302,7 @@ function configureRouter(app, options) {
     });
   } catch (e) {}
 
-  if (navigationType === 'reload') {
+  if (navigationType === 'reload' && !options.resumeOnReload) {
     storage.delete(history.state);
 
     if (options.urlMode === 'none') {
@@ -4304,6 +4323,7 @@ function configureRouter(app, options) {
     } else {
       currentIndex = index;
       indexOffset = states[index].index - currentIndex;
+      sessionId = states[index].sessionId || sessionId;
     }
 
     states[currentIndex].type = navigationType;
