@@ -158,6 +158,29 @@ declare namespace Brew {
          */
         readonly previousPath: string | null;
         /**
+         * Gets a unique ID that represent an app session.
+         *
+         * Note that an app session is different from a browser session which typically associates to the lifetime of a tab.
+         *
+         * By constrast, an app session is created for every unique visit to the single-page app, for example from a link.
+         * When the page is reloaded, or is restored by going forward or backward in browser history, previous app session is resumed.
+         * App sessions can also be explicitly resumed when `resume` option is specified when configuring the router.
+         */
+        readonly sessionId: string;
+        /**
+         * Gets the storage that persists over and gets restored in the same app session.
+         * @see {@link WithRouter.sessionId} for definition of an app session.
+         */
+        readonly sessionStorage: PersistedStorage;
+        /**
+         * Gets the storage that persists over and gets restored in the current tab.
+         *
+         * It is essentially like storing items directly to {@link Window.sessionStorage}, but with the benefits that
+         * data is compressed, as well as that data will not be stored in duplication if it is also saved to {@link WithRouter.sessionStorage}
+         * or {@link WithRouter.historyStorage}.
+         */
+        readonly cache: PersistedStorage;
+        /**
          * Gets information of and performs actions on current page.
          */
         readonly page: PageInfo
@@ -252,14 +275,19 @@ declare namespace Brew {
     }
 
     /**
-     * A map for storing and retrieving states associated to a specific page step in history.
+     * A map for storing and retrieving states.
      *
      * Only string and symbol keys are allowed, where other type are coerced into string.
      * Also entries with symbol as key are not persisted into session storage.
      */
-    class HistoryStorage extends Map<string | symbol, any> {
+    interface PersistedStorage extends Map<string | symbol, any> {
         toJSON(): object;
     }
+
+    /**
+     * A map for storing and retrieving states associated to a specific page step in history.
+     */
+    type HistoryStorage = PersistedStorage;
 
     interface RoutePattern {
         /**

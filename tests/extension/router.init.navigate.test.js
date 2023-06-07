@@ -2,6 +2,7 @@ import { _, initApp, mockFn } from "../testUtil";
 import router from "src/extension/router";
 import { createObjectStorage } from "src/util/storage";
 import { randomId } from "zeta-dom/util";
+import { jest } from "@jest/globals";
 
 const stateId1 = randomId();
 const stateId2 = randomId();
@@ -25,8 +26,6 @@ describe('router', () => {
         var app = await new Promise(resolve => {
             initApp(router, app => {
                 app.useRouter({
-                    resume: true,
-                    urlMode: 'none',
                     routes: [
                         '/*'
                     ]
@@ -36,17 +35,17 @@ describe('router', () => {
             });
         });
 
-        expect(app.path).toBe('/foo')
+        expect(app.path).toBe('/');
         expect(app.canNavigateForward).toBe(false);
         expect(history.state).not.toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
-            navigationType: 'resume',
-            pathname: '/foo',
-            data: { a: 1 }
+            navigationType: 'navigate',
+            pathname: '/',
+            data: undefined
         }), _);
-        expect(app.historyStorage.current.get('foo')).toBe('foo');
-        expect(app.sessionId).toBe(sessionId);
-        expect(app.sessionStorage.get('bar')).toBe('bar');
+        expect(app.historyStorage.current.has('foo')).toBe(false);
+        expect(app.sessionId).not.toBe(sessionId);
+        expect(app.sessionStorage.has('bar')).toBe(false);
         expect(app.cache.get('baz')).toBe('baz');
     });
 });

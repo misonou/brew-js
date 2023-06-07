@@ -13,12 +13,14 @@ navigationType.mockReturnValue(performance.navigation.TYPE_RELOAD);
 
 beforeAll(async () => {
     var store = createObjectStorage(sessionStorage, 'brew.router./');
+    store.set('g', { baz: 'baz' });
     store.set('c', stateId1);
     store.set('s', [
         [stateId1, '/foo', 0, false, { a: 1 }, sessionId],
         [stateId2, '/bar', 1, false, null, sessionId],
     ]);
     store.set(stateId1, { foo: 'foo' });
+    store.set(sessionId, { bar: 'bar' });
     history.replaceState(stateId1, '');
 });
 
@@ -49,5 +51,8 @@ describe('router', () => {
             data: { a: 1 }
         }), _);
         expect(app.historyStorage.current.has('foo')).toBe(false);
+        expect(app.sessionId).toBe(sessionId);
+        expect(app.sessionStorage.get('bar')).toBe('bar');
+        expect(app.cache.get('baz')).toBe('baz');
     });
 });

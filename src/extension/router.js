@@ -1,7 +1,7 @@
 import { bind } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, setImmediate, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";
@@ -50,7 +50,7 @@ function getCurrentPathAndQuery() {
 }
 
 function HistoryStorage(obj) {
-    var map = new Map(Object.entries(obj));
+    var map = new Map(obj && Object.entries(obj));
     Object.setPrototypeOf(map, HistoryStorage.prototype);
     return map;
 }
@@ -313,6 +313,7 @@ definePrototype(PageInfo, {
  */
 function configureRouter(app, options) {
     var sessionId = randomId();
+    var resumedId = sessionId;
     var route;
     var basePath = '/';
     var currentPath = '';
@@ -322,6 +323,10 @@ function configureRouter(app, options) {
     var pendingState;
     var lastState = {};
     var pageInfos = {};
+
+    function getPersistedStorage(key, ctor) {
+        return storage.revive(key, ctor) || mapGet(storage, key, ctor);
+    }
 
     function createNavigateResult(id, path, originalPath, navigated) {
         return Object.freeze({
@@ -339,6 +344,7 @@ function configureRouter(app, options) {
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
         var pageId = previous && keepPreviousPath ? previous.pageId : id;
+        var resumedId = previous && (keepPreviousPath || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
         var promise, resolved;
         var savedState = [id, path, index, keepPreviousPath, data, sessionId];
         if (storageMap) {
@@ -356,6 +362,7 @@ function configureRouter(app, options) {
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
             pageId: pageId,
             sessionId: sessionId,
+            resumedId: resumedId,
             handled: false,
             get done() {
                 return resolved;
@@ -375,10 +382,7 @@ function configureRouter(app, options) {
                 }));
             },
             get storage() {
-                if (!storageMap) {
-                    storageMap = storage.revive(id, HistoryStorage) || (storage.set(id, new HistoryStorage({})), storage.get(id));
-                }
-                return storageMap;
+                return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
             },
             reset: function () {
                 state.handled = false;
@@ -480,6 +484,9 @@ function configureRouter(app, options) {
             if (!replace) {
                 each(states.splice(currentIndex), function (i, v) {
                     storage.delete(v.id);
+                    if (v.resumedId !== resumedId) {
+                        storage.delete(v.resumedId);
+                    }
                 });
             }
             states[currentIndex] = state;
@@ -713,6 +720,7 @@ function configureRouter(app, options) {
     defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
+    defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
 
     bind(window, 'popstate', function () {
         var index = getHistoryIndex(history.state);
@@ -733,12 +741,12 @@ function configureRouter(app, options) {
     var initialState;
     var index = getHistoryIndex(navigationType === 'resume' ? storage.get('c') : history.state);
     if (index >= 0) {
+        resumedId = states[index].resumedId;
+        currentIndex = index;
         if (navigationType === 'resume') {
-            currentIndex = index;
             indexOffset = history.length - currentIndex - 1;
             pushState(states[index].path, false, true);
         } else {
-            currentIndex = index;
             indexOffset = states[index].index - currentIndex;
             sessionId = states[index].sessionId || sessionId;
             if (navigationType === 'reload' && !options.resumeOnReload) {
@@ -763,6 +771,9 @@ function configureRouter(app, options) {
         }
         handlePathChange();
     });
+
+    defineOwnProperty(app, 'sessionId', resumedId, true);
+    defineOwnProperty(app, 'sessionStorage', getPersistedStorage(resumedId, HistoryStorage), true);
 }
 
 parsedRoutes['/*'] = deepFreeze(new RoutePattern({
