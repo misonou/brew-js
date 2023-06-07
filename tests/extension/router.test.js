@@ -872,6 +872,59 @@ describe('app.historyStorage', () => {
     });
 });
 
+describe('app.page', () => {
+    it('should expose information of current page', async () => {
+        const data = {};
+        const { id, path } = await app.navigate('/test-1', false, data);
+        expect(app.page).toMatchObject({
+            pageId: id,
+            path: path,
+            params: app.route,
+            data: sameObject(data)
+        });
+    });
+
+    it('should return same object after snapshot', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.snapshot();
+        expect(app.page).toBe(page);
+    });
+
+    it('should clear navigation data', async () => {
+        const cb = mockFn();
+        const { id } = await app.navigate('/test-1', false, {});
+        expect(app.page.data).toBeTruthy();
+        app.page.clearNavigateData();
+        expect(app.page.data).toBeNull();
+
+        await app.navigate('/test-2');
+        bindEvent(app, 'navigate', cb);
+        await app.back();
+        expect(cb).toBeCalledWith(objectContaining({
+            newStateId: id,
+            data: null
+        }), _)
+    });
+
+    it('should clear history storage instances of all snapshots', async () => {
+        await app.navigate('/test-1');
+        const storage1 = app.historyStorage.current;
+        storage1.set('foo', 'bar');
+
+        await app.snapshot();
+        const storage2 = app.historyStorage.current;
+        storage2.set('foo', 'baz');
+        expect(storage1.size).toBe(1);
+        expect(storage2.size).toBe(1);
+
+        app.page.clearHistoryStorage();
+        expect(storage1.size).toBe(0);
+        expect(storage2.size).toBe(0);
+    });
+});
+
 describe('matchRoute', () => {
     it('should match path without optional segments', () => {
         expect(matchRoute('/foo/{id?}', '/foo')).toBeTruthy();

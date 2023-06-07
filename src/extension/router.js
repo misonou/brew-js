@@ -13,6 +13,7 @@ const mapProto = Map.prototype;
 const parsedRoutes = {};
 const root = dom.root;
 
+var states = [];
 var baseUrl;
 var storage;
 var constant = function (value) {
@@ -276,6 +277,36 @@ definePrototype(Route, {
 });
 watchable(Route.prototype);
 
+function PageInfo(props) {
+    for (var i in props) {
+        defineOwnProperty(this, i, props[i], true);
+    }
+}
+
+function pageInfoForEachState(self, callback) {
+    var pageId = self.pageId;
+    each(states, function (i, v) {
+        if (v.pageId === pageId) {
+            callback(v);
+        }
+    });
+}
+
+definePrototype(PageInfo, {
+    clearNavigateData: function () {
+        pageInfoForEachState(this, function (v) {
+            v.data = null;
+        });
+        storage.persist(states);
+        defineOwnProperty(this, 'data', null, true);
+    },
+    clearHistoryStorage: function () {
+        pageInfoForEachState(this, function (v) {
+            v.storage.clear();
+        });
+    }
+});
+
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
  * @param {Record<string, any>} options
@@ -290,7 +321,7 @@ function configureRouter(app, options) {
     var indexOffset = 0;
     var pendingState;
     var lastState = {};
-    var states = [];
+    var pageInfos = {};
 
     function createNavigateResult(id, path, originalPath, navigated) {
         return Object.freeze({
@@ -307,6 +338,7 @@ function configureRouter(app, options) {
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
+        var pageId = previous && keepPreviousPath ? previous.pageId : id;
         var promise, resolved;
         var savedState = [id, path, index, keepPreviousPath, data, sessionId];
         if (storageMap) {
@@ -322,7 +354,7 @@ function configureRouter(app, options) {
             type: 'navigate',
             previous: previous,
             previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
-            pageId: previous && keepPreviousPath ? previous.pageId : id,
+            pageId: pageId,
             sessionId: sessionId,
             handled: false,
             get done() {
@@ -332,6 +364,14 @@ function configureRouter(app, options) {
                 return promise || (promise = new Promise(function (resolve_, reject_) {
                     resolvePromise = resolve_;
                     rejectPromise = reject_;
+                }));
+            },
+            get pageInfo() {
+                return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
+                    path: pathNoQuery,
+                    pageId: pageId,
+                    params: state.route,
+                    data: data
                 }));
             },
             get storage() {
@@ -372,6 +412,7 @@ function configureRouter(app, options) {
                 }
             },
             toJSON: function () {
+                savedState[4] = state.data;
                 return savedState;
             }
         };
@@ -635,6 +676,9 @@ function configureRouter(app, options) {
         },
         get previousPath() {
             return states[currentIndex].previousPath || null;
+        },
+        get page() {
+            return states[currentIndex].pageInfo;
         },
         matchRoute: matchRoute,
         parseRoute: parseRoute,

@@ -86,6 +86,34 @@ declare namespace Brew {
         readonly originalPath: string | null;
     }
 
+    interface PageInfo {
+        /**
+         * Gets a unique ID representing current visit to the path.
+         */
+        readonly pageId: string;
+        /**
+         * Gets the navigated path.
+         */
+        readonly path: string;
+        /**
+         * Gets the route parameters parsed from the navigated path.
+         */
+        readonly params: RouteParam;
+        /**
+         * Gets data passed by {@link WithRouter.navigate}.
+         */
+        readonly data: any;
+        /**
+         * Deletes data passed by {@link WithRouter.navigate}.
+         */
+        clearNavigateData(): void;
+        /**
+         * Clears all data stored in history storage for this page.
+         * When there are multiple snapshots, all of them will be cleared.
+         */
+        clearHistoryStorage(): void;
+    }
+
     interface WithRouter extends EventDispatcher<keyof RouterEventMap, RouterEventMap> {
         /**
          * Gets or sets the current path.
@@ -129,6 +157,10 @@ declare namespace Brew {
          * Gets the path that will be navigated to if user click 'Back' on browser or by calling `app.back()`.
          */
         readonly previousPath: string | null;
+        /**
+         * Gets information of and performs actions on current page.
+         */
+        readonly page: PageInfo
 
         /**
          * Navigate to the specified path.
