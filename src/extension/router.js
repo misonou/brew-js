@@ -686,16 +686,8 @@ function configureRouter(app, options) {
         });
     } catch (e) { }
 
-    if (navigationType === 'reload' && !options.resumeOnReload) {
-        storage.delete(history.state);
-        if (options.urlMode === 'none') {
-            history.replaceState('', '');
-        }
-    } else if (navigationType === 'resume') {
-        history.replaceState(storage.get('c'), '');
-    }
     var initialState;
-    var index = getHistoryIndex(history.state);
+    var index = getHistoryIndex(navigationType === 'resume' ? storage.get('c') : history.state);
     if (index >= 0) {
         if (navigationType === 'resume') {
             currentIndex = index;
@@ -705,11 +697,18 @@ function configureRouter(app, options) {
             currentIndex = index;
             indexOffset = states[index].index - currentIndex;
             sessionId = states[index].sessionId || sessionId;
+            if (navigationType === 'reload' && !options.resumeOnReload) {
+                storage.delete(history.state);
+                initialState = options.urlMode === 'none';
+            }
         }
         states[currentIndex].type = navigationType;
     } else {
         currentIndex = states.length;
         indexOffset = history.length - currentIndex;
+        initialState = true;
+    }
+    if (initialState) {
         initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
     }
     storage.set('c', states[currentIndex].id);
