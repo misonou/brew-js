@@ -1,4 +1,4 @@
-/*! brew-js v0.5.2 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.3 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -361,6 +361,7 @@ var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_d
     removeNode = domUtil_zeta$util.removeNode,
     getClass = domUtil_zeta$util.getClass,
     setClass = domUtil_zeta$util.setClass,
+    getSafeAreaInset = domUtil_zeta$util.getSafeAreaInset,
     getScrollOffset = domUtil_zeta$util.getScrollOffset,
     getScrollParent = domUtil_zeta$util.getScrollParent,
     getContentRect = domUtil_zeta$util.getContentRect,
@@ -3530,6 +3531,7 @@ var router_ = createPrivateStore();
 var mapProto = Map.prototype;
 var parsedRoutes = {};
 var router_root = zeta_dom_dom.root;
+var states = [];
 var router_baseUrl;
 var storage;
 
@@ -3572,7 +3574,7 @@ function getCurrentPathAndQuery() {
 }
 
 function HistoryStorage(obj) {
-  var map = new Map(Object.entries(obj));
+  var map = new Map(obj && Object.entries(obj));
   Object.setPrototypeOf(map, HistoryStorage.prototype);
   return map;
 }
@@ -3831,6 +3833,36 @@ definePrototype(Route, {
   }
 });
 watchable(Route.prototype);
+
+function PageInfo(props) {
+  for (var i in props) {
+    defineOwnProperty(this, i, props[i], true);
+  }
+}
+
+function pageInfoForEachState(self, callback) {
+  var pageId = self.pageId;
+  each(states, function (i, v) {
+    if (v.pageId === pageId) {
+      callback(v);
+    }
+  });
+}
+
+definePrototype(PageInfo, {
+  clearNavigateData: function clearNavigateData() {
+    pageInfoForEachState(this, function (v) {
+      v.data = null;
+    });
+    storage.persist(states);
+    defineOwnProperty(this, 'data', null, true);
+  },
+  clearHistoryStorage: function clearHistoryStorage() {
+    pageInfoForEachState(this, function (v) {
+      v.storage.clear();
+    });
+  }
+});
 /**
  * @param {Brew.AppInstance<Brew.WithRouter>} app
  * @param {Record<string, any>} options
@@ -3838,6 +3870,7 @@ watchable(Route.prototype);
 
 function configureRouter(app, options) {
   var sessionId = randomId();
+  var resumedId = sessionId;
   var route;
   var basePath = '/';
   var currentPath = '';
@@ -3846,7 +3879,11 @@ function configureRouter(app, options) {
   var indexOffset = 0;
   var pendingState;
   var lastState = {};
-  var states = [];
+  var pageInfos = {};
+
+  function getPersistedStorage(key, ctor) {
+    return storage.revive(key, ctor) || mapGet(storage, key, ctor);
+  }
 
   function createNavigateResult(id, path, originalPath, navigated) {
     return Object.freeze({
@@ -3863,6 +3900,8 @@ function configureRouter(app, options) {
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
     var previous = states[currentIndex];
+    var pageId = previous && keepPreviousPath ? previous.pageId : id;
+    var resumedId = previous && (keepPreviousPath || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
     var promise, resolved;
     var savedState = [id, path, index, keepPreviousPath, data, sessionId];
 
@@ -3880,8 +3919,9 @@ function configureRouter(app, options) {
       type: 'navigate',
       previous: previous,
       previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
-      pageId: previous && keepPreviousPath ? previous.pageId : id,
+      pageId: pageId,
       sessionId: sessionId,
+      resumedId: resumedId,
       handled: false,
 
       get done() {
@@ -3895,12 +3935,17 @@ function configureRouter(app, options) {
         }));
       },
 
-      get storage() {
-        if (!storageMap) {
-          storageMap = storage.revive(id, HistoryStorage) || (storage.set(id, new HistoryStorage({})), storage.get(id));
-        }
+      get pageInfo() {
+        return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
+          path: pathNoQuery,
+          pageId: pageId,
+          params: state.route,
+          data: data
+        }));
+      },
 
-        return storageMap;
+      get storage() {
+        return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
       },
 
       reset: function reset() {
@@ -3943,6 +3988,7 @@ function configureRouter(app, options) {
         }
       },
       toJSON: function toJSON() {
+        savedState[4] = state.data;
         return savedState;
       }
     };
@@ -4025,6 +4071,10 @@ function configureRouter(app, options) {
       if (!replace) {
         each(states.splice(currentIndex), function (i, v) {
           storage.delete(v.id);
+
+          if (v.resumedId !== resumedId) {
+            storage.delete(v.resumedId);
+          }
         });
       }
 
@@ -4251,6 +4301,10 @@ function configureRouter(app, options) {
       return states[currentIndex].previousPath || null;
     },
 
+    get page() {
+      return states[currentIndex].pageInfo;
+    },
+
     matchRoute: matchRoute,
     parseRoute: parseRoute,
     resolvePath: resolvePath,
@@ -4285,6 +4339,7 @@ function configureRouter(app, options) {
   defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
   defineOwnProperty(app, 'route', route, true);
   defineOwnProperty(app, 'routes', freeze(options.routes));
+  defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
   bind(window, 'popstate', function () {
     var index = getHistoryIndex(history.state);
 
@@ -4302,34 +4357,34 @@ function configureRouter(app, options) {
     });
   } catch (e) {}
 
-  if (navigationType === 'reload' && !options.resumeOnReload) {
-    storage.delete(history.state);
-
-    if (options.urlMode === 'none') {
-      history.replaceState('', '');
-    }
-  } else if (navigationType === 'resume') {
-    history.replaceState(storage.get('c'), '');
-  }
-
   var initialState;
-  var index = getHistoryIndex(history.state);
+  var index = getHistoryIndex(navigationType === 'resume' ? storage.get('c') : history.state);
 
   if (index >= 0) {
+    resumedId = states[index].resumedId;
+    currentIndex = index;
+
     if (navigationType === 'resume') {
-      currentIndex = index;
       indexOffset = history.length - currentIndex - 1;
       pushState(states[index].path, false, true);
     } else {
-      currentIndex = index;
       indexOffset = states[index].index - currentIndex;
       sessionId = states[index].sessionId || sessionId;
+
+      if (navigationType === 'reload' && !options.resumeOnReload) {
+        storage.delete(history.state);
+        initialState = options.urlMode === 'none';
+      }
     }
 
     states[currentIndex].type = navigationType;
   } else {
     currentIndex = states.length;
     indexOffset = history.length - currentIndex;
+    initialState = true;
+  }
+
+  if (initialState) {
     initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
   }
 
@@ -4341,6 +4396,8 @@ function configureRouter(app, options) {
 
     handlePathChange();
   });
+  defineOwnProperty(app, 'sessionId', resumedId, true);
+  defineOwnProperty(app, 'sessionStorage', getPersistedStorage(resumedId, HistoryStorage), true);
 }
 
 parsedRoutes['/*'] = deepFreeze(new RoutePattern({
