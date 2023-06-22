@@ -425,12 +425,17 @@ function configureRouter(app, options) {
 
     function updatePath(state, path) {
         if (removeQueryAndHash(path) === state.pathname) {
+            var oldHash = parsePath(state.path).hash;
+            var newHash = parsePath(path).hash;
             state.path = path;
-            if (history.state === state.id) {
+            if ((history.state || state.id) === state.id) {
                 history.replaceState(state.id, '', toPathname(path));
                 if (state.done) {
                     currentPath = path;
                     app.path = path;
+                }
+                if (oldHash !== newHash) {
+                    app.emit('hashchange', { oldHash, newHash }, { handleable: false });
                 }
             }
             return true;

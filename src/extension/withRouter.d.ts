@@ -5,6 +5,7 @@ declare namespace Brew {
         pageload: PageEvent;
         pageenter: PageEvent;
         pageleave: PageEvent;
+        hashchange: HashChangeEvent;
     }
 
     type NavigationType = 'navigate' | 'reload' | 'back_forward' | 'resume';
@@ -60,6 +61,11 @@ declare namespace Brew {
          * It does not necessarily equal to the current path, i.e. {@link WithRouter.path}.
          */
         readonly pathname: string;
+    }
+
+    interface HashChangeEvent extends Zeta.ZetaEventBase {
+        readonly oldHash: string;
+        readonly newHash: string;
     }
 
     interface NavigateResult {
