@@ -338,15 +338,15 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path, index, keepPreviousPath, data, sessionId, storageMap) {
+    function createState(id, path, index, snapshot, data, sessionId, keepPreviousPath, storageMap) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
-        var pageId = previous && keepPreviousPath ? previous.pageId : id;
-        var resumedId = previous && (keepPreviousPath || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
+        var pageId = previous && snapshot ? previous.pageId : id;
+        var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
         var promise, resolved;
-        var savedState = [id, path, index, keepPreviousPath, data, sessionId];
+        var savedState = [id, path, index, snapshot, data, sessionId];
         if (storageMap) {
             storage.set(id, storageMap);
         }
@@ -359,7 +359,7 @@ function configureRouter(app, options) {
             data: data,
             type: 'navigate',
             previous: previous,
-            previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
+            previousPath: previous && (keepPreviousPath || snapshot ? previous.previousPath : previous.path),
             pageId: pageId,
             sessionId: sessionId,
             resumedId: resumedId,
@@ -483,7 +483,7 @@ function configureRouter(app, options) {
 
         var id = randomId();
         var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path, indexOffset + index, replace || snapshot, data, sessionId, storageMap);
+        var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replace, storageMap);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {

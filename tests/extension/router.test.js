@@ -884,6 +884,43 @@ describe('app.page', () => {
         });
     });
 
+    it('should return different object after redirection', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.navigate('/test-2', true);
+        expect(app.page).not.toBe(page);
+    });
+
+    it('should return different object after redirected back to previous page', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.navigate('/test-2');
+        const result = await app.navigate('/test-1', true);
+        expect(app.page).not.toBe(page);
+        expect(app.page).toMatchObject({
+            pageId: result.id,
+            path: '/test-1'
+        });
+    });
+
+    it('should return different object after redirected back to previous page in beforepageload event', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        const unbind = app.on('beforepageload', () => {
+            unbind();
+            app.navigate('/test-1', true);
+        });
+        const result = await app.navigate('/test-2');
+        expect(app.page).not.toBe(page);
+        expect(app.page).toMatchObject({
+            pageId: result.id,
+            path: '/test-1'
+        });
+    });
+
     it('should return same object after snapshot', async () => {
         await app.navigate('/test-1');
         const page = app.page;
