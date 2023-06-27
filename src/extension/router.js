@@ -345,7 +345,8 @@ function configureRouter(app, options) {
         var previous = states[currentIndex];
         var pageId = previous && snapshot ? previous.pageId : id;
         var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
-        var promise, resolved;
+        var resolved = previous && snapshot && previous.done;
+        var promise;
         var savedState = [id, path, index, snapshot, data, sessionId];
         if (storageMap) {
             storage.set(id, storageMap);
@@ -363,7 +364,7 @@ function configureRouter(app, options) {
             pageId: pageId,
             sessionId: sessionId,
             resumedId: resumedId,
-            handled: false,
+            handled: resolved,
             get done() {
                 return resolved;
             },
@@ -450,7 +451,7 @@ function configureRouter(app, options) {
                 pendingState.reject();
             }
         }
-        pendingState = state;
+        pendingState = state.handled ? null : state;
         if (appReady && !snapshot && locked(root)) {
             cancelLock(root).then(function () {
                 if (pendingState === state && callback() !== false) {
@@ -482,8 +483,9 @@ function configureRouter(app, options) {
         }
 
         var id = randomId();
-        var index = Math.max(0, currentIndex + !replace);
-        var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replace, storageMap);
+        var replaceHistory = replace || pendingState;
+        var index = Math.max(0, currentIndex + !replaceHistory);
+        var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replaceHistory, storageMap);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
@@ -495,7 +497,7 @@ function configureRouter(app, options) {
                 });
             }
             states[currentIndex] = state;
-            history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+            history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
             storage.set('c', id);
             storage.set('s', states);
         });

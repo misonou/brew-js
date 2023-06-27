@@ -220,6 +220,17 @@ describe('app#navigate', () => {
         expect(app.path).toEqual('/base/test-2');
     });
 
+    it('should remove cancelled navigation from history', async () => {
+        catchAsync(app.navigate('/base/test-1'));
+
+        await app.navigate('/base/test-2');
+        expect(app.path).toEqual('/base/test-2');
+        expect(app.previousPath).toBe(initialPath);
+
+        await app.back();
+        expect(app.path).toBe(initialPath);
+    });
+
     it('should report redirected flag for previous navigation when redirecting before page load', async () => {
         let resolve;
         const promise1 = app.navigate('/base/test-1');
