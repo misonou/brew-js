@@ -881,6 +881,26 @@ describe('app.historyStorage', () => {
     it('should return null for invalid state ID', async () => {
         expect(app.historyStorage.for('')).toBeNull();
     });
+
+    it('should update between navigate and beforepageload event', async () => {
+        const cb = mockFn();
+        const storage = app.historyStorage.current;
+        cleanupAfterTest(app.on('navigate', () => cb('navigate event', app.historyStorage.current.get('foo'))));
+        cleanupAfterTest(app.on('beforepageload', () => cb('beforepageload event', app.historyStorage.current.get('foo'))));
+
+        storage.set('foo', 'bar');
+        expect(storage.size).toBe(1);
+
+        const promise = app.navigate('/test-1');
+        cb('after app.navigate', app.historyStorage.current.get('foo'));
+        await promise;
+
+        verifyCalls(cb, [
+            ['after app.navigate', 'bar'],
+            ['navigate event', 'bar'],
+            ['beforepageload event', undefined]
+        ]);
+    });
 });
 
 describe('app.page', () => {
@@ -893,6 +913,23 @@ describe('app.page', () => {
             params: app.route,
             data: sameObject(data)
         });
+    });
+
+    it('should update between navigate and beforepageload event', async () => {
+        const cb = mockFn();
+        const page = app.page;
+        cleanupAfterTest(app.on('navigate', () => cb('navigate event', app.page)));
+        cleanupAfterTest(app.on('beforepageload', () => cb('beforepageload event', app.page)));
+
+        const promise = app.navigate('/test-1');
+        cb('after app.navigate', app.page);
+        await promise;
+
+        verifyCalls(cb, [
+            ['after app.navigate', sameObject(page)],
+            ['navigate event', sameObject(page)],
+            ['beforepageload event', objectContaining({ path: '/test-1' })]
+        ]);
     });
 
     it('should return different object after redirection', async () => {

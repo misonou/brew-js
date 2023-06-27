@@ -320,6 +320,7 @@ function configureRouter(app, options) {
     var redirectSource = {};
     var currentIndex = 0;
     var indexOffset = 0;
+    var pendingState;
     var lastState = {};
     var pageInfos = {};
 
@@ -472,7 +473,7 @@ function configureRouter(app, options) {
         var currentState = states[currentIndex];
         if (currentState && !snapshot && updatePath(currentState, path)) {
             if (currentState.done) {
-                return { promise: resolve(createNavigateResult(currentState.id, path, null, false)) };
+                return { promise: resolve(createNavigateResult(currentState.pageId, path, null, false)) };
             }
             return currentState;
         }
@@ -561,6 +562,7 @@ function configureRouter(app, options) {
         var deferred = deferrable();
 
         currentPath = path;
+        pendingState = state;
         app.path = path;
         route.set(path);
         app.emit('beforepageload', {
@@ -572,6 +574,7 @@ function configureRouter(app, options) {
 
         always(deferred, function () {
             if (states[currentIndex] === state) {
+                pendingState = null;
                 redirectSource = {};
                 state.resolve();
             }
@@ -585,7 +588,7 @@ function configureRouter(app, options) {
         var state = states[currentIndex];
         var newPath = state.path;
         if (lastState === state || state.handled) {
-            state.resolve(createNavigateResult(lastState.id, newPath, null, false));
+            state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
             return;
         }
         state.handled = true;
@@ -688,7 +691,7 @@ function configureRouter(app, options) {
             return states[currentIndex].previousPath || null;
         },
         get page() {
-            return states[currentIndex].pageInfo;
+            return (pendingState || lastState).pageInfo;
         },
         matchRoute: matchRoute,
         parseRoute: parseRoute,
@@ -697,7 +700,7 @@ function configureRouter(app, options) {
         toHref: toPathname,
         fromHref: fromPathname,
         snapshot: function () {
-            return states[currentIndex] === lastState && !!pushState(currentPath, false, true);
+            return states[currentIndex] === lastState && !!(lastState = pushState(currentPath, false, true));
         },
         navigate: function (path, replace, data) {
             return pushState(path, replace, false, data).promise;
@@ -711,7 +714,7 @@ function configureRouter(app, options) {
         },
         historyStorage: {
             get current() {
-                return states[currentIndex].storage;
+                return (pendingState || lastState).storage;
             },
             for: function (stateId) {
                 var state = states[getHistoryIndex(stateId)];
