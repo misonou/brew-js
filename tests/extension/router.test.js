@@ -932,6 +932,19 @@ describe('app.page', () => {
         });
     });
 
+    it('should return same object after redirected back to previous page in navigate event', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        const unbind = app.on('navigate', () => {
+            unbind();
+            app.navigate('/test-1', true);
+        });
+        const { navigated } = await app.navigate('/test-2');
+        expect(navigated).toBe(false);
+        expect(app.page).toBe(page);
+    });
+
     it('should return same object after snapshot', async () => {
         await app.navigate('/test-1');
         const page = app.page;

@@ -343,6 +343,10 @@ function configureRouter(app, options) {
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var previous = states[currentIndex];
+        if (lastState && lastState.pathname === pathNoQuery && removeQueryAndHash(currentPath) === pathNoQuery) {
+            snapshot = true;
+            previous = lastState;
+        }
         var pageId = previous && snapshot ? previous.pageId : id;
         var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
         var resolved = previous && snapshot && previous.done;
@@ -585,11 +589,8 @@ function configureRouter(app, options) {
         }
         var state = states[currentIndex];
         var newPath = state.path;
-        if (lastState && state.pathname === removeQueryAndHash(currentPath) && updatePath(lastState, newPath)) {
+        if (lastState === state || state.handled) {
             state.resolve(createNavigateResult(lastState.id, newPath, null, false));
-            return;
-        }
-        if (state.handled) {
             return;
         }
         state.handled = true;
