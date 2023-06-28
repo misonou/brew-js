@@ -320,7 +320,6 @@ function configureRouter(app, options) {
     var redirectSource = {};
     var currentIndex = 0;
     var indexOffset = 0;
-    var pendingState;
     var lastState = {};
     var pageInfos = {};
 
@@ -407,8 +406,7 @@ function configureRouter(app, options) {
             resolve: function (result) {
                 resolved = true;
                 resolvePromise(result || createNavigateResult(id, state.path));
-                if (pendingState === state) {
-                    pendingState = null;
+                if (states[currentIndex] === state) {
                     lastState = state;
                     app.emit('pageload', { pathname: state.path }, { handleable: false });
                 }
@@ -416,9 +414,6 @@ function configureRouter(app, options) {
             reject: function (error) {
                 promise = null;
                 rejectPromise(error || errorWithCode(ErrorCode.navigationCancelled));
-                if (pendingState === state) {
-                    pendingState = null;
-                }
             },
             toJSON: function () {
                 savedState[4] = state.data;
@@ -448,17 +443,17 @@ function configureRouter(app, options) {
     }
 
     function applyState(state, replace, snapshot, callback) {
-        if (pendingState && pendingState !== state) {
+        var currentState = states[currentIndex];
+        if (currentState && currentState !== state && !currentState.done) {
             if (replace) {
-                pendingState.forward(state);
+                currentState.forward(state);
             } else {
-                pendingState.reject();
+                currentState.reject();
             }
         }
-        pendingState = state.handled ? null : state;
         if (appReady && !snapshot && locked(root)) {
             cancelLock(root).then(function () {
-                if (pendingState === state && callback() !== false) {
+                if (states[currentIndex] === currentState && callback() !== false) {
                     setImmediateOnce(handlePathChange);
                 }
             }, function () {
@@ -474,7 +469,7 @@ function configureRouter(app, options) {
         if (!isSubPathOf(path, basePath)) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
         }
-        var currentState = pendingState || states[currentIndex];
+        var currentState = states[currentIndex];
         if (currentState && !snapshot && updatePath(currentState, path)) {
             if (currentState.done) {
                 return { promise: resolve(createNavigateResult(currentState.id, path, null, false)) };
@@ -487,7 +482,7 @@ function configureRouter(app, options) {
         }
 
         var id = randomId();
-        var replaceHistory = replace || pendingState;
+        var replaceHistory = replace || (currentState && !currentState.done);
         var index = Math.max(0, currentIndex + !replaceHistory);
         var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replaceHistory, storageMap);
         applyState(state, replace, snapshot, function () {
@@ -702,7 +697,7 @@ function configureRouter(app, options) {
         toHref: toPathname,
         fromHref: fromPathname,
         snapshot: function () {
-            return !pendingState && !!pushState(currentPath, false, true);
+            return states[currentIndex] === lastState && !!pushState(currentPath, false, true);
         },
         navigate: function (path, replace, data) {
             return pushState(path, replace, false, data).promise;
@@ -774,7 +769,7 @@ function configureRouter(app, options) {
     storage.set('c', states[currentIndex].id);
 
     app.on('ready', function () {
-        if (initialState && pendingState === initialState && includeQuery) {
+        if (initialState && states[currentIndex] === initialState && includeQuery) {
             pushState(initialPath + getCurrentQuery(), true);
         }
         handlePathChange();
