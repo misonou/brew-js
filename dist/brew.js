@@ -1,4 +1,4 @@
-/*! brew-js v0.5.3 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.4 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -305,7 +305,7 @@ function toRelativeUrl(url) {
 
 function isSubPathOf(a, b) {
   var len = b.length;
-  return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && normalizePath(a.slice(len));
+  return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && (a[len] === '/' ? '' : '/') + a.slice(len);
 }
 /**
  * @param {string} path
@@ -3895,15 +3895,22 @@ function configureRouter(app, options) {
     });
   }
 
-  function createState(id, path, index, keepPreviousPath, data, sessionId, storageMap) {
+  function createState(id, path, index, snapshot, data, sessionId, keepPreviousPath, storageMap) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
     var previous = states[currentIndex];
-    var pageId = previous && keepPreviousPath ? previous.pageId : id;
-    var resumedId = previous && (keepPreviousPath || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
-    var promise, resolved;
-    var savedState = [id, path, index, keepPreviousPath, data, sessionId];
+
+    if (lastState && lastState.pathname === pathNoQuery && removeQueryAndHash(currentPath) === pathNoQuery) {
+      snapshot = true;
+      previous = lastState;
+    }
+
+    var pageId = previous && snapshot ? previous.pageId : id;
+    var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
+    var resolved = previous && snapshot && previous.done;
+    var promise;
+    var savedState = [id, path, index, snapshot, data, sessionId];
 
     if (storageMap) {
       storage.set(id, storageMap);
@@ -3918,11 +3925,11 @@ function configureRouter(app, options) {
       data: data,
       type: 'navigate',
       previous: previous,
-      previousPath: previous && (keepPreviousPath ? previous.previousPath : previous.path),
+      previousPath: previous && (keepPreviousPath || snapshot ? previous.previousPath : previous.path),
       pageId: pageId,
       sessionId: sessionId,
       resumedId: resumedId,
-      handled: false,
+      handled: resolved,
 
       get done() {
         return resolved;
@@ -3969,8 +3976,7 @@ function configureRouter(app, options) {
         resolved = true;
         resolvePromise(result || createNavigateResult(id, state.path));
 
-        if (pendingState === state) {
-          pendingState = null;
+        if (states[currentIndex] === state) {
           lastState = state;
           app.emit('pageload', {
             pathname: state.path
@@ -3982,10 +3988,6 @@ function configureRouter(app, options) {
       reject: function reject(error) {
         promise = null;
         rejectPromise(error || errorWithCode(navigationCancelled));
-
-        if (pendingState === state) {
-          pendingState = null;
-        }
       },
       toJSON: function toJSON() {
         savedState[4] = state.data;
@@ -3997,14 +3999,25 @@ function configureRouter(app, options) {
 
   function updatePath(state, path) {
     if (removeQueryAndHash(path) === state.pathname) {
+      var oldHash = parsePath(state.path).hash;
+      var newHash = parsePath(path).hash;
       state.path = path;
 
-      if (history.state === state.id) {
+      if ((history.state || state.id) === state.id) {
         history.replaceState(state.id, '', toPathname(path));
 
         if (state.done) {
           currentPath = path;
           app.path = path;
+        }
+
+        if (oldHash !== newHash) {
+          app.emit('hashchange', {
+            oldHash: oldHash,
+            newHash: newHash
+          }, {
+            handleable: false
+          });
         }
       }
 
@@ -4013,19 +4026,19 @@ function configureRouter(app, options) {
   }
 
   function applyState(state, replace, snapshot, callback) {
-    if (pendingState && pendingState !== state) {
+    var currentState = states[currentIndex];
+
+    if (currentState && currentState !== state && !currentState.done) {
       if (replace) {
-        pendingState.forward(state);
+        currentState.forward(state);
       } else {
-        pendingState.reject();
+        currentState.reject();
       }
     }
 
-    pendingState = state;
-
     if (appReady && !snapshot && locked(router_root)) {
       cancelLock(router_root).then(function () {
-        if (pendingState === state && callback() !== false) {
+        if (states[currentIndex] === currentState && callback() !== false) {
           setImmediateOnce(handlePathChange);
         }
       }, function () {
@@ -4045,12 +4058,12 @@ function configureRouter(app, options) {
       };
     }
 
-    var currentState = pendingState || states[currentIndex];
+    var currentState = states[currentIndex];
 
     if (currentState && !snapshot && updatePath(currentState, path)) {
       if (currentState.done) {
         return {
-          promise: resolve(createNavigateResult(currentState.id, path, null, false))
+          promise: resolve(createNavigateResult(currentState.pageId, path, null, false))
         };
       }
 
@@ -4063,8 +4076,9 @@ function configureRouter(app, options) {
     }
 
     var id = randomId();
-    var index = Math.max(0, currentIndex + !replace);
-    var state = createState(id, path, indexOffset + index, replace || snapshot, data, sessionId, storageMap);
+    var replaceHistory = replace || currentState && !currentState.done;
+    var index = Math.max(0, currentIndex + !replaceHistory);
+    var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replaceHistory, storageMap);
     applyState(state, replace, snapshot, function () {
       currentIndex = index;
 
@@ -4079,7 +4093,7 @@ function configureRouter(app, options) {
       }
 
       states[currentIndex] = state;
-      history[replace ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+      history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
       storage.set('c', id);
       storage.set('s', states);
     });
@@ -4151,6 +4165,7 @@ function configureRouter(app, options) {
     var path = state.path;
     var deferred = deferrable();
     currentPath = path;
+    pendingState = state;
     app.path = path;
     route.set(path);
     app.emit('beforepageload', {
@@ -4163,6 +4178,7 @@ function configureRouter(app, options) {
     });
     always(deferred, function () {
       if (states[currentIndex] === state) {
+        pendingState = null;
         redirectSource = {};
         state.resolve();
       }
@@ -4177,12 +4193,8 @@ function configureRouter(app, options) {
     var state = states[currentIndex];
     var newPath = state.path;
 
-    if (lastState && state.pathname === removeQueryAndHash(currentPath) && updatePath(lastState, newPath)) {
-      state.resolve(createNavigateResult(lastState.id, newPath, null, false));
-      return;
-    }
-
-    if (state.handled) {
+    if (lastState === state || state.handled) {
+      state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
       return;
     }
 
@@ -4302,7 +4314,7 @@ function configureRouter(app, options) {
     },
 
     get page() {
-      return states[currentIndex].pageInfo;
+      return (pendingState || lastState).pageInfo;
     },
 
     matchRoute: matchRoute,
@@ -4312,7 +4324,7 @@ function configureRouter(app, options) {
     toHref: toPathname,
     fromHref: fromPathname,
     snapshot: function snapshot() {
-      return !pendingState && !!pushState(currentPath, false, true);
+      return states[currentIndex] === lastState && !!(lastState = pushState(currentPath, false, true));
     },
     navigate: function navigate(path, replace, data) {
       return pushState(path, replace, false, data).promise;
@@ -4326,7 +4338,7 @@ function configureRouter(app, options) {
     },
     historyStorage: {
       get current() {
-        return states[currentIndex].storage;
+        return (pendingState || lastState).storage;
       },
 
       for: function _for(stateId) {
@@ -4390,7 +4402,7 @@ function configureRouter(app, options) {
 
   storage.set('c', states[currentIndex].id);
   app.on('ready', function () {
-    if (initialState && pendingState === initialState && includeQuery) {
+    if (initialState && states[currentIndex] === initialState && includeQuery) {
       pushState(initialPath + getCurrentQuery(), true);
     }
 
