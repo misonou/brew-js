@@ -417,6 +417,7 @@ function configureRouter(app, options) {
                 rejectPromise(error || errorWithCode(ErrorCode.navigationCancelled));
             },
             toJSON: function () {
+                savedState[1] = state.path;
                 savedState[4] = state.data;
                 return savedState;
             }
