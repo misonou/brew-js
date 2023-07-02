@@ -408,6 +408,15 @@ describe('app.navigate', () => {
         const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
         expect(storage1.get('c')).toBe(id);
     });
+
+    it('should not emit pageload event when only query string or hash has changed', async () => {
+        const cb = mockFn();
+        await app.navigate('/test-1');
+
+        cleanupAfterTest(app.on('pageload', cb));
+        await app.navigate('/test-1?a=1');
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('app.back', () => {

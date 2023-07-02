@@ -398,6 +398,15 @@ describe('app.navigate', () => {
         expect(r1.path).toBe('/test-1?a=2');
         expect(r1.redirected).toBe(false);
     });
+
+    it('should not emit pageload event when only query string or hash has changed', async () => {
+        const cb = mockFn();
+        await app.navigate('/test-1');
+
+        cleanupAfterTest(app.on('pageload', cb));
+        await app.navigate('/test-1?a=1');
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('app.back', () => {

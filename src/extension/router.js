@@ -405,11 +405,14 @@ function configureRouter(app, options) {
                 }
             },
             resolve: function (result) {
+                result = result || createNavigateResult(id, state.path);
                 resolved = true;
-                resolvePromise(result || createNavigateResult(id, state.path));
+                resolvePromise(result);
                 if (states[currentIndex] === state) {
                     lastState = state;
-                    app.emit('pageload', { pathname: state.path }, { handleable: false });
+                    if (result.navigated) {
+                        app.emit('pageload', { pathname: state.path }, { handleable: false });
+                    }
                 }
             },
             reject: function (error) {

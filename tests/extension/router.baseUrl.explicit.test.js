@@ -400,6 +400,15 @@ describe('app#navigate', () => {
         expect(r1.redirected).toBe(false);
     });
 
+    it('should not emit pageload event when only query string or hash has changed', async () => {
+        const cb = mockFn();
+        await app.navigate('/base/test-1');
+
+        cleanupAfterTest(app.on('pageload', cb));
+        await app.navigate('/base/test-1?a=1');
+        expect(cb).not.toBeCalled();
+    });
+
     it('should not navigate for path not starting with baseUrl', async () => {
         await expect(app.navigate('/test-1')).rejects.toBeErrorWithCode('brew/navigation-rejected');
         await expect(app.navigate('/test-1?a=1')).rejects.toBeErrorWithCode('brew/navigation-rejected');

@@ -1,4 +1,4 @@
-import { root, _, initApp } from "../testUtil";
+import { root, _, initApp, mockFn, cleanupAfterTest } from "../testUtil";
 import router from "src/extension/router";
 import template from "src/extension/template";
 import dom from "zeta-dom/dom";
@@ -34,6 +34,15 @@ describe('app.navigate', () => {
         expect(location.pathname).toBe('/');
         await app.navigate('/test-1');
         expect(location.pathname).toBe('/');
+    });
+
+    it('should not emit pageload event when only query string or hash has changed', async () => {
+        const cb = mockFn();
+        await app.navigate('/test-1');
+
+        cleanupAfterTest(app.on('pageload', cb));
+        await app.navigate('/test-1?a=1');
+        expect(cb).not.toBeCalled();
     });
 });
 

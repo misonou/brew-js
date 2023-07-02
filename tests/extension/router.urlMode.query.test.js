@@ -1,4 +1,4 @@
-import { root, _, initApp, mockFn, bindEvent, delay } from "../testUtil";
+import { root, _, initApp, mockFn, bindEvent, delay, cleanupAfterTest } from "../testUtil";
 import router from "src/extension/router";
 import template from "src/extension/template";
 import dom from "zeta-dom/dom";
@@ -65,6 +65,15 @@ describe('app.navigate', () => {
         expect(location.search).toBe(serializeQueryString({ path: '/test-1' }));
         expect(location.hash).toBe('#a=1');
         expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/test-1#a=1' }), _);
+    });
+
+    it('should not emit pageload event when only query string or hash has changed', async () => {
+        const cb = mockFn();
+        await app.navigate('/test-1');
+
+        cleanupAfterTest(app.on('pageload', cb));
+        await app.navigate('/test-1?a=1');
+        expect(cb).not.toBeCalled();
     });
 });
 
