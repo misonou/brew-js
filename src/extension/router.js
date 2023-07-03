@@ -338,23 +338,18 @@ function configureRouter(app, options) {
         });
     }
 
-    function createState(id, path, index, snapshot, data, sessionId, keepPreviousPath, storageMap) {
-        var resolvePromise = noop;
-        var rejectPromise = noop;
-        var pathNoQuery = removeQueryAndHash(path);
-        var previous = states[currentIndex];
-        if (lastState && lastState.pathname === pathNoQuery && removeQueryAndHash(currentPath) === pathNoQuery) {
-            snapshot = true;
-            previous = lastState;
-        }
-        var pageId = previous && snapshot ? previous.pageId : id;
-        var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
-        var resolved = previous && snapshot && previous.done;
-        var promise;
-        var savedState = [id, path, index, snapshot, data, sessionId];
+    function createState(id, path, index, snapshot, data, sessionId, previous, keepPreviousPath, storageMap) {
+        previous = previous || states[currentIndex];
         if (storageMap) {
             storage.set(id, storageMap);
         }
+        var resolvePromise = noop;
+        var rejectPromise = noop;
+        var pathNoQuery = removeQueryAndHash(path);
+        var pageId = previous && snapshot ? previous.pageId : id;
+        var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
+        var resolved, promise;
+        var savedState = [id, path, index, snapshot, data, sessionId];
         var state = {
             id: id,
             path: path,
@@ -368,15 +363,15 @@ function configureRouter(app, options) {
             pageId: pageId,
             sessionId: sessionId,
             resumedId: resumedId,
-            handled: resolved,
+            handled: previous && snapshot && !!previous.done,
             get done() {
                 return resolved;
             },
             get promise() {
-                return promise || (promise = new Promise(function (resolve_, reject_) {
+                return promise || (promise = resolve(resolved || new Promise(function (resolve_, reject_) {
                     resolvePromise = resolve_;
                     rejectPromise = reject_;
-                }));
+                })));
             },
             get pageInfo() {
                 return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
@@ -405,12 +400,12 @@ function configureRouter(app, options) {
                 }
             },
             resolve: function (result) {
-                result = result || createNavigateResult(id, state.path);
-                resolved = true;
-                resolvePromise(result);
+                resolved = result || createNavigateResult(id, state.path);
+                resolvePromise(resolved);
+                state.handled = true;
                 if (states[currentIndex] === state) {
                     lastState = state;
-                    if (result.navigated) {
+                    if (resolved.navigated) {
                         app.emit('pageload', { pathname: state.path }, { handleable: false });
                     }
                 }
@@ -428,23 +423,20 @@ function configureRouter(app, options) {
         return state;
     }
 
-    function updatePath(state, path) {
-        if (removeQueryAndHash(path) === state.pathname) {
-            var oldHash = parsePath(state.path).hash;
-            var newHash = parsePath(path).hash;
-            state.path = path;
-            if ((history.state || state.id) === state.id) {
-                history.replaceState(state.id, '', toPathname(path));
-                if (state.done) {
-                    currentPath = path;
-                    app.path = path;
-                }
-                if (oldHash !== newHash) {
-                    app.emit('hashchange', { oldHash, newHash }, { handleable: false });
-                }
+    function updateQueryAndHash(state, newPath, oldPath) {
+        state.path = newPath;
+        history.replaceState(state.id, '', toPathname(newPath));
+        if (state.done) {
+            var oldHash = parsePath(oldPath).hash;
+            var newHash = parsePath(newPath).hash;
+            currentPath = newPath;
+            app.path = newPath;
+            if (oldHash !== newHash) {
+                app.emit('hashchange', { oldHash, newHash }, { handleable: false });
             }
-            return true;
+            return { promise: resolve(createNavigateResult(state.pageId, newPath, null, false)) };
         }
+        return state;
     }
 
     function applyState(state, replace, snapshot, callback) {
@@ -465,7 +457,12 @@ function configureRouter(app, options) {
                 state.reject(errorWithCode(ErrorCode.navigationRejected));
             });
         } else if (callback() !== false) {
-            setImmediateOnce(handlePathChange);
+            if (snapshot && currentState.done) {
+                state.resolve(createNavigateResult(state.pageId, state.path, null, false));
+                updateQueryAndHash(state, state.path, currentState.path);
+            } else {
+                setImmediateOnce(handlePathChange);
+            }
         }
     }
 
@@ -475,21 +472,27 @@ function configureRouter(app, options) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
         }
         var currentState = states[currentIndex];
-        if (currentState && !snapshot && updatePath(currentState, path)) {
-            if (currentState.done) {
-                return { promise: resolve(createNavigateResult(currentState.pageId, path, null, false)) };
+        var previous = currentState;
+        if (currentState) {
+            var pathNoQuery = removeQueryAndHash(path);
+            if (snapshot) {
+                storageMap = new HistoryStorage(previous.storage.toJSON());
+            } else if (pathNoQuery === currentState.pathname) {
+                if (!currentState.done || replace || path === currentState.path) {
+                    return updateQueryAndHash(currentState, path, currentState.path);
+                }
+                snapshot = true;
+                storageMap = currentState.storage;
+            } else if (pathNoQuery === lastState.pathname && removeQueryAndHash(currentPath) === pathNoQuery) {
+                snapshot = true;
+                previous = lastState;
+                storageMap = lastState.storage;
             }
-            return currentState;
         }
-        if (snapshot && currentState) {
-            data = currentState.data;
-            storageMap = new HistoryStorage(currentState.storage.toJSON());
-        }
-
         var id = randomId();
         var replaceHistory = replace || (currentState && !currentState.done);
         var index = Math.max(0, currentIndex + !replaceHistory);
-        var state = createState(id, path, indexOffset + index, snapshot, data, sessionId, replaceHistory, storageMap);
+        var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
         applyState(state, replace, snapshot, function () {
             currentIndex = index;
             if (!replace) {
@@ -501,7 +504,7 @@ function configureRouter(app, options) {
                 });
             }
             states[currentIndex] = state;
-            history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+            history[replaceHistory || state.index === history.length ? 'replaceState' : 'pushState'](id, '', toPathname(path));
             storage.set('c', id);
             storage.set('s', states);
         });
@@ -704,7 +707,7 @@ function configureRouter(app, options) {
         toHref: toPathname,
         fromHref: fromPathname,
         snapshot: function () {
-            return states[currentIndex] === lastState && !!(lastState = pushState(currentPath, false, true));
+            return states[currentIndex] === lastState && !!pushState(currentPath, false, true);
         },
         navigate: function (path, replace, data) {
             return pushState(path, replace, false, data).promise;
