@@ -45,10 +45,6 @@ function getCurrentQuery() {
     return location.search + location.hash;
 }
 
-function getCurrentPathAndQuery() {
-    return location.pathname + getCurrentQuery();
-}
-
 function HistoryStorage(obj) {
     var map = new Map(obj && Object.entries(obj));
     Object.setPrototypeOf(map, HistoryStorage.prototype);
@@ -642,8 +638,13 @@ function configureRouter(app, options) {
     if (options.urlMode === 'none') {
         baseUrl = '/';
         isAppPath = constant(false);
-        fromPathname = constant(baseUrl);
-        toPathname = getCurrentPathAndQuery;
+        fromPathname = function (path) {
+            var parts = parsePath(currentPath);
+            return parts.pathname + parts.search + parsePath(path).hash;
+        };
+        toPathname = function (path) {
+            return location.pathname + location.search + parsePath(path).hash;
+        };
     } else if (options.urlMode === 'query') {
         baseUrl = '/';
         isAppPath = function (path) {
@@ -738,7 +739,7 @@ function configureRouter(app, options) {
     bind(window, 'popstate', function () {
         var index = getHistoryIndex(history.state);
         if (index < 0) {
-            pushState(fromPathname(getCurrentPathAndQuery()));
+            pushState(fromPathname(location.pathname + getCurrentQuery()));
         } else if (index !== currentIndex) {
             popState(index, true);
         }
