@@ -1,7 +1,7 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, any, catchAsync, grep, mapRemove, matchWord, pipe } from "./include/zeta-dom/util.js";
+import { always, any, grep, mapRemove, matchWord, pipe, resolve } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
@@ -10,7 +10,7 @@ import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
-import { selectorForAttr } from "./util/common.js";
+import { hasAttr, selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
 
 const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
@@ -50,19 +50,31 @@ export function closeFlyout(flyout, value) {
     var elements = $(flyout || '[is-flyout].open').get();
     return resolveAll(elements.map(function (v) {
         var state = flyoutStates.get(v);
-        if (state) {
-            flyoutStates.delete(v);
+        if (!state) {
+            return resolve();
+        }
+        var promise = state.closePromise;
+        if (!promise) {
             releaseModal(v);
             releaseFocus(v);
             state.resolve(value);
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
             }
+            if (hasAttr(v, 'animate-out')) {
+                setClass(v, 'closing', true);
+                promise = animateOut(v, 'open');
+            } else {
+                promise = runCSSTransition(v, 'closing');
+            }
+            promise = always(promise, function () {
+                flyoutStates.delete(v);
+                setClass(v, { open: false, closing: false, visible: false });
+                dom.emit('flyouthide', v);
+            });
+            state.closePromise = promise;
         }
-        return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
-            setClass(v, { open: false, closing: false, visible: false });
-            dom.emit('flyouthide', v);
-        });
+        return promise;
     }));
 }
 
