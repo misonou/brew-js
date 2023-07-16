@@ -303,14 +303,8 @@ export default addExtension(true, 'template', function (app) {
     });
 
     matchElement('[loading-scope]', function (element) {
-        dom.subscribeAsync(element);
-        dom.on(element, {
-            asyncStart: function () {
-                setVar(element, 'loading', true);
-            },
-            asyncEnd: function () {
-                setVar(element, 'loading', false);
-            }
+        dom.subscribeAsync(element, function (loading) {
+            setVar(element, 'loading', loading);
         });
     });
 

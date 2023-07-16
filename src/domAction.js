@@ -1,10 +1,10 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, any, grep, mapRemove, matchWord, pipe, resolve } from "./include/zeta-dom/util.js";
+import { always, grep, mapRemove, matchWord, pipe, resolve } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal } from "./include/zeta-dom/dom.js";
+import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
 import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
@@ -13,7 +13,6 @@ import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
 import { evalAttr, setVar } from "./var.js";
 
-const SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 
@@ -152,34 +151,9 @@ export function openFlyout(selector, states, source, closeIfOpened) {
 }
 
 dom.ready.then(function () {
-    var tabindexMap = new WeakMap();
-    var tabRoot = root;
-
-    function setTabIndex(nodes) {
-        $(nodes || SELECTOR_FOCUSABLE).each(function (i, v) {
-            var closest = $(v).closest(SELECTOR_TABROOT)[0] || root;
-            if (closest !== tabRoot) {
-                if (!tabindexMap.has(v)) {
-                    tabindexMap.set(v, v.tabIndex);
-                }
-                v.tabIndex = -1;
-            } else {
-                $(v).attr('tabindex', mapRemove(tabindexMap, v) || null);
-            }
-        });
-    }
-
-    dom.on('focuschange', function () {
-        var newRoot = any($(SELECTOR_TABROOT).get().reverse(), function (v) {
-            return focused(v);
-        }) || root;
-        if (newRoot !== tabRoot) {
-            tabRoot = newRoot;
-            setTimeout(setTabIndex);
-        }
-    });
-
-    watchElements(root, SELECTOR_FOCUSABLE, setTabIndex, true);
+    watchElements(root, SELECTOR_TABROOT, function (addedNodes) {
+        addedNodes.forEach(setTabRoot);
+    }, true);
 
     app.on('mounted', function (e) {
         var selector = selectorForAttr(asyncActions);
