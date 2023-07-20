@@ -7,9 +7,10 @@ declare namespace Brew {
         scrollMove: ScrollableEvent;
         scrollStop: ScrollableEvent;
         scrollProgressChange: ScrollableEvent;
+        scrollIndexChange: ScrollableIndexChangeEvent;
     }
 
-    interface ScrollableEvent extends ZetaEvent {
+    interface ScrollableEvent extends Zeta.ZetaEvent {
         readonly startX: number;
         readonly startY: number;
         readonly offsetX: number;
@@ -20,6 +21,11 @@ declare namespace Brew {
         readonly percentY: number;
         readonly pageIndex: number;
         readonly pageItem: Element | null;
+    }
+
+    interface ScrollableIndexChangeEvent extends Zeta.ZetaEvent {
+        readonly oldIndex: number;
+        readonly newIndex: number;
     }
 
     interface WithScrollable extends EventDispatcher<keyof ScrollableEventMap, ScrollableEventMap> {

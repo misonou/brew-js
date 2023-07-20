@@ -4,7 +4,7 @@ import { bind, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf }
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
-import { getVar, setVar } from "../var.js";
+import { setVar } from "../var.js";
 import { addExtension, isElementActive } from "../app.js";
 import { selectorForAttr } from "../util/common.js";
 
@@ -36,6 +36,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         var scrolling = false;
         var needRefresh = false;
         var isControlledScroll;
+        var currentIndex = 0;
 
         // @ts-ignore: signature ignored
         $(container).scrollable(extend({}, defaultOptions, {
@@ -98,10 +99,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         }
 
         function setState(index) {
+            var oldIndex = currentIndex;
+            currentIndex = index;
             if (varname) {
-                var obj = {};
-                obj[varname] = index;
-                setVar(container, obj);
+                setVar(container, varname, index);
+            }
+            if (oldIndex !== index) {
+                app.emit('scrollIndexChange', container, {
+                    oldIndex: oldIndex,
+                    newIndex: index
+                }, true);
             }
         }
 
@@ -126,7 +133,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     needRefresh = true;
                 } else {
                     needRefresh = false;
-                    scrollTo(getVar(container, varname));
+                    scrollTo(currentIndex);
                 }
             }
         }
@@ -139,38 +146,36 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     });
                 }));
             }
-            if (varname) {
-                registerCleanup(container, app.on(container, {
-                    statechange: function (e) {
-                        var newIndex = e.data[varname];
-                        if (!scrolling) {
-                            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
-                                scrollTo(newIndex, 'left center');
-                            } else {
-                                scrollTo(newIndex);
-                            }
-                        }
-                    },
-                    scrollMove: function (e) {
-                        scrolling = true;
-                        if (!isControlledScroll) {
-                            setState(e.pageIndex);
-                        }
-                    },
-                    scrollStop: function (e) {
-                        setState(e.pageIndex);
-                        scrolling = false;
-                        if (needRefresh) {
-                            refresh();
+            registerCleanup(container, app.on(container, {
+                statechange: function (e) {
+                    var newIndex = e.data[varname];
+                    if (!scrolling) {
+                        if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
+                            scrollTo(newIndex, 'left center');
+                        } else {
+                            scrollTo(newIndex);
                         }
                     }
-                }, true));
-                var timeout;
-                registerCleanup(container, bind(window, 'resize', function () {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(refresh, 200);
-                }));
-            }
+                },
+                scrollMove: function (e) {
+                    scrolling = true;
+                    if (!isControlledScroll) {
+                        setState(e.pageIndex);
+                    }
+                },
+                scrollStop: function (e) {
+                    setState(e.pageIndex);
+                    scrolling = false;
+                    if (needRefresh) {
+                        refresh();
+                    }
+                }
+            }, true));
+            var timeout;
+            registerCleanup(container, bind(window, 'resize', function () {
+                clearTimeout(timeout);
+                timeout = setTimeout(refresh, 200);
+            }));
         }
 
         if (persistScroll) {
