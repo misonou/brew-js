@@ -545,6 +545,10 @@ function configureRouter(app, options) {
         var parsedState;
         path = decodeURI(path) || '/';
         currentPath = currentPath || app.path;
+        if (path[0] === '#' || path[0] === '?') {
+            var parts = parsePath(currentPath);
+            return parts.pathname + (path[0] === '#' ? parts.search + path : path);
+        }
         if (path[0] === '~' || path.indexOf('{') >= 0) {
             var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
             parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
@@ -555,7 +559,7 @@ function configureRouter(app, options) {
         if (path[0] === '~') {
             path = (isRoutePath ? pipe : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
         } else if (path[0] !== '/') {
-            path = combinePath(currentPath, path);
+            path = combinePath(removeQueryAndHash(currentPath), path);
         }
         return normalizePath(path, true);
     }

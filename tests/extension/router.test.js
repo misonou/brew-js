@@ -725,6 +725,9 @@ describe('app.resolvePath', () => {
     it('should resolve relative path', async () => {
         await app.navigate('/foo/bar');
         expect(app.resolvePath('baz')).toEqual('/foo/bar/baz');
+
+        await app.navigate('/foo/bar?foo=bar#baz');
+        expect(app.resolvePath('baz')).toEqual('/foo/bar/baz');
     });
 
     it('should resolve ~/ path relative to min path of current route', async () => {
@@ -757,6 +760,13 @@ describe('app.resolvePath', () => {
         await app.navigate(initialPath);
         expect(app.resolvePath('/foo/{id?}', '/foo')).toEqual('/foo');
         expect(app.resolvePath('/foo/{id?}/baz', '/foo')).toEqual('/foo/null/baz');
+    });
+
+    it('should resolve to current path when given query string or hash only', async () => {
+        await app.navigate('/foo?bar=baz#hash');
+        expect(app.resolvePath('#foo')).toEqual('/foo?bar=baz#foo');
+        expect(app.resolvePath('?foo')).toEqual('/foo?foo');
+        expect(app.resolvePath('?foo#foo')).toEqual('/foo?foo#foo');
     });
 });
 
