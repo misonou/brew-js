@@ -1,4 +1,4 @@
-/*! brew-js v0.5.5 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.6 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -927,12 +927,14 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     setShortcut = _zeta$dom.setShortcut,
     focusable = _zeta$dom.focusable,
     focused = _zeta$dom.focused,
+    setTabRoot = _zeta$dom.setTabRoot,
     setModal = _zeta$dom.setModal,
     releaseModal = _zeta$dom.releaseModal,
     retainFocus = _zeta$dom.retainFocus,
     releaseFocus = _zeta$dom.releaseFocus,
     iterateFocusPath = _zeta$dom.iterateFocusPath,
-    dom_focus = _zeta$dom.focus;
+    dom_focus = _zeta$dom.focus,
+    dom_blur = _zeta$dom.blur;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
@@ -2175,7 +2177,6 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 
 
-var SELECTOR_FOCUSABLE = 'button,input,select,textarea,[contenteditable],a[href],area[href],iframe';
 var SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 var domAction_root = zeta_dom_dom.root;
@@ -2214,8 +2215,13 @@ function closeFlyout(flyout, value) {
   return resolveAll(elements.map(function (v) {
     var state = flyoutStates.get(v);
 
-    if (state) {
-      flyoutStates.delete(v);
+    if (!state) {
+      return resolve();
+    }
+
+    var promise = state.closePromise;
+
+    if (!promise) {
       releaseModal(v);
       releaseFocus(v);
       state.resolve(value);
@@ -2223,16 +2229,27 @@ function closeFlyout(flyout, value) {
       if (state.source) {
         setClass(state.source, 'target-opened', false);
       }
+
+      if (hasAttr(v, 'animate-out')) {
+        setClass(v, 'closing', true);
+        promise = animateOut(v, 'open');
+      } else {
+        promise = runCSSTransition(v, 'closing');
+      }
+
+      promise = always(promise, function () {
+        flyoutStates.delete(v);
+        setClass(v, {
+          open: false,
+          closing: false,
+          visible: false
+        });
+        zeta_dom_dom.emit('flyouthide', v);
+      });
+      state.closePromise = promise;
     }
 
-    return catchAsync(v.attributes['animate-out'] ? (setClass(v, 'closing', true), animateOut(v, 'open')) : runCSSTransition(v, 'closing')).then(function () {
-      setClass(v, {
-        open: false,
-        closing: false,
-        visible: false
-      });
-      zeta_dom_dom.emit('flyouthide', v);
-    });
+    return promise;
   }));
 }
 /**
@@ -2326,36 +2343,9 @@ function openFlyout(selector, states, source, closeIfOpened) {
   return promise;
 }
 zeta_dom_dom.ready.then(function () {
-  var tabindexMap = new WeakMap();
-  var tabRoot = domAction_root;
-
-  function setTabIndex(nodes) {
-    jquery(nodes || SELECTOR_FOCUSABLE).each(function (i, v) {
-      var closest = jquery(v).closest(SELECTOR_TABROOT)[0] || domAction_root;
-
-      if (closest !== tabRoot) {
-        if (!tabindexMap.has(v)) {
-          tabindexMap.set(v, v.tabIndex);
-        }
-
-        v.tabIndex = -1;
-      } else {
-        jquery(v).attr('tabindex', mapRemove(tabindexMap, v) || null);
-      }
-    });
-  }
-
-  zeta_dom_dom.on('focuschange', function () {
-    var newRoot = any(jquery(SELECTOR_TABROOT).get().reverse(), function (v) {
-      return focused(v);
-    }) || domAction_root;
-
-    if (newRoot !== tabRoot) {
-      tabRoot = newRoot;
-      setTimeout(setTabIndex);
-    }
-  });
-  watchElements(domAction_root, SELECTOR_FOCUSABLE, setTabIndex, true);
+  watchElements(domAction_root, SELECTOR_TABROOT, function (addedNodes) {
+    addedNodes.forEach(setTabRoot);
+  }, true);
   app.on('mounted', function (e) {
     var selector = selectorForAttr(asyncActions);
 
@@ -2885,14 +2875,8 @@ var template_root = zeta_dom_dom.root;
     });
   });
   matchElement('[loading-scope]', function (element) {
-    zeta_dom_dom.subscribeAsync(element);
-    zeta_dom_dom.on(element, {
-      asyncStart: function asyncStart() {
-        setVar(element, 'loading', true);
-      },
-      asyncEnd: function asyncEnd() {
-        setVar(element, 'loading', false);
-      }
+    zeta_dom_dom.subscribeAsync(element, function (loading) {
+      setVar(element, 'loading', loading);
     });
   });
   matchElement('[error-scope]', function (element) {
@@ -3190,7 +3174,8 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
     var savedOffset = {};
     var scrolling = false;
     var needRefresh = false;
-    var isControlledScroll; // @ts-ignore: signature ignored
+    var isControlledScroll;
+    var currentIndex = 0; // @ts-ignore: signature ignored
 
     jquery(container).scrollable(extend({}, defaultOptions, {
       handle: matchWord(dir, 'auto scrollbar content') || 'content',
@@ -3251,10 +3236,18 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
     }
 
     function setState(index) {
+      var oldIndex = currentIndex;
+      currentIndex = index;
+
       if (varname) {
-        var obj = {};
-        obj[varname] = index;
-        setVar(container, obj);
+        setVar(container, varname, index);
+      }
+
+      if (oldIndex !== index) {
+        app.emit('scrollIndexChange', container, {
+          oldIndex: oldIndex,
+          newIndex: index
+        }, true);
       }
     }
 
@@ -3281,7 +3274,7 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
           needRefresh = true;
         } else {
           needRefresh = false;
-          scrollTo(getVar(container, varname));
+          scrollTo(currentIndex);
         }
       }
     }
@@ -3295,41 +3288,39 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
         }));
       }
 
-      if (varname) {
-        registerCleanup(container, app.on(container, {
-          statechange: function statechange(e) {
-            var newIndex = e.data[varname];
+      registerCleanup(container, app.on(container, {
+        statechange: function statechange(e) {
+          var newIndex = e.data[varname];
 
-            if (!scrolling) {
-              if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
-                scrollTo(newIndex, 'left center');
-              } else {
-                scrollTo(newIndex);
-              }
-            }
-          },
-          scrollMove: function scrollMove(e) {
-            scrolling = true;
-
-            if (!isControlledScroll) {
-              setState(e.pageIndex);
-            }
-          },
-          scrollStop: function scrollStop(e) {
-            setState(e.pageIndex);
-            scrolling = false;
-
-            if (needRefresh) {
-              refresh();
+          if (!scrolling) {
+            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
+              scrollTo(newIndex, 'left center');
+            } else {
+              scrollTo(newIndex);
             }
           }
-        }, true));
-        var timeout;
-        registerCleanup(container, bind(window, 'resize', function () {
-          clearTimeout(timeout);
-          timeout = setTimeout(refresh, 200);
-        }));
-      }
+        },
+        scrollMove: function scrollMove(e) {
+          scrolling = true;
+
+          if (!isControlledScroll) {
+            setState(e.pageIndex);
+          }
+        },
+        scrollStop: function scrollStop(e) {
+          setState(e.pageIndex);
+          scrolling = false;
+
+          if (needRefresh) {
+            refresh();
+          }
+        }
+      }, true));
+      var timeout;
+      registerCleanup(container, bind(window, 'resize', function () {
+        clearTimeout(timeout);
+        timeout = setTimeout(refresh, 200);
+      }));
     }
 
     if (persistScroll) {
@@ -4147,6 +4138,11 @@ function configureRouter(app, options) {
     path = decodeURI(path) || '/';
     currentPath = currentPath || app.path;
 
+    if (path[0] === '#' || path[0] === '?') {
+      var parts = parsePath(currentPath);
+      return parts.pathname + (path[0] === '#' ? parts.search + path : path);
+    }
+
     if (path[0] === '~' || path.indexOf('{') >= 0) {
       var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
       parsedState = iequal(fullPath, route.toString()) ? router_(route).current : route.parse(fullPath) && router_(route).lastMatch;
@@ -4158,7 +4154,7 @@ function configureRouter(app, options) {
     if (path[0] === '~') {
       path = (isRoutePath ? pipe : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
     } else if (path[0] !== '/') {
-      path = combinePath(currentPath, path);
+      path = combinePath(removeQueryAndHash(currentPath), path);
     }
 
     return normalizePath(path, true);
