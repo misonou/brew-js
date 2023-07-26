@@ -224,8 +224,6 @@ function initHtmlRouter(app, options) {
     });
 
     dom.ready.then(function () {
-        registerMatchPathElements();
-
         // replace inline background-image to prevent browser to load unneccessary images
         $('[style]').each(function (i, v) {
             var backgroundImage = isCssUrlValue(v.style.backgroundImage);
@@ -234,6 +232,7 @@ function initHtmlRouter(app, options) {
                 v.style.backgroundImage = 'none';
             }
         });
+        registerMatchPathElements();
     });
 
     watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
