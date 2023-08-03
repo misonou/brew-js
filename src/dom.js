@@ -313,7 +313,7 @@ export function mountElement(element) {
         stateChangeLock = prevStateChangeLock;
     }
 
-    var mountedElements = [element];
+    var mountedElements = new Set([element]);
     var firedOnRoot = element === root;
     var index = -1, index2 = 0;
     while (index < selectorHandlers.length) {
@@ -323,21 +323,21 @@ export function mountElement(element) {
                     if (index < 0) {
                         v.unbindHandlers.push(app.on(w, v.handlers));
                     }
-                    if (v.handlers.mounted && mountedElements.indexOf(w) < 0) {
-                        mountedElements.push(w);
+                    if (v.handlers.mounted) {
+                        mountedElements.add(v);
                     }
                 });
             }
         });
         index = selectorHandlers.length;
-        each($.uniqueSort(mountedElements.slice(index2)), function (i, v) {
+        each($.uniqueSort(makeArray(mountedElements).slice(index2)), function (i, v) {
             dom.emit('mounted', v);
         });
         if (!firedOnRoot) {
             firedOnRoot = true;
             dom.emit('mounted', root, { target: element });
         }
-        index2 = mountedElements.length;
+        index2 = mountedElements.size;
     }
     each(matchElementHandlers, function (i, v) {
         $(selectIncludeSelf(v.selector, element)).each(function (i, w) {
