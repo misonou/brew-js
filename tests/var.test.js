@@ -1,5 +1,10 @@
-import { uniqueName, root, mount, body } from "./testUtil";
+import { uniqueName, root, mount, body, initApp } from "./testUtil";
 import { declareVar, getVar, getVarScope, resetVar, setVar } from "src/var";
+import template from "src/extension/template";
+
+beforeAll(async () => {
+    await initApp(template);
+});
 
 describe('getVar', () => {
     it('should throw during initialization', () => {

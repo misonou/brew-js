@@ -1,11 +1,17 @@
 import { addDetect, app, install } from "src/app";
 import router from "src/extension/htmlRouter";
+import template from "src/extension/template";
 import { resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
 
 const { objectContaining } = expect;
 
-beforeAll(() => initApp(router));
+beforeAll(() => initApp(router, template, function (app) {
+    app.useHtmlRouter({
+        baseUrl: '/',
+        routes: ['/*']
+    });
+}));
 
 describe('app.emit', () => {
     it('should emit event to root element if element is not supplied', async () => {
@@ -147,10 +153,6 @@ describe('app.matchPath', () => {
                 <div id="test2" match-path="/test-nested/default"></div>
             </div>
         `);
-        app.useHtmlRouter({
-            baseUrl: '/',
-            routes: ['/*']
-        });
         const cb1 = mockFn();
         const cb2 = mockFn();
         const cb3 = mockFn();

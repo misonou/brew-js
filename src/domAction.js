@@ -11,7 +11,6 @@ import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable }
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
-import { evalAttr, setVar } from "./var.js";
 
 const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
@@ -121,8 +120,8 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     if (source) {
         setClass(source, 'target-opened', true);
     }
-    if (states) {
-        setVar(element, states);
+    if (states && app.setVar) {
+        app.setVar(element, states);
     }
     setClass(element, 'visible', true);
     runCSSTransition(element, 'open', function () {
@@ -247,34 +246,6 @@ dom.ready.then(function () {
             cancelLock(root).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
                 window.open(dataHref || href, '_self', features.join(','));
-            });
-        }
-    });
-
-    $('body').on('click', '[set-var]:not([match-path])', function (e) {
-        var self = e.currentTarget;
-        if (self === $(e.target).closest('[set-var]')[0]) {
-            setVar(self);
-            closeFlyout();
-        }
-    });
-
-    $('body').on('click', '[toggle]', function (e) {
-        var self = e.currentTarget;
-        e.stopPropagation();
-        if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
-            openFlyout(self.getAttribute('toggle'), null, self, true);
-        }
-    });
-
-    $('body').on('click', '[toggle-class]', function (e) {
-        var self = e.currentTarget;
-        e.stopPropagation();
-        if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
-            var selector = self.getAttribute('toggle-class-for');
-            var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
-            each(self.getAttribute('toggle-class'), function (i, v) {
-                setClass(target, v.slice(1), v[0] === '+');
             });
         }
     });

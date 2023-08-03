@@ -1,10 +1,9 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
-import { addSelectHandlers, hookBeforeUpdate, matchElement, mountElement } from "./dom.js";
 
 const root = dom.root;
 const featureDetections = {};
@@ -28,6 +27,16 @@ function exactTargetWrapper(handler) {
             return handler.apply(this, arguments);
         }
     };
+}
+
+function wrapEventHandlers(event, handler, noChildren) {
+    if (isPlainObject(event)) {
+        return noChildren ? mapObject(event, exactTargetWrapper) : event;
+    }
+    if (noChildren) {
+        handler = exactTargetWrapper(handler);
+    }
+    return (event.indexOf(' ') >= 0 ? fill : kv)(event, handler);
 }
 
 function initExtension(app, name, deps, options, callback) {
@@ -123,44 +132,22 @@ definePrototype(App, {
         }));
     },
     on: function (target, event, handler, noChildren) {
-        noChildren = (noChildren || handler) === true;
         if (isFunction(event)) {
+            noChildren = handler;
             handler = event;
             event = target;
             target = root;
         }
-        var handlers = event;
-        if (typeof event === 'string') {
-            if (noChildren) {
-                handler = exactTargetWrapper(handler);
-            }
-            if (event.indexOf(' ') >= 0) {
-                handlers = {};
-                each(event, function (i, v) {
-                    handlers[v] = handler;
-                });
-            } else {
-                handlers = kv(event, handler);
-            }
-        } else if (noChildren) {
-            for (var i in event) {
-                event[i] = exactTargetWrapper(event[i]);
-            }
+        var handlers = wrapEventHandlers(event, handler, (noChildren || handler) === true);
+        if (!is(target, Node)) {
+            return combineFn($(target).get().map(function (v) {
+                return dom.on(v, handlers);
+            }));
         }
-        var arr = [];
-        if (typeof target === 'string') {
-            addSelectHandlers(target, handlers, arr);
-            target = $(target).get();
-        } else if (target instanceof Node) {
-            target = [target];
-        }
-        each(target, function (i, v) {
-            arr.push(dom.on(v, handlers));
-        });
-        return combineFn(arr);
+        return dom.on(target, handlers);
     },
-    matchElement: matchElement,
-    beforeUpdate: hookBeforeUpdate
+    matchElement: noop,
+    beforeUpdate: noop
 });
 watchable(App.prototype);
 
@@ -199,7 +186,6 @@ function init(callback) {
     appInit.then(function () {
         if (app.readyState === 'init') {
             appReady = true;
-            mountElement(root);
             setReadyState('ready');
             app.emit('ready');
         }

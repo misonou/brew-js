@@ -1,14 +1,14 @@
 import waterpipe from "../include/external/waterpipe.js"
 import $ from "../include/external/jquery.js";
 import { parseCSS, isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
-import { bind, selectClosestRelative, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
-import { camel, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
+import { bind, selectClosestRelative, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
+import { camel, combineFn, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
 import { registerCleanup, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
 import dom from "../include/zeta-dom/dom.js";
 import { preventLeave } from "../include/zeta-dom/domLock.js";
 import { addExtension, isElementActive } from "../app.js";
-import { addRenderer, addTransformer, matchElement, mountElement } from "../dom.js";
-import { addAsyncAction } from "../domAction.js";
+import { addRenderer, addSelectHandlers, addTransformer, hookBeforeUpdate, matchElement, mountElement } from "../dom.js";
+import { addAsyncAction, closeFlyout, openFlyout } from "../domAction.js";
 import { copyAttr, getAttr, getAttrValues, getFormValues, hasAttr, isBoolAttr, setAttr } from "../util/common.js";
 import { groupLog, writeLog } from "../util/console.js";
 import { toRelativeUrl, withBaseUrl } from "../util/path.js";
@@ -20,6 +20,27 @@ const templates = {};
 const root = dom.root;
 
 export default addExtension(true, 'template', function (app) {
+    var addListener = app.on.bind(app);
+    app.define({
+        getVar: getVar,
+        setVar: setVar,
+        matchElement: matchElement,
+        beforeUpdate: hookBeforeUpdate,
+        on: function (target, event, handler, noChildren) {
+            var unbind = addListener(target, event, handler, noChildren);
+            if (isFunction(event) || typeof target !== 'string') {
+                return unbind;
+            }
+            return combineFn(unbind, addSelectHandlers(target, event, handler, noChildren));
+        }
+    });
+
+    app.watch('readyState', function (state) {
+        if (state === 'ready') {
+            mountElement(root);
+        }
+    });
+
     addTransformer('apply-template', function (element, getState) {
         var state = getState(element);
         var templateName = getAttr(element, 'apply-template');
@@ -344,6 +365,34 @@ export default addExtension(true, 'template', function (app) {
                 }
             });
         }).remove();
+
+        $('body').on('click', '[set-var]:not([match-path])', function (e) {
+            var self = e.currentTarget;
+            if (self === $(e.target).closest('[set-var]')[0]) {
+                setVar(self);
+                closeFlyout();
+            }
+        });
+
+        $('body').on('click', '[toggle]', function (e) {
+            var self = e.currentTarget;
+            e.stopPropagation();
+            if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+                openFlyout(self.getAttribute('toggle'), null, self, true);
+            }
+        });
+
+        $('body').on('click', '[toggle-class]', function (e) {
+            var self = e.currentTarget;
+            e.stopPropagation();
+            if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
+                var selector = self.getAttribute('toggle-class-for');
+                var target = selector ? selectClosestRelative(selector, self) : e.currentTarget;
+                each(self.getAttribute('toggle-class'), function (i, v) {
+                    setClass(target, v.slice(1), v[0] === '+');
+                });
+            }
+        });
 
         if (hasAttr(root, 'loading-scope')) {
             setVar(root, 'loading', 'initial');

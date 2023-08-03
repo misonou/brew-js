@@ -1,8 +1,7 @@
 /**
  * @param target
- * @param handlers
  */
-export function addSelectHandlers(target: string, handlers: any, unbindHandlers: any[]): Zeta.UnregisterCallback;
+export function addSelectHandlers(target: string, event: any, handler: any, noChildren: boolean): Zeta.UnregisterCallback;
 
 /**
  * @param selector

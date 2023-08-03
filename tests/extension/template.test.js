@@ -8,6 +8,7 @@ import { notifyAsync } from "zeta-dom/domLock";
 import { errorWithCode } from "zeta-dom/util";
 import { fireEvent, screen } from "@testing-library/dom";
 import dom from "zeta-dom/dom";
+import { openFlyout } from "src/domAction";
 
 const isElementActive = mockFn();
 
@@ -557,5 +558,119 @@ describe('context-method directive', () => {
             `<div context-method="unknown-method"></div>
         `);
         expect(() => fireEvent.click(elm)).not.toThrow();
+    });
+});
+
+describe('toggle directive', () => {
+    it('should find the closest ancestor with is-flyout if selector is not specified', async () => {
+        const { flyout, button } = await mount(`
+            <div id="flyout" is-flyout>
+                <button id="button" toggle></button>
+            </div>
+        `);
+        fireEvent.click(button);
+        expect(flyout).toHaveClassName('open');
+    });
+
+    it('should find the closest element with selector', async () => {
+        const { flyout1, flyout2, button } = await mount(`
+            <div>
+                <div>
+                    <div>
+                        <div id="flyout1" is-flyout></div>
+                    </div>
+                    <button id="button" toggle="[is-flyout]"></button>
+                </div>
+                <div id="flyout2" is-flyout></div>
+            </div>
+        `);
+        fireEvent.click(button);
+        expect(flyout1).toHaveClassName('open');
+        expect(flyout2).not.toHaveClassName('open');
+    });
+
+    it('should add target-opened class to the triggering element', async () => {
+        const { button } = await mount(`
+            <div id="flyout" is-flyout>
+                <button id="button" toggle></button>
+            </div>
+        `);
+        fireEvent.click(button);
+        expect(button).toHaveClassName('target-opened');
+    });
+
+    it('should open flyout if toggle-if evaluates to truthy value', async () => {
+        const { flyout, button } = await mount(`
+            <div id="flyout" is-flyout>
+                <button id="button" var="{ boolValue: false }" toggle toggle-if="boolValue"></button>
+            </div>
+        `);
+        fireEvent.click(button);
+        expect(flyout).not.toHaveClassName('open');
+
+        setVar(button, 'boolValue', true);
+        fireEvent.click(button);
+        expect(flyout).toHaveClassName('open');
+    });
+});
+
+describe('toggle-class directive', () => {
+    it('should add class names to element', async () => {
+        const elm = await mount(`<div toggle-class="+foo +bar"></div>`);
+        fireEvent.click(elm);
+        expect(elm).toHaveClassName('foo');
+        expect(elm).toHaveClassName('bar');
+    });
+
+    it('should add class names to specified element', async () => {
+        const { parent, child } = await mount(`
+            <div id="parent">
+                <div id="child" toggle-class="+foo" toggle-class-for="#parent"></div>
+            </div>
+        `);
+        fireEvent.click(child);
+        expect(parent).toHaveClassName('foo');
+    });
+
+    it('should add class names to element if toggle-if evaluates to truthy value', async () => {
+        const elm = await mount(`<div var="{ boolValue: false }" toggle-class="+foo" toggle-if="boolValue"></div>`);
+        fireEvent.click(elm);
+        expect(elm).not.toHaveClassName('foo');
+
+        setVar(elm, 'boolValue', true);
+        fireEvent.click(elm);
+        expect(elm).toHaveClassName('foo');
+    });
+});
+
+describe('set-var directive', () => {
+    it('should set variables on click', async () => {
+        const elm = await mount(`<div var="{ foo: null }" set-var="{ foo: bar }"></div>`);
+        expect(getVar(elm, 'foo')).toBeNull();
+
+        fireEvent.click(elm);
+        expect(getVar(elm, 'foo')).toBe('bar');
+    });
+
+    it('should not set variables for nested parent', async () => {
+        const { parent, child } = await mount(`
+            <div id="parent" var="{ foo: null }" set-var="{ foo: baz }">
+                <div id="child" set-var="{ foo: bar }"></div>
+            </div>
+        `);
+        expect(getVar(parent, 'foo')).toBeNull();
+
+        fireEvent.click(child);
+        expect(getVar(parent, 'foo')).toBe('bar');
+    });
+});
+
+describe('domAction', () => {
+    it('should assign variables to flyout element', async () => {
+        const flyout = await mount(`<div var="{ foo: null }" is-flyout></div>`);
+        expect(getVar(flyout, 'foo')).toBeNull();
+
+        openFlyout(flyout, { foo: 'bar' });
+        expect(getVar(flyout, 'foo')).toBe('bar');
     });
 });

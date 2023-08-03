@@ -188,13 +188,6 @@ declare namespace Brew {
         when<T>(promise: T | PromiseLike<T>, callback: (value: T) => void): void;
 
         /**
-         * Registers handler to be fired when each matched element is being mounted.
-         * @param selector A valid CSS selector identifying elements.
-         * @param handler A callback function which receives is the matched element.
-         */
-        matchElement(selector: string, handler: (element: Element) => void): void;
-
-        /**
          * Postpones app start until the promise is fulfilled.
          *
          * When all operations have completed, {@link AppInstance.readyState} will be set to `ready`
@@ -204,13 +197,6 @@ declare namespace Brew {
          * @param promise A promise-like object or a callback that returns promise-like object when called.
          */
         beforeInit(promise: PromiseLike<any> | (() => PromiseOrEmpty)): void;
-
-        /**
-         * Registers handler to perform asychronous operations when DOM is about to change.
-         * If the handler returns a promise, DOM changes are delayed until the promise resolves.
-         * @param callback A callback function which receives a list of updates.
-         */
-        beforeUpdate(callback: (domUpdates: Map<Element, DOMUpdateState>) => PromiseOrEmpty): void;
 
         emit(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
 

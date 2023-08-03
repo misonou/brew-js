@@ -2,7 +2,7 @@ import $ from "./include/external/jquery.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove } from "./include/zeta-dom/util.js";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
@@ -104,16 +104,14 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
     });
 }
 
-/**
- * @param {string} target
- * @param {Zeta.Dictionary} handlers
- * @param {any[]} unbindHandlers
- */
-export function addSelectHandlers(target, handlers, unbindHandlers) {
+export function addSelectHandlers(target, event, handler, noChildren) {
+    var unbindHandlers = [];
     var obj = {
         target: target,
-        handlers: handlers,
-        unbindHandlers: unbindHandlers
+        doMount: event.mounted || matchWord(event, 'mounted'),
+        add: function (elements) {
+            unbindHandlers.push(app.on(elements, event, handler, noChildren));
+        }
     };
     selectorHandlers.push(obj);
     unbindHandlers.push(function () {
@@ -124,6 +122,7 @@ export function addSelectHandlers(target, handlers, unbindHandlers) {
             arrRemove(selectorHandlers, obj);
         });
     });
+    return combineFn(unbindHandlers);
 }
 
 /**
@@ -319,14 +318,17 @@ export function mountElement(element) {
     while (index < selectorHandlers.length) {
         each(selectorHandlers.slice(index < 0 ? 0 : index), function (i, v) {
             if (!v.disposed) {
-                $(selectIncludeSelf(v.target, element)).each(function (i, w) {
+                var elements = selectIncludeSelf(v.target, element);
+                if (elements[0]) {
                     if (index < 0) {
-                        v.unbindHandlers.push(app.on(w, v.handlers));
+                        v.add(elements);
                     }
-                    if (v.handlers.mounted) {
-                        mountedElements.add(v);
+                    if (v.doMount) {
+                        each(elements, function (i, v) {
+                            mountedElements.add(v);
+                        });
                     }
-                });
+                }
             }
         });
         index = selectorHandlers.length;
