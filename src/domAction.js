@@ -1,7 +1,7 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, camel, each, grep, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
+import { always, camel, catchAsync, each, grep, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
@@ -131,9 +131,9 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         app.setVar(element, states);
     }
     setClass(element, { visible: true, closing: false });
-    runCSSTransition(element, 'open', function () {
+    catchAsync(runCSSTransition(element, 'open', function () {
         focus(element);
-    });
+    }));
     animateIn(element, 'open');
     if (element.attributes['is-modal']) {
         setModal(element);
