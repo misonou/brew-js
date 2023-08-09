@@ -1,13 +1,12 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, grep, mapRemove, matchWord, pipe, resolve } from "./include/zeta-dom/util.js";
+import { always, camel, each, grep, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, selectClosestRelative, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
-import { throwNotFunction, camel, resolveAll, each, mapGet, reject, isThenable } from "./include/zeta-dom/util.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
@@ -64,9 +63,11 @@ export function closeFlyout(flyout, value) {
                 hasAttr(v, 'animate-out') && animateOut(v, 'open')
             ]);
             promise = always(promise, function () {
-                flyoutStates.delete(v);
-                setClass(v, { open: false, closing: false, visible: false });
-                dom.emit('flyouthide', v);
+                if (flyoutStates.get(v) === state) {
+                    flyoutStates.delete(v);
+                    setClass(v, { open: false, closing: false, visible: false });
+                    dom.emit('flyouthide', v);
+                }
             });
             state.closePromise = promise;
         }
@@ -87,7 +88,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         return reject();
     }
     var prev = flyoutStates.get(element);
-    if (prev) {
+    if (prev && !prev.closePromise) {
         if (closeIfOpened) {
             // @ts-ignore: can accept if no such property
             closeFlyout(element, source && waterpipe.eval('`' + source.value));
@@ -121,7 +122,7 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     if (states && app.setVar) {
         app.setVar(element, states);
     }
-    setClass(element, 'visible', true);
+    setClass(element, { visible: true, closing: false });
     runCSSTransition(element, 'open', function () {
         focus(element);
     });

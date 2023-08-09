@@ -2,10 +2,9 @@ import { fireEvent } from "@testing-library/dom";
 import { jest } from "@jest/globals";
 import router from "src/extension/router";
 import { addAsyncAction, closeFlyout, openFlyout } from "src/domAction";
-import { getVar, setVar } from "src/var";
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
-import { initApp, delay, mount, root, mockFn, after } from "./testUtil";
+import { initApp, delay, mount, root, mockFn, after, bindEvent } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 var app;
@@ -41,6 +40,21 @@ describe('openFlyout', () => {
         const flyout = await mount(`<div is-flyout></div>`);
         const promise = openFlyout(flyout);
         expect(openFlyout(flyout)).toBe(promise);
+    });
+
+    it('should return the different promise if flyout is already closing', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        const promise = openFlyout(flyout);
+        const promise1 = closeFlyout(flyout);
+        expect(flyout).toHaveClassName('closing');
+
+        expect(openFlyout(flyout)).not.toBe(promise);
+        expect(flyout).not.toHaveClassName('closing');
+        expect(flyout).toHaveClassName('visible');
+
+        await promise1;
+        expect(flyout).not.toHaveClassName('closing');
+        expect(flyout).toHaveClassName('visible');
     });
 
     it('should return a rejected promise if no element if found for selector', async () => {
@@ -125,6 +139,28 @@ describe('closeFlyout', () => {
         closeFlyout(undefined, 'test');
         await expect(p1).resolves.toBe('test');
         await expect(p2).resolves.toBe('test');
+    });
+
+    it('should emit flyouthide event after flyout is closed', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        bindEvent(flyout, 'flyouthide', cb);
+        openFlyout(flyout);
+
+        await closeFlyout(flyout);
+        expect(cb).toBeCalledTimes(1);
+    });
+
+    it('should not emit flyouthide event if flyout is reopened before fully closed', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        bindEvent(flyout, 'flyouthide', cb);
+        openFlyout(flyout);
+
+        const promise = closeFlyout(flyout);
+        openFlyout(flyout);
+        await promise;
+        expect(cb).not.toBeCalled();
     });
 });
 
