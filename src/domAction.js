@@ -3,7 +3,7 @@ import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
 import { always, camel, each, grep, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
-import { setClass, selectClosestRelative, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
+import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { watchElements } from "./include/zeta-dom/observe.js";
@@ -91,8 +91,7 @@ export function toggleFlyout(selector, source) {
  * @param {boolean=} closeIfOpened
  */
 export function openFlyout(selector, states, source, closeIfOpened) {
-    var container = source || root;
-    var element = selector ? selectClosestRelative(selector, container) : $(container).closest('[is-flyout]')[0];
+    var element = $(selector)[0];
     if (!element) {
         return reject();
     }

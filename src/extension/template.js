@@ -8,7 +8,7 @@ import dom from "../include/zeta-dom/dom.js";
 import { preventLeave } from "../include/zeta-dom/domLock.js";
 import { addExtension, isElementActive } from "../app.js";
 import { addRenderer, addSelectHandlers, addTransformer, hookBeforeUpdate, matchElement, mountElement } from "../dom.js";
-import { addAsyncAction, closeFlyout, openFlyout } from "../domAction.js";
+import { addAsyncAction, closeFlyout, toggleFlyout } from "../domAction.js";
 import { copyAttr, getAttr, getAttrValues, getFormValues, hasAttr, isBoolAttr, setAttr } from "../util/common.js";
 import { groupLog, writeLog } from "../util/console.js";
 import { toRelativeUrl, withBaseUrl } from "../util/path.js";
@@ -376,9 +376,11 @@ export default addExtension(true, 'template', function (app) {
 
         $('body').on('click', '[toggle]', function (e) {
             var self = e.currentTarget;
+            var selector = self.getAttribute('toggle');
+            var target = selector ? selectClosestRelative(selector, self) : $(self).closest('[is-flyout]')[0];
             e.stopPropagation();
-            if (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if')) {
-                openFlyout(self.getAttribute('toggle'), null, self, true);
+            if (target && (!self.attributes['toggle-if'] || evalAttr(self, 'toggle-if'))) {
+                toggleFlyout(target, self);
             }
         });
 
