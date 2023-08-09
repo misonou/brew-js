@@ -37,6 +37,11 @@ export function addAsyncAction(attr, callback) {
     asyncActions[attr] = throwNotFunction(callback);
 }
 
+export function isFlyoutOpen(selector) {
+    var state = flyoutStates.get($(selector)[0]);
+    return !!state && !state.closePromise;
+}
+
 /**
  * @param {Element | string=} flyout
  * @param {any=} value
@@ -73,6 +78,10 @@ export function closeFlyout(flyout, value) {
         }
         return promise;
     }));
+}
+
+export function toggleFlyout(selector, source) {
+    return openFlyout(selector, null, source, true);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { fireEvent } from "@testing-library/dom";
 import { jest } from "@jest/globals";
 import router from "src/extension/router";
-import { addAsyncAction, closeFlyout, openFlyout } from "src/domAction";
+import { addAsyncAction, closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } from "src/domAction";
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
 import { initApp, delay, mount, root, mockFn, after, bindEvent } from "./testUtil";
@@ -161,6 +161,52 @@ describe('closeFlyout', () => {
         openFlyout(flyout);
         await promise;
         expect(cb).not.toBeCalled();
+    });
+});
+
+describe('isFlyoutOpen', () => {
+    it('should return whether flyout is open', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        expect(isFlyoutOpen(flyout)).toBe(false);
+
+        openFlyout(flyout);
+        expect(isFlyoutOpen(flyout)).toBe(true);
+
+        await closeFlyout(flyout);
+        expect(isFlyoutOpen(flyout)).toBe(false);
+    });
+
+    it('should return false when flyout is closing', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout);
+
+        const promise = closeFlyout(flyout);
+        expect(isFlyoutOpen(flyout)).toBe(false);
+        await promise;
+    });
+});
+
+describe('toggleFlyout', () => {
+    it('should toggle flyout', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        expect(isFlyoutOpen(flyout)).toBe(false);
+
+        toggleFlyout(flyout);
+        expect(isFlyoutOpen(flyout)).toBe(true);
+
+        toggleFlyout(flyout);
+        expect(isFlyoutOpen(flyout)).toBe(false);
+    });
+
+    it('should send value from source element', async () => {
+        const { flyout, button } = await mount(`
+            <div id="flyout" is-flyout>
+                <button id="button" value="test" toggle></button>
+            </div>
+        `);
+        const promise = toggleFlyout(flyout);
+        toggleFlyout(flyout, button);
+        await expect(promise).resolves.toBe('test');
     });
 });
 
