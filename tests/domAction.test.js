@@ -61,6 +61,13 @@ describe('openFlyout', () => {
         await expect(openFlyout('#nonexist')).rejects.toBeUndefined();
     });
 
+    it('should resolve the promise if flyout is detached without closing', async () => {
+        const flyout = await mount(`<div is-flyout swipe-dismiss="left"></div>`);
+        const promise = openFlyout(flyout);
+        flyout.remove();
+        await expect(promise).resolves.toBeUndefined();
+    });
+
     it('should set modal if is-modal is present', async () => {
         const flyout = await mount(`<div is-flyout is-modal></div>`);
         openFlyout(flyout);

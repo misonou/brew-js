@@ -6,7 +6,7 @@ import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
-import { watchElements } from "./include/zeta-dom/observe.js";
+import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
@@ -15,7 +15,9 @@ const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 
 const root = dom.root;
-const flyoutStates = new Map();
+const flyoutStates = createAutoCleanupMap(function (element, state) {
+    state.resolve();
+});
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 const asyncActions = {};
