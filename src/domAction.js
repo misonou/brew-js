@@ -1,17 +1,16 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, camel, catchAsync, each, grep, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
+import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot } from "./include/zeta-dom/dom.js";
+import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
 
-const SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 
 const root = dom.root;
@@ -90,16 +89,21 @@ export function toggleFlyout(selector, source) {
  * @param {string} selector
  * @param {any=} states
  * @param {Element=} source
- * @param {boolean=} closeIfOpened
+ * @param {(Zeta.Dictionary | boolean)=} options
  */
-export function openFlyout(selector, states, source, closeIfOpened) {
+export function openFlyout(selector, states, source, options) {
     var element = $(selector)[0];
     if (!element) {
         return reject();
     }
+    if (is(states, Node) || isPlainObject(source)) {
+        options = source;
+        source = states;
+        states = null;
+    }
     var prev = flyoutStates.get(element);
     if (prev && !prev.closePromise) {
-        if (closeIfOpened) {
+        if (options === true) {
             // @ts-ignore: can accept if no such property
             closeFlyout(element, source && waterpipe.eval('`' + source.value));
         } else {
@@ -108,6 +112,12 @@ export function openFlyout(selector, states, source, closeIfOpened) {
         }
         return prev.promise;
     }
+    options = extend({
+        focus: !source || !textInputAllowed(source),
+        tabThrough: hasAttr(element, 'tab-through'),
+        modal: hasAttr(element, 'is-modal')
+    }, options);
+
     var focusFriend = source;
     if (!focusFriend && !focusable(element)) {
         focusFriend = dom.modalElement;
@@ -134,15 +144,20 @@ export function openFlyout(selector, states, source, closeIfOpened) {
     }
     setClass(element, { visible: true, closing: false });
     catchAsync(runCSSTransition(element, 'open', function () {
-        focus(element);
+        if (options.focus !== false) {
+            focus(element);
+        }
     }));
     animateIn(element, 'open');
-    if (element.attributes['is-modal']) {
+    if (options.modal) {
         setModal(element);
+    }
+    if (!options.tabThrough) {
+        setTabRoot(element);
     }
     var closeHandler = function (e) {
         var swipeDismiss = element.getAttribute('swipe-dismiss');
-        if (e.type === 'focusout' ? !swipeDismiss : e.data === camel('swipe-' + swipeDismiss)) {
+        if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
             closeFlyout(element);
             if (dom.event) {
                 dom.event.preventDefault();
@@ -150,16 +165,16 @@ export function openFlyout(selector, states, source, closeIfOpened) {
             e.handled();
         }
     };
-    always(promise, dom.on(element, {
-        focusout: closeHandler,
-        gesture: closeHandler
-    }));
+    always(promise, combineFn(
+        dom.on(source || element, 'focusout', closeHandler),
+        dom.on(element, 'gesture', closeHandler)
+    ));
     dom.emit('flyoutshow', element);
     return promise;
 }
 
 dom.ready.then(function () {
-    watchElements(root, SELECTOR_TABROOT, function (addedNodes) {
+    watchElements(root, '[tab-root]', function (addedNodes) {
         addedNodes.forEach(setTabRoot);
     }, true);
 

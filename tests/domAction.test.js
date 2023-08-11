@@ -74,6 +74,24 @@ describe('openFlyout', () => {
         expect(dom.modalElement).toBe(flyout);
     });
 
+    it('should set modal if modal option is set to true', async () => {
+        const flyout = await mount(`<div is-flyout is-modal></div>`);
+        openFlyout(flyout, null, { modal: true });
+        expect(dom.modalElement).toBe(flyout);
+    });
+
+    it('should focus element in flyout', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout);
+        expect(dom.activeElement).toBe(flyout);
+    });
+
+    it('should not focus element in flyout if focus option is set to false', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { focus: false });
+        expect(dom.activeElement).toBe(document.body);
+    });
+
     it('should retain focus when element is not currently focusable', async () => {
         const { modal, flyout } = await mount(`
             <div>
@@ -113,6 +131,16 @@ describe('openFlyout', () => {
         dom.focus(root);
         await delay(10);
         expect(flyout).not.toHaveClassName('open');
+    });
+
+    it('should not have flyout closed upon focus leaving when closeOnBlur option is set to false', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { closeOnBlur: false });
+        expect(flyout).toHaveClassName('open');
+
+        dom.focus(root);
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
     });
 
     it('should not have flyout closed upon focus leaving when swipe-dismiss is present', async () => {
