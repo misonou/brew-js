@@ -96,6 +96,8 @@ module.exports = {
     entry: {
         'brew': './src/entry.js',
         'brew.min': './src/entry.js',
+        'brew-slim': './src/entry-slim.js',
+        'brew-slim.min': './src/entry-slim.js',
     },
     devtool: 'source-map',
     output: {
