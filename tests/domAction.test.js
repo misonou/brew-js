@@ -152,6 +152,59 @@ describe('openFlyout', () => {
         await delay(10);
         expect(flyout).toHaveClassName('open');
     });
+
+    it('should set tab root by default', async () => {
+        const { flyout, input } = await mount(`
+            <div>
+                <div id="flyout" is-flyout></div>
+                <input id="input" />
+            </div>
+        `);
+        openFlyout(flyout);
+        await delay(10);
+        expect(input).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('should not set tab root when tab-through directive is present', async () => {
+        const { flyout, input } = await mount(`
+            <div>
+                <div id="flyout" is-flyout tab-through></div>
+                <input id="input" />
+            </div>
+        `);
+        openFlyout(flyout);
+        await delay(10);
+        expect(input).not.toHaveAttribute('tabindex', '-1');
+    });
+
+    it('should not set tab root when tabThrough option is set to true', async () => {
+        const { flyout, input } = await mount(`
+            <div>
+                <div id="flyout" is-flyout></div>
+                <input id="input" />
+            </div>
+        `);
+        openFlyout(flyout, null, { tabThrough: true });
+        await delay(10);
+        expect(input).not.toHaveAttribute('tabindex', '-1');
+    });
+
+    it('should revert tab root behavior', async () => {
+        const { flyout, input } = await mount(`
+            <div>
+                <div id="flyout" is-flyout></div>
+                <input id="input" />
+            </div>
+        `);
+        openFlyout(flyout);
+        await delay(10);
+        expect(input).toHaveAttribute('tabindex', '-1');
+
+        await closeFlyout(flyout);
+        openFlyout(flyout, null, { tabThrough: true });
+        await delay(10);
+        expect(input).not.toHaveAttribute('tabindex', '-1');
+    });
 });
 
 describe('closeFlyout', () => {

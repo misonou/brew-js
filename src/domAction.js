@@ -4,7 +4,7 @@ import waterpipe from "./include/external/waterpipe.js"
 import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed } from "./include/zeta-dom/dom.js";
+import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
@@ -152,7 +152,9 @@ export function openFlyout(selector, states, source, options) {
     if (options.modal) {
         setModal(element);
     }
-    if (!options.tabThrough) {
+    if (options.tabThrough) {
+        unsetTabRoot(element);
+    } else {
         setTabRoot(element);
     }
     var closeHandler = function (e) {
@@ -174,8 +176,9 @@ export function openFlyout(selector, states, source, options) {
 }
 
 dom.ready.then(function () {
-    watchElements(root, '[tab-root]', function (addedNodes) {
+    watchElements(root, '[tab-root]', function (addedNodes, removedNodes) {
         addedNodes.forEach(setTabRoot);
+        removedNodes.forEach(unsetTabRoot);
     }, true);
 
     app.on('mounted', function (e) {
