@@ -3,6 +3,7 @@
     "transform": {},
     "clearMocks": true,
     "setupFilesAfterEnv": [
+        "@misonou/test-utils/mock/console",
         "@misonou/test-utils/mock/performance",
         "<rootDir>/tests/setup.cjs"
     ],

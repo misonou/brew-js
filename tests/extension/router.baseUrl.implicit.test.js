@@ -1,4 +1,4 @@
-import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, classNamesOf, initApp, mount, cleanupAfterTest } from "../testUtil";
+import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, initApp, mount, cleanupAfterTest } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
@@ -1009,26 +1009,26 @@ describe('processPageChange', () => {
     });
 
     it('should remove hidden class from newly matched match-path element before pageenter event', async () => {
-        expect(classNamesOf(div.test1)).toContain('hidden');
+        expect(div.test1).toHaveClassName('hidden');
         bindEvent(div.test1, 'pageenter', () => {
-            expect(classNamesOf(div.test1)).not.toContain('hidden');
+            expect(div.test1).not.toHaveClassName('hidden');
         });
 
         await app.navigate('/test-1');
-        expect(classNamesOf(div.test1)).not.toContain('hidden');
+        expect(div.test1).not.toHaveClassName('hidden');
         expect.assertions(3);
     });
 
     it('should add hidden class to previously matched match-path element after pageleave event', async () => {
         await app.navigate('/test-1');
-        expect(classNamesOf(div.test1)).not.toContain('hidden');
+        expect(div.test1).not.toHaveClassName('hidden');
         bindEvent(div.test1, 'pageleave', () => {
-            expect(classNamesOf(div.test1)).not.toContain('hidden');
+            expect(div.test1).not.toHaveClassName('hidden');
         });
 
         await app.navigate(initialPath);
         await delay(100);
-        expect(classNamesOf(div.test1)).toContain('hidden');
+        expect(div.test1).toHaveClassName('hidden');
         expect.assertions(3);
     });
 
@@ -1040,15 +1040,15 @@ describe('processPageChange', () => {
         addAnimateOut('dummy-anim', defunctAfterTest(cb));
 
         await app.navigate(initialPath);
-        expect(classNamesOf(div.anim)).not.toContain('hidden');
+        expect(div.anim).not.toHaveClassName('hidden');
 
         await promise;
         expect(cb).toBeCalledTimes(1);
-        expect(classNamesOf(div.anim)).toContain('tweening-out');
-        expect(classNamesOf(div.anim)).not.toContain('hidden');
+        expect(div.anim).toHaveClassName('tweening-out');
+        expect(div.anim).not.toHaveClassName('hidden');
 
         await delay();
-        expect(classNamesOf(div.anim)).toContain('hidden');
+        expect(div.anim).toHaveClassName('hidden');
     });
 
     it('should trigger animation to newly matched match-path element', async () => {
