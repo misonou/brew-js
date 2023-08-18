@@ -11,9 +11,9 @@ export function hasAttr(element: Element, name: string): boolean;
 
 export function getAttr(element: Element, name: string): string | undefined;
 
-export function setAttr(element: Element, name: string, value: string): void;
+export function setAttr(element: Element, name: string, value: string | null): void;
 
-export function setAttr(element: Element, values: Zeta.Dictionary<string>): void;
+export function setAttr(element: Element, values: Zeta.Dictionary<string | null>): void;
 
 export function copyAttr(src: Element, dst: Element): void;
 

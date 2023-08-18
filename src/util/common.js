@@ -34,7 +34,11 @@ export function getAttr(element, name) {
 
 export function setAttr(element, name, value) {
     each(isPlainObject(name) || kv(name, value), function (i, v) {
-        element.setAttribute(i, v);
+        if (v === null) {
+            element.removeAttribute(i);
+        } else {
+            element.setAttribute(i, v);
+        }
     });
 }
 
