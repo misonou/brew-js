@@ -10,6 +10,11 @@ import * as ErrorCode from "../errorCode.js";
 const preloadImagesCache = {};
 /** @type {Zeta.Dictionary<Promise<Zeta.Dictionary>>} */
 const loadScriptCache = {};
+const boolAttrMap = {};
+
+each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
+    boolAttrMap[v.toLowerCase()] = v;
+});
 
 export function getAttrValues(element) {
     var values = {};
@@ -20,7 +25,7 @@ export function getAttrValues(element) {
 }
 
 export function isBoolAttr(element, name) {
-    return matchWord(name, 'allowfullscreen async autofocus autoplay checked controls default defer disabled formnovalidate ismap itemscope loop multiple muted nomodule novalidate open playsinline readonly required reversed selected truespeed') && name in element;
+    return name === 'itemscope' || boolAttrMap[name] in Object.getPrototypeOf(element);
 }
 
 export function hasAttr(element, name) {

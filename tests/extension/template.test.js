@@ -157,24 +157,55 @@ describe('template directive', () => {
     });
 
     it('should handle boolean mapped attribute', async () => {
-        // fix @ 48f8a0b, 073730e, 144b820
+        const dict = {
+            allowfullscreen: ['allowFullscreen', 'iframe'],
+            // async: ['async', 'script'],  // not supported in jsdom
+            autofocus: ['autofocus', 'input'],
+            autoplay: ['autoplay', 'video'],
+            checked: ['checked', 'input'],
+            controls: ['controls', 'video'],
+            default: ['default', 'track'],
+            defer: ['defer', 'script'],
+            disabled: ['disabled', 'input'],
+            formnovalidate: ['formNoValidate', 'input'],
+            ismap: ['isMap', 'img'],
+            itemscope: ['', 'div'], // itemscope has no mapped property
+            loop: ['loop', 'video'],
+            multiple: ['multiple', 'select'],
+            muted: ['', 'video'],  // muted property not working in jsdom
+            // nomodule: ['noModule', 'script'],  // not supported in jsdom
+            novalidate: ['noValidate', 'form'],
+            open: ['open', 'details'],
+            playsinline: ['playsInline', 'video'],
+            readonly: ['readOnly', 'input'],
+            required: ['required', 'input'],
+            reversed: ['reversed', 'ol'],
+            selected: ['selected', 'option'],
+            truespeed: ['trueSpeed', 'marquee'],
+        };
         const varname = uniqueName();
-        const div = await mount(`
-            <div>
-                <button template disabled="{{${varname}.trueValue}}"></button>
-                <button template disabled="{{${varname}.falseValue}}"></button>
-                <button template disabled="{{${varname}.undefinedValue}}"></button>
-            </div>
-        `);
-
-        await after(() => {
-            setVar(root, varname, {
-                trueValue: true,
-                falseValue: false
-            });
+        setVar(root, varname, {
+            trueValue: true,
+            falseValue: false
         });
-        // @ts-ignore
-        expect($('button', div).get().map(v => v.disabled)).toEqual([true, false, false]);
+        for (const attr in dict) {
+            const [prop, tag] = dict[attr] || [attr, 'div'];
+            const { node1, node2, node3 } = await mount(`
+                <div>
+                    <${tag} id="node1" template ${attr}="{{${varname}.trueValue}}"></${tag}>
+                    <${tag} id="node2" template ${attr}="{{${varname}.falseValue}}"></${tag}>
+                    <${tag} id="node3" template ${attr}="{{${varname}.undefinedValue}}"></${tag}>
+                </div>
+            `);
+            expect(node1).toHaveAttribute(attr, '');
+            expect(node2).not.toHaveAttribute(attr);
+            expect(node3).not.toHaveAttribute(attr);
+            if (prop) {
+                expect(node1).toHaveProperty(prop, true);
+                expect(node2).toHaveProperty(prop, false);
+                expect(node3).toHaveProperty(prop, false);
+            }
+        }
     });
 
     it('should support rich-text child content', async () => {

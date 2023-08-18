@@ -7,7 +7,7 @@ import { app } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
 import { getVar, resetVar } from "./var.js";
-import { isBoolAttr, selectorForAttr } from "./util/common.js";
+import { isBoolAttr, selectorForAttr, setAttr } from "./util/common.js";
 
 const _ = createPrivateStore();
 const root = dom.root;
@@ -40,7 +40,7 @@ function updateDOM(element, props, suppressEvent) {
         } else if (j === 'style') {
             $(element).css(v);
         } else if (isBoolAttr(element, j)) {
-            element[j] = !!v;
+            setAttr(element, j, v ? '' : null);
         } else {
             element.setAttribute(j, v);
         }
