@@ -1,10 +1,10 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
+import { always, camel, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focusable, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
+import dom, { focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
@@ -143,12 +143,11 @@ export function openFlyout(selector, states, source, options) {
         app.setVar(element, states);
     }
     setClass(element, { visible: true, closing: false });
-    catchAsync(runCSSTransition(element, 'open', function () {
-        if (options.focus !== false) {
+    Promise.allSettled([runCSSTransition(element, 'open'), animateIn(element, 'open')]).then(function () {
+        if (options.focus !== false && !focused(element)) {
             focus(element);
         }
-    }));
-    animateIn(element, 'open');
+    });
     if (options.modal) {
         setModal(element);
     }

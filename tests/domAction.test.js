@@ -83,6 +83,7 @@ describe('openFlyout', () => {
     it('should focus element in flyout', async () => {
         const flyout = await mount(`<div is-flyout></div>`);
         openFlyout(flyout);
+        await delay(10);
         expect(dom.activeElement).toBe(flyout);
     });
 
@@ -101,6 +102,7 @@ describe('openFlyout', () => {
         `);
         dom.setModal(modal);
         openFlyout(flyout);
+        await delay(10);
         expect(dom.focusedElements).toEqual([flyout, modal, root]);
     });
 
@@ -128,6 +130,7 @@ describe('openFlyout', () => {
         openFlyout(flyout);
         expect(flyout).toHaveClassName('open');
 
+        await delay(10);
         dom.focus(root);
         await delay(10);
         expect(flyout).not.toHaveClassName('open');
