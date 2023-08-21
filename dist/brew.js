@@ -1,4 +1,4 @@
-/*! brew-js v0.5.7 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.8 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -404,6 +404,10 @@ var preloadImagesCache = {};
 /** @type {Zeta.Dictionary<Promise<Zeta.Dictionary>>} */
 
 var loadScriptCache = {};
+var boolAttrMap = {};
+each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
+  boolAttrMap[v.toLowerCase()] = v;
+});
 function getAttrValues(element) {
   var values = {};
   each(element.attributes, function (i, v) {
@@ -412,7 +416,7 @@ function getAttrValues(element) {
   return values;
 }
 function isBoolAttr(element, name) {
-  return matchWord(name, 'allowfullscreen async autofocus autoplay checked controls default defer disabled formnovalidate ismap itemscope loop multiple muted nomodule novalidate open playsinline readonly required reversed selected truespeed') && name in element;
+  return name === 'itemscope' || boolAttrMap[name] in Object.getPrototypeOf(element);
 }
 function hasAttr(element, name) {
   return !!element.attributes[name];
@@ -423,7 +427,11 @@ function getAttr(element, name) {
 }
 function setAttr(element, name, value) {
   each(isPlainObject(name) || kv(name, value), function (i, v) {
-    element.setAttribute(i, v);
+    if (v === null) {
+      element.removeAttribute(i);
+    } else {
+      element.setAttribute(i, v);
+    }
   });
 }
 function copyAttr(src, dst) {
@@ -930,6 +938,7 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
     focusable = _zeta$dom.focusable,
     focused = _zeta$dom.focused,
     setTabRoot = _zeta$dom.setTabRoot,
+    unsetTabRoot = _zeta$dom.unsetTabRoot,
     setModal = _zeta$dom.setModal,
     releaseModal = _zeta$dom.releaseModal,
     retainFocus = _zeta$dom.retainFocus,
@@ -1540,7 +1549,7 @@ function updateDOM(element, props, suppressEvent) {
     } else if (j === 'style') {
       jquery(element).css(v);
     } else if (isBoolAttr(element, j)) {
-      element[j] = !!v;
+      setAttr(element, j, v ? '' : null);
     } else {
       element.setAttribute(j, v);
     }
@@ -2162,7 +2171,6 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 
 
-var SELECTOR_TABROOT = '[is-flyout]:not([tab-through]),[tab-root]';
 var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 var domAction_root = zeta_dom_dom.root;
 var flyoutStates = createAutoCleanupMap(function (element, state) {
@@ -2246,20 +2254,26 @@ function toggleFlyout(selector, source) {
  * @param {string} selector
  * @param {any=} states
  * @param {Element=} source
- * @param {boolean=} closeIfOpened
+ * @param {(Zeta.Dictionary | boolean)=} options
  */
 
-function openFlyout(selector, states, source, closeIfOpened) {
+function openFlyout(selector, states, source, options) {
   var element = jquery(selector)[0];
 
   if (!element) {
     return reject();
   }
 
+  if (is(states, Node) || isPlainObject(source)) {
+    options = source;
+    source = states;
+    states = null;
+  }
+
   var prev = flyoutStates.get(element);
 
   if (prev && !prev.closePromise) {
-    if (closeIfOpened) {
+    if (options === true) {
       // @ts-ignore: can accept if no such property
       closeFlyout(element, source && waterpipe.eval('`' + source.value));
     } else {
@@ -2270,6 +2284,11 @@ function openFlyout(selector, states, source, closeIfOpened) {
     return prev.promise;
   }
 
+  options = extend({
+    focus: !source || !textInputAllowed(source),
+    tabThrough: hasAttr(element, 'tab-through'),
+    modal: hasAttr(element, 'is-modal')
+  }, options);
   var focusFriend = source;
 
   if (!focusFriend && !focusable(element)) {
@@ -2304,19 +2323,26 @@ function openFlyout(selector, states, source, closeIfOpened) {
     visible: true,
     closing: false
   });
-  catchAsync(runCSSTransition(element, 'open', function () {
-    dom_focus(element);
-  }));
-  animateIn(element, 'open');
+  promise_polyfill.allSettled([runCSSTransition(element, 'open'), animateIn(element, 'open')]).then(function () {
+    if (options.focus !== false && !focused(element)) {
+      dom_focus(element);
+    }
+  });
 
-  if (element.attributes['is-modal']) {
+  if (options.modal) {
     setModal(element);
+  }
+
+  if (options.tabThrough) {
+    unsetTabRoot(element);
+  } else {
+    setTabRoot(element);
   }
 
   var closeHandler = function closeHandler(e) {
     var swipeDismiss = element.getAttribute('swipe-dismiss');
 
-    if (e.type === 'focusout' ? !swipeDismiss : e.data === camel('swipe-' + swipeDismiss)) {
+    if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
       closeFlyout(element);
 
       if (zeta_dom_dom.event) {
@@ -2327,16 +2353,14 @@ function openFlyout(selector, states, source, closeIfOpened) {
     }
   };
 
-  always(promise, zeta_dom_dom.on(element, {
-    focusout: closeHandler,
-    gesture: closeHandler
-  }));
+  always(promise, combineFn(zeta_dom_dom.on(source || element, 'focusout', closeHandler), zeta_dom_dom.on(element, 'gesture', closeHandler)));
   zeta_dom_dom.emit('flyoutshow', element);
   return promise;
 }
 zeta_dom_dom.ready.then(function () {
-  watchElements(domAction_root, SELECTOR_TABROOT, function (addedNodes) {
+  watchElements(domAction_root, '[tab-root]', function (addedNodes, removedNodes) {
     addedNodes.forEach(setTabRoot);
+    removedNodes.forEach(unsetTabRoot);
   }, true);
   app.on('mounted', function (e) {
     var selector = selectorForAttr(asyncActions);
