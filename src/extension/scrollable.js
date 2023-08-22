@@ -5,7 +5,9 @@ import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
 import { addExtension, isElementActive } from "../app.js";
-import { selectorForAttr } from "../util/common.js";
+
+const SELECTOR_SCROLLABLE = '[scrollable]';
+const SELECTOR_TARGET = '[scrollable-target]';
 
 export default addExtension('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
@@ -38,11 +40,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         var currentIndex = 0;
 
         // @ts-ignore: signature ignored
-        $(container).scrollable(extend({}, defaultOptions, {
+        var scrollable = $.scrollable(container, extend({}, defaultOptions, {
             handle: matchWord(dir, 'auto scrollbar content') || 'content',
             hScroll: !matchWord(dir, 'y-only'),
             vScroll: !matchWord(dir, 'x-only'),
-            content: '.' + getState(container).childClass + ':visible:not(.disabled)',
+            content: '.' + childClass + ':visible:not(.disabled)',
             pageItem: selector,
             snapToPage: (paged === 'always' || paged === app.orientation),
             scrollStart: function (e) {
@@ -63,7 +65,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         }));
 
         registerCleanup(container, function () {
-            $(container).scrollable('destroy');
+            scrollable.destroy();
         });
 
         registerCleanup(container, dom.on(container, {
@@ -73,7 +75,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             getContentRect: function (e) {
                 if (e.target === container || $(e.target).closest('.' + childClass)[0]) {
                     var rect = getRect(container);
-                    var padding = $(container).scrollable('scrollPadding');
+                    var padding = scrollable.scrollPadding();
                     rect.top += padding.top;
                     rect.left += padding.left;
                     rect.right -= padding.right;
@@ -82,13 +84,13 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }
             },
             scrollBy: function (e) {
-                $(container).scrollable('stop');
-                var origX = $(container).scrollable('scrollLeft');
-                var origY = $(container).scrollable('scrollTop');
-                $(container).scrollable('scrollBy', e.x, e.y, 200);
+                scrollable.stop();
+                var origX = scrollable.scrollLeft();
+                var origY = scrollable.scrollTop();
+                scrollable.scrollBy(e.x, e.y, 200);
                 return {
-                    x: $(container).scrollable('scrollLeft') - origX,
-                    y: $(container).scrollable('scrollTop') - origY
+                    x: scrollable.scrollLeft() - origX,
+                    y: scrollable.scrollTop() - origY
                 };
             }
         }));
@@ -118,7 +120,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 scrolling = true;
                 isControlledScroll = true;
                 setState(index);
-                $(container).scrollable('scrollToElement', item, align, align, 200, function () {
+                scrollable.scrollToElement(item, align, align, 200, function () {
                     scrolling = false;
                     isControlledScroll = false;
                 });
@@ -140,7 +142,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         if (selector) {
             if (paged !== 'always') {
                 registerCleanup(container, app.on('orientationchange', function () {
-                    $(container).scrollable('setOptions', {
+                    scrollable.setOptions({
                         snapToPage: paged === app.orientation
                     });
                 }));
@@ -182,7 +184,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             var restoreScroll = function () {
                 let offset = savedOffset[history.state];
                 if (offset) {
-                    $(container).scrollable('scrollTo', offset.x, offset.y, 0);
+                    scrollable.scrollTo(offset.x, offset.y, 0);
                 }
             };
             registerCleanup(container, combineFn(
@@ -195,8 +197,8 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }),
                 app.on('navigate', function (e) {
                     savedOffset[e.oldStateId] = {
-                        x: $(container).scrollable('scrollLeft'),
-                        y: $(container).scrollable('scrollTop')
+                        x: scrollable.scrollLeft(),
+                        y: scrollable.scrollTop()
                     };
                     setTimeout(function () {
                         if (!hasAsync) {
@@ -209,14 +211,14 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }
 
     app.on('ready', function () {
-        watchElements(dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
-            $(nodes).filter('[scrollable-target]').each(function (i, v) {
-                var scrollable = $(v).closest('[scrollable]')[0];
+        watchElements(dom.root, [SELECTOR_SCROLLABLE, SELECTOR_TARGET].join(','), function (nodes) {
+            $(nodes).filter(SELECTOR_TARGET).each(function (i, v) {
+                var scrollable = $(v).closest(SELECTOR_SCROLLABLE)[0];
                 if (scrollable) {
                     $(v).addClass(getState(scrollable).childClass);
                 }
             });
-            $(nodes).filter('[scrollable]').each(function (i, v) {
+            $(nodes).filter(SELECTOR_SCROLLABLE).each(function (i, v) {
                 initScrollable(v);
                 $(v).scrollable(focusable(v) ? 'enable' : 'disable');
             });
@@ -225,14 +227,14 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     // update scroller on events other than window resize
     function refresh() {
-        $('[scrollable]:visible').scrollable('refresh');
+        $(SELECTOR_SCROLLABLE).scrollable('refresh');
     }
     app.on('statechange orientationchange animationcomplete', function () {
         setTimeoutOnce(refresh);
     });
     app.on('pageenter', function (e) {
-        var $scrollables = $(selectIncludeSelf('[scrollable]', e.target)).add($(e.target).parents('[scrollable]'));
-        $(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
+        var $scrollables = $(selectIncludeSelf(SELECTOR_SCROLLABLE, e.target)).add($(e.target).parents(SELECTOR_SCROLLABLE));
+        $(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
             $(v).toggleClass('disabled', !isElementActive(v));
         });
         $scrollables.scrollable('refresh');
@@ -258,7 +260,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     });
 
     dom.on('modalchange', function () {
-        $('[scrollable]').each(function (i, v) {
+        $(SELECTOR_SCROLLABLE).each(function (i, v) {
             $(v).scrollable(focusable(v) ? 'enable' : 'disable');
         });
     });
@@ -266,7 +268,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     dom.on('keystroke', function (e) {
         const originalEvent = dom.event;
         if (dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
-            var target = selectIncludeSelf('[scrollable]', dom.modalElement)[0];
+            var target = selectIncludeSelf(SELECTOR_SCROLLABLE, dom.modalElement)[0];
             if (target) {
                 $(target).triggerHandler($.Event('keydown', {
                     keyCode: originalEvent.keyCode
