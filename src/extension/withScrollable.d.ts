@@ -35,4 +35,11 @@ declare namespace Brew {
          */
         useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'handle' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd' | 'scrollProgressChange'>>): void;
     }
+
+    interface DirectiveComponent {
+        /**
+         * Gets the jQuery scrollable plugin instance if the element has the `scrollable` attribute
+         */
+        readonly scrollable: JQueryScrollable | null;
+    }
 }

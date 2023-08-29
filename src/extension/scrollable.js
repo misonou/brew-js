@@ -2,9 +2,9 @@ import $ from "../include/external/jquery.js";
 import { combineFn, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
-import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
 import { addExtension, isElementActive } from "../app.js";
+import { registerDirective } from "../directive.js";
 
 const SELECTOR_SCROLLABLE = '[scrollable]';
 const SELECTOR_TARGET = '[scrollable-target]';
@@ -17,13 +17,14 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     // @ts-ignore: non-standard member
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
 
-    function initScrollable(container) {
+    function initScrollable(container, context) {
         var dir = container.getAttribute('scrollable');
         var paged = container.getAttribute('scroller-snap-page') || '';
         var varname = container.getAttribute('scroller-state') || '';
         var selector = container.getAttribute('scroller-page') || '';
         var persistScroll = container.hasAttribute('persist-scroll');
         var savedOffset = {};
+        var cleanup = [];
 
         var scrolling = false;
         var needRefresh = false;
@@ -40,11 +41,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             snapToPage: (paged === 'always' || paged === app.orientation)
         }));
 
-        registerCleanup(container, function () {
+        cleanup.push(function () {
             scrollable.destroy();
         });
 
-        registerCleanup(container, dom.on(container, {
+        cleanup.push(dom.on(container, {
             drag: function () {
                 beginDrag();
             },
@@ -109,13 +110,13 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
         if (selector) {
             if (paged !== 'always') {
-                registerCleanup(container, app.on('orientationchange', function () {
+                cleanup.push(app.on('orientationchange', function () {
                     scrollable.setOptions({
                         snapToPage: paged === app.orientation
                     });
                 }));
             }
-            registerCleanup(container, app.on(container, {
+            cleanup.push(app.on(container, {
                 statechange: function (e) {
                     var newIndex = e.data[varname];
                     if (!scrolling) {
@@ -141,7 +142,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }
             }, true));
             var timeout;
-            registerCleanup(container, bind(window, 'resize', function () {
+            cleanup.push(bind(window, 'resize', function () {
                 clearTimeout(timeout);
                 timeout = setTimeout(refresh, 200);
             }));
@@ -155,7 +156,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     scrollable.scrollTo(offset.x, offset.y, 0);
                 }
             };
-            registerCleanup(container, combineFn(
+            cleanup.push(
                 dom.on('asyncStart', function () {
                     hasAsync = true;
                 }),
@@ -179,17 +180,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                         }
                     });
                 })
-            ));
+            );
         }
+
+        context.on('destroy', combineFn(cleanup));
+        scrollable[focusable(container) ? 'enable' : 'disable']();
+        return scrollable;
     }
 
-    app.on('ready', function () {
-        watchElements(dom.root, SELECTOR_SCROLLABLE, function (nodes) {
-            $(nodes).each(function (i, v) {
-                initScrollable(v);
-                $(v).scrollable(focusable(v) ? 'enable' : 'disable');
-            });
-        }, true);
+    registerDirective('scrollable', SELECTOR_SCROLLABLE, {
+        component: initScrollable
     });
 
     $.scrollable.hook({
