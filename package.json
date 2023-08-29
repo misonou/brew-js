@@ -17,7 +17,7 @@
   "homepage": "http://hackmd.io/@misonou/brew-js",
   "repository": "github:misonou/brew-js",
   "dependencies": {
-    "jq-scrollable": "^1.7.0",
+    "jq-scrollable": "^1.12.0",
     "jquery": "^3.0.0",
     "lz-string": "^1.5.0",
     "waterpipe": "^2.7.0",

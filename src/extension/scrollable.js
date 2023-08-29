@@ -1,6 +1,6 @@
 import $ from "../include/external/jquery.js";
-import { combineFn, createPrivateStore, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
-import { bind, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
+import { combineFn, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
+import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { registerCleanup, watchElements } from "../include/zeta-dom/observe.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -16,17 +16,8 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     // @ts-ignore: non-standard member
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-    var store = createPrivateStore();
-    var id = 0;
-
-    function getState(container) {
-        return store(container) || store(container, {
-            childClass: 'scrollable-target-' + (++id)
-        });
-    }
 
     function initScrollable(container) {
-        var childClass = getState(container).childClass;
         var dir = container.getAttribute('scrollable');
         var paged = container.getAttribute('scroller-snap-page') || '';
         var varname = container.getAttribute('scroller-state') || '';
@@ -44,24 +35,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             handle: matchWord(dir, 'auto scrollbar content') || 'content',
             hScroll: !matchWord(dir, 'y-only'),
             vScroll: !matchWord(dir, 'x-only'),
-            content: '.' + childClass + ':visible:not(.disabled)',
+            content: '[scrollable-target]:not(.disabled)',
             pageItem: selector,
-            snapToPage: (paged === 'always' || paged === app.orientation),
-            scrollStart: function (e) {
-                if (dom.eventSource !== 'script') {
-                    delete savedOffset[history.state];
-                }
-                app.emit('scrollStart', container, e, true);
-            },
-            scrollMove: function (e) {
-                app.emit('scrollMove', container, e, true);
-            },
-            scrollEnd: function (e) {
-                app.emit('scrollStop', container, e, true);
-            },
-            scrollProgressChange: function (e) {
-                app.emit('scrollProgressChange', container, e, true);
-            }
+            snapToPage: (paged === 'always' || paged === app.orientation)
         }));
 
         registerCleanup(container, function () {
@@ -73,24 +49,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 beginDrag();
             },
             getContentRect: function (e) {
-                if (e.target === container || $(e.target).closest('.' + childClass)[0]) {
-                    var rect = getRect(container);
-                    var padding = scrollable.scrollPadding();
-                    rect.top += padding.top;
-                    rect.left += padding.left;
-                    rect.right -= padding.right;
-                    rect.bottom -= padding.bottom;
-                    return rect;
+                if (e.target === container || containsOrEquals(scrollable.scrollTarget, e.target)) {
+                    var padding = scrollable.scrollPadding(e.target);
+                    return getRect(container).expand(-padding.left, -padding.top, padding.right, padding.bottom);
                 }
             },
             scrollBy: function (e) {
-                scrollable.stop();
-                var origX = scrollable.scrollLeft();
-                var origY = scrollable.scrollTop();
-                scrollable.scrollBy(e.x, e.y, 200);
+                var result = scrollable.scrollBy(e.x, e.y, 200);
                 return {
-                    x: scrollable.scrollLeft() - origX,
-                    y: scrollable.scrollTop() - origY
+                    x: result.deltaX,
+                    y: result.deltaY
                 };
             }
         }));
@@ -195,6 +163,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                     hasAsync = false;
                     restoreScroll();
                 }),
+                app.on(container, 'scrollStart', function (e) {
+                    if (e.source !== 'script') {
+                        delete savedOffset[history.state];
+                    }
+                }, true),
                 app.on('navigate', function (e) {
                     savedOffset[e.oldStateId] = {
                         x: scrollable.scrollLeft(),
@@ -211,18 +184,27 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }
 
     app.on('ready', function () {
-        watchElements(dom.root, [SELECTOR_SCROLLABLE, SELECTOR_TARGET].join(','), function (nodes) {
-            $(nodes).filter(SELECTOR_TARGET).each(function (i, v) {
-                var scrollable = $(v).closest(SELECTOR_SCROLLABLE)[0];
-                if (scrollable) {
-                    $(v).addClass(getState(scrollable).childClass);
-                }
-            });
-            $(nodes).filter(SELECTOR_SCROLLABLE).each(function (i, v) {
+        watchElements(dom.root, SELECTOR_SCROLLABLE, function (nodes) {
+            $(nodes).each(function (i, v) {
                 initScrollable(v);
                 $(v).scrollable(focusable(v) ? 'enable' : 'disable');
             });
         }, true);
+    });
+
+    $.scrollable.hook({
+        scrollStart: function (e) {
+            app.emit('scrollStart', this, e, true);
+        },
+        scrollMove: function (e) {
+            app.emit('scrollMove', this, e, true);
+        },
+        scrollEnd: function (e) {
+            app.emit('scrollStop', this, e, true);
+        },
+        scrollProgressChange: function (e) {
+            app.emit('scrollProgressChange', this, e, true);
+        }
     });
 
     // update scroller on events other than window resize
