@@ -35,6 +35,10 @@ declare namespace Brew {
         [s: string]: any;
     }
 
+    interface DirectiveComponent {
+        readonly element: Element;
+    }
+
     interface EventDispatcher<T extends string = string, M = any> {
         /**
          * Listens global events or events triggered from any elements.

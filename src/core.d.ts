@@ -1,6 +1,7 @@
 import { declareVar, evalAttr, getVar, setVar } from "./var";
 import { addRenderer, addTemplate, addTransformer, handleAsync, preventLeave } from "./dom";
 import { addDetect, addExtension, install } from "./app";
+import { getDirectiveComponent, registerDirective } from "./directive.js";
 import defaults from "./defaults";
 
 import * as path from "./util/path";
@@ -27,6 +28,8 @@ const method = {
     ...path,
     ...animation,
     ...domAction,
+    getDirectiveComponent,
+    registerDirective,
     getVar,
     setVar,
     declareVar,
