@@ -243,7 +243,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     // scroll-into-view animation trigger
     function updateScrollIntoView() {
-        $('[animate-on~="scroll-into-view"]:visible').each(function (i, v) {
+        $('[animate-on~="scroll-into-view"]').filter(':visible').each(function (i, v) {
             var m = new DOMMatrix(getComputedStyle(v).transform);
             var rootRect = getRect(dom.root);
             var thisRect = getRect(v);
