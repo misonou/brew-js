@@ -11,39 +11,26 @@ const SELECTOR_TARGET = '[scrollable-target]';
 
 export default addExtension('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
+        content: '[scrollable-target]:not(.disabled)',
         bounce: false
     }, defaultOptions);
 
     // @ts-ignore: non-standard member
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
 
+    function getOptions(context) {
+        return {
+            handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
+            hScroll: !matchWord(context.dir, 'y-only'),
+            vScroll: !matchWord(context.dir, 'x-only'),
+            pageItem: context.selector,
+            snapToPage: context.paged === 'always' || context.paged === app.orientation
+        };
+    }
+
     function initScrollable(container, context) {
-        var dir = container.getAttribute('scrollable');
-        var paged = container.getAttribute('scroller-snap-page') || '';
-        var varname = container.getAttribute('scroller-state') || '';
-        var selector = container.getAttribute('scroller-page') || '';
-        var persistScroll = container.hasAttribute('persist-scroll');
-        var savedOffset = {};
+        var scrollable = $.scrollable(container, extend({}, defaultOptions, getOptions(context)));
         var cleanup = [];
-
-        var scrolling = false;
-        var needRefresh = false;
-        var isControlledScroll;
-        var currentIndex = 0;
-
-        // @ts-ignore: signature ignored
-        var scrollable = $.scrollable(container, extend({}, defaultOptions, {
-            handle: matchWord(dir, 'auto scrollbar content') || 'content',
-            hScroll: !matchWord(dir, 'y-only'),
-            vScroll: !matchWord(dir, 'x-only'),
-            content: '[scrollable-target]:not(.disabled)',
-            pageItem: selector,
-            snapToPage: (paged === 'always' || paged === app.orientation)
-        }));
-
-        cleanup.push(function () {
-            scrollable.destroy();
-        });
 
         cleanup.push(dom.on(container, {
             drag: function () {
@@ -64,91 +51,107 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             }
         }));
 
-        function getItem(index) {
-            return selector && $(selector, container).get()[index];
-        }
-
-        function setState(index) {
-            var oldIndex = currentIndex;
-            currentIndex = index;
-            if (varname && app.setVar) {
-                app.setVar(container, varname, index);
+        function initPageIndex(enabled) {
+            if (!enabled || initPageIndex.d++) {
+                return;
             }
-            if (oldIndex !== index) {
-                app.emit('scrollIndexChange', container, {
-                    oldIndex: oldIndex,
-                    newIndex: index
-                }, true);
-            }
-        }
+            var scrolling = false;
+            var needRefresh = false;
+            var isControlledScroll;
+            var currentIndex = 0;
+            var timeout;
 
-        function scrollTo(index, align) {
-            var item = getItem(index);
-            align = align || 'center top';
-            if (!scrolling && isVisible(container) && item) {
-                scrolling = true;
-                isControlledScroll = true;
-                setState(index);
-                scrollable.scrollToElement(item, align, align, 200, function () {
-                    scrolling = false;
-                    isControlledScroll = false;
-                });
+            function getItem(index) {
+                return context.selector && $(context.selector, container).get()[index];
             }
-        }
 
-        function refresh() {
-            var isPaged = (paged === 'always' || paged === app.orientation);
-            if (isPaged && isVisible(container)) {
-                if (scrolling) {
-                    needRefresh = true;
-                } else {
-                    needRefresh = false;
-                    scrollTo(currentIndex);
+            function setState(index) {
+                var oldIndex = currentIndex;
+                currentIndex = index;
+                if (context.varname && app.setVar) {
+                    app.setVar(container, context.varname, index);
+                }
+                if (oldIndex !== index) {
+                    app.emit('scrollIndexChange', container, {
+                        oldIndex: oldIndex,
+                        newIndex: index
+                    }, true);
                 }
             }
-        }
 
-        if (selector) {
-            if (paged !== 'always') {
-                cleanup.push(app.on('orientationchange', function () {
-                    scrollable.setOptions({
-                        snapToPage: paged === app.orientation
+            function scrollTo(index, align) {
+                var item = getItem(index);
+                align = align || 'center top';
+                if (!scrolling && isVisible(container) && item) {
+                    scrolling = true;
+                    isControlledScroll = true;
+                    setState(index);
+                    scrollable.scrollToElement(item, align, align, 200, function () {
+                        scrolling = false;
+                        isControlledScroll = false;
                     });
-                }));
+                }
             }
-            cleanup.push(app.on(container, {
-                statechange: function (e) {
-                    var newIndex = e.data[varname];
-                    if (!scrolling) {
-                        if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
-                            scrollTo(newIndex, 'left center');
-                        } else {
-                            scrollTo(newIndex);
+
+            function refresh() {
+                var isPaged = context.paged === 'always' || context.paged === app.orientation;
+                if (isPaged && isVisible(container)) {
+                    if (scrolling) {
+                        needRefresh = true;
+                    } else {
+                        needRefresh = false;
+                        scrollTo(currentIndex);
+                    }
+                }
+            }
+
+            cleanup.push(
+                app.on('orientationchange', function () {
+                    scrollable.setOptions({
+                        snapToPage: context.paged === 'always' || context.paged === app.orientation
+                    });
+                }),
+                app.on(container, {
+                    statechange: function (e) {
+                        if (context.selector && !scrolling) {
+                            var newIndex = e.data[context.varname];
+                            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
+                                scrollTo(newIndex, 'left center');
+                            } else {
+                                scrollTo(newIndex);
+                            }
+                        }
+                    },
+                    scrollMove: function (e) {
+                        scrolling = true;
+                        if (context.selector && !isControlledScroll) {
+                            setState(e.pageIndex);
+                        }
+                    },
+                    scrollStop: function (e) {
+                        scrolling = false;
+                        if (context.selector) {
+                            setState(e.pageIndex);
+                            if (needRefresh) {
+                                refresh();
+                            }
                         }
                     }
-                },
-                scrollMove: function (e) {
-                    scrolling = true;
-                    if (!isControlledScroll) {
-                        setState(e.pageIndex);
+                }, true),
+                bind(window, 'resize', function () {
+                    if (context.selector) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(refresh, 200);
                     }
-                },
-                scrollStop: function (e) {
-                    setState(e.pageIndex);
-                    scrolling = false;
-                    if (needRefresh) {
-                        refresh();
-                    }
-                }
-            }, true));
-            var timeout;
-            cleanup.push(bind(window, 'resize', function () {
-                clearTimeout(timeout);
-                timeout = setTimeout(refresh, 200);
-            }));
+                })
+            );
         }
 
-        if (persistScroll) {
+        function initPersistScroll(enabled) {
+            if (!enabled || initPersistScroll.d++) {
+                return;
+            }
+            var savedOffset = {};
             var hasAsync = false;
             var restoreScroll = function () {
                 let offset = savedOffset[history.state];
@@ -162,7 +165,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }),
                 dom.on('asyncEnd', function () {
                     hasAsync = false;
-                    restoreScroll();
+                    if (context.persistScroll) {
+                        restoreScroll();
+                    }
                 }),
                 app.on(container, 'scrollStart', function (e) {
                     if (e.source !== 'script') {
@@ -175,7 +180,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                         y: scrollable.scrollTop()
                     };
                     setTimeout(function () {
-                        if (!hasAsync) {
+                        if (!hasAsync && context.persistScroll) {
                             restoreScroll();
                         }
                     });
@@ -183,13 +188,30 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             );
         }
 
-        context.on('destroy', combineFn(cleanup));
+        initPageIndex.d = 0;
+        initPersistScroll.d = 0;
+        context.watch(function () {
+            scrollable.setOptions(getOptions(context));
+        });
+        context.watch('selector', initPageIndex, true);
+        context.watch('persistScroll', initPersistScroll, true);
+        context.on('destroy', function () {
+            combineFn(cleanup)();
+            scrollable.destroy();
+        });
         scrollable[focusable(container) ? 'enable' : 'disable']();
         return scrollable;
     }
 
     registerDirective('scrollable', SELECTOR_SCROLLABLE, {
-        component: initScrollable
+        component: initScrollable,
+        directives: {
+            dir: { attribute: 'scrollable' },
+            paged: { attribute: 'scroller-snap-page' },
+            varname: { attribute: 'scroller-state' },
+            selector: { attribute: 'scroller-page' },
+            persistScroll: { attribute: 'persist-scroll', type: 'boolean' }
+        }
     });
 
     $.scrollable.hook({
