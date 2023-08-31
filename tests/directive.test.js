@@ -1,5 +1,5 @@
 import { getDirectiveComponent, registerDirective } from "src/directive";
-import { after, delay, initApp, initBody, mockFn, uniqueName } from "./testUtil";
+import { after, initApp, initBody, mockFn } from "./testUtil";
 
 const cbDestroy = mockFn();
 const cbInit = mockFn((_, context) => {
@@ -10,7 +10,12 @@ const cbInit = mockFn((_, context) => {
 beforeAll(() => {
     return initApp(() => {
         registerDirective('test', '.test', {
-            component: cbInit
+            component: cbInit,
+            directives: {
+                strValue: { attribute: 'str-value' },
+                numValue: { attribute: 'num-value', type: 'number' },
+                boolValue: { attribute: 'bool-value', type: 'boolean' },
+            }
         });
     });
 });
@@ -47,5 +52,68 @@ describe('registerDirective', () => {
         div.classList.add('test');
         getDirectiveComponent(div).test;
         expect(cbInit).toBeCalledTimes(2);
+    });
+
+    it('should map attribute value to properties', async () => {
+        const { div } = initBody(`<div id="div" class="test" str-value="foo" num-value="1" bool-value></div>`);
+        getDirectiveComponent(div).test;
+
+        const context = cbInit.mock.calls[0][1];
+        expect(context).toHaveProperty('strValue', 'foo');
+        expect(context).toHaveProperty('numValue', 1);
+        expect(context).toHaveProperty('boolValue', true);
+
+        await after(() => {
+            div.removeAttribute('str-value');
+            div.removeAttribute('num-value');
+            div.removeAttribute('bool-value');
+        });
+        expect(context).toHaveProperty('strValue', null);
+        expect(context).toHaveProperty('numValue', null);
+        expect(context).toHaveProperty('boolValue', false);
+    });
+
+    it('should update attribute if mapped properties are updated', async () => {
+        const { div } = initBody(`<div id="div" class="test" str-value="foo" num-value="1" bool-value></div>`);
+        getDirectiveComponent(div).test;
+
+        const context = cbInit.mock.calls[0][1];
+        await after(() => {
+            context.strValue = '';
+            context.numValue = 0;
+        });
+        expect(div).toHaveAttribute('str-value', '');
+        expect(div).toHaveAttribute('num-value', '0');
+
+        await after(() => {
+            context.strValue = null;
+            context.numValue = null;
+            context.boolValue = false;
+        });
+        expect(div).not.toHaveAttribute('str-value');
+        expect(div).not.toHaveAttribute('num-value');
+        expect(div).not.toHaveAttribute('bool-value');
+    });
+
+    it('should normalize value when setting mapped properties', async () => {
+        const { div } = initBody(`<div id="div" class="test"></div>`);
+        getDirectiveComponent(div).test;
+
+        const context = cbInit.mock.calls[0][1];
+
+        context.strValue = 1;
+        expect(context.strValue).toBe('1');
+        context.strValue = 0;
+        expect(context.strValue).toBe('0');
+
+        context.numValue = true;
+        expect(context.numValue).toBe(1);
+        context.numValue = false;
+        expect(context.numValue).toBe(0);
+
+        context.boolValue = 1;
+        expect(context.boolValue).toBe(true);
+        context.boolValue = 0;
+        expect(context.boolValue).toBe(false);
     });
 });
