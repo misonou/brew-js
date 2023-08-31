@@ -34,7 +34,7 @@ export function hasAttr(element, name) {
 
 export function getAttr(element, name) {
     var attr = element.attributes[name];
-    return attr && attr.value;
+    return attr ? attr.value : null;
 }
 
 export function setAttr(element, name, value) {
