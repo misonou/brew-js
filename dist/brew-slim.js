@@ -1,4 +1,4 @@
-/*! brew-js v0.5.8 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.9 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -12,7 +12,7 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 473:
+/***/ 268:
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -423,7 +423,7 @@ function hasAttr(element, name) {
 }
 function getAttr(element, name) {
   var attr = element.attributes[name];
-  return attr && attr.value;
+  return attr ? attr.value : null;
 }
 function setAttr(element, name, value) {
   each(isPlainObject(name) || kv(name, value), function (i, v) {
@@ -1201,6 +1201,7 @@ var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     observe = observe_zeta$dom.observe,
     registerCleanup = observe_zeta$dom.registerCleanup,
     createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
+    afterDetached = observe_zeta$dom.afterDetached,
     watchElements = observe_zeta$dom.watchElements,
     watchAttributes = observe_zeta$dom.watchAttributes,
     watchOwnAttributes = observe_zeta$dom.watchOwnAttributes;
@@ -1769,6 +1770,58 @@ zeta_dom_dom.ready.then(function () {
     }
   });
 });
+// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
+
+var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
+
+// CONCATENATED MODULE: ./src/directive.js
+
+
+
+
+
+var emitter = new ZetaEventContainer();
+
+function Component(element) {
+  defineOwnProperty(this, 'element', element, true);
+}
+
+function ComponentContext() {}
+
+definePrototype(ComponentContext, {
+  on: function on(event, handler) {
+    return emitter.add(this, event, handler);
+  }
+});
+function getDirectiveComponent(element) {
+  return new Component(element);
+}
+function registerDirective(key, selector, options) {
+  var map = new WeakMap();
+  var collect = watchElements(zeta_dom_dom.root, selector, function (added, removed) {
+    each(removed, function (i, v) {
+      emitter.emit('destroy', mapRemove(map, v).context);
+    });
+    each(added, function (i, v) {
+      var context = new ComponentContext();
+      map.set(v, {
+        component: options.component(v, context),
+        context: context
+      });
+    });
+  }, true);
+  defineGetterProperty(Component.prototype, key, function () {
+    var element = this.element;
+
+    if (!map.has(element) && matchSelector(element, selector)) {
+      collect();
+    }
+
+    return (map.get(element) || '').component || null;
+  });
+}
 // CONCATENATED MODULE: ./src/extension/i18n.js
 
 
@@ -1868,85 +1921,54 @@ function detectLanguage(languages, defaultLanguage) {
 
 
 
-
+var SELECTOR_SCROLLABLE = '[scrollable]';
+var SELECTOR_TARGET = '[scrollable-target]';
 /* harmony default export */ const scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     bounce: false
   }, defaultOptions); // @ts-ignore: non-standard member
 
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-  var store = createPrivateStore();
-  var id = 0;
 
-  function getState(container) {
-    return store(container) || store(container, {
-      childClass: 'scrollable-target-' + ++id
-    });
-  }
-
-  function initScrollable(container) {
-    var childClass = getState(container).childClass;
+  function initScrollable(container, context) {
     var dir = container.getAttribute('scrollable');
     var paged = container.getAttribute('scroller-snap-page') || '';
     var varname = container.getAttribute('scroller-state') || '';
     var selector = container.getAttribute('scroller-page') || '';
     var persistScroll = container.hasAttribute('persist-scroll');
     var savedOffset = {};
+    var cleanup = [];
     var scrolling = false;
     var needRefresh = false;
     var isControlledScroll;
     var currentIndex = 0; // @ts-ignore: signature ignored
 
-    jquery(container).scrollable(extend({}, defaultOptions, {
+    var scrollable = jquery.scrollable(container, extend({}, defaultOptions, {
       handle: matchWord(dir, 'auto scrollbar content') || 'content',
       hScroll: !matchWord(dir, 'y-only'),
       vScroll: !matchWord(dir, 'x-only'),
-      content: '.' + getState(container).childClass + ':visible:not(.disabled)',
+      content: '[scrollable-target]:not(.disabled)',
       pageItem: selector,
-      snapToPage: paged === 'always' || paged === app.orientation,
-      scrollStart: function scrollStart(e) {
-        if (zeta_dom_dom.eventSource !== 'script') {
-          delete savedOffset[history.state];
-        }
-
-        app.emit('scrollStart', container, e, true);
-      },
-      scrollMove: function scrollMove(e) {
-        app.emit('scrollMove', container, e, true);
-      },
-      scrollEnd: function scrollEnd(e) {
-        app.emit('scrollStop', container, e, true);
-      },
-      scrollProgressChange: function scrollProgressChange(e) {
-        app.emit('scrollProgressChange', container, e, true);
-      }
+      snapToPage: paged === 'always' || paged === app.orientation
     }));
-    registerCleanup(container, function () {
-      jquery(container).scrollable('destroy');
+    cleanup.push(function () {
+      scrollable.destroy();
     });
-    registerCleanup(container, zeta_dom_dom.on(container, {
+    cleanup.push(zeta_dom_dom.on(container, {
       drag: function drag() {
         beginDrag();
       },
       getContentRect: function getContentRect(e) {
-        if (e.target === container || jquery(e.target).closest('.' + childClass)[0]) {
-          var rect = getRect(container);
-          var padding = jquery(container).scrollable('scrollPadding');
-          rect.top += padding.top;
-          rect.left += padding.left;
-          rect.right -= padding.right;
-          rect.bottom -= padding.bottom;
-          return rect;
+        if (e.target === container || containsOrEquals(scrollable.scrollTarget, e.target)) {
+          var padding = scrollable.scrollPadding(e.target);
+          return getRect(container).expand(-padding.left, -padding.top, padding.right, padding.bottom);
         }
       },
       scrollBy: function scrollBy(e) {
-        jquery(container).scrollable('stop');
-        var origX = jquery(container).scrollable('scrollLeft');
-        var origY = jquery(container).scrollable('scrollTop');
-        jquery(container).scrollable('scrollBy', e.x, e.y, 200);
+        var result = scrollable.scrollBy(e.x, e.y, 200);
         return {
-          x: jquery(container).scrollable('scrollLeft') - origX,
-          y: jquery(container).scrollable('scrollTop') - origY
+          x: result.deltaX,
+          y: result.deltaY
         };
       }
     }));
@@ -1979,7 +2001,7 @@ function detectLanguage(languages, defaultLanguage) {
         scrolling = true;
         isControlledScroll = true;
         setState(index);
-        jquery(container).scrollable('scrollToElement', item, align, align, 200, function () {
+        scrollable.scrollToElement(item, align, align, 200, function () {
           scrolling = false;
           isControlledScroll = false;
         });
@@ -2001,14 +2023,14 @@ function detectLanguage(languages, defaultLanguage) {
 
     if (selector) {
       if (paged !== 'always') {
-        registerCleanup(container, app.on('orientationchange', function () {
-          jquery(container).scrollable('setOptions', {
+        cleanup.push(app.on('orientationchange', function () {
+          scrollable.setOptions({
             snapToPage: paged === app.orientation
           });
         }));
       }
 
-      registerCleanup(container, app.on(container, {
+      cleanup.push(app.on(container, {
         statechange: function statechange(e) {
           var newIndex = e.data[varname];
 
@@ -2037,7 +2059,7 @@ function detectLanguage(languages, defaultLanguage) {
         }
       }, true));
       var timeout;
-      registerCleanup(container, bind(window, 'resize', function () {
+      cleanup.push(bind(window, 'resize', function () {
         clearTimeout(timeout);
         timeout = setTimeout(refresh, 200);
       }));
@@ -2050,55 +2072,65 @@ function detectLanguage(languages, defaultLanguage) {
         var offset = savedOffset[history.state];
 
         if (offset) {
-          jquery(container).scrollable('scrollTo', offset.x, offset.y, 0);
+          scrollable.scrollTo(offset.x, offset.y, 0);
         }
       };
 
-      registerCleanup(container, combineFn(zeta_dom_dom.on('asyncStart', function () {
+      cleanup.push(zeta_dom_dom.on('asyncStart', function () {
         hasAsync = true;
       }), zeta_dom_dom.on('asyncEnd', function () {
         hasAsync = false;
         restoreScroll();
-      }), app.on('navigate', function (e) {
+      }), app.on(container, 'scrollStart', function (e) {
+        if (e.source !== 'script') {
+          delete savedOffset[history.state];
+        }
+      }, true), app.on('navigate', function (e) {
         savedOffset[e.oldStateId] = {
-          x: jquery(container).scrollable('scrollLeft'),
-          y: jquery(container).scrollable('scrollTop')
+          x: scrollable.scrollLeft(),
+          y: scrollable.scrollTop()
         };
         setTimeout(function () {
           if (!hasAsync) {
             restoreScroll();
           }
         });
-      })));
+      }));
     }
+
+    context.on('destroy', combineFn(cleanup));
+    scrollable[focusable(container) ? 'enable' : 'disable']();
+    return scrollable;
   }
 
-  app.on('ready', function () {
-    watchElements(zeta_dom_dom.root, selectorForAttr(['scrollable', 'scrollable-target']), function (nodes) {
-      jquery(nodes).filter('[scrollable-target]').each(function (i, v) {
-        var scrollable = jquery(v).closest('[scrollable]')[0];
-
-        if (scrollable) {
-          jquery(v).addClass(getState(scrollable).childClass);
-        }
-      });
-      jquery(nodes).filter('[scrollable]').each(function (i, v) {
-        initScrollable(v);
-        jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
-      });
-    }, true);
+  registerDirective('scrollable', SELECTOR_SCROLLABLE, {
+    component: initScrollable
+  });
+  jquery.scrollable.hook({
+    scrollStart: function scrollStart(e) {
+      app.emit('scrollStart', this, e, true);
+    },
+    scrollMove: function scrollMove(e) {
+      app.emit('scrollMove', this, e, true);
+    },
+    scrollEnd: function scrollEnd(e) {
+      app.emit('scrollStop', this, e, true);
+    },
+    scrollProgressChange: function scrollProgressChange(e) {
+      app.emit('scrollProgressChange', this, e, true);
+    }
   }); // update scroller on events other than window resize
 
   function refresh() {
-    jquery('[scrollable]:visible').scrollable('refresh');
+    jquery(SELECTOR_SCROLLABLE).scrollable('refresh');
   }
 
   app.on('statechange orientationchange animationcomplete', function () {
     setTimeoutOnce(refresh);
   });
   app.on('pageenter', function (e) {
-    var $scrollables = jquery(selectIncludeSelf('[scrollable]', e.target)).add(jquery(e.target).parents('[scrollable]'));
-    jquery(selectIncludeSelf('[scrollable-target]', e.target)).each(function (i, v) {
+    var $scrollables = jquery(selectIncludeSelf(SELECTOR_SCROLLABLE, e.target)).add(jquery(e.target).parents(SELECTOR_SCROLLABLE));
+    jquery(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
       jquery(v).toggleClass('disabled', !isElementActive(v));
     });
     $scrollables.scrollable('refresh');
@@ -2106,7 +2138,7 @@ function detectLanguage(languages, defaultLanguage) {
   }); // scroll-into-view animation trigger
 
   function updateScrollIntoView() {
-    jquery('[animate-on~="scroll-into-view"]:visible').each(function (i, v) {
+    jquery('[animate-on~="scroll-into-view"]').filter(':visible').each(function (i, v) {
       var m = new DOMMatrix(getComputedStyle(v).transform);
       var rootRect = getRect(zeta_dom_dom.root);
       var thisRect = getRect(v);
@@ -2122,7 +2154,7 @@ function detectLanguage(languages, defaultLanguage) {
     setTimeoutOnce(updateScrollIntoView);
   });
   zeta_dom_dom.on('modalchange', function () {
-    jquery('[scrollable]').each(function (i, v) {
+    jquery(SELECTOR_SCROLLABLE).each(function (i, v) {
       jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
     });
   });
@@ -2130,7 +2162,7 @@ function detectLanguage(languages, defaultLanguage) {
     var originalEvent = zeta_dom_dom.event;
 
     if (zeta_dom_dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
-      var target = selectIncludeSelf('[scrollable]', zeta_dom_dom.modalElement)[0];
+      var target = selectIncludeSelf(SELECTOR_SCROLLABLE, zeta_dom_dom.modalElement)[0];
 
       if (target) {
         jquery(target).triggerHandler(jquery.Event('keydown', {
@@ -3165,10 +3197,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+
 util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   ErrorCode: errorCode_namespaceObject,
   defaults: src_defaults
 }, common_namespaceObject), storage_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
+  getDirectiveComponent: getDirectiveComponent,
+  registerDirective: registerDirective,
   install: install,
   addDetect: addDetect,
   addExtension: addExtension
@@ -3783,7 +3818,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(473);
+/******/ 	return __webpack_require__(268);
 /******/ })()
 .default;
 });
