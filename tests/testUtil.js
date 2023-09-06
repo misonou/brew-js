@@ -3,7 +3,7 @@ import brew, { app } from "src/app";
 import { mountElement } from "src/dom";
 import dom from "zeta-dom/dom";
 import { jest } from "@jest/globals";
-import { removeNode, selectIncludeSelf } from "zeta-dom/domUtil";
+import { bind, removeNode, selectIncludeSelf } from "zeta-dom/domUtil";
 import { after, body, mockFn, cleanup } from "@misonou/test-utils";
 
 export { root, body, mockFn, delay, after, verifyCalls, _, cleanup as cleanupAfterTest } from "@misonou/test-utils";
@@ -101,6 +101,16 @@ export function mockXHROnce(status, body) {
 
 export function uniqueName() {
     return '__test__' + (counter++);
+}
+
+export function nativeHistoryBack() {
+    return new Promise(resolve => {
+        const unbind = bind(window, 'popstate', function () {
+            unbind();
+            setTimeout(resolve);
+        })
+        history.back();
+    });
 }
 
 beforeEach(() => {

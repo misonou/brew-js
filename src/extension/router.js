@@ -500,7 +500,7 @@ function configureRouter(app, options) {
                 });
             }
             states[currentIndex] = state;
-            history[replaceHistory || state.index === history.length ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+            history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
             storage.set('c', id);
             storage.set('s', states);
         });

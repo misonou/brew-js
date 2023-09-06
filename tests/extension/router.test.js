@@ -1,4 +1,4 @@
-import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, initApp, mount, cleanupAfterTest } from "../testUtil";
+import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, initApp, mount, cleanupAfterTest, nativeHistoryBack } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
@@ -431,6 +431,17 @@ describe('app.navigate', () => {
         });
         expect(history.state).not.toBe(id2);
         expect(app.historyStorage.current).toBe(storage);
+    });
+
+    it('should push a history entry after navigating back previously', async () => {
+        await app.navigate('/test-1');
+        await app.navigate('/test-2');
+        await nativeHistoryBack();
+        expect(app.path).toBe('/test-1');
+
+        await app.navigate('/test-2');
+        await nativeHistoryBack();
+        expect(app.path).toBe('/test-1');
     });
 
     it('should carry data when navigation did not happen', async () => {
