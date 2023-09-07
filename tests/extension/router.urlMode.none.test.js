@@ -8,8 +8,10 @@ const initialPath = '/';
 
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
+var initialAppPath;
 
 beforeAll(async () => {
+    history.replaceState('', '', '/?a=1#b=1');
     app = await initApp(router, template, app => {
         app.useRouter({
             urlMode: 'none',
@@ -23,6 +25,9 @@ beforeAll(async () => {
             ]
         });
     });
+    await app.ready.then(() => {
+        initialAppPath = app.path;
+    });
 });
 
 beforeEach(async () => {
@@ -31,6 +36,11 @@ beforeEach(async () => {
 });
 
 describe('app', () => {
+    it('should set correct initialPath', async () => {
+        expect(initialAppPath).toBe('/?a=1#b=1');
+        expect(app.initialPath).toBe('/?a=1');
+    });
+
     it('should push a new state to history stack on hashchange', async () => {
         const id = history.state;
         const page = app.page;

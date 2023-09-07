@@ -45,6 +45,10 @@ function getCurrentQuery() {
     return location.search + location.hash;
 }
 
+function getCurrentPathAndQuery() {
+    return location.pathname + getCurrentQuery();
+}
+
 function HistoryStorage(obj) {
     var map = new Map(obj && Object.entries(obj));
     Object.setPrototypeOf(map, HistoryStorage.prototype);
@@ -679,7 +683,7 @@ function configureRouter(app, options) {
     }
     var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
     var includeQuery = !initialPath;
-    initialPath = initialPath || fromPathname(location.pathname);
+    initialPath = initialPath || fromPathname(getCurrentPathAndQuery());
     if (!isSubPathOf(initialPath, basePath)) {
         initialPath = basePath;
     }
@@ -735,7 +739,7 @@ function configureRouter(app, options) {
         }
     });
     defineOwnProperty(app, 'basePath', basePath, true);
-    defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
+    defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
     defineOwnProperty(app, 'route', route, true);
     defineOwnProperty(app, 'routes', freeze(options.routes));
     defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
@@ -743,7 +747,7 @@ function configureRouter(app, options) {
     bind(window, 'popstate', function () {
         var index = getHistoryIndex(history.state);
         if (index < 0) {
-            pushState(fromPathname(location.pathname + getCurrentQuery()));
+            pushState(fromPathname(getCurrentPathAndQuery()));
         } else if (index !== currentIndex) {
             popState(index, true);
         }
@@ -779,13 +783,13 @@ function configureRouter(app, options) {
         initialState = true;
     }
     if (initialState) {
-        initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+        initialState = pushState(initialPath, true);
     }
     storage.set('c', states[currentIndex].id);
 
     app.on('ready', function () {
         if (initialState && states[currentIndex] === initialState && includeQuery) {
-            pushState(initialPath + getCurrentQuery(), true);
+            pushState(fromPathname(getCurrentPathAndQuery()), true);
         }
         handlePathChange();
     });
