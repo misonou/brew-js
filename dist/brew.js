@@ -1,4 +1,4 @@
-/*! brew-js v0.5.9 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.10 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -177,6 +177,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     lcfirst = _zeta$util.lcfirst,
     trim = _zeta$util.trim,
     matchWord = _zeta$util.matchWord,
+    matchWordMulti = _zeta$util.matchWordMulti,
     htmlDecode = _zeta$util.htmlDecode,
     resolve = _zeta$util.resolve,
     reject = _zeta$util.reject,
@@ -3280,7 +3281,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
         beginDrag();
       },
       getContentRect: function getContentRect(e) {
-        if (e.target === container || containsOrEquals(scrollable.scrollTarget, e.target)) {
+        if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
           var padding = scrollable.scrollPadding(e.target);
           return getRect(container).expand(-padding.left, -padding.top, padding.right, padding.bottom);
         }
@@ -3631,6 +3632,10 @@ function matchRoute(route, segments, ignoreExact) {
 
 function getCurrentQuery() {
   return location.search + location.hash;
+}
+
+function getCurrentPathAndQuery() {
+  return location.pathname + getCurrentQuery();
 }
 
 function HistoryStorage(obj) {
@@ -4160,7 +4165,7 @@ function configureRouter(app, options) {
       }
 
       states[currentIndex] = state;
-      history[replaceHistory || state.index === history.length ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+      history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
       storage.set('c', id);
       storage.set('s', states);
     });
@@ -4360,7 +4365,7 @@ function configureRouter(app, options) {
 
   var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
   var includeQuery = !initialPath;
-  initialPath = initialPath || fromPathname(location.pathname);
+  initialPath = initialPath || fromPathname(getCurrentPathAndQuery());
 
   if (!isSubPathOf(initialPath, basePath)) {
     initialPath = basePath;
@@ -4427,7 +4432,7 @@ function configureRouter(app, options) {
     }
   });
   defineOwnProperty(app, 'basePath', basePath, true);
-  defineOwnProperty(app, 'initialPath', initialPath + (includeQuery ? location.search : ''), true);
+  defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
   defineOwnProperty(app, 'route', route, true);
   defineOwnProperty(app, 'routes', freeze(options.routes));
   defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
@@ -4435,7 +4440,7 @@ function configureRouter(app, options) {
     var index = getHistoryIndex(history.state);
 
     if (index < 0) {
-      pushState(fromPathname(location.pathname + getCurrentQuery()));
+      pushState(fromPathname(getCurrentPathAndQuery()));
     } else if (index !== currentIndex) {
       popState(index, true);
     }
@@ -4476,13 +4481,13 @@ function configureRouter(app, options) {
   }
 
   if (initialState) {
-    initialState = pushState(initialPath + (includeQuery ? getCurrentQuery() : ''), true);
+    initialState = pushState(initialPath, true);
   }
 
   storage.set('c', states[currentIndex].id);
   app.on('ready', function () {
     if (initialState && states[currentIndex] === initialState && includeQuery) {
-      pushState(initialPath + getCurrentQuery(), true);
+      pushState(fromPathname(getCurrentPathAndQuery()), true);
     }
 
     handlePathChange();
