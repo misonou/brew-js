@@ -658,7 +658,7 @@ describe('app#snapshot', () => {
         await app.navigate('/base/test-1', false, data);
         app.snapshot();
 
-        dom.lock(root, new Promise(() => { }));
+        catchAsync(dom.lock(root, new Promise(() => { })));
         await expect(app.back()).resolves.toBeTruthy();
     });
 });

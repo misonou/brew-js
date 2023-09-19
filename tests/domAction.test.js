@@ -4,6 +4,7 @@ import router from "src/extension/router";
 import { addAsyncAction, closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } from "src/domAction";
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
+import { catchAsync } from "zeta-dom/util";
 import { initApp, delay, mount, root, mockFn, after, bindEvent } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
@@ -404,7 +405,7 @@ describe('href directive', () => {
             <a id="link" href="http://google.com/"></a>
         `);
         // create a cancellable lock so that window.open will be called
-        lock(link, new Promise(() => { }), true);
+        catchAsync(lock(link, new Promise(() => { }), true));
 
         const stateId = history.state;
         await after(() => {
@@ -421,7 +422,7 @@ describe('href directive', () => {
             <a id="link" rel="noreferrer noopener" href="http://www.www.com/test"></a>
         `);
         // create a cancellable lock so that window.open will be called
-        lock(link, new Promise(() => { }), true);
+        catchAsync(lock(link, new Promise(() => { }), true));
 
         await after(() => {
             fireEvent.click(link);
