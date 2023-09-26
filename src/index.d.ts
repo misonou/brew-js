@@ -2,6 +2,7 @@
 /// <reference path="./extension/withConfig.d.ts" />
 /// <reference path="./extension/withHtmlRouter.d.ts" />
 /// <reference path="./extension/withI18n.d.ts" />
+/// <reference path="./extension/withIdleTimeout.d.ts" />
 /// <reference path="./extension/withLogin.d.ts" />
 /// <reference path="./extension/withRouter.d.ts" />
 /// <reference path="./extension/withScrollable.d.ts" />
