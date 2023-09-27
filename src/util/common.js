@@ -297,3 +297,20 @@ export function preloadImages(urls, ms) {
     }
     return Promise.race([delay(ms), resolveAll(values(preloadImagesCache))]);
 }
+
+export function openDeferredURL(promise, loadingUrl, target, features) {
+    var win = window.open(loadingUrl || 'data:text/html;base64,TG9hZGluZy4uLg==', target || '_blank', features || '');
+    if (!win) {
+        return resolve(false);
+    }
+    return promise.then(function (url) {
+        if (win.closed) {
+            return false;
+        }
+        win.location.replace(url);
+        return true;
+    }, function (e) {
+        win.close();
+        throw e;
+    });
+}

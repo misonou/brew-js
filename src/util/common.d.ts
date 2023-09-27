@@ -53,3 +53,17 @@ export function loadScript(url: string | string[], options?: {
 export function addStyleSheet(url: string, media?: string): void;
 
 export function preloadImages(urls: string[] | Element, ms?: number): Promise<any>;
+
+/**
+ * Opens a new window with URL that is yet to be resolved asynchronously.
+ *
+ * The returned promise will resolve to `true` when the resolved URL is being loaded in target window;
+ * otherwise to `false` if the new window cannot be opened or the opened window is closed before URL is resolved.
+ * It will forward rejection result if the given promise rejects.
+ *
+ * @param promise A promise that resolves the target URL.
+ * @param initialUrl URL to show during loading, typically a loading screen. A blank page with text "Loading..." will be used if not specified.
+ * @param target Name of target window.
+ * @param features A string containing a comma-separated list of window features, same as {@link Window.open}.
+ */
+export function openDeferredURL(promise: Promise<string>, initialUrl?: string, target?: string, features?: string): Promise<boolean>;
