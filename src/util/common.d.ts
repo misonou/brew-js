@@ -9,7 +9,7 @@ export function isBoolAttr(element: Element, name: string): boolean;
 
 export function hasAttr(element: Element, name: string): boolean;
 
-export function getAttr(element: Element, name: string): string | undefined;
+export function getAttr(element: Element, name: string): string | null;
 
 export function setAttr(element: Element, name: string, value: string | null): void;
 

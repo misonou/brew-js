@@ -33,23 +33,25 @@ export function hasAttr(element, name) {
 }
 
 export function getAttr(element, name) {
-    var attr = element.attributes[name];
-    return attr ? attr.value : null;
+    return element.getAttribute(name);
 }
 
 export function setAttr(element, name, value) {
-    each(isPlainObject(name) || kv(name, value), function (i, v) {
-        if (v === null) {
-            element.removeAttribute(i);
-        } else {
-            element.setAttribute(i, v);
+    if (typeof name !== 'string') {
+        each(name, setAttr.bind(0, element));
+    } else if (value === null) {
+        element.removeAttribute(name);
+    } else {
+        value = String(value);
+        if (getAttr(element, name) !== value) {
+            element.setAttribute(name, value);
         }
-    });
+    }
 }
 
 export function copyAttr(src, dst) {
     each(src.attributes, function (i, v) {
-        dst.setAttribute(v.name, v.value);
+        setAttr(dst, v.name, v.value);
     });
 }
 

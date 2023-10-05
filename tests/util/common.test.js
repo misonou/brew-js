@@ -46,6 +46,19 @@ describe('setAttr', () => {
         setAttr(elm, { a: '3' });
         expect(elm.getAttribute('a')).toEqual('3');
     });
+
+    it('should not cause mutation when setting the same attribute value', async () => {
+        const cb = mockFn();
+        const elm = $('<div a="1"></div>')[0];
+        new MutationObserver(cb).observe(elm, { attributes: true });
+
+        await after(() => setAttr(elm, 'a', '2'));
+        expect(cb).toBeCalledTimes(1);
+
+        cb.mockClear();
+        await after(() => setAttr(elm, 'a', '2'));
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('copyAttr', () => {
@@ -61,6 +74,20 @@ describe('copyAttr', () => {
         const dst = $('<div a="2"></div>')[0];
         copyAttr(src, dst);
         expect(dst.getAttribute('a')).toEqual('1');
+    });
+
+    it('should not cause mutation when no attributes are updated', async () => {
+        const cb = mockFn();
+        const src = $('<div a="1"></div>')[0];
+        const dst = $('<div a="2"></div>')[0];
+        new MutationObserver(cb).observe(dst, { attributes: true });
+
+        await after(() => copyAttr(src, dst));
+        expect(cb).toBeCalledTimes(1);
+
+        cb.mockClear();
+        await after(() => copyAttr(src, dst));
+        expect(cb).not.toBeCalled();
     });
 });
 
