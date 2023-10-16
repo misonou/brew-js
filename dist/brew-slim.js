@@ -1,4 +1,4 @@
-/*! brew-js v0.5.10 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.11 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -70,6 +70,7 @@ __webpack_require__.d(common_namespaceObject, {
   "hasAttr": function() { return hasAttr; },
   "isBoolAttr": function() { return isBoolAttr; },
   "loadScript": function() { return loadScript; },
+  "openDeferredURL": function() { return openDeferredURL; },
   "preloadImages": function() { return preloadImages; },
   "selectorForAttr": function() { return selectorForAttr; },
   "setAttr": function() { return setAttr; },
@@ -113,6 +114,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     noop = _zeta$util.noop,
     pipe = _zeta$util.pipe,
     either = _zeta$util.either,
+    sameValueZero = _zeta$util.sameValueZero,
     is = _zeta$util.is,
     isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
     isArray = _zeta$util.isArray,
@@ -423,21 +425,24 @@ function hasAttr(element, name) {
   return !!element.attributes[name];
 }
 function getAttr(element, name) {
-  var attr = element.attributes[name];
-  return attr ? attr.value : null;
+  return element.getAttribute(name);
 }
 function setAttr(element, name, value) {
-  each(isPlainObject(name) || kv(name, value), function (i, v) {
-    if (v === null) {
-      element.removeAttribute(i);
-    } else {
-      element.setAttribute(i, v);
+  if (typeof name !== 'string') {
+    each(name, setAttr.bind(0, element));
+  } else if (value === null) {
+    element.removeAttribute(name);
+  } else {
+    value = String(value);
+
+    if (getAttr(element, name) !== value) {
+      element.setAttribute(name, value);
     }
-  });
+  }
 }
 function copyAttr(src, dst) {
   each(src.attributes, function (i, v) {
-    dst.setAttribute(v.name, v.value);
+    setAttr(dst, v.name, v.value);
   });
 }
 function selectorForAttr(attr) {
@@ -715,6 +720,25 @@ function preloadImages(urls, ms) {
   }
 
   return promise_polyfill.race([delay(ms), resolveAll(values(preloadImagesCache))]);
+}
+function openDeferredURL(promise, loadingUrl, target, features) {
+  var win = window.open(loadingUrl || 'data:text/html;base64,TG9hZGluZy4uLg==', target || '_blank', features || '');
+
+  if (!win) {
+    return resolve(false);
+  }
+
+  return promise.then(function (url) {
+    if (win.closed) {
+      return false;
+    }
+
+    win.location.replace(url);
+    return true;
+  }, function (e) {
+    win.close();
+    throw e;
+  });
 }
 // EXTERNAL MODULE: ./node_modules/lz-string/libs/lz-string.js
 var lz_string = __webpack_require__(961);
@@ -1783,7 +1807,28 @@ var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_
 
 
 
+
 var emitter = new ZetaEventContainer();
+
+var directive_toString = function toString(v) {
+  return isUndefinedOrNull(v) ? null : String(v);
+};
+
+var toNumber = function toNumber(v) {
+  return isUndefinedOrNull(v) || isNaN(v) ? null : +v;
+};
+
+var converters = {
+  string: [pipe, directive_toString],
+  number: [toNumber, function (v) {
+    return directive_toString(toNumber(v));
+  }],
+  boolean: [function (v) {
+    return !isUndefinedOrNull(v);
+  }, function (v) {
+    return v ? '' : null;
+  }]
+};
 
 function Component(element) {
   defineOwnProperty(this, 'element', element, true);
@@ -1796,17 +1841,65 @@ definePrototype(ComponentContext, {
     return emitter.add(this, event, handler);
   }
 });
+watchable(ComponentContext.prototype);
+
+function createContextClass(options) {
+  var attributes = map(options.directives, function (v) {
+    return v.attribute;
+  });
+  var directives = mapObject(options.directives, function (v) {
+    var name = v.attribute;
+    var converter = converters[v.type] || converters.string;
+    return {
+      get: function get(element) {
+        return converter[0](getAttr(element, name));
+      },
+      set: function set(element, value) {
+        value = converter[1](value);
+        setAttr(element, name, value);
+        return converter[0](value);
+      }
+    };
+  });
+
+  var Context = function Context(element) {
+    var self = this;
+    defineOwnProperty(self, 'element', element, true);
+
+    if (attributes[0]) {
+      var update = function update() {
+        each(directives, function (i, v) {
+          self[i] = v.get(element);
+        });
+      };
+
+      update();
+      var collectChange = watchOwnAttributes(element, attributes, update);
+      self.on('destroy', collectChange.dispose);
+    }
+  };
+
+  definePrototype(Context, ComponentContext);
+  each(directives, function (i) {
+    defineObservableProperty(Context.prototype, i, null, function (v) {
+      return directives[i].set(this.element, v);
+    });
+  });
+  return Context;
+}
+
 function getDirectiveComponent(element) {
   return new Component(element);
 }
 function registerDirective(key, selector, options) {
+  var Context = createContextClass(options);
   var map = new WeakMap();
   var collect = watchElements(zeta_dom_dom.root, selector, function (added, removed) {
     each(removed, function (i, v) {
       emitter.emit('destroy', mapRemove(map, v).context);
     });
     each(added, function (i, v) {
-      var context = new ComponentContext();
+      var context = new Context(v);
       map.set(v, {
         component: options.component(v, context),
         context: context
@@ -1926,35 +2019,25 @@ var SELECTOR_SCROLLABLE = '[scrollable]';
 var SELECTOR_TARGET = '[scrollable-target]';
 /* harmony default export */ const scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
+    content: '[scrollable-target]:not(.disabled)',
     bounce: false
   }, defaultOptions); // @ts-ignore: non-standard member
 
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
 
-  function initScrollable(container, context) {
-    var dir = container.getAttribute('scrollable');
-    var paged = container.getAttribute('scroller-snap-page') || '';
-    var varname = container.getAttribute('scroller-state') || '';
-    var selector = container.getAttribute('scroller-page') || '';
-    var persistScroll = container.hasAttribute('persist-scroll');
-    var savedOffset = {};
-    var cleanup = [];
-    var scrolling = false;
-    var needRefresh = false;
-    var isControlledScroll;
-    var currentIndex = 0; // @ts-ignore: signature ignored
+  function getOptions(context) {
+    return {
+      handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
+      hScroll: !matchWord(context.dir, 'y-only'),
+      vScroll: !matchWord(context.dir, 'x-only'),
+      pageItem: context.selector,
+      snapToPage: context.paged === 'always' || context.paged === app.orientation
+    };
+  }
 
-    var scrollable = jquery.scrollable(container, extend({}, defaultOptions, {
-      handle: matchWord(dir, 'auto scrollbar content') || 'content',
-      hScroll: !matchWord(dir, 'y-only'),
-      vScroll: !matchWord(dir, 'x-only'),
-      content: '[scrollable-target]:not(.disabled)',
-      pageItem: selector,
-      snapToPage: paged === 'always' || paged === app.orientation
-    }));
-    cleanup.push(function () {
-      scrollable.destroy();
-    });
+  function initScrollable(container, context) {
+    var scrollable = jquery.scrollable(container, extend({}, defaultOptions, getOptions(context)));
+    var cleanup = [];
     cleanup.push(zeta_dom_dom.on(container, {
       drag: function drag() {
         beginDrag();
@@ -1974,68 +2057,74 @@ var SELECTOR_TARGET = '[scrollable-target]';
       }
     }));
 
-    function getItem(index) {
-      return selector && jquery(selector, container).get()[index];
-    }
-
-    function setState(index) {
-      var oldIndex = currentIndex;
-      currentIndex = index;
-
-      if (varname && app.setVar) {
-        app.setVar(container, varname, index);
+    function initPageIndex(enabled) {
+      if (!enabled || initPageIndex.d++) {
+        return;
       }
 
-      if (oldIndex !== index) {
-        app.emit('scrollIndexChange', container, {
-          oldIndex: oldIndex,
-          newIndex: index
-        }, true);
+      var scrolling = false;
+      var needRefresh = false;
+      var isControlledScroll;
+      var currentIndex = 0;
+      var timeout;
+
+      function getItem(index) {
+        return context.selector && jquery(context.selector, container).get()[index];
       }
-    }
 
-    function scrollTo(index, align) {
-      var item = getItem(index);
-      align = align || 'center top';
+      function setState(index) {
+        var oldIndex = currentIndex;
+        currentIndex = index;
 
-      if (!scrolling && isVisible(container) && item) {
-        scrolling = true;
-        isControlledScroll = true;
-        setState(index);
-        scrollable.scrollToElement(item, align, align, 200, function () {
-          scrolling = false;
-          isControlledScroll = false;
-        });
-      }
-    }
+        if (context.varname && app.setVar) {
+          app.setVar(container, context.varname, index);
+        }
 
-    function refresh() {
-      var isPaged = paged === 'always' || paged === app.orientation;
-
-      if (isPaged && isVisible(container)) {
-        if (scrolling) {
-          needRefresh = true;
-        } else {
-          needRefresh = false;
-          scrollTo(currentIndex);
+        if (oldIndex !== index) {
+          app.emit('scrollIndexChange', container, {
+            oldIndex: oldIndex,
+            newIndex: index
+          }, true);
         }
       }
-    }
 
-    if (selector) {
-      if (paged !== 'always') {
-        cleanup.push(app.on('orientationchange', function () {
-          scrollable.setOptions({
-            snapToPage: paged === app.orientation
+      function scrollTo(index, align) {
+        var item = getItem(index);
+        align = align || 'center top';
+
+        if (!scrolling && isVisible(container) && item) {
+          scrolling = true;
+          isControlledScroll = true;
+          setState(index);
+          scrollable.scrollToElement(item, align, align, 200, function () {
+            scrolling = false;
+            isControlledScroll = false;
           });
-        }));
+        }
       }
 
-      cleanup.push(app.on(container, {
-        statechange: function statechange(e) {
-          var newIndex = e.data[varname];
+      function refresh() {
+        var isPaged = context.paged === 'always' || context.paged === app.orientation;
 
-          if (!scrolling) {
+        if (isPaged && isVisible(container)) {
+          if (scrolling) {
+            needRefresh = true;
+          } else {
+            needRefresh = false;
+            scrollTo(currentIndex);
+          }
+        }
+      }
+
+      cleanup.push(app.on('orientationchange', function () {
+        scrollable.setOptions({
+          snapToPage: context.paged === 'always' || context.paged === app.orientation
+        });
+      }), app.on(container, {
+        statechange: function statechange(e) {
+          if (context.selector && !scrolling) {
+            var newIndex = e.data[context.varname];
+
             if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
               scrollTo(newIndex, 'left center');
             } else {
@@ -2046,27 +2135,35 @@ var SELECTOR_TARGET = '[scrollable-target]';
         scrollMove: function scrollMove(e) {
           scrolling = true;
 
-          if (!isControlledScroll) {
+          if (context.selector && !isControlledScroll) {
             setState(e.pageIndex);
           }
         },
         scrollStop: function scrollStop(e) {
-          setState(e.pageIndex);
           scrolling = false;
 
-          if (needRefresh) {
-            refresh();
+          if (context.selector) {
+            setState(e.pageIndex);
+
+            if (needRefresh) {
+              refresh();
+            }
           }
         }
-      }, true));
-      var timeout;
-      cleanup.push(bind(window, 'resize', function () {
-        clearTimeout(timeout);
-        timeout = setTimeout(refresh, 200);
+      }, true), bind(window, 'resize', function () {
+        if (context.selector) {
+          clearTimeout(timeout);
+          timeout = setTimeout(refresh, 200);
+        }
       }));
     }
 
-    if (persistScroll) {
+    function initPersistScroll(enabled) {
+      if (!enabled || initPersistScroll.d++) {
+        return;
+      }
+
+      var savedOffset = {};
       var hasAsync = false;
 
       var restoreScroll = function restoreScroll() {
@@ -2081,7 +2178,10 @@ var SELECTOR_TARGET = '[scrollable-target]';
         hasAsync = true;
       }), zeta_dom_dom.on('asyncEnd', function () {
         hasAsync = false;
-        restoreScroll();
+
+        if (context.persistScroll) {
+          restoreScroll();
+        }
       }), app.on(container, 'scrollStart', function (e) {
         if (e.source !== 'script') {
           delete savedOffset[history.state];
@@ -2092,20 +2192,48 @@ var SELECTOR_TARGET = '[scrollable-target]';
           y: scrollable.scrollTop()
         };
         setTimeout(function () {
-          if (!hasAsync) {
+          if (!hasAsync && context.persistScroll) {
             restoreScroll();
           }
         });
       }));
     }
 
-    context.on('destroy', combineFn(cleanup));
+    initPageIndex.d = 0;
+    initPersistScroll.d = 0;
+    context.watch(function () {
+      scrollable.setOptions(getOptions(context));
+    });
+    context.watch('selector', initPageIndex, true);
+    context.watch('persistScroll', initPersistScroll, true);
+    context.on('destroy', function () {
+      combineFn(cleanup)();
+      scrollable.destroy();
+    });
     scrollable[focusable(container) ? 'enable' : 'disable']();
     return scrollable;
   }
 
   registerDirective('scrollable', SELECTOR_SCROLLABLE, {
-    component: initScrollable
+    component: initScrollable,
+    directives: {
+      dir: {
+        attribute: 'scrollable'
+      },
+      paged: {
+        attribute: 'scroller-snap-page'
+      },
+      varname: {
+        attribute: 'scroller-state'
+      },
+      selector: {
+        attribute: 'scroller-page'
+      },
+      persistScroll: {
+        attribute: 'persist-scroll',
+        type: 'boolean'
+      }
+    }
   });
   jquery.scrollable.hook({
     scrollStart: function scrollStart(e) {
