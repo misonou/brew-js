@@ -104,5 +104,6 @@ export function evalTemplate(template: string, context: any, html?: boolean): st
  * @param element A DOM element.
  * @param attrName Name of the attribute which to be evaluated.
  * @param templateMode When specified to `true`, the attribute is evaluated as a template instead of an expression.
+ * @param context Context object of which the template or expression is evaluated against. Current template variables declared on the element will be used if it is omitted.
  */
-export function evalAttr(element: Element, attrName: string, templateMode?: boolean): any;
+export function evalAttr(element: Element, attrName: string, templateMode?: boolean, context?: any): any;

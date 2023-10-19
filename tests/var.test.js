@@ -1,5 +1,5 @@
 import { uniqueName, root, mount, body, initApp } from "./testUtil";
-import { declareVar, getVar, getVarScope, resetVar, setVar } from "src/var";
+import { declareVar, evalAttr, getVar, getVarScope, resetVar, setVar } from "src/var";
 import template from "src/extension/template";
 
 beforeAll(async () => {
@@ -137,5 +137,13 @@ describe('resetVar', () => {
         resetVar(div);
         expect(getVar(div, varname1)).toBe(1);
         expect(getVar(div.children[0], varname2)).toBe(1);
+    });
+});
+
+describe('evalAttr', () => {
+    it('should allow overriding evaluation context', async () => {
+        const div = await mount(`<div var="{ foo: 1 }" test="foo"></div>`);
+        expect(evalAttr(div, 'test', false)).toBe(1);
+        expect(evalAttr(div, 'test', false, { foo: 2 })).toBe(2);
     });
 });

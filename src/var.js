@@ -194,9 +194,10 @@ export function evalTemplate(template, context, html) {
  * @param {Element} element
  * @param {string} attrName
  * @param {boolean=} templateMode
+ * @param {VarContext=} context
  */
-export function evalAttr(element, attrName, templateMode) {
-    return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), getVar(element));
+export function evalAttr(element, attrName, templateMode, context) {
+    return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), context || getVar(element));
 }
 
 tree.on('update', function (e) {
