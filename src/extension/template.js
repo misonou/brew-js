@@ -35,10 +35,8 @@ export default addExtension(true, 'template', function (app) {
         }
     });
 
-    app.watch('readyState', function (state) {
-        if (state === 'ready') {
-            mountElement(root);
-        }
+    app.on('ready', function () {
+        mountElement(root);
     });
 
     addTransformer('apply-template', function (element, getState) {

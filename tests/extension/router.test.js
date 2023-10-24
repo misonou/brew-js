@@ -4,7 +4,6 @@ import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
-import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
@@ -14,6 +13,7 @@ const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/';
 const div = {};
+const mounted = [];
 
 var initialCanNavigateBack;
 var initialCanNavigateForward;
@@ -43,10 +43,14 @@ beforeAll(async () => {
         } catch (e) {
             initialRedirectError = e;
         }
+        initContent();
+        app.on('mounted', e => {
+            mounted.push(e.target);
+        });
     });
 });
 
-beforeAll(async () => {
+function initContent() {
     Object.assign(div, initBody(`
         <div switch id="root" var="{ parentVar: 0 }">
             <div match-path="/" id="initial"></div>
@@ -99,10 +103,7 @@ beforeAll(async () => {
     div.audio.play = mockFn();
     div.video.pause = mockFn();
     div.audio.pause = mockFn();
-    await after(() => {
-        mountElement(div.root);
-    });
-});
+}
 
 beforeEach(async () => {
     resetVar(div.preventLeave);
@@ -1372,6 +1373,10 @@ describe('popstate event', () => {
 });
 
 describe('mounted event', () => {
+    it('should be emitted on root element first', () => {
+        expect(mounted.slice(0, 2)).toEqual([root, div.test1]);
+    });
+
     it('should be emitted on first-time matched element before pageenter event', async () => {
         const cb = mockFn();
         bindEvent(div.mounted, 'mounted', cb);
