@@ -214,6 +214,16 @@ export default addExtension(true, 'template', function (app) {
         applyDOMUpdates(element, { $$class: evalAttr(element, 'set-class') });
     });
 
+    addRenderer('data-src', function (element, getState, applyDOMUpdates) {
+        applyDOMUpdates(element, { src: withBaseUrl(evalAttr(element, 'data-src', true)) });
+    });
+
+    addRenderer('data-bg-src', function (element, getState, applyDOMUpdates) {
+        applyDOMUpdates(element, {
+            style: { backgroundImage: 'url("' + withBaseUrl(evalAttr(element, 'data-bg-src', true)) + '")' }
+        });
+    });
+
     addRenderer('prevent-leave', function (element, getState) {
         var state = getState(element);
         var value = evalAttr(element, 'prevent-leave');

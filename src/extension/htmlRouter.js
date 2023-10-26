@@ -203,14 +203,6 @@ function initHtmlRouter(app, options) {
 
     app.on('mounted', function (e) {
         var element = e.target;
-        $(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
-            v.src = withBaseUrl(v.dataset.src);
-            v.removeAttribute('data-src');
-        });
-        $(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
-            v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
-            v.removeAttribute('data-bg-src');
-        });
         $(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
             v.src = withBaseUrl(v.getAttribute('src'));
         });

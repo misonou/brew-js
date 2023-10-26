@@ -316,6 +316,44 @@ describe('set-style directive', () => {
     });
 });
 
+describe('data-src directive', () => {
+    it('should update src of an element', async () => {
+        const elm = await mount(`<img var="{ color: blue }" template data-src="/{{color}}.png" />`);
+        expect(elm).toHaveAttribute('src', '/blue.png');
+
+        await after(() => setVar(elm, { color: 'red' }));
+        expect(elm).toHaveAttribute('src', '/red.png');
+    });
+
+    it('should prepend baseUrl to source', async () => {
+        const elm = await mount(`<img var="{ color: blue }" template data-src="/{{color}}.png" />`);
+        expect(elm).toHaveAttribute('src', '/blue.png');
+
+        setBaseUrl('/foo');
+        await after(() => setVar(elm, { color: 'red' }));
+        expect(elm).toHaveAttribute('src', '/foo/red.png');
+    });
+});
+
+describe('data-bg-src directive', () => {
+    it('should update background image of an element', async () => {
+        const elm = await mount(`<div var="{ color: blue }" template data-bg-src="/{{color}}.png"></div>`);
+        expect(elm.style.backgroundImage).toBe('url(/blue.png)');
+
+        await after(() => setVar(elm, { color: 'red' }));
+        expect(elm.style.backgroundImage).toBe('url(/red.png)');
+    });
+
+    it('should prepend baseUrl to source', async () => {
+        const elm = await mount(`<div var="{ color: blue }" template data-bg-src="/{{color}}.png"></div>`);
+        expect(elm.style.backgroundImage).toBe('url(/blue.png)');
+
+        setBaseUrl('/foo');
+        await after(() => setVar(elm, { color: 'red' }));
+        expect(elm.style.backgroundImage).toBe('url(/foo/red.png)');
+    });
+});
+
 describe('loading-scope directive', () => {
     it('should update loading variable', async () => {
         const elm = await mount(`<div loading-scope></div>`);
