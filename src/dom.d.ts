@@ -1,4 +1,9 @@
 /**
+ * @private
+ */
+export function isDirective(name: string): boolean;
+
+/**
  * @param target
  */
 export function addSelectHandlers(target: string, event: any, handler: any, noChildren: boolean): Zeta.UnregisterCallback;

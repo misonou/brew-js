@@ -9,6 +9,7 @@ import { errorWithCode } from "zeta-dom/util";
 import { fireEvent, screen } from "@testing-library/dom";
 import dom from "zeta-dom/dom";
 import { openFlyout } from "src/domAction";
+import { addRenderer } from "src/dom";
 
 const isElementActive = mockFn();
 
@@ -216,6 +217,12 @@ describe('template directive', () => {
             setVar(div, 'html', '<b>test</b>');
         });
         expect(div.innerHTML).toBe('<b>test</b>&lt;b&gt;');
+    });
+
+    it('should not process other directive', async () => {
+        addRenderer('test-u8n4t', () => { });
+        const elm = await mount(`<div template test-u8n4t="{{test}}"></div>`);
+        expect(elm).toHaveAttribute('test-u8n4t', '{{test}}');
     });
 });
 

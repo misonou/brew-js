@@ -104,6 +104,10 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
     });
 }
 
+export function isDirective(name) {
+    return !!(transformationHandlers[name] || renderHandlers[name]);
+}
+
 export function addSelectHandlers(target, event, handler, noChildren) {
     var unbindHandlers = [];
     var obj = {

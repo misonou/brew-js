@@ -7,7 +7,7 @@ import { registerCleanup, watchAttributes, watchElements } from "../include/zeta
 import dom from "../include/zeta-dom/dom.js";
 import { preventLeave } from "../include/zeta-dom/domLock.js";
 import { addExtension, isElementActive } from "../app.js";
-import { addRenderer, addSelectHandlers, addTransformer, hookBeforeUpdate, matchElement, mountElement } from "../dom.js";
+import { addRenderer, addSelectHandlers, addTransformer, hookBeforeUpdate, isDirective, matchElement, mountElement } from "../dom.js";
 import { addAsyncAction, closeFlyout, toggleFlyout } from "../domAction.js";
 import { copyAttr, getAttr, getAttrValues, getFormValues, hasAttr, isBoolAttr, setAttr } from "../util/common.js";
 import { groupLog, writeLog } from "../util/console.js";
@@ -177,7 +177,7 @@ export default addExtension(true, 'template', function (app) {
         if (!templates) {
             templates = {};
             each(element.attributes, function (i, w) {
-                if (w.value.indexOf('{{') >= 0) {
+                if (!isDirective(w.name) && w.value.indexOf('{{') >= 0) {
                     templates[w.name] = isBoolAttr(element, w.name) ? w.value.replace(/^{{|}}$/g, '') : w.value;
                 }
             });
