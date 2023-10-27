@@ -1,8 +1,8 @@
 import { addAnimateIn, addAnimateOut } from "src/anim";
-import { addTransformer, hookBeforeUpdate } from "src/dom";
+import { addTransformer, hookBeforeUpdate, matchElement } from "src/dom";
 import { getVar, setVar } from "src/var";
 import template from "src/extension/template";
-import { after, defunctAfterTest, delay, initApp, mockFn, mount, uniqueName, verifyCalls, _ } from "./testUtil";
+import { after, defunctAfterTest, delay, initApp, mockFn, mount, uniqueName, verifyCalls, _, body, initBody } from "./testUtil";
 
 const testTransform = mockFn((element, getState, updateDOM) => {
     element.innerHTML = '<div>test</div>';
@@ -10,15 +10,25 @@ const testTransform = mockFn((element, getState, updateDOM) => {
 
 const customAnimateIn = mockFn();
 const customAnimateOut = mockFn();
+const matchElementCb = mockFn();
 addAnimateIn('custom-anim', customAnimateIn)
 addAnimateOut('custom-anim', customAnimateOut)
 
 /** @type {Brew.AppInstance<{}>} */
 var app;
+var matchElementResult = [];
 
 beforeAll(async () => {
     addTransformer('test-transform', testTransform);
-    app = await initApp(template);
+    app = await initApp(template, (app) => {
+        // test for matchElement before app ready
+        initBody('<div class="match-element-1"></div>');
+        matchElement('.match-element-1', matchElementCb);
+        matchElementResult.push([...matchElementCb.mock.calls]);
+        app.on('ready', () => {
+            matchElementResult.push([...matchElementCb.mock.calls]);
+        });
+    });
 });
 
 describe('mountElement', () => {
@@ -156,5 +166,22 @@ describe('hookBeforeUpdate', () => {
         await after(() => setVar(elm, 'foo', true));
         expect(elm).toHaveClassName('foo');
         expect(elm).toHaveClassName('bar');
+    });
+});
+
+describe('matchElement', () => {
+    it('should match element when mounted', async () => {
+        expect(matchElementResult[0]).toEqual([]);
+        expect(matchElementResult[1]).toEqual([[body.querySelector('.match-element-1')]]);
+
+        const elm = await mount(`<div class="match-element-1"></div>`);
+        verifyCalls(matchElementCb, [[elm]]);
+    });
+
+    it('should match existing element after app ready', async () => {
+        const elm = await mount(`<div class="match-element-2"></div>`);
+        const cb = mockFn();
+        matchElement('.match-element-2', cb);
+        verifyCalls(cb, [[elm]]);
     });
 });

@@ -3,7 +3,7 @@ import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-do
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
 import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "./include/zeta-dom/util.js";
-import { app } from "./app.js";
+import { app, appReady } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
 import { getVar, resetVar } from "./var.js";
@@ -134,7 +134,15 @@ export function addSelectHandlers(target, event, handler, noChildren) {
  * @param {(ele: Element) => void} handler
  */
 export function matchElement(selector, handler) {
-    matchElementHandlers.push({ selector, handler });
+    var callback = function (element) {
+        $(selectIncludeSelf(selector, element)).each(function (i, v) {
+            handler.call(v, v);
+        });
+    };
+    matchElementHandlers.push(callback);
+    if (appReady) {
+        callback(root);
+    }
 }
 
 /**
@@ -345,11 +353,7 @@ export function mountElement(element) {
         }
         index2 = mountedElements.size;
     }
-    each(matchElementHandlers, function (i, v) {
-        $(selectIncludeSelf(v.selector, element)).each(function (i, w) {
-            v.handler.call(w, w);
-        });
-    });
+    combineFn(matchElementHandlers)(element);
     markUpdated(element);
     setImmediateOnce(processStateChange);
 }
