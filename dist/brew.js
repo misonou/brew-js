@@ -1,4 +1,4 @@
-/*! brew-js v0.5.11 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.12 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -1644,6 +1644,9 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
   });
 }
 
+function isDirective(name) {
+  return !!(transformationHandlers[name] || renderHandlers[name]);
+}
 function addSelectHandlers(target, event, handler, noChildren) {
   var unbindHandlers = [];
   var obj = {
@@ -1670,10 +1673,17 @@ function addSelectHandlers(target, event, handler, noChildren) {
  */
 
 function matchElement(selector, handler) {
-  matchElementHandlers.push({
-    selector: selector,
-    handler: handler
-  });
+  var callback = function callback(element) {
+    jquery(selectIncludeSelf(selector, element)).each(function (i, v) {
+      handler.call(v, v);
+    });
+  };
+
+  matchElementHandlers.push(callback);
+
+  if (appReady) {
+    callback(dom_root);
+  }
 }
 /**
  * @param {(domChanges: Map<Element, Brew.DOMUpdateState>) => Brew.PromiseOrEmpty} callback
@@ -1908,11 +1918,7 @@ function mountElement(element) {
     index2 = mountedElements.size;
   }
 
-  each(matchElementHandlers, function (i, v) {
-    jquery(selectIncludeSelf(v.selector, element)).each(function (i, w) {
-      v.handler.call(w, w);
-    });
-  });
+  combineFn(matchElementHandlers)(element);
   markUpdated(element);
   setImmediateOnce(processStateChange);
 }
@@ -2161,10 +2167,11 @@ function evalTemplate(template, context, html) {
  * @param {Element} element
  * @param {string} attrName
  * @param {boolean=} templateMode
+ * @param {VarContext=} context
  */
 
-function evalAttr(element, attrName, templateMode) {
-  return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), getVar(element));
+function evalAttr(element, attrName, templateMode, context) {
+  return (templateMode ? evalTemplate : evalExpression)(getAttr(element, attrName), context || getVar(element));
 }
 tree.on('update', function (e) {
   each(e.updatedNodes, function (i, v) {
@@ -2708,10 +2715,8 @@ var template_root = zeta_dom_dom.root;
       return combineFn(unbind, addSelectHandlers(target, event, handler, noChildren));
     }
   });
-  app.watch('readyState', function (state) {
-    if (state === 'ready') {
-      mountElement(template_root);
-    }
+  app.on('ready', function () {
+    mountElement(template_root);
   });
   addTransformer('apply-template', function (element, getState) {
     var state = getState(element);
@@ -2874,7 +2879,7 @@ var template_root = zeta_dom_dom.root;
     if (!templates) {
       templates = {};
       each(element.attributes, function (i, w) {
-        if (w.value.indexOf('{{') >= 0) {
+        if (!isDirective(w.name) && w.value.indexOf('{{') >= 0) {
           templates[w.name] = isBoolAttr(element, w.name) ? w.value.replace(/^{{|}}$/g, '') : w.value;
         }
       });
@@ -2915,6 +2920,18 @@ var template_root = zeta_dom_dom.root;
   addRenderer('set-class', function (element, getState, applyDOMUpdates) {
     applyDOMUpdates(element, {
       $$class: evalAttr(element, 'set-class')
+    });
+  });
+  addRenderer('data-src', function (element, getState, applyDOMUpdates) {
+    applyDOMUpdates(element, {
+      src: withBaseUrl(evalAttr(element, 'data-src', true))
+    });
+  });
+  addRenderer('data-bg-src', function (element, getState, applyDOMUpdates) {
+    applyDOMUpdates(element, {
+      style: {
+        backgroundImage: 'url("' + withBaseUrl(evalAttr(element, 'data-bg-src', true)) + '")'
+      }
     });
   });
   addRenderer('prevent-leave', function (element, getState) {
@@ -4844,14 +4861,6 @@ function initHtmlRouter(app, options) {
   });
   app.on('mounted', function (e) {
     var element = e.target;
-    jquery(selectIncludeSelf('[data-src]', element)).each(function (i, v) {
-      v.src = withBaseUrl(v.dataset.src);
-      v.removeAttribute('data-src');
-    });
-    jquery(selectIncludeSelf('[data-bg-src]', element)).each(function (i, v) {
-      v.style.backgroundImage = 'url("' + withBaseUrl(v.dataset.bgSrc) + '")';
-      v.removeAttribute('data-bg-src');
-    });
     jquery(selectIncludeSelf('img[src^="/"], video[src^="/"]', element)).each(function (i, v) {
       v.src = withBaseUrl(v.getAttribute('src'));
     });

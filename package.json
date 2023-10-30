@@ -1,6 +1,6 @@
 {
   "name": "brew-js",
-  "version": "0.5.11",
+  "version": "0.5.12",
   "description": "",
   "type": "module",
   "main": "src/index.js",
