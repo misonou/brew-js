@@ -124,12 +124,13 @@ declare namespace Brew {
     /* -------------------------------------------------------------
      * App
      * ------------------------------------------------------------- */
-    type BrewEventName = 'ready' | 'animationstart' | 'animationcomplete' | 'domchange' | 'statechange' | 'flyoutshow' | 'flyouthide' | 'preventLeave' | 'mounted' | 'validate' | 'reset';
+    type BrewEventName = 'ready' | 'animationstart' | 'animationcomplete' | 'domchange' | 'statechange' | 'flyoutshow' | 'flyouthide' | 'preventLeave' | 'mounted' | 'validate' | 'reset' | 'unload';
 
     type BrewEventMap = {
         animationstart: AnimationEvent;
         animationcomplete: AnimationEvent;
         statechange: StateChangeEvent;
+        unload: UnloadEvent;
         validate: ValidateEvent;
     }
 
@@ -149,6 +150,10 @@ declare namespace Brew {
         readonly data: Zeta.Dictionary;
         readonly oldValues: Zeta.Dictionary;
         readonly newValues: Zeta.Dictionary;
+    }
+
+    interface UnloadEvent extends Zeta.ZetaEventBase {
+        readonly persisted: boolean;
     }
 
     interface ValidateEvent extends Zeta.ZetaAsyncHandleableEvent<boolean> {

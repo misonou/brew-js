@@ -1,6 +1,7 @@
 import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
+import { bind } from "./include/zeta-dom/domUtil.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
@@ -189,6 +190,9 @@ function init(callback) {
             setReadyState('ready');
             app.emit('ready');
         }
+    });
+    bind(window, 'pagehide', function (e) {
+        app.emit('unload', { persisted: e.persisted }, { handleable: false });
     });
     return app;
 }
