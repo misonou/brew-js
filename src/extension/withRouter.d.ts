@@ -6,6 +6,7 @@ declare namespace Brew {
         pageenter: PageEvent;
         pageleave: PageEvent;
         hashchange: HashChangeEvent;
+        popstate: PopStateEvent;
     }
 
     type NavigationType = 'navigate' | 'reload' | 'back_forward' | 'resume';
@@ -66,6 +67,17 @@ declare namespace Brew {
     interface HashChangeEvent extends Zeta.ZetaEventBase {
         readonly oldHash: string;
         readonly newHash: string;
+    }
+
+    interface PopStateEvent extends Zeta.ZetaEventBase {
+        /**
+         * Gets the unique state ID for the previous snapshot.
+         */
+        readonly oldStateId: string;
+        /**
+         * Gets the unique state ID for the current snapshot.
+         */
+        readonly newStateId: string;
     }
 
     interface NavigateResult {

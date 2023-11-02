@@ -504,6 +504,14 @@ describe('app.navigate', () => {
         await app.navigate('/test-1?a=1');
         expect(cb).not.toBeCalled();
     });
+
+    it('should not emit popstate event', async () => {
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+
+        await app.navigate('/test-1');
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('app.back', () => {
@@ -589,6 +597,19 @@ describe('app.back', () => {
         await app.back();
         verifyCalls(cb, [
             [objectContaining({ type: 'hashchange', oldHash: '#a=1', newHash: '' }), _]
+        ]);
+    });
+
+    it('should emit popstate event when returned to previous snapshot of the same page', async () => {
+        const { id: newStateId } = await app.navigate('/test-1');
+        app.snapshot();
+
+        const oldStateId = history.state;
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+        await app.back();
+        verifyCalls(cb, [
+            [objectContaining({ type: 'popstate', oldStateId, newStateId }), _]
         ]);
     });
 
@@ -684,6 +705,15 @@ describe('app.snapshot', () => {
 
         catchAsync(dom.lock(root, new Promise(() => { })));
         await expect(app.back()).resolves.toBeTruthy();
+    });
+
+    it('should not emit popstate event', async () => {
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+        app.snapshot();
+
+        await delay();
+        expect(cb).not.toBeCalled();
     });
 });
 

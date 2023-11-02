@@ -400,6 +400,7 @@ function configureRouter(app, options) {
                 }
             },
             resolve: function (result) {
+                var previousState = lastState;
                 resolved = result || createNavigateResult(id, state.path);
                 resolvePromise(resolved);
                 state.handled = true;
@@ -407,6 +408,8 @@ function configureRouter(app, options) {
                     lastState = state;
                     if (resolved.navigated) {
                         app.emit('pageload', { pathname: state.path }, { handleable: false });
+                    } else if (state.type === 'back_forward') {
+                        app.emit('popstate', { oldStateId: previousState.id, newStateId: state.id }, { handleable: false });
                     }
                 }
             },
