@@ -149,6 +149,15 @@ describe('app', () => {
         // expect(history.state).toBe(id);
         // expect(location.hash).toBe('');
     });
+
+    it('should update current state ID in session storage on pagehide event', async () => {
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage1.get('c')).not.toBe(history.state);
+
+        await after(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
+        const storage2 = createObjectStorage(sessionStorage, 'brew.router./');
+        expect(storage2.get('c')).toBe(history.state);
+    });
 });
 
 describe('app.navigate', () => {
@@ -490,12 +499,6 @@ describe('app.navigate', () => {
         ]);
     });
 
-    it('should update current state ID in session storage', async () => {
-        const { id } = await app.navigate('/test-1');
-        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage1.get('c')).toBe(id);
-    });
-
     it('should not emit pageload event when only query string or hash has changed', async () => {
         const cb = mockFn();
         await app.navigate('/test-1');
@@ -566,16 +569,6 @@ describe('app.back', () => {
             pathname: '/',
             navigationType: 'back_forward',
         }), _);
-    });
-
-    it('should update current state ID in session storage', async () => {
-        const { id: id1 } = await app.navigate('/test-1');
-        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage1.get('c')).toBe(id1);
-
-        const { id: id2 } = await app.back();
-        const storage2 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage2.get('c')).toBe(id2);
     });
 
     it('should update path to previous snapshot', async () => {
@@ -1006,19 +999,19 @@ describe('app.beforePageEnter', () => {
 });
 
 describe('app.historyStorage', () => {
-    it('should persist value to session storage', async () => {
-        expect(sessionStorage['brew.router./']).not.toMatch(/__this_should_appear__/);
+    it('should persist all states to session storage on pagehide event', async () => {
+        const obj1 = {};
+        await after(() => app.historyStorage.current.set('foo', obj1));
+        await app.navigate('/test-1');
 
-        await after(() => app.historyStorage.current.set('foo', '__this_should_appear__'));
-        expect(sessionStorage['brew.router./']).toMatch(/__this_should_appear__/);
-    });
+        const obj2 = {};
+        await after(() => app.historyStorage.current.set('foo', obj2));
 
-    it('should delete value from session storage', async () => {
-        await after(() => app.historyStorage.current.set('foo', '__this_should_appear__'));
-        expect(sessionStorage['brew.router./']).toMatch(/__this_should_appear__/);
-
-        await after(() => app.historyStorage.current.delete('foo'));
-        expect(sessionStorage['brew.router./']).not.toMatch(/__this_should_appear__/);
+        obj1.bar = '__persist_on_pagehide_1__';
+        obj2.bar = '__persist_on_pagehide_2__';
+        await after(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
+        expect(sessionStorage['brew.router./']).toMatch(/__persist_on_pagehide_1__/);
+        expect(sessionStorage['brew.router./']).toMatch(/__persist_on_pagehide_2__/);
     });
 
     it('should convert key other than string or symbol to string', async () => {
@@ -1388,17 +1381,6 @@ describe('popstate event', () => {
         expect(cb).toBeCalledTimes(2);
         expect(app.path).toEqual('/test-1');
         expect(history.state).toEqual(stateId);
-    });
-
-    it('should update current state ID in session storage', async () => {
-        const { id: id1 } = await app.navigate('/test-1');
-        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage1.get('c')).toBe(id1);
-
-        history.back();
-        await delay(100);
-        const storage2 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage2.get('c')).toBe(history.state);
     });
 });
 

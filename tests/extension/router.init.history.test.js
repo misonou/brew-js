@@ -53,8 +53,5 @@ describe('router', () => {
         expect(app.sessionId).toBe(sessionId);
         expect(app.sessionStorage.get('bar')).toBe('bar');
         expect(app.cache.get('baz')).toBe('baz');
-
-        const storage1 = createObjectStorage(sessionStorage, 'brew.router./');
-        expect(storage1.get('c')).toBe(stateId1);
     });
 });

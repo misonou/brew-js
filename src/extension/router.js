@@ -67,25 +67,10 @@ definePrototype(HistoryStorage, Map, {
         return mapProto.get.call(this, stringOrSymbol(k));
     },
     set: function (k, v) {
-        var self = this;
-        k = stringOrSymbol(k);
-        if (self.get(k) !== v) {
-            storage.persist(self);
-        }
-        return mapProto.set.call(self, k, v);
+        return mapProto.set.call(this, stringOrSymbol(k), v);
     },
     delete: function (k) {
-        var self = this;
-        var result = mapProto.delete.call(self, stringOrSymbol(k));
-        if (result) {
-            storage.persist(self);
-        }
-        return result;
-    },
-    clear: function () {
-        var self = this;
-        mapProto.clear.call(self);
-        storage.persist(self);
+        return mapProto.delete.call(this, stringOrSymbol(k));
     },
     toJSON: function () {
         return Object.fromEntries(this.entries());
@@ -297,7 +282,6 @@ definePrototype(PageInfo, {
         pageInfoForEachState(this, function (v) {
             v.data = null;
         });
-        storage.persist(states);
         defineOwnProperty(this, 'data', null, true);
     },
     clearHistoryStorage: function () {
@@ -508,8 +492,6 @@ function configureRouter(app, options) {
             }
             states[currentIndex] = state;
             history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-            storage.set('c', id);
-            storage.set('s', states);
         });
         return state;
     }
@@ -537,7 +519,6 @@ function configureRouter(app, options) {
             if (!isNative || isLocked) {
                 history.go(step);
             }
-            storage.set('c', state.id);
         });
         return state;
     }
@@ -788,13 +769,17 @@ function configureRouter(app, options) {
     if (initialState) {
         initialState = pushState(initialPath, true);
     }
-    storage.set('c', states[currentIndex].id);
 
     app.on('ready', function () {
         if (initialState && states[currentIndex] === initialState && includeQuery) {
             pushState(fromPathname(getCurrentPathAndQuery()), true);
         }
         handlePathChange();
+    });
+    app.on('unload', function () {
+        storage.set('c', states[currentIndex].id);
+        storage.set('s', states);
+        storage.persistAll();
     });
 
     defineOwnProperty(app, 'sessionId', resumedId, true);
