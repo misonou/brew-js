@@ -17,6 +17,22 @@ declare namespace Brew {
          */
         readonly pathname: string;
         /**
+         * Gets the path where user is navigating from.
+         */
+        readonly oldPathname: string;
+        /**
+         * Gets the unique state ID for the page about to leave.
+         */
+        readonly oldStateId: string;
+        /**
+         * Gets the unique state ID for the page going to navigate.
+         */
+        readonly newStateId: string;
+        /**
+         * Gets the route parameters extracted from the path navigating to.
+         */
+        readonly route: Readonly<RouteParam>;
+        /**
          * Gets the data passed to {@link WithRouter.navigate}.
          */
         readonly data: any;
@@ -34,25 +50,9 @@ declare namespace Brew {
     }
 
     interface NavigateEvent extends RouterEvent, Zeta.ZetaAsyncHandleableEvent {
-        readonly pathname: string;
-        readonly oldPathname: string;
-        /**
-         * Gets the unique state ID for the page about to leave.
-         */
-        readonly oldStateId: string;
-        /**
-         * Gets the unique state ID for the page going to navigate.
-         */
-        readonly newStateId: string;
-        readonly route: Readonly<RouteParam>;
-        readonly data: any;
-        readonly navigationType: NavigationType;
     }
 
     interface BeforePageLoadEvent extends RouterEvent, Zeta.Deferrable {
-        readonly pathname: string;
-        readonly data: any;
-        readonly navigationType: NavigationType;
         waitFor(...args: Promise<any>[]): boolean;
     }
 

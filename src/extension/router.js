@@ -552,6 +552,19 @@ function configureRouter(app, options) {
         return normalizePath(path, true);
     }
 
+    function emitNavigationEvent(eventName, state, data, options) {
+        data = extend({
+            navigationType: state.type,
+            pathname: state.path,
+            oldPathname: lastState.path,
+            oldStateId: lastState.id,
+            newStateId: state.id,
+            route: state.route,
+            data: state.data
+        }, data);
+        return app.emit(eventName, data, options);
+    }
+
     function processPageChange(state) {
         var path = state.path;
         var deferred = deferrable();
@@ -560,12 +573,7 @@ function configureRouter(app, options) {
         pendingState = state;
         app.path = path;
         route.set(path);
-        app.emit('beforepageload', {
-            navigationType: state.type,
-            pathname: path,
-            data: state.data,
-            waitFor: deferred.waitFor
-        }, { handleable: false });
+        emitNavigationEvent('beforepageload', state, { waitFor: deferred.waitFor }, { handleable: false });
 
         always(deferred, function () {
             if (states[currentIndex] === state) {
@@ -598,15 +606,7 @@ function configureRouter(app, options) {
         redirectSource[newPath] = true;
 
         console.log('Nagivate', newPath);
-        var promise = resolve(app.emit('navigate', {
-            navigationType: state.type,
-            pathname: newPath,
-            oldPathname: lastState.path,
-            oldStateId: lastState.id,
-            newStateId: state.id,
-            route: state.route,
-            data: state.data
-        }));
+        var promise = resolve(emitNavigationEvent('navigate', state));
         notifyAsync(root, promise);
         promise.then(function () {
             if (states[currentIndex] === state) {
