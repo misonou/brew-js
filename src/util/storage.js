@@ -160,6 +160,14 @@ export function createObjectStorage(storage, key) {
             dirty.add(obj);
             setImmediateOnce(persist);
         },
+        persistAll: function () {
+            each(entries, function (i, v) {
+                if (isObject(objectCache[v])) {
+                    dirty.add(objectCache[v]);
+                }
+            });
+            setImmediateOnce(persist);
+        },
         delete: function (key) {
             if (entries[key]) {
                 delete entries[key];

@@ -170,6 +170,29 @@ describe('ObjectStorage.persist', () => {
     });
 });
 
+describe('ObjectStorage.persistAll', () => {
+    it('should persist all living objects', async () => {
+        const data = { foo: 'bar' };
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('test', data);
+        await delay();
+
+        data.foo = 'baz';
+        store.persistAll();
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('test')).toEqual({ foo: 'baz' });
+
+        store2.get('test').bar = 'bar';
+        store2.persistAll();
+        await delay();
+
+        const store3 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store3.get('test')).toEqual({ foo: 'baz', bar: 'bar' });
+    });
+});
+
 describe('ObjectStorage.delete', () => {
     it('should remove object from backing storage', async () => {
         const store = createObjectStorage(sessionStorage, TEST_KEY);

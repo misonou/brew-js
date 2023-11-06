@@ -52,6 +52,11 @@ export interface ObjectStorage {
     persist(obj: any): void;
 
     /**
+     * Marks all living objects as dirty and updates backing storage asynchronously.
+     */
+    persistAll(): void;
+
+    /**
      * Removes data from storage.
      * @param key A key associated to specific data.
      */
