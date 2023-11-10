@@ -1,4 +1,4 @@
-/*! brew-js v0.5.12 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.13 | (c) misonou | http://hackmd.io/@misonou/brew-js */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
@@ -932,6 +932,14 @@ function createObjectStorage(storage, key) {
       dirty.add(obj);
       setImmediateOnce(_persist);
     },
+    persistAll: function persistAll() {
+      each(entries, function (i, v) {
+        if (isObject(objectCache[v])) {
+          dirty.add(objectCache[v]);
+        }
+      });
+      setImmediateOnce(_persist);
+    },
     delete: function _delete(key) {
       if (entries[key]) {
         delete entries[key];
@@ -1254,6 +1262,7 @@ var defaults = {};
 
 
 
+
 var root = zeta_dom_dom.root;
 var featureDetections = {};
 var dependencies = {};
@@ -1457,6 +1466,13 @@ function init(callback) {
       setReadyState('ready');
       app.emit('ready');
     }
+  });
+  bind(window, 'pagehide', function (e) {
+    app.emit('unload', {
+      persisted: e.persisted
+    }, {
+      handleable: false
+    });
   });
   return app;
 }
@@ -2463,29 +2479,10 @@ definePrototype(HistoryStorage, Map, {
     return mapProto.get.call(this, stringOrSymbol(k));
   },
   set: function set(k, v) {
-    var self = this;
-    k = stringOrSymbol(k);
-
-    if (self.get(k) !== v) {
-      storage.persist(self);
-    }
-
-    return mapProto.set.call(self, k, v);
+    return mapProto.set.call(this, stringOrSymbol(k), v);
   },
   delete: function _delete(k) {
-    var self = this;
-    var result = mapProto.delete.call(self, stringOrSymbol(k));
-
-    if (result) {
-      storage.persist(self);
-    }
-
-    return result;
-  },
-  clear: function clear() {
-    var self = this;
-    mapProto.clear.call(self);
-    storage.persist(self);
+    return mapProto.delete.call(this, stringOrSymbol(k));
   },
   toJSON: function toJSON() {
     return Object.fromEntries(this.entries());
@@ -2726,7 +2723,6 @@ definePrototype(PageInfo, {
     pageInfoForEachState(this, function (v) {
       v.data = null;
     });
-    storage.persist(states);
     defineOwnProperty(this, 'data', null, true);
   },
   clearHistoryStorage: function clearHistoryStorage() {
@@ -2838,6 +2834,7 @@ function configureRouter(app, options) {
         }
       },
       resolve: function resolve(result) {
+        var previousState = lastState;
         resolved = result || createNavigateResult(id, state.path);
         resolvePromise(resolved);
         state.handled = true;
@@ -2848,6 +2845,13 @@ function configureRouter(app, options) {
           if (resolved.navigated) {
             app.emit('pageload', {
               pathname: state.path
+            }, {
+              handleable: false
+            });
+          } else if (state.type === 'back_forward') {
+            app.emit('popstate', {
+              oldStateId: previousState.id,
+              newStateId: state.id
             }, {
               handleable: false
             });
@@ -2973,8 +2977,6 @@ function configureRouter(app, options) {
 
       states[currentIndex] = state;
       history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-      storage.set('c', id);
-      storage.set('s', states);
     });
     return state;
   }
@@ -3006,8 +3008,6 @@ function configureRouter(app, options) {
       if (!isNative || isLocked) {
         history.go(step);
       }
-
-      storage.set('c', state.id);
     });
     return state;
   }
@@ -3045,6 +3045,19 @@ function configureRouter(app, options) {
     return normalizePath(path, true);
   }
 
+  function emitNavigationEvent(eventName, state, data, options) {
+    data = extend({
+      navigationType: state.type,
+      pathname: state.path,
+      oldPathname: lastState.path,
+      oldStateId: lastState.id,
+      newStateId: state.id,
+      route: state.route,
+      data: state.data
+    }, data);
+    return app.emit(eventName, data, options);
+  }
+
   function processPageChange(state) {
     var path = state.path;
     var deferred = deferrable();
@@ -3052,10 +3065,7 @@ function configureRouter(app, options) {
     pendingState = state;
     app.path = path;
     route.set(path);
-    app.emit('beforepageload', {
-      navigationType: state.type,
-      pathname: path,
-      data: state.data,
+    emitNavigationEvent('beforepageload', state, {
       waitFor: deferred.waitFor
     }, {
       handleable: false
@@ -3094,15 +3104,7 @@ function configureRouter(app, options) {
 
     redirectSource[newPath] = true;
     console.log('Nagivate', newPath);
-    var promise = resolve(app.emit('navigate', {
-      navigationType: state.type,
-      pathname: newPath,
-      oldPathname: lastState.path,
-      oldStateId: lastState.id,
-      newStateId: state.id,
-      route: state.route,
-      data: state.data
-    }));
+    var promise = resolve(emitNavigationEvent('navigate', state));
     notifyAsync(router_root, promise);
     promise.then(function () {
       if (states[currentIndex] === state) {
@@ -3291,13 +3293,17 @@ function configureRouter(app, options) {
     initialState = pushState(initialPath, true);
   }
 
-  storage.set('c', states[currentIndex].id);
   app.on('ready', function () {
     if (initialState && states[currentIndex] === initialState && includeQuery) {
       pushState(fromPathname(getCurrentPathAndQuery()), true);
     }
 
     handlePathChange();
+  });
+  app.on('unload', function () {
+    storage.set('c', states[currentIndex].id);
+    storage.set('s', states);
+    storage.persistAll();
   });
   defineOwnProperty(app, 'sessionId', resumedId, true);
   defineOwnProperty(app, 'sessionStorage', getPersistedStorage(resumedId, HistoryStorage), true);

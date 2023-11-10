@@ -1,6 +1,6 @@
 {
   "name": "brew-js",
-  "version": "0.5.12",
+  "version": "0.5.13",
   "description": "",
   "type": "module",
   "main": "src/index.js",
@@ -14,7 +14,7 @@
   },
   "author": "misonou",
   "license": "ISC",
-  "homepage": "http://hackmd.io/@misonou/brew-js",
+  "homepage": "https://misonou.github.io",
   "repository": "github:misonou/brew-js",
   "dependencies": {
     "jq-scrollable": "^1.12.0",
