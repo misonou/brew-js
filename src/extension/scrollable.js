@@ -43,7 +43,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }
             },
             scrollBy: function (e) {
-                var result = scrollable.scrollBy(e.x, e.y, 200);
+                var result = scrollable.scrollBy(e.x, e.y, e.behavior === 'instant' ? 0 : 200);
                 return {
                     x: result.deltaX,
                     y: result.deltaY
