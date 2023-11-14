@@ -39,7 +39,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             getContentRect: function (e) {
                 if (e.target === container || containsOrEquals(container, $(e.target).closest(SELECTOR_TARGET)[0])) {
                     var padding = scrollable.scrollPadding(e.target);
-                    return getRect(container).expand(-padding.left, -padding.top, padding.right, padding.bottom);
+                    return getRect(container).expand(padding, -1);
                 }
             },
             scrollBy: function (e) {
