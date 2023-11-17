@@ -2,6 +2,7 @@ import { addAnimateIn, addAnimateOut } from "src/anim";
 import { addTransformer, hookBeforeUpdate, matchElement } from "src/dom";
 import { getVar, setVar } from "src/var";
 import template from "src/extension/template";
+import router from "src/extension/htmlRouter";
 import { after, defunctAfterTest, delay, initApp, mockFn, mount, uniqueName, verifyCalls, _, body, initBody } from "./testUtil";
 
 const testTransform = mockFn((element, getState, updateDOM) => {
@@ -14,13 +15,16 @@ const matchElementCb = mockFn();
 addAnimateIn('custom-anim', customAnimateIn)
 addAnimateOut('custom-anim', customAnimateOut)
 
-/** @type {Brew.AppInstance<{}>} */
+/** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
 var matchElementResult = [];
 
 beforeAll(async () => {
     addTransformer('test-transform', testTransform);
-    app = await initApp(template, (app) => {
+    app = await initApp(template, router, (app) => {
+        app.useHtmlRouter({
+            routes: ['/*']
+        });
         // test for matchElement before app ready
         initBody('<div class="match-element-1"></div>');
         matchElement('.match-element-1', matchElementCb);
@@ -112,6 +116,36 @@ describe('processStateChange', () => {
         await after(() => setVar(elm, 'foo', 2));
         await delay(10);
         expect(customAnimateIn).toBeCalledTimes(1);
+    });
+
+    it('should trigger animation on all active elements', async () => {
+        const { root, inner1, inner2 } = await mount(`
+            <div id="root" var="{ foo: 1 }" switch>
+                <div match-path="/foo">
+                    <div id="inner1" custom-anim animate-on="statechange" animate-on-statechange="foo"></div>
+                </div>
+                <div match-path="/bar">
+                    <div id="inner2" custom-anim animate-on="statechange" animate-on-statechange="foo"></div>
+                </div>
+            </div>
+        `);
+        await app.navigate('/foo');
+        inner1.setAttribute('animate-in', 'custom-anim');
+        inner2.setAttribute('animate-in', 'custom-anim');
+
+        await after(() => setVar(root, 'foo', 2));
+        await delay(10);
+        verifyCalls(customAnimateIn, [
+            [inner1, '']
+        ]);
+
+        customAnimateIn.mockClear();
+        await app.navigate('/bar');
+        await after(() => setVar(root, 'foo', 3));
+        await delay(10);
+        verifyCalls(customAnimateIn, [
+            [inner2, '']
+        ]);
     });
 
     it('should apply dom changes after animating-out and before animating-in', async () => {

@@ -254,11 +254,11 @@ export function processStateChange(suppressAnim) {
                         };
                         groupElements = [];
                         setImmediate(function () {
-                            animateOut(animParent, 'statechange', '[match-path]', filter, true).then(function () {
+                            animateOut(animParent, 'statechange', '[match-path].hidden', filter, true).then(function () {
                                 each(groupElements, function (i, v) {
                                     updateDOM(v, mapRemove(pendingDOMUpdates, v));
                                 });
-                                animateIn(animParent, 'statechange', '[match-path]', filter);
+                                animateIn(animParent, 'statechange', '[match-path].hidden', filter);
                             });
                         });
                         animScopes.set(animParent, groupElements);
