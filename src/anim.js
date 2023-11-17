@@ -1,49 +1,33 @@
 import Promise from "./include/external/promise-polyfill.js";
 import $ from "./include/external/jquery.js";
 import { selectIncludeSelf, isVisible } from "./include/zeta-dom/domUtil.js";
-import { catchAsync, resolve, resolveAll, each, throwNotFunction, errorWithCode } from "./include/zeta-dom/util.js";
+import { resolve, resolveAll, each, throwNotFunction, setTimeout, always, setPromiseTimeout } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
-import * as ErrorCode from "./errorCode.js";
 import dom from "./include/zeta-dom/dom.js";
 
 const customAnimateIn = {};
 const customAnimateOut = {};
 const animatingElements = new Map();
 
-var nextId = 0;
-
-function handleAnimation(element, elements, promises, trigger) {
+function handleAnimation(element, promises) {
     if (!promises.length) {
         return resolve();
     }
-    var id = ++nextId;
-    var timeout, timeoutReject, timeoutResolve;
-    promises = promises.map(function (v) {
-        return v instanceof Promise ? catchAsync(v) : new Promise(function (resolve) {
-            v.then(resolve, resolve);
-        });
+    var promise = always(setPromiseTimeout(Promise.allSettled(promises), 1500), function (resolved) {
+        animatingElements.delete(element);
+        if (!resolved) {
+            console.warn('Animation might take longer than expected', promises);
+        }
     });
-    catchAsync(resolveAll(promises, function () {
-        clearTimeout(timeout);
-        timeoutResolve();
-        animatingElements.delete(element);
-    }));
-    promises.push(new Promise(function (resolve, reject) {
-        timeoutResolve = resolve;
-        timeoutReject = reject;
-    }));
-    timeout = setTimeout(function () {
-        timeoutReject(errorWithCode(ErrorCode.timeout, 'Animation timed out'));
-        console.warn('Animation #%i might take longer than expected', id, promises);
-        animatingElements.delete(element);
-    }, 1500);
-
-    var promise = catchAsync(resolveAll(promises));
     animatingElements.set(element, promise);
     return promise;
 }
 
 function animateElement(element, cssClass, eventName, customAnimation) {
+    // transform cannot apply on inline elements
+    if ($(element).css('display') === 'inline') {
+        $(element).css('display', 'inline-block');
+    }
     var promises = [runCSSTransition(element, cssClass), dom.emit(eventName, element)];
     var delay = parseFloat($(element).css('transition-delay')) || 0;
     each(customAnimation, function (i, v) {
@@ -78,13 +62,11 @@ export function animateIn(element, trigger, scope, filterCallback) {
 
     var $innerScope = scope ? $(scope, element) : $();
     var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-    var elements = [];
     var promises = [];
 
     $(selectIncludeSelf('[animate-in]', element)).filter(filter).each(function (i, v) {
         // @ts-ignore: filterCallback must be function
         if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
-            elements.push(v);
             promises.push(animateElement(v, 'tweening-in', 'animatein', customAnimateIn));
         }
     });
@@ -100,11 +82,6 @@ export function animateIn(element, trigger, scope, filterCallback) {
             $elements.css('transition-duration', '0s');
             $elements.attr('animate-in', type).attr('is-animate-sequence', '');
             $elements.each(function (i, v) {
-                if ($(v).css('display') === 'inline') {
-                    // transform cannot apply on inline elements
-                    $(v).css('display', 'inline-block');
-                }
-                elements.push(v);
                 promises.push(new Promise(function (resolve, reject) {
                     setTimeout(function () {
                         $(v).css('transition-duration', '');
@@ -117,7 +94,7 @@ export function animateIn(element, trigger, scope, filterCallback) {
             }
         }
     });
-    return handleAnimation(element, elements, promises, trigger).then(function () {
+    return handleAnimation(element, promises).then(function () {
         dom.emit('animationcomplete', element, { animationType: 'in', animationTrigger: trigger }, true);
     });
 }
@@ -135,7 +112,6 @@ export function animateOut(element, trigger, scope, filterCallback, excludeSelf)
 
     var $innerScope = scope ? $(scope, element) : $();
     var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-    var elements = [];
     var promises = [];
 
     // @ts-ignore: type inference issue
@@ -143,11 +119,10 @@ export function animateOut(element, trigger, scope, filterCallback, excludeSelf)
     $target.each(function (i, v) {
         // @ts-ignore: filterCallback must be function
         if (!$innerScope.find(v)[0] && filterCallback(v)) {
-            elements.push(v);
             promises.push(animateElement(v, 'tweening-out', 'animateout', customAnimateOut));
         }
     });
-    return handleAnimation(element, elements, promises, trigger).then(function () {
+    return handleAnimation(element, promises).then(function () {
         // reset animation state after outro animation has finished
         // @ts-ignore: type inference issue
         var $target = $((excludeSelf ? $ : selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
