@@ -31,6 +31,7 @@ export function initBody(html) {
 
 export async function mount(html, callback) {
     const elm = $(html)[0];
+    const arr = selectIncludeSelf('[id]', elm);
     cleanup(() => {
         removeNode(elm);
     });
@@ -43,7 +44,6 @@ export async function mount(html, callback) {
         body.appendChild(elm);
         mountElement(elm);
     });
-    const arr = selectIncludeSelf('[id]', elm);
     if (arr[0]) {
         const dict = {};
         arr.forEach(v => {

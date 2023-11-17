@@ -9,6 +9,7 @@ import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { createObjectStorage } from "src/util/storage";
 import { waitFor } from "@testing-library/dom";
+import $ from "jquery";
 
 const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
@@ -1541,6 +1542,14 @@ describe('matchRoute', () => {
 });
 
 describe('processPageChange', () => {
+    it('should match newly inserted match-path element', async () => {
+        cleanupAfterTest(app.on('navigate', () => {
+            $('<div match-path="/test-new-insert"></div>').appendTo('#root');
+        }));
+        await app.navigate('/test-new-insert');
+        expect(app.path).toBe('/test-new-insert');
+    });
+
     it('should set own variables to initial values on newly matched match-path element and its active descendents', async () => {
         await app.navigate('/test-var');
         expect(getVar(div.var, 'myVar')).toEqual(true);

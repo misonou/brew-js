@@ -30,8 +30,8 @@ function isElementActive(v, arr) {
     return !parent || (arr || activeElements).indexOf(parent) >= 0;
 }
 
-function registerMatchPathElements(container) {
-    $('[match-path]', container).each(function (i, v) {
+function registerMatchPathElements(addedNodes) {
+    $(addedNodes).each(function (i, v) {
         if (!matchByPathElements.has(v)) {
             var placeholder = document.createElement('div');
             placeholder.setAttribute('style', 'display: none !important');
@@ -54,12 +54,13 @@ function registerMatchPathElements(container) {
  */
 function initHtmlRouter(app, options) {
     var newActiveElements;
+    var ensureMatchPathElements;
 
     app.on('beforepageload', function (e) {
         // find active elements i.e. with match-path that is equal to or is parent of the new path
         /** @type {HTMLElement[]} */
         newActiveElements = [root];
-        registerMatchPathElements();
+        ensureMatchPathElements();
         batch(true, function () {
             var newRoutePath = toRoutePath(removeQueryAndHash(e.pathname));
             var switchElements = $('[switch=""]').get();
@@ -224,7 +225,7 @@ function initHtmlRouter(app, options) {
                 v.style.backgroundImage = 'none';
             }
         });
-        registerMatchPathElements();
+        ensureMatchPathElements = watchElements(root, '[match-path]', registerMatchPathElements, true);
     });
 
     watchElements(root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
