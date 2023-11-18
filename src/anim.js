@@ -1,20 +1,31 @@
 import $ from "./include/external/jquery.js";
 import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "./include/zeta-dom/domUtil.js";
-import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce } from "./include/zeta-dom/util.js";
+import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
-import { createAutoCleanupMap } from "./include/zeta-dom/observe.js";
+import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import dom from "./include/zeta-dom/dom.js";
 import { getAttr, setAttr } from "./util/common.js";
 
 const customAnimateIn = {};
 const customAnimateOut = {};
 const animateScopes = createAutoCleanupMap(noop);
+const collectChanges = watchElements(dom.root, '[animate-in],[animate-sequence],[is-animate-sequence]', handleMutations);
 
 function getShouldAnimate(element, trigger, scope, filterCallback) {
     var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
     return function (v) {
         return matchSelector(v, filter) && (!scope || containsOrEquals($(v).closest(scope)[0] || dom.root, element)) && (!filterCallback || filterCallback(v)) && isVisible(v);
     };
+}
+
+function handleMutations(addNodes) {
+    if (addNodes[0]) {
+        each(animateScopes, function (i, v) {
+            each(v, function (j, v) {
+                v.start();
+            });
+        });
+    }
 }
 
 function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
@@ -72,12 +83,14 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
  * @param {Element} element
  * @param {string} trigger
  * @param {string=} scope
- * @param {((elm: Element) => boolean)=} filterCallback
+ * @param {((elm: Element) => boolean) | boolean=} filterCallback
  */
 export function animateIn(element, trigger, scope, filterCallback) {
     var dict = mapGet(animateScopes, element, Object);
-    var scopeObject = dict[trigger] || (dict[trigger] = {});
-    var shouldAnimate = getShouldAnimate(element, trigger, scope, filterCallback);
+    var scopeObject = dict[trigger] || (dict[trigger] = {
+        start: filterCallback === true ? animateIn.bind(0, element, trigger, scope) : noop
+    });
+    var shouldAnimate = getShouldAnimate(element, trigger, scope, isFunction(filterCallback));
     var anim = scopeObject.anim || (scopeObject.anim = handleAnimation(element, 'in', trigger, customAnimateIn, function () {
         scopeObject.anim = null;
     }));
@@ -95,6 +108,7 @@ export function animateIn(element, trigger, scope, filterCallback) {
             'is-animate-sequence': ''
         });
     });
+    collectChanges(true);
     return anim.promise;
 }
 

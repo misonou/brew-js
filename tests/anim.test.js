@@ -1,5 +1,6 @@
 import { addAnimateIn, addAnimateOut, animateIn, animateOut } from "src/anim";
-import { bindEvent, delay, mockFn, mount, verifyCalls } from "./testUtil";
+import { after, bindEvent, delay, mockFn, mount, verifyCalls } from "./testUtil";
+import $ from "jquery";
 
 const customAnimateIn = mockFn(() => delay(10));
 const customAnimateOut = mockFn(() => delay(10));
@@ -70,6 +71,48 @@ describe('animateIn', () => {
         await animateIn(elm, 'show');
         expect(elm).toHaveClassName('tweening-in');
         expect(arr).toEqual([false, false, false]);
+    });
+
+    it('should animate new elements for scope with autoStart set to true', async () => {
+        const elm = await mount(`<div animate-in></div>`);
+        animateIn(elm, 'show', '[scope]', true);
+
+        // listen animate-in
+        await after(() => {
+            elm.innerHTML = `
+                <div custom-anim animate-in></div>
+                <div scope>
+                    <div custom-anim animate-in></div>
+                </div>
+            `;
+        });
+        verifyCalls(customAnimateIn, [
+            [elm.children[0], '']
+        ]);
+        customAnimateIn.mockClear();
+
+        // listen animate-sequence
+        await after(() => {
+            elm.innerHTML = `
+                <div animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+            `;
+        });
+        await delay(50);
+        verifyCalls(customAnimateIn, [
+            [elm.querySelector('.item'), '']
+        ]);
+        customAnimateIn.mockClear();
+
+        // listen is-animate-sequence
+        await after(() => {
+            $(elm.children[0]).append('<div is-animate-sequence custom-anim class="item"></div>');
+        })
+        await delay(50);
+        verifyCalls(customAnimateIn, [
+            [elm.querySelectorAll('.item')[1], '']
+        ]);
     });
 });
 
@@ -162,6 +205,17 @@ describe('animateOut', () => {
         await animateOut(elm, 'show', '', undefined, true);
         expect(customAnimateOut).toBeCalledTimes(2);
         expect(elm).toHaveClassName('tweening-in');
+    });
+
+    it('should cancel listening for new elements', async () => {
+        const elm = await mount(`<div animate-in></div>`);
+        await animateIn(elm, 'show', '', undefined, true);
+        await animateOut(elm, 'show');
+
+        await after(() => {
+            elm.innerHTML = '<div custom-anim animate-in></div>';
+        });
+        expect(customAnimateIn).not.toBeCalled();
     });
 });
 
