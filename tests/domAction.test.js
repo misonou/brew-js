@@ -212,7 +212,7 @@ describe('openFlyout', () => {
 
     it('should start intro animation', async () => {
         const cb = mockFn();
-        const flyout = await mount(`<div is-flyout></div>`);
+        const flyout = await mount(`<div is-flyout animate-in animate-on="open"></div>`);
         bindEvent(flyout, 'animationstart', cb);
         openFlyout(flyout);
         verifyCalls(cb, [
@@ -267,7 +267,7 @@ describe('closeFlyout', () => {
 
     it('should start outro animation', async () => {
         const cb = mockFn();
-        const flyout = await mount(`<div is-flyout></div>`);
+        const flyout = await mount(`<div is-flyout animate-out animate-on="open"></div>`);
         openFlyout(flyout);
 
         bindEvent(flyout, 'animationstart', cb);

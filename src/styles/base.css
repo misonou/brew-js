@@ -6,8 +6,12 @@
 
 [animate-in] {
     transition-property: none;
-    transition-duration: var(--transition-duration);
+    transition-duration: 0s;
     transition-delay: var(--transition-delay);
+}
+
+[animate-in].tweening-in {
+    transition-duration: var(--transition-duration);
 }
 
 [animate-in~="fade-in"] {
