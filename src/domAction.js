@@ -64,10 +64,7 @@ export function closeFlyout(flyout, value) {
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
             }
-            promise = resolveAll([
-                runCSSTransition(v, 'closing'),
-                hasAttr(v, 'animate-out') && animateOut(v, 'open')
-            ]);
+            promise = Promise.allSettled([runCSSTransition(v, 'closing'), animateOut(v, 'open')]);
             promise = always(promise, function () {
                 if (flyoutStates.get(v) === state) {
                     flyoutStates.delete(v);

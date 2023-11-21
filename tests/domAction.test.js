@@ -5,7 +5,7 @@ import { addAsyncAction, closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } f
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
 import { catchAsync } from "zeta-dom/util";
-import { initApp, delay, mount, root, mockFn, after, bindEvent } from "./testUtil";
+import { initApp, delay, mount, root, mockFn, after, bindEvent, verifyCalls } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 var app;
@@ -209,6 +209,16 @@ describe('openFlyout', () => {
         await delay(10);
         expect(input).not.toHaveAttribute('tabindex', '-1');
     });
+
+    it('should start intro animation', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        bindEvent(flyout, 'animationstart', cb);
+        openFlyout(flyout);
+        verifyCalls(cb, [
+            [expect.objectContaining({ animationType: 'in', animationTrigger: 'open' }), flyout]
+        ]);
+    });
 });
 
 describe('closeFlyout', () => {
@@ -253,6 +263,18 @@ describe('closeFlyout', () => {
         openFlyout(flyout);
         await promise;
         expect(cb).not.toBeCalled();
+    });
+
+    it('should start outro animation', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout);
+
+        bindEvent(flyout, 'animationstart', cb);
+        closeFlyout(flyout);
+        verifyCalls(cb, [
+            [expect.objectContaining({ animationType: 'out', animationTrigger: 'open' }), flyout]
+        ]);
     });
 });
 
