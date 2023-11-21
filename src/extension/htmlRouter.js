@@ -148,7 +148,7 @@ function initHtmlRouter(app, options) {
                             preload.set(element, resolveAll(promises, function () {
                                 if (activeElements.indexOf(element) >= 0) {
                                     setClass(element, 'hidden', false);
-                                    animateIn(element, 'show', '[match-path]');
+                                    animateIn(element, 'show', '[match-path]', true);
                                     app.emit('pageenter', element, { pathname: path }, true);
                                 }
                             }));
