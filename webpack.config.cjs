@@ -103,10 +103,16 @@ module.exports = {
     output: {
         path: outputPath,
         filename: '[name].js',
-        library: 'brew',
-        libraryTarget: 'umd',
-        libraryExport: 'default',
-        umdNamedDefine: true
+        library: {
+            name: {
+                commonjs: 'brew-js',
+                amd: 'brew-js',
+                root: 'brew'
+            },
+            type: 'umd',
+            export: 'default',
+            umdNamedDefine: true
+        }
     },
     module: {
         rules: [
@@ -152,7 +158,12 @@ module.exports = {
     externals: {
         'promise-polyfill': 'promise-polyfill',
         'waterpipe': 'waterpipe',
-        'jquery': 'jQuery',
+        'jquery': {
+            commonjs: 'jquery',
+            commonjs2: 'jquery',
+            amd: 'jquery',
+            root: 'jQuery'
+        },
         'jq-scrollable': 'jq-scrollable',
         'zeta-dom': {
             commonjs: 'zeta-dom',
