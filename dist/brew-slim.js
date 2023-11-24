@@ -1,14 +1,14 @@
-/*! brew-js v0.5.13 | (c) misonou | http://hackmd.io/@misonou/brew-js */
+/*! brew-js v0.5.14 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
+		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
 	else if(typeof define === 'function' && define.amd)
-		define("brew", ["zeta-dom", "jQuery", "jq-scrollable", "waterpipe"], factory);
+		define("brew-js", ["zeta-dom", "jquery", "jq-scrollable", "waterpipe"], factory);
 	else if(typeof exports === 'object')
-		exports["brew"] = factory(require("zeta-dom"), require("jQuery"), require("jq-scrollable"), require("waterpipe"));
+		exports["brew-js"] = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
 	else
 		root["brew"] = factory(root["zeta"], root["jQuery"], root["jq-scrollable"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__609__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__160__) {
+})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__254__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__160__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -48,7 +48,7 @@ __webpack_require__.d(errorCode_namespaceObject, {
   "navigationRejected": function() { return navigationRejected; },
   "networkError": function() { return networkError; },
   "resourceError": function() { return resourceError; },
-  "timeout": function() { return errorCode_timeout; },
+  "timeout": function() { return timeout; },
   "validationFailed": function() { return validationFailed; }
 });
 
@@ -149,6 +149,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     setIntervalSafe = _zeta$util.setIntervalSafe,
     setImmediate = _zeta$util.setImmediate,
     setImmediateOnce = _zeta$util.setImmediateOnce,
+    clearImmediateOnce = _zeta$util.clearImmediateOnce,
     util_throws = _zeta$util.throws,
     throwNotFunction = _zeta$util.throwNotFunction,
     errorWithCode = _zeta$util.errorWithCode,
@@ -320,14 +321,14 @@ function toSegments(path) {
   path = normalizePath(path);
   return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
-// EXTERNAL MODULE: external "jQuery"
-var external_jQuery_ = __webpack_require__(609);
+// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
+var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(254);
 // EXTERNAL MODULE: external "jq-scrollable"
 var external_jq_scrollable_ = __webpack_require__(172);
 // CONCATENATED MODULE: ./src/include/external/jquery.js
 
 
-/* harmony default export */ const jquery = (external_jQuery_);
+/* harmony default export */ const jquery = (external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_);
 // CONCATENATED MODULE: ./src/include/external/promise-polyfill.js
 var promise_polyfill_Promise = window.Promise;
 /* harmony default export */ const promise_polyfill = (promise_polyfill_Promise);
@@ -392,7 +393,7 @@ var apiError = 'brew/api-error';
 var validationFailed = 'brew/validation-failed';
 var navigationCancelled = 'brew/navigation-cancelled';
 var navigationRejected = 'brew/navigation-rejected';
-var errorCode_timeout = "brew/timeout";
+var timeout = "brew/timeout";
 // CONCATENATED MODULE: ./src/util/common.js
 
 
@@ -991,51 +992,39 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 
 
 
-
 var customAnimateIn = {};
 var customAnimateOut = {};
 var animatingElements = new Map();
-var nextId = 0;
 
-function handleAnimation(element, elements, promises, trigger) {
+function handleAnimation(element, promises) {
   if (!promises.length) {
     return resolve();
   }
 
-  var id = ++nextId;
-  var timeout, timeoutReject, timeoutResolve;
-  promises = promises.map(function (v) {
-    return v instanceof promise_polyfill ? catchAsync(v) : new promise_polyfill(function (resolve) {
-      v.then(resolve, resolve);
-    });
+  var promise = always(setPromiseTimeout(promise_polyfill.allSettled(promises), 1500), function (resolved) {
+    animatingElements.delete(element);
+
+    if (!resolved) {
+      console.warn('Animation might take longer than expected', promises);
+    }
   });
-  catchAsync(resolveAll(promises, function () {
-    clearTimeout(timeout);
-    timeoutResolve();
-    animatingElements.delete(element);
-  }));
-  promises.push(new promise_polyfill(function (resolve, reject) {
-    timeoutResolve = resolve;
-    timeoutReject = reject;
-  }));
-  timeout = setTimeout(function () {
-    timeoutReject(errorWithCode(errorCode_timeout, 'Animation timed out'));
-    console.warn('Animation #%i might take longer than expected', id, promises);
-    animatingElements.delete(element);
-  }, 1500);
-  var promise = catchAsync(resolveAll(promises));
   animatingElements.set(element, promise);
   return promise;
 }
 
 function animateElement(element, cssClass, eventName, customAnimation) {
+  // transform cannot apply on inline elements
+  if (jquery(element).css('display') === 'inline') {
+    jquery(element).css('display', 'inline-block');
+  }
+
   var promises = [runCSSTransition(element, cssClass), zeta_dom_dom.emit(eventName, element)];
   var delay = parseFloat(jquery(element).css('transition-delay')) || 0;
   each(customAnimation, function (i, v) {
     if (element.attributes[i]) {
       var attrValue = element.getAttribute(i);
       promises.push(new promise_polyfill(function (resolve, reject) {
-        setTimeout(function () {
+        util_setTimeout(function () {
           resolveAll(v(element, attrValue)).then(resolve, reject);
         }, delay * 1000);
       }));
@@ -1070,12 +1059,10 @@ function animateIn(element, trigger, scope, filterCallback) {
   }, true);
   var $innerScope = scope ? jquery(scope, element) : jquery();
   var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-  var elements = [];
   var promises = [];
   jquery(selectIncludeSelf('[animate-in]', element)).filter(filter).each(function (i, v) {
     // @ts-ignore: filterCallback must be function
     if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
-      elements.push(v);
       promises.push(animateElement(v, 'tweening-in', 'animatein', customAnimateIn));
     }
   });
@@ -1093,14 +1080,8 @@ function animateIn(element, trigger, scope, filterCallback) {
       $elements.css('transition-duration', '0s');
       $elements.attr('animate-in', type).attr('is-animate-sequence', '');
       $elements.each(function (i, v) {
-        if (jquery(v).css('display') === 'inline') {
-          // transform cannot apply on inline elements
-          jquery(v).css('display', 'inline-block');
-        }
-
-        elements.push(v);
         promises.push(new promise_polyfill(function (resolve, reject) {
-          setTimeout(function () {
+          util_setTimeout(function () {
             jquery(v).css('transition-duration', '');
             animateElement(v, 'tweening-in', 'animatein', customAnimateIn).then(resolve, reject);
           }, i * 50);
@@ -1112,7 +1093,7 @@ function animateIn(element, trigger, scope, filterCallback) {
       }
     }
   });
-  return handleAnimation(element, elements, promises, trigger).then(function () {
+  return handleAnimation(element, promises).then(function () {
     zeta_dom_dom.emit('animationcomplete', element, {
       animationType: 'in',
       animationTrigger: trigger
@@ -1138,18 +1119,16 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
   }, true);
   var $innerScope = scope ? jquery(scope, element) : jquery();
   var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-  var elements = [];
   var promises = []; // @ts-ignore: type inference issue
 
   var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out]', element)).filter(filter);
   $target.each(function (i, v) {
     // @ts-ignore: filterCallback must be function
     if (!$innerScope.find(v)[0] && filterCallback(v)) {
-      elements.push(v);
       promises.push(animateElement(v, 'tweening-out', 'animateout', customAnimateOut));
     }
   });
-  return handleAnimation(element, elements, promises, trigger).then(function () {
+  return handleAnimation(element, promises).then(function () {
     // reset animation state after outro animation has finished
     // @ts-ignore: type inference issue
     var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
@@ -1576,7 +1555,7 @@ function closeFlyout(flyout, value) {
         setClass(state.source, 'target-opened', false);
       }
 
-      promise = resolveAll([runCSSTransition(v, 'closing'), hasAttr(v, 'animate-out') && animateOut(v, 'open')]);
+      promise = promise_polyfill.allSettled([runCSSTransition(v, 'closing'), animateOut(v, 'open')]);
       promise = always(promise, function () {
         if (flyoutStates.get(v) === state) {
           flyoutStates.delete(v);
@@ -2061,11 +2040,11 @@ var SELECTOR_TARGET = '[scrollable-target]';
       getContentRect: function getContentRect(e) {
         if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
           var padding = scrollable.scrollPadding(e.target);
-          return getRect(container).expand(-padding.left, -padding.top, padding.right, padding.bottom);
+          return getRect(container).expand(padding, -1);
         }
       },
       scrollBy: function scrollBy(e) {
-        var result = scrollable.scrollBy(e.x, e.y, 200);
+        var result = scrollable.scrollBy(e.x, e.y, e.behavior === 'instant' ? 0 : 200);
         return {
           x: result.deltaX,
           y: result.deltaY
@@ -3867,14 +3846,6 @@ if (true) {
 
 /***/ }),
 
-/***/ 609:
-/***/ (function(module) {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__609__;
-
-/***/ }),
-
 /***/ 172:
 /***/ (function(module) {
 
@@ -3888,6 +3859,14 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__172__;
 
 "use strict";
 module.exports = __WEBPACK_EXTERNAL_MODULE__160__;
+
+/***/ }),
+
+/***/ 254:
+/***/ (function(module) {
+
+"use strict";
+module.exports = __WEBPACK_EXTERNAL_MODULE__254__;
 
 /***/ }),
 
