@@ -3,7 +3,7 @@ import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-do
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import dom from "./include/zeta-dom/dom.js";
 import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "./include/zeta-dom/util.js";
-import { app, appReady } from "./app.js";
+import { app, appReady, emitAppEvent } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
 import { getVar, resetVar } from "./var.js";
@@ -275,7 +275,7 @@ export function processStateChange(suppressAnim) {
                 }
             });
             each(updatedProps, function (i, v) {
-                dom.emit('statechange', i, {
+                emitAppEvent('statechange', i, {
                     data: getVar(i),
                     newValues: v.newValues,
                     oldValues: v.oldValues
@@ -345,11 +345,11 @@ export function mountElement(element) {
         });
         index = selectorHandlers.length;
         each($.uniqueSort(makeArray(mountedElements).slice(index2)), function (i, v) {
-            dom.emit('mounted', v);
+            emitAppEvent('mounted', v);
         });
         if (!firedOnRoot) {
             firedOnRoot = true;
-            dom.emit('mounted', root, { target: element });
+            emitAppEvent('mounted', root, { target: element });
         }
         index2 = mountedElements.size;
     }

@@ -14,13 +14,36 @@ beforeAll(() => initApp(router, template, function (app) {
 }));
 
 describe('app.emit', () => {
-    it('should emit event to root element if element is not supplied', async () => {
+    it('should emit event to app if element is root', async () => {
         const cb = mockFn();
-        bindEvent('testEvent', cb);
-        await after(() => {
-            app.emit('testEvent');
-        });
-        expect(cb).toBeCalledWith(objectContaining({ type: 'testEvent', target: app.element }), _);
+        bindEvent(app, 'testEvent', cb);
+        app.emit('testEvent', root);
+        expect(cb).toBeCalledWith(objectContaining({ type: 'testEvent', target: root }), _);
+    });
+
+    it('should emit event to app if bubbles is true', async () => {
+        const cb = mockFn();
+        bindEvent(app, 'testEvent', cb);
+        app.emit('testEvent', document.body, null, true);
+        expect(cb).toBeCalledWith(objectContaining({ type: 'testEvent', target: document.body }), _);
+
+        cb.mockClear();
+        app.emit('testEvent', document.body, null, { bubbles: true });
+        expect(cb).toBeCalledWith(objectContaining({ type: 'testEvent', target: document.body }), _);
+    });
+
+    it('should emit event to element if element is supplied', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'testEvent', cb);
+        app.emit('testEvent', root);
+        expect(cb).toBeCalledWith(objectContaining({ type: 'testEvent', target: root }), _);
+    });
+
+    it('should not emit event to root element if element is not supplied', async () => {
+        const cb = mockFn();
+        bindEvent(root, 'testEvent', cb);
+        app.emit('testEvent');
+        expect(cb).not.toBeCalled();
     });
 });
 

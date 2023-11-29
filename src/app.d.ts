@@ -91,4 +91,8 @@ export function addExtension<T = Zeta.Dictionary, U = Zeta.Dictionary>(name: str
  */
 export function addDetect(name: string, callback: () => boolean | Promise<boolean>): void;
 
+export function emitAppEvent(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
+
+export function emitAppEvent(event: string, target: Element, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
+
 export function isElementActive(element: Element): boolean;

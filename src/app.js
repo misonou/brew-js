@@ -2,10 +2,12 @@ import $ from "./include/external/jquery.js";
 import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { bind } from "./include/zeta-dom/domUtil.js";
+import { ZetaEventContainer } from "./include/zeta-dom/events.js";
 import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 
+const emitter = new ZetaEventContainer();
 const root = dom.root;
 const featureDetections = {};
 const dependencies = {};
@@ -85,13 +87,19 @@ function App() {
 }
 
 definePrototype(App, {
-    emit: function (event, element, data, bubbles) {
+    emit: function (event, element, data, options) {
         if (!is(element, Node)) {
-            bubbles = data;
-            data = element;
-            element = this.element;
+            return emitter.emit(event, this, element, data);
         }
-        return dom.emit(event, element, data, bubbles);
+        var result = dom.emit(event, element, data, options);
+        if (!result && (element === root || options === true || (options || '').bubbles)) {
+            // backward compatibility where app will receive event bubbled up from dom element
+            data = extend({
+                target: element
+            }, isPlainObject(data) || { data });
+            result = emitter.emit(event, this, data, options);
+        }
+        return result;
     },
     define: function (props) {
         define(this, props);
@@ -133,11 +141,8 @@ definePrototype(App, {
         }));
     },
     on: function (target, event, handler, noChildren) {
-        if (isFunction(event)) {
-            noChildren = handler;
-            handler = event;
-            event = target;
-            target = root;
+        if (isFunction(event) || event === undefined) {
+            return emitter.add(this, wrapEventHandlers(target, event));
         }
         var handlers = wrapEventHandlers(event, handler, (noChildren || handler) === true);
         if (!is(target, Node)) {
@@ -222,6 +227,10 @@ export function addExtension(autoInit, name, deps, callback) {
 
 export function addDetect(name, callback) {
     featureDetections[name] = throwNotFunction(callback);
+}
+
+export function emitAppEvent() {
+    return defaultApp.emit.apply(defaultApp, arguments);
 }
 
 export function isElementActive(element) {
