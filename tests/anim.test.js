@@ -34,6 +34,20 @@ describe('animateIn', () => {
         expect(cb).not.toBeCalled();
     });
 
+    it('should trigger custom animation when animate-in attribute contains animation name', async () => {
+        const elm = await mount(`
+            <div>
+                <div animate-in="custom-anim"></div>
+                <div animate-in="custom-anim" custom-anim="foo"></div>
+            </div>
+        `);
+        await animateIn(elm, 'show');
+        verifyCalls(customAnimateIn, [
+            [elm.children[0], ''],
+            [elm.children[1], 'foo'],
+        ]);
+    });
+
     it('should always resolve within a timeout interval', async () => {
         const onResolve = mockFn();
         const promise = delay(30000).then(onResolve);
@@ -141,6 +155,20 @@ describe('animateOut', () => {
 
         await animateOut(elm, 'show');
         expect(cb).not.toBeCalled();
+    });
+
+    it('should trigger custom animation when animate-in attribute contains animation name', async () => {
+        const elm = await mount(`
+            <div>
+                <div class="tweening-in" animate-in="custom-anim" animate-out></div>
+                <div class="tweening-in" animate-in="custom-anim" animate-out custom-anim="foo"></div>
+            </div>
+        `);
+        await animateOut(elm, 'show');
+        verifyCalls(customAnimateOut, [
+            [elm.children[0], ''],
+            [elm.children[1], 'foo'],
+        ]);
     });
 
     it('should start outro animation for filtered elements and reset them', async () => {

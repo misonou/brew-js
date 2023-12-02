@@ -1,6 +1,6 @@
 import $ from "./include/external/jquery.js";
 import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "./include/zeta-dom/domUtil.js";
-import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction } from "./include/zeta-dom/util.js";
+import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import dom from "./include/zeta-dom/dom.js";
@@ -45,12 +45,13 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
         if ($(element).css('display') === 'inline') {
             $(element).css('display', 'inline-block');
         }
+        var effects = fill(getAttr(element, 'animate-in') || '', true);
         var ms = parseFloat($(element).css('transition-delay')) * 1000 || 0;
         fireEvent();
         deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), dom.emit('animate' + animationType, element));
         each(customAnimation, function (i, v) {
-            if (element.attributes[i]) {
-                var fn = v.bind(undefined, element, getAttr(element, i));
+            if (effects[i] || element.attributes[i]) {
+                var fn = v.bind(undefined, element, getAttr(element, i) || '');
                 deferred.waitFor(ms ? delay(ms, fn) : fn());
             }
         });
