@@ -1,17 +1,34 @@
-import { addDetect, app, install } from "src/app";
+import { addDetect, addExtension, app, install } from "src/app";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
 import { resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
+import brew from "src/core";
 
 const { objectContaining } = expect;
 
-beforeAll(() => initApp(router, template, function (app) {
+const initAutoCb = [];
+const initDepCb = [];
+const ext0 = addExtension(true, 'ext0', (_, options) => initAutoCb.push(['ext0', options]));
+const ext1 = addExtension('ext1', ['ext2'], (_, options) => initDepCb.push(['ext1', options]));
+const ext2 = addExtension('ext2', ['?ext3'], (_, options) => initDepCb.push(['ext2', options]));
+
+beforeAll(() => initApp(router, template, ext0, ext1, ext2, function (app) {
     app.useHtmlRouter({
         baseUrl: '/',
         routes: ['/*']
     });
+    app.useExt1({ key1: true });
+    app.useExt2({ key2: true });
 }));
+
+describe('brew', () => {
+    it('should throw when called second time', () => {
+        const cb = mockFn();
+        expect(() => brew(cb)).toThrow();
+        expect(cb).not.toBeCalled();
+    });
+});
 
 describe('app.emit', () => {
     it('should emit event to app if element is root', async () => {
@@ -208,6 +225,27 @@ describe('install', () => {
         expect(app.useDummy).toBeInstanceOf(Function);
         app.useDummy({ foo: 'bar' });
         expect(cb).toBeCalledWith(app, { foo: 'bar' });
+    });
+});
+
+describe('addExtension', () => {
+    it('should init extension automatically when autoInit is true', () => {
+        expect(initAutoCb).toEqual([['ext0', {}]]);
+    });
+
+    it('should init dependent extensions in correct order', () => {
+        expect(initDepCb).toEqual([
+            ['ext2', { key2: true }],
+            ['ext1', { key1: true }],
+        ]);
+    });
+
+    it('should throw when use callback is called in second time', () => {
+        expect(() => app.useExt2()).toThrow();
+        expect(initDepCb).toEqual([
+            ['ext2', { key2: true }],
+            ['ext1', { key1: true }],
+        ]);
     });
 });
 

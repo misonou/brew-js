@@ -44,14 +44,14 @@ function wrapEventHandlers(event, handler, noChildren) {
 }
 
 function initExtension(app, name, deps, options, callback) {
+    if (extensions[name]) {
+        throw new Error('Extension' + name + 'is already initiated');
+    }
     deps = grep(deps, function (v) {
         return !extensions[v.replace(/^\?/, '')];
     });
     var counter = deps.length || 1;
     var wrapper = function (loaded) {
-        if (!counter) {
-            throw new Error('Extension' + name + 'is already initiated');
-        }
         if (loaded && !--counter) {
             extensions[name] = true;
             callback(app, options || {});
