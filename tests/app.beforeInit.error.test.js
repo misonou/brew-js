@@ -12,5 +12,6 @@ describe('init', () => {
         });
         expect(app.readyState).toBe('init');
         await expect(watchOnce(app, 'readyState')).resolves.toBe('error');
+        await expect(app.ready).rejects.toBe(error);
     });
 });

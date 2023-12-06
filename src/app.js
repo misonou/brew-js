@@ -3,7 +3,7 @@ import dom from "./include/zeta-dom/dom.js";
 import { notifyAsync } from "./include/zeta-dom/domLock.js";
 import { bind } from "./include/zeta-dom/domUtil.js";
 import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop } from "./include/zeta-dom/util.js";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always } from "./include/zeta-dom/util.js";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 
@@ -22,7 +22,8 @@ export var appReady;
 export var appInited;
 /** @type {Promise<void> & Zeta.Deferrable} */
 var appInit;
-var setReadyState;
+var appReadyResolve;
+var appReadyReject;
 
 function exactTargetWrapper(handler) {
     return function (e) {
@@ -79,11 +80,19 @@ function defineUseMethod(name, deps, callback) {
 
 function App() {
     var self = this;
+    var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
     defineOwnProperty(self, 'element', root, true);
-    defineOwnProperty(self, 'ready', new Promise(function (resolve) {
-        self.on('ready', resolve.bind(0, self));
+    defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
+        appReadyResolve = resolve.bind(0, self);
+        appReadyReject = reject;
     }), true);
-    setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
+    always(self.ready, function (resolved) {
+        setReadyState(resolved ? 'ready' : 'error');
+        if (resolved) {
+            appReady = true;
+            app.emit('ready');
+        }
+    });
 }
 
 definePrototype(App, {
@@ -108,10 +117,7 @@ definePrototype(App, {
         if (isFunction(promise)) {
             promise = makeAsync(promise).call(this);
         }
-        appInit.waitFor(promise.then(null, function (error) {
-            console.error('Failed to initialize', error);
-            setReadyState('error');
-        }));
+        appInit.waitFor(promise.then(null, appReadyReject));
     },
     isElementActive: function () {
         return true;
@@ -189,13 +195,7 @@ function init(callback) {
 
     appInited = true;
     notifyAsync(root, appInit);
-    appInit.then(function () {
-        if (app.readyState === 'init') {
-            appReady = true;
-            setReadyState('ready');
-            app.emit('ready');
-        }
-    });
+    appInit.then(appReadyResolve);
     bind(window, 'pagehide', function (e) {
         app.emit('unload', { persisted: e.persisted }, { handleable: false });
     });
