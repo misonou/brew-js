@@ -90,7 +90,7 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
     }
     var visited = [];
     each(elements.reverse(), function (i, v) {
-        groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
+        groupLog('statechange', [v, updatedProps ? updatedProps.get(v).newValues : {}], function (console) {
             console.log(v === root ? document : v);
             $(selectIncludeSelf(selector, v)).not(visited).each(function (i, element) {
                 each(renderHandlers, function (i, v) {
@@ -317,9 +317,11 @@ export function mountElement(element) {
     stateChangeLock = true;
     resetVar(element);
     try {
-        processTransform(element, function (element, props) {
+        var applyDOMUpdates = function (element, props) {
             updateDOM(element, props, true);
-        });
+        };
+        processTransform(element, applyDOMUpdates);
+        processRender([element], null, applyDOMUpdates);
     } finally {
         stateChangeLock = prevStateChangeLock;
     }

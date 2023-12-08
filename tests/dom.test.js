@@ -1,5 +1,5 @@
 import { addAnimateIn, addAnimateOut } from "src/anim";
-import { addTransformer, hookBeforeUpdate, matchElement } from "src/dom";
+import { addRenderer, addTransformer, hookBeforeUpdate, matchElement } from "src/dom";
 import { getVar, setVar } from "src/var";
 import template from "src/extension/template";
 import router from "src/extension/htmlRouter";
@@ -7,6 +7,11 @@ import { after, defunctAfterTest, delay, initApp, mockFn, mount, uniqueName, ver
 
 const testTransform = mockFn((element, getState, updateDOM) => {
     element.innerHTML = '<div>test</div>';
+});
+const testRenderer = mockFn((element, getState, updateDOM) => {
+    updateDOM(element, {
+        'test-renderer': 'foo'
+    });
 });
 
 const customAnimateIn = mockFn();
@@ -21,6 +26,7 @@ var matchElementResult = [];
 
 beforeAll(async () => {
     addTransformer('test-transform', testTransform);
+    addRenderer('test-renderer', testRenderer);
     app = await initApp(template, router, (app) => {
         app.useHtmlRouter({
             routes: ['/*']
@@ -45,6 +51,12 @@ describe('mountElement', () => {
         const cb = mockFn(elm => elm.innerHTML);
         const elm = await mount(`<div test-transform></div>`, cb);
         expect(cb.mock.results[0].value).toBe(elm.innerHTML);
+    });
+
+    it('should apply renderer before mounted event', async () => {
+        const cb = mockFn(elm => elm.getAttribute('test-renderer'));
+        const elm = await mount(`<div test-renderer></div>`, cb);
+        expect(cb.mock.results[0].value).toBe('foo');
     });
 
     it('should attach selector-based event handler when element is being mounted', async () => {
