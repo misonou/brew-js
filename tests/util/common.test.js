@@ -1,12 +1,13 @@
 import $ from "jquery";
 import { catchAsync } from "zeta-dom/util";
-import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, preloadImages, setAttr, setCookie, setQueryParam } from "src/util/common";
+import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, openDeferredURL, preloadImages, setAttr, setCookie, setQueryParam } from "src/util/common";
 import { setBaseUrl } from "src/util/path";
 import { after, mockFn, mockXHROnce, verifyCalls, _ } from "../testUtil";
 import { jest } from "@jest/globals";
 
 const { stringMatching, objectContaining } = expect;
 const fetchSpy = mockFn();
+const windowOpen = jest.spyOn(window, 'open');
 const setAttribute = jest.spyOn(HTMLImageElement.prototype, 'setAttribute');
 
 jest.spyOn($, 'ajax');
@@ -369,5 +370,48 @@ describe('preloadImages', () => {
 
         await preloadImages(elm);
         expect(setAttribute).toBeCalledTimes(3);
+    });
+});
+
+describe('openDeferredURL', () => {
+    it('should resolve to true when resolved link is navigated', async () => {
+        const cb = mockFn();
+        windowOpen.mockReturnValueOnce({
+            closed: false,
+            location: {
+                replace: cb
+            }
+        });
+        await expect(openDeferredURL(Promise.resolve('http://localhost/test'))).resolves.toBe(true);
+        expect(cb).toBeCalledWith('http://localhost/test');
+    });
+
+    it('should resolve to false when window is closed before link is resolved', async () => {
+        windowOpen.mockReturnValueOnce({
+            closed: true,
+            location: {
+                replace(url) { }
+            }
+        });
+        await expect(openDeferredURL(Promise.resolve('http://localhost/test'))).resolves.toBe(false);
+    });
+
+    it('should resolve to false when new window is blocked', async () => {
+        windowOpen.mockReturnValueOnce(null);
+        await expect(openDeferredURL(Promise.resolve('http://localhost/test'))).resolves.toBe(false);
+    });
+
+    it('should throw and close opened window when given promise rejects', async () => {
+        const cb = mockFn();
+        windowOpen.mockReturnValueOnce({
+            closed: false,
+            close: cb,
+            location: {
+                replace(url) { }
+            }
+        });
+        const error = new Error();
+        await expect(openDeferredURL(Promise.reject(error))).rejects.toBe(error);
+        expect(cb).toBeCalledTimes(1);
     });
 });

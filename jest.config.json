@@ -13,7 +13,7 @@
     "collectCoverageFrom": [
         "src/**/*.js",
         "!src/include/**",
-        "!src/{entry,errorCode,libCheck}.js"
+        "!src/{entry,entry-slim,errorCode,libCheck}.js"
     ],
     "moduleNameMapper": {
         "^src/(.*)$": "<rootDir>/src/$1",

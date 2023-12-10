@@ -5,7 +5,7 @@ import { addAsyncAction, closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } f
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
 import { catchAsync } from "zeta-dom/util";
-import { initApp, delay, mount, root, mockFn, after, bindEvent, verifyCalls } from "./testUtil";
+import { initApp, delay, mount, root, mockFn, after, bindEvent, verifyCalls, _, initBody } from "./testUtil";
 
 /** @type {Brew.AppInstance<Brew.WithRouter>} */
 var app;
@@ -276,6 +276,20 @@ describe('closeFlyout', () => {
             [expect.objectContaining({ animationType: 'out', animationTrigger: 'open' }), flyout]
         ]);
     });
+
+    it('should remove target-opened class from source element', async () => {
+        const flyout = await mount(`
+            <div is-flyout>
+                <span></span>
+            </div>
+        `);
+        const span = flyout.firstElementChild;
+        openFlyout(flyout, span);
+        expect(span).toHaveClassName('target-opened');
+
+        await closeFlyout(flyout);
+        expect(span).not.toHaveClassName('target-opened');
+    });
 });
 
 describe('isFlyoutOpen', () => {
@@ -451,6 +465,27 @@ describe('href directive', () => {
         });
         expect(window.open).toBeCalledWith('http://www.www.com/test', '_self', 'noreferrer,noopener');
     });
+
+    it('should not trigger navigation when event is default prevented', async () => {
+        const { link } = await mount(`
+            <a id="link" href="/test"></a>
+        `);
+        bindEvent(link, 'click', e => e.preventDefault());
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(app.path).toBe('/');
+    });
+
+    it('should not handle navigation when target is not self', async () => {
+        const { link } = await mount(`
+            <a id="link" href="/test" target="_blank"></a>
+        `);
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(app.path).toBe('/');
+    });
 });
 
 describe('data-href directive', () => {
@@ -470,5 +505,21 @@ describe('data-href directive', () => {
         `);
         fireEvent.click(link);
         expect(app.fromHref).not.toBeCalled();
+    });
+});
+
+describe('tab-root directive', () => {
+    it('should set element as tab root when directive is present', async () => {
+        const { button, div } = initBody(`
+            <button id="button"></button>
+            <div id="div" tab-root></div>
+        `);
+        dom.focus(div);
+        await delay(0);
+        expect(button).toHaveAttribute('tabindex', '-1');
+
+        div.removeAttribute('tab-root');
+        await delay(0);
+        expect(button).not.toHaveAttribute('tabindex', '-1');
     });
 });
