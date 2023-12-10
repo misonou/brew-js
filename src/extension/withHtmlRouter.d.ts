@@ -3,13 +3,15 @@
 namespace Brew {
     interface WithHtmlRouter extends WithRouter {
         /**
-         * @param callback
+         * Registers hook to perform operation before `pageenter` event.
+         * @param callback Callback to be invoked. If promise is returned, `pageenter` event is deferred until promise is resolved.
          */
         beforePageEnter(callback: (element: Element) => PromiseOrEmpty): void;
 
         /**
-         * @param route
-         * @param callback
+         * Registers hook to perform operation before `pageenter` event for specific paths.
+         * @param route A string containing a valid route. Wildcard and segments containing regular expression filter is supported.
+         * @param callback Callback to be invoked. If promise is returned, `pageenter` event is deferred until promise is resolved.
          */
         beforePageEnter(route: string, callback: (element: Element) => PromiseOrEmpty): void;
 
@@ -30,7 +32,8 @@ namespace Brew {
 
         /**
          * Configures router.
-         * @param options
+         * @param options Options for router.
+         * @see {@link RouterOptions}
          */
         useHtmlRouter(options: RouterOptions): void;
     }

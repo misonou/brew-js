@@ -11,12 +11,17 @@ declare namespace Brew {
 
         /**
          * Sets the language.
-         * If the language is not on the specified list, the language will not be changed.
-         * @param language
+         * @param language Language to set. If the language is not on the specified list, the language will not be changed.
          */
         setLanguage(language: string): void;
 
+        /**
+         * Detects preferred language from browser's settings.
+         * @param languages A list of languages.
+         * @param defaultLanguage Default langauge when none of the languages is in user's preference.
+         */
         detectLanguage(languages: readonly string[], defaultLanguage?: string): string;
+
         /**
          * Enables the i18n (internationalization) module.
          * @param options Options to be passed to the module.

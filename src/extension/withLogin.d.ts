@@ -3,7 +3,8 @@ declare namespace Brew {
      * useLogin
      * ------------------------------------------------------------- */
     type LoginEventMap<T = any> = {
-        login: LoginEvent<T>
+        login: LoginEvent<T>;
+        logout: Zeta.ZetaEventBase;
     }
 
     interface LoginEvent<T> extends Zeta.ZetaEventBase {
@@ -14,6 +15,10 @@ declare namespace Brew {
     }
 
     interface WithLogin<T = any> extends EventDispatcher<keyof LoginEventMap, LoginEventMap<T>> {
+        /**
+         * Gets whether user is logged in.
+         */
+        readonly loggedIn: boolean;
         /**
          * Performs login action with the specified parameters.
          * @param params An object containing parameters such as username and password.

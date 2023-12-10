@@ -1,5 +1,5 @@
 declare namespace Brew {
-    /* ------------------------------------------------------------- 
+    /* -------------------------------------------------------------
      * useConfig
      * ------------------------------------------------------------- */
     interface WithConfig<T = any> {
@@ -10,7 +10,7 @@ declare namespace Brew {
 
         /**
          * Loads configurations from a JSON file at the given path.
-         * @param options 
+         * @param options Options for loading configurations.
          */
         useConfig(options: ConfigOptions<T>): void;
     }

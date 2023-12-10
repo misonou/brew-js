@@ -7,7 +7,7 @@ declare namespace Brew {
         /**
          * Enables idle detection.
          * The `idle` event will be fired after a specified amount time without any user interaction.
-         * @param options
+         * @param options Options for idle detection extension.
          */
         useIdleTimeout(options: IdleTimeoutOptions): void;
     }
