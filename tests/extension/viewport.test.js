@@ -1,31 +1,12 @@
 import { _, bindEvent, initApp, mockFn, verifyCalls } from "../testUtil";
+import { setViewportSize } from "../harness/visualViewport";
 import viewport from "src/extension/viewport";
 
 /** @type {Brew.AppInstance<Brew.WithViewport>} */
 var app;
 
-const visualViewport = Object.assign(new EventTarget(), {
-    width: 1024,
-    height: 768
-});
-Object.defineProperty(window, 'visualViewport', {
-    configurable: true,
-    enumerable: true,
-    value: visualViewport
-});
-
-function setViewportSize(w, h) {
-    visualViewport.width = w;
-    visualViewport.height = h;
-    visualViewport.dispatchEvent(new CustomEvent('resize'));
-}
-
 beforeAll(async () => {
     app = await initApp(viewport);
-});
-
-beforeEach(() => {
-    setViewportSize(1024, 768);
 });
 
 describe('Viewport extension', () => {
