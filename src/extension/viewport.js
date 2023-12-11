@@ -27,15 +27,15 @@ export default addExtension(true, 'viewport', function (app) {
         setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
 
         if (triggerEvent !== false) {
-            app.emit('resize', {
+            var data = {
                 aspectRatio: aspectRatio,
+                orientation: app.orientation,
                 viewportWidth: viewportWidth,
                 viewportHeight: viewportHeight
-            });
+            };
+            app.emit('resize', data);
             if (either(aspectRatio >= 1, previousAspectRatio >= 1)) {
-                app.emit('orientationchange', {
-                    orientation: app.orientation
-                });
+                app.emit('orientationchange', data);
             }
         }
     }

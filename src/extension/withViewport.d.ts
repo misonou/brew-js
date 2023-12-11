@@ -7,15 +7,16 @@ declare namespace Brew {
         resize: ResizeEvent;
     }
 
-    interface OrientationChangeEvent extends Zeta.ZetaEventBase {
+    interface ViewportEvent extends Zeta.ZetaEventBase {
         readonly aspectRatio: number;
+        readonly orientation: 'portrait' | 'landscape';
         readonly viewportHeight: number;
         readonly viewportWidth: number;
     }
 
-    interface ResizeEvent extends Zeta.ZetaEventBase {
-        readonly orientation: 'portrait' | 'landscape';
-    }
+    interface OrientationChangeEvent extends ViewportEvent { }
+
+    interface ResizeEvent extends ViewportEvent { }
 
     interface WithViewport extends EventDispatcher<keyof ViewportEventMap, ViewportEventMap> {
         readonly orientation: 'portrait' | 'landscape';
