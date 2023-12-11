@@ -1,4 +1,4 @@
-/*! brew-js v0.5.14 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.0 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -958,28 +958,41 @@ function createObjectStorage(storage, key) {
     }
   };
 }
+// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
+
+var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    observe = _zeta$dom.observe,
+    registerCleanup = _zeta$dom.registerCleanup,
+    createAutoCleanupMap = _zeta$dom.createAutoCleanupMap,
+    afterDetached = _zeta$dom.afterDetached,
+    watchElements = _zeta$dom.watchElements,
+    watchAttributes = _zeta$dom.watchAttributes,
+    watchOwnAttributes = _zeta$dom.watchOwnAttributes;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
+
 // CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
 
 var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
 /* harmony default export */ const dom = (_defaultExport);
-var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    textInputAllowed = _zeta$dom.textInputAllowed,
-    beginDrag = _zeta$dom.beginDrag,
-    beginPinchZoom = _zeta$dom.beginPinchZoom,
-    insertText = _zeta$dom.insertText,
-    getShortcut = _zeta$dom.getShortcut,
-    setShortcut = _zeta$dom.setShortcut,
-    focusable = _zeta$dom.focusable,
-    focused = _zeta$dom.focused,
-    setTabRoot = _zeta$dom.setTabRoot,
-    unsetTabRoot = _zeta$dom.unsetTabRoot,
-    setModal = _zeta$dom.setModal,
-    releaseModal = _zeta$dom.releaseModal,
-    retainFocus = _zeta$dom.retainFocus,
-    releaseFocus = _zeta$dom.releaseFocus,
-    iterateFocusPath = _zeta$dom.iterateFocusPath,
-    dom_focus = _zeta$dom.focus,
-    dom_blur = _zeta$dom.blur;
+var dom_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    textInputAllowed = dom_zeta$dom.textInputAllowed,
+    beginDrag = dom_zeta$dom.beginDrag,
+    beginPinchZoom = dom_zeta$dom.beginPinchZoom,
+    insertText = dom_zeta$dom.insertText,
+    getShortcut = dom_zeta$dom.getShortcut,
+    setShortcut = dom_zeta$dom.setShortcut,
+    focusable = dom_zeta$dom.focusable,
+    focused = dom_zeta$dom.focused,
+    setTabRoot = dom_zeta$dom.setTabRoot,
+    unsetTabRoot = dom_zeta$dom.unsetTabRoot,
+    setModal = dom_zeta$dom.setModal,
+    releaseModal = dom_zeta$dom.releaseModal,
+    retainFocus = dom_zeta$dom.retainFocus,
+    releaseFocus = dom_zeta$dom.releaseFocus,
+    iterateFocusPath = dom_zeta$dom.iterateFocusPath,
+    dom_focus = dom_zeta$dom.focus,
+    dom_blur = dom_zeta$dom.blur;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
 
@@ -992,113 +1005,129 @@ var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
 
 
 
+
 var customAnimateIn = {};
 var customAnimateOut = {};
-var animatingElements = new Map();
+var animateScopes = createAutoCleanupMap(noop);
+var collectChanges = watchElements(zeta_dom_dom.root, '[animate-in],[animate-sequence],[is-animate-sequence]', handleMutations);
 
-function handleAnimation(element, promises) {
-  if (!promises.length) {
-    return resolve();
-  }
-
-  var promise = always(setPromiseTimeout(promise_polyfill.allSettled(promises), 1500), function (resolved) {
-    animatingElements.delete(element);
-
-    if (!resolved) {
-      console.warn('Animation might take longer than expected', promises);
-    }
-  });
-  animatingElements.set(element, promise);
-  return promise;
+function getShouldAnimate(element, trigger, scope, filterCallback) {
+  var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
+  return function (v) {
+    return matchSelector(v, filter) && (!scope || containsOrEquals(jquery(v).closest(scope)[0] || zeta_dom_dom.root, element)) && (!filterCallback || filterCallback(v)) && isVisible(v);
+  };
 }
 
-function animateElement(element, cssClass, eventName, customAnimation) {
-  // transform cannot apply on inline elements
-  if (jquery(element).css('display') === 'inline') {
-    jquery(element).css('display', 'inline-block');
+function handleMutations(addNodes) {
+  if (addNodes[0]) {
+    each(animateScopes, function (i, v) {
+      each(v, function (j, v) {
+        v.start();
+      });
+    });
   }
+}
 
-  var promises = [runCSSTransition(element, cssClass), zeta_dom_dom.emit(eventName, element)];
-  var delay = parseFloat(jquery(element).css('transition-delay')) || 0;
-  each(customAnimation, function (i, v) {
-    if (element.attributes[i]) {
-      var attrValue = element.getAttribute(i);
-      promises.push(new promise_polyfill(function (resolve, reject) {
-        util_setTimeout(function () {
-          resolveAll(v(element, attrValue)).then(resolve, reject);
-        }, delay * 1000);
-      }));
+function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+  var sequences = new WeakMap();
+  var deferred = deferrable();
+  var promise = setPromiseTimeout(deferred, 1500).catch(function () {
+    console.warn('Animation might take longer than expected', {
+      element: element,
+      animationType: animationType,
+      animationTrigger: animationTrigger
+    });
+  });
+  var fireEvent = executeOnce(function () {
+    zeta_dom_dom.emit('animationstart', element, {
+      animationType: animationType,
+      animationTrigger: animationTrigger
+    }, true);
+    promise.then(function () {
+      zeta_dom_dom.emit('animationcomplete', element, {
+        animationType: animationType,
+        animationTrigger: animationTrigger
+      }, true);
+    });
+  });
+
+  var animate = function animate(element) {
+    // transform cannot apply on inline elements
+    if (jquery(element).css('display') === 'inline') {
+      jquery(element).css('display', 'inline-block');
     }
-  });
-  return resolveAll(promises, function () {
-    return element;
-  });
+
+    var effects = fill(getAttr(element, 'animate-in') || '', true);
+    var ms = parseFloat(jquery(element).css('transition-delay')) * 1000 || 0;
+    fireEvent();
+    deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), zeta_dom_dom.emit('animate' + animationType, element));
+    each(customAnimation, function (i, v) {
+      if (effects[i] || element.attributes[i]) {
+        var fn = v.bind(undefined, element, getAttr(element, i) || '');
+        deferred.waitFor(ms ? delay(ms, fn) : fn());
+      }
+    });
+  };
+
+  return {
+    promise: promise.then(callback),
+    animate: animate,
+    sequence: function sequence(element, filter, attr) {
+      var queue = mapGet(sequences, element, Array);
+      var reverse = getAttr(element, 'animate-sequence-reverse');
+      var selector = getAttr(element, 'animate-sequence') || '';
+      var elements = jquery(element).find(selector[0] === '>' ? selector : jquery(selector)).filter(filter).attr(attr || {}).get();
+
+      if (reverse === '' || reverse === animationType) {
+        elements.reverse();
+      }
+
+      each(elements, function (i, v) {
+        if (queue.indexOf(v) < 0 && queue.push(v) === 1) {
+          fireEvent();
+          deferred.waitFor(delay(50, function next() {
+            animate(queue.shift());
+            return queue[0] && delay(50, next);
+          }));
+        }
+      });
+    }
+  };
 }
 /**
  * @param {Element} element
  * @param {string} trigger
  * @param {string=} scope
- * @param {((elm: Element) => boolean)=} filterCallback
+ * @param {((elm: Element) => boolean) | boolean=} filterCallback
  */
 
 
 function animateIn(element, trigger, scope, filterCallback) {
-  if (animatingElements.has(element)) {
-    return animatingElements.get(element).then(function () {
-      return animateIn(element, trigger, scope, filterCallback);
+  var dict = mapGet(animateScopes, element, Object);
+  var scopeObject = dict[trigger] || (dict[trigger] = {
+    start: filterCallback === true ? animateIn.bind(0, element, trigger, scope) : noop
+  });
+  var shouldAnimate = getShouldAnimate(element, trigger, scope, isFunction(filterCallback));
+  var anim = scopeObject.anim || (scopeObject.anim = handleAnimation(element, 'in', trigger, customAnimateIn, function () {
+    scopeObject.anim = null;
+  }));
+  selectIncludeSelf('[animate-in]:not([is-animate-sequence],.tweening-in)', element).filter(shouldAnimate).forEach(function (v) {
+    anim.animate(v);
+  });
+  selectIncludeSelf('[animate-sequence]', element).filter(shouldAnimate).forEach(function (v) {
+    if (!getClass(v, 'tweening-in')) {
+      setAttr(v, 'animate-in', '');
+      anim.animate(v);
+    }
+
+    anim.sequence(v, ':not(.tweening-in)', {
+      'animate-in': getAttr(v, 'animate-sequence-type') || '',
+      'animate-on': trigger,
+      'is-animate-sequence': ''
     });
-  }
-
-  filterCallback = filterCallback || function () {
-    return true;
-  };
-
-  zeta_dom_dom.emit('animationstart', element, {
-    animationType: 'in',
-    animationTrigger: trigger
-  }, true);
-  var $innerScope = scope ? jquery(scope, element) : jquery();
-  var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-  var promises = [];
-  jquery(selectIncludeSelf('[animate-in]', element)).filter(filter).each(function (i, v) {
-    // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
-      promises.push(animateElement(v, 'tweening-in', 'animatein', customAnimateIn));
-    }
   });
-  jquery(selectIncludeSelf('[animate-sequence]', element)).filter(filter).each(function (i, v) {
-    // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v) && isVisible(v)) {
-      var selector = v.getAttribute('animate-sequence') || '';
-      var type = v.getAttribute('animate-sequence-type') || '';
-      var $elements = jquery(v).find(selector[0] === '>' ? selector : jquery(selector));
-
-      if (jquery(v).attr('animate-sequence-reverse') !== undefined) {
-        [].reverse.apply($elements);
-      }
-
-      $elements.css('transition-duration', '0s');
-      $elements.attr('animate-in', type).attr('is-animate-sequence', '');
-      $elements.each(function (i, v) {
-        promises.push(new promise_polyfill(function (resolve, reject) {
-          util_setTimeout(function () {
-            jquery(v).css('transition-duration', '');
-            animateElement(v, 'tweening-in', 'animatein', customAnimateIn).then(resolve, reject);
-          }, i * 50);
-        }));
-      });
-
-      if (!v.attributes['animate-in']) {
-        jquery(v).attr('animate-in', '').addClass('tweening-in');
-      }
-    }
-  });
-  return handleAnimation(element, promises).then(function () {
-    zeta_dom_dom.emit('animationcomplete', element, {
-      animationType: 'in',
-      animationTrigger: trigger
-    }, true);
-  });
+  collectChanges(true);
+  return anim.promise;
 }
 /**
  * @param {Element} element
@@ -1109,45 +1138,25 @@ function animateIn(element, trigger, scope, filterCallback) {
  */
 
 function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
-  filterCallback = filterCallback || function () {
-    return true;
-  };
+  var shouldAnimate = getShouldAnimate(element, trigger, scope, filterCallback);
+  var elements = selectIncludeSelf('.tweening-in,[animate-out]', element);
 
-  zeta_dom_dom.emit('animationstart', element, {
-    animationType: 'out',
-    animationTrigger: trigger
-  }, true);
-  var $innerScope = scope ? jquery(scope, element) : jquery();
-  var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-  var promises = []; // @ts-ignore: type inference issue
+  if (excludeSelf && elements[0] === element) {
+    elements.splice(0, 1);
+  }
 
-  var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out]', element)).filter(filter);
-  $target.each(function (i, v) {
-    // @ts-ignore: filterCallback must be function
-    if (!$innerScope.find(v)[0] && filterCallback(v)) {
-      promises.push(animateElement(v, 'tweening-out', 'animateout', customAnimateOut));
-    }
+  var filtered = elements.filter(shouldAnimate);
+  var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function () {
+    jquery(trigger === 'show' ? elements : filtered).removeClass('tweening-in tweening-out');
   });
-  return handleAnimation(element, promises).then(function () {
-    // reset animation state after outro animation has finished
-    // @ts-ignore: type inference issue
-    var $target = jquery((excludeSelf ? jquery : selectIncludeSelf)('[animate-out], .tweening-in, .tweening-out', element));
-
-    if (trigger !== 'show') {
-      $target = $target.filter(filter);
-    }
-
-    $target = $target.filter(function (i, v) {
-      // @ts-ignore: filterCallback must be function
-      return filterCallback(v);
-    });
-    $target.removeClass('tweening-in tweening-out');
-    $target.find('[is-animate-sequence]').removeAttr('animate-in').removeClass('tweening-in tweening-out');
-    zeta_dom_dom.emit('animationcomplete', element, {
-      animationType: 'out',
-      animationTrigger: trigger
-    }, true);
+  jquery(filtered).filter('[animate-out]:not([is-animate-sequence],.tweening-out)').each(function (i, v) {
+    anim.animate(v);
   });
+  jquery(filtered).filter('[animate-out][animate-sequence]').each(function (i, v) {
+    anim.sequence(v, '.tweening-in');
+  });
+  delete mapGet(animateScopes, element, Object)[trigger];
+  return anim.promise;
 }
 /**
  * @param {string} name
@@ -1207,6 +1216,12 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
 
+// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
+
+var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
+
 // CONCATENATED MODULE: ./src/libCheck.js
 
 var BREW_KEY = '__BREW__';
@@ -1229,6 +1244,8 @@ var defaults = {};
 
 
 
+
+var emitter = new ZetaEventContainer();
 var root = zeta_dom_dom.root;
 var featureDetections = {};
 var dependencies = {};
@@ -1246,7 +1263,8 @@ var appInited;
 /** @type {Promise<void> & Zeta.Deferrable} */
 
 var appInit;
-var setReadyState;
+var appReadyResolve;
+var appReadyReject;
 
 function exactTargetWrapper(handler) {
   return function (e) {
@@ -1269,16 +1287,16 @@ function wrapEventHandlers(event, handler, noChildren) {
 }
 
 function initExtension(app, name, deps, options, callback) {
+  if (extensions[name]) {
+    throw new Error('Extension' + name + 'is already initiated');
+  }
+
   deps = grep(deps, function (v) {
     return !extensions[v.replace(/^\?/, '')];
   });
   var counter = deps.length || 1;
 
   var wrapper = function wrapper(loaded) {
-    if (!counter) {
-      throw new Error('Extension' + name + 'is already initiated');
-    }
-
     if (loaded && ! --counter) {
       extensions[name] = true;
       callback(app, options || {});
@@ -1309,22 +1327,41 @@ function defineUseMethod(name, deps, callback) {
 
 function App() {
   var self = this;
+  var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
   defineOwnProperty(self, 'element', root, true);
-  defineOwnProperty(self, 'ready', new Promise(function (resolve) {
-    self.on('ready', resolve.bind(0, self));
+  defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
+    appReadyResolve = resolve.bind(0, self);
+    appReadyReject = reject;
   }), true);
-  setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
+  always(self.ready, function (resolved) {
+    setReadyState(resolved ? 'ready' : 'error');
+
+    if (resolved) {
+      appReady = true;
+      app.emit('ready');
+    }
+  });
 }
 
 definePrototype(App, {
-  emit: function emit(event, element, data, bubbles) {
+  emit: function emit(event, element, data, options) {
     if (!is(element, Node)) {
-      bubbles = data;
-      data = element;
-      element = this.element;
+      return emitter.emit(event, this, element, data);
     }
 
-    return zeta_dom_dom.emit(event, element, data, bubbles);
+    var result = zeta_dom_dom.emit(event, element, data, options);
+
+    if (!result && (element === root || options === true || (options || '').bubbles)) {
+      // backward compatibility where app will receive event bubbled up from dom element
+      data = extend({
+        target: element
+      }, isPlainObject(data) || {
+        data: data
+      });
+      result = emitter.emit(event, this, data, options);
+    }
+
+    return result;
   },
   define: function define(props) {
     util_define(this, props);
@@ -1334,10 +1371,7 @@ definePrototype(App, {
       promise = makeAsync(promise).call(this);
     }
 
-    appInit.waitFor(promise.then(null, function (error) {
-      console.error('Failed to initialize', error);
-      setReadyState('error');
-    }));
+    appInit.waitFor(promise.then(null, appReadyReject));
   },
   isElementActive: function isElementActive() {
     return true;
@@ -1371,11 +1405,8 @@ definePrototype(App, {
     }));
   },
   on: function on(target, event, handler, noChildren) {
-    if (isFunction(event)) {
-      noChildren = handler;
-      handler = event;
-      event = target;
-      target = root;
+    if (isFunction(event) || event === undefined) {
+      return emitter.add(this, wrapEventHandlers(target, event));
     }
 
     var handlers = wrapEventHandlers(event, handler, (noChildren || handler) === true);
@@ -1426,13 +1457,7 @@ function init(callback) {
   });
   appInited = true;
   notifyAsync(root, appInit);
-  appInit.then(function () {
-    if (app.readyState === 'init') {
-      appReady = true;
-      setReadyState('ready');
-      app.emit('ready');
-    }
-  });
+  appInit.then(appReadyResolve);
   bind(window, 'pagehide', function (e) {
     app.emit('unload', {
       persisted: e.persisted
@@ -1466,6 +1491,9 @@ function addExtension(autoInit, name, deps, callback) {
 }
 function addDetect(name, callback) {
   featureDetections[name] = throwNotFunction(callback);
+}
+function emitAppEvent() {
+  return defaultApp.emit.apply(defaultApp, arguments);
 }
 function isElementActive(element) {
   return !app || app.isElementActive(element);
@@ -1625,7 +1653,7 @@ function processRender(elements, updatedProps, applyDOMUpdates) {
 
   var visited = [];
   each(elements.reverse(), function (i, v) {
-    groupLog('statechange', [v, updatedProps.get(v).newValues], function (console) {
+    groupLog('statechange', [v, updatedProps ? updatedProps.get(v).newValues : {}], function (console) {
       console.log(v === dom_root ? document : v);
       jquery(selectIncludeSelf(selector, v)).not(visited).each(function (i, element) {
         each(renderHandlers, function (i, v) {
@@ -1824,7 +1852,7 @@ function processStateChange(suppressAnim) {
         }
       });
       each(updatedProps, function (i, v) {
-        zeta_dom_dom.emit('statechange', i, {
+        emitAppEvent('statechange', i, {
           data: getVar(i),
           newValues: v.newValues,
           oldValues: v.oldValues
@@ -1868,9 +1896,12 @@ function mountElement(element) {
   resetVar(element);
 
   try {
-    processTransform(element, function (element, props) {
+    var applyDOMUpdates = function applyDOMUpdates(element, props) {
       updateDOM(element, props, true);
-    });
+    };
+
+    processTransform(element, applyDOMUpdates);
+    processRender([element], null, applyDOMUpdates);
   } finally {
     stateChangeLock = prevStateChangeLock;
   }
@@ -1900,12 +1931,12 @@ function mountElement(element) {
     });
     index = selectorHandlers.length;
     each(jquery.uniqueSort(makeArray(mountedElements).slice(index2)), function (i, v) {
-      zeta_dom_dom.emit('mounted', v);
+      emitAppEvent('mounted', v);
     });
 
     if (!firedOnRoot) {
       firedOnRoot = true;
-      zeta_dom_dom.emit('mounted', dom_root, {
+      emitAppEvent('mounted', dom_root, {
         target: element
       });
     }
@@ -2173,19 +2204,6 @@ tree.on('update', function (e) {
     markUpdated(v.element);
   });
 });
-// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
-
-var observe_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    observe = observe_zeta$dom.observe,
-    registerCleanup = observe_zeta$dom.registerCleanup,
-    createAutoCleanupMap = observe_zeta$dom.createAutoCleanupMap,
-    afterDetached = observe_zeta$dom.afterDetached,
-    watchElements = observe_zeta$dom.watchElements,
-    watchAttributes = observe_zeta$dom.watchAttributes,
-    watchOwnAttributes = observe_zeta$dom.watchOwnAttributes;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
-
 // CONCATENATED MODULE: ./src/domAction.js
 
 
@@ -2492,12 +2510,6 @@ zeta_dom_dom.ready.then(function () {
     }
   });
 });
-// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
-
-var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
-
 // CONCATENATED MODULE: ./src/directive.js
 
 
@@ -2505,7 +2517,7 @@ var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_
 
 
 
-var emitter = new ZetaEventContainer();
+var directive_emitter = new ZetaEventContainer();
 
 var directive_toString = function toString(v) {
   return isUndefinedOrNull(v) ? null : String(v);
@@ -2535,7 +2547,7 @@ function ComponentContext() {}
 
 definePrototype(ComponentContext, {
   on: function on(event, handler) {
-    return emitter.add(this, event, handler);
+    return directive_emitter.add(this, event, handler);
   }
 });
 watchable(ComponentContext.prototype);
@@ -2593,7 +2605,7 @@ function registerDirective(key, selector, options) {
   var map = new WeakMap();
   var collect = watchElements(zeta_dom_dom.root, selector, function (added, removed) {
     each(removed, function (i, v) {
-      emitter.emit('destroy', mapRemove(map, v).context);
+      directive_emitter.emit('destroy', mapRemove(map, v).context);
     });
     each(added, function (i, v) {
       var context = new Context(v);
@@ -3674,16 +3686,16 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
     setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
 
     if (triggerEvent !== false) {
-      app.emit('resize', {
+      var data = {
         aspectRatio: aspectRatio,
+        orientation: app.orientation,
         viewportWidth: viewportWidth,
         viewportHeight: viewportHeight
-      });
+      };
+      app.emit('resize', data);
 
       if (either(aspectRatio >= 1, previousAspectRatio >= 1)) {
-        app.emit('orientationchange', {
-          orientation: app.orientation
-        });
+        app.emit('orientationchange', data);
       }
     }
   }
@@ -4790,7 +4802,7 @@ function initHtmlRouter(app, options) {
               preload.set(element, resolveAll(promises, function () {
                 if (activeElements.indexOf(element) >= 0) {
                   setClass(element, 'hidden', false);
-                  animateIn(element, 'show', '[match-path]');
+                  animateIn(element, 'show', '[match-path]', true);
                   app.emit('pageenter', element, {
                     pathname: path
                   }, true);
