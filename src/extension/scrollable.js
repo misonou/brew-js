@@ -4,7 +4,7 @@ import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, s
 import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
 import { animateIn, animateOut } from "../anim.js";
 import { addExtension, isElementActive } from "../app.js";
-import { registerDirective } from "../directive.js";
+import { getDirectiveComponent, registerDirective } from "../directive.js";
 
 const SELECTOR_SCROLLABLE = '[scrollable]';
 const SELECTOR_TARGET = '[scrollable-target]';
@@ -241,7 +241,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         $(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
             $(v).toggleClass('disabled', !isElementActive(v));
         });
-        $scrollables.scrollable('refresh');
+        $scrollables.each(function (i, v) {
+            getDirectiveComponent(v).scrollable.refresh();
+        });
         $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
     });
 
