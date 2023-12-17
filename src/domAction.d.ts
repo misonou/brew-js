@@ -29,10 +29,13 @@ export interface FlyoutOptions {
      */
     closeOnBlur?: boolean;
     /**
-     * Whether flyout content will be focused.
+     * Whether flyout content will be initially focused.
      * Default is `true` if source element is not an text input element.
+     *
+     * If a CSS selector is given, the first matched element will be focused; otherwise
+     * the first focusable element will be focused.
      */
-    focus?: boolean;
+    focus?: boolean | string | Element;
     /**
      * Whether flyout element will be set as modal.
      * Default is `false`.

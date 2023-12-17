@@ -88,10 +88,61 @@ describe('openFlyout', () => {
         expect(dom.activeElement).toBe(flyout);
     });
 
+    it('should focus to first focusable element in flyout', async () => {
+        const { flyout, button } = await mount(`
+            <div id="flyout" is-flyout>
+                <div id="child"></div>
+                <button id="button"></button>
+            </div>
+        `);
+        jest.spyOn(button, 'offsetWidth', 'get').mockReturnValue(100);
+        openFlyout(flyout);
+        await delay(10);
+        expect(dom.activeElement).toBe(button);
+    });
+
+    it('should focus to first matched element in flyout', async () => {
+        const { flyout, child } = await mount(`
+            <div id="flyout" is-flyout>
+                <button></button>
+                <div class="item" id="child"></div>
+                <div class="item"></div>
+            </div>
+        `);
+        openFlyout(flyout, null, { focus: '.item' });
+        await delay(10);
+        expect(dom.activeElement).toBe(child);
+    });
+
+    it('should focus to specific element in flyout', async () => {
+        const { flyout, child } = await mount(`
+            <div id="flyout" is-flyout>
+                <button></button>
+                <div id="child"></div>
+            </div>
+        `);
+        openFlyout(flyout, null, { focus: child });
+        await delay(10);
+        expect(dom.activeElement).toBe(child);
+    });
+
     it('should not focus element in flyout if focus option is set to false', async () => {
         const flyout = await mount(`<div is-flyout></div>`);
         openFlyout(flyout, null, { focus: false });
+        await delay(10);
         expect(dom.activeElement).toBe(document.body);
+    });
+
+    it('should not focus element outside flyout', async () => {
+        const { flyout, other } = await mount(`
+            <div>
+                <div id="flyout" is-flyout></div>
+                <div id="other"></div>
+            </div>
+        `);
+        openFlyout(flyout, null, { focus: other });
+        await delay(10);
+        expect(dom.activeElement).toBe(flyout);
     });
 
     it('should retain focus when element is not currently focusable', async () => {

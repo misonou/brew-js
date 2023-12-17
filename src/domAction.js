@@ -142,8 +142,13 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     }
     setClass(element, { visible: true, closing: false });
     Promise.allSettled([runCSSTransition(element, 'open'), animateIn(element, 'open')]).then(function () {
-        if (options.focus !== false && !focused(element)) {
-            focus(element);
+        if (options.focus && !focused(element)) {
+            var focusTarget = options.focus === true ? element : $(element).find(options.focus)[0];
+            if (focusTarget) {
+                focus(focusTarget);
+            } else {
+                focus(element, false);
+            }
         }
     });
     if (options.modal) {
