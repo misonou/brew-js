@@ -326,6 +326,12 @@ describe('toggleFlyout', () => {
         expect(isFlyoutOpen(flyout)).toBe(false);
     });
 
+    it('should pass options to openFlyout', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        toggleFlyout(flyout, undefined, { modal: true });
+        expect(dom.modalElement).toBe(flyout);
+    });
+
     it('should send value from source element', async () => {
         const { flyout, button } = await mount(`
             <div id="flyout" is-flyout>

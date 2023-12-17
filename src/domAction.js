@@ -78,8 +78,8 @@ export function closeFlyout(flyout, value) {
     }));
 }
 
-export function toggleFlyout(selector, source) {
-    return openFlyout(selector, null, source, true);
+export function toggleFlyout(selector, source, options) {
+    return openFlyout(selector, null, source, options, true);
 }
 
 /**
@@ -87,8 +87,9 @@ export function toggleFlyout(selector, source) {
  * @param {any=} states
  * @param {Element=} source
  * @param {(Zeta.Dictionary | boolean)=} options
+ * @param {boolean=} closeIfOpened
  */
-export function openFlyout(selector, states, source, options) {
+export function openFlyout(selector, states, source, options, closeIfOpened) {
     var element = $(selector)[0];
     if (!element) {
         return reject();
@@ -100,7 +101,7 @@ export function openFlyout(selector, states, source, options) {
     }
     var prev = flyoutStates.get(element);
     if (prev && !prev.closePromise) {
-        if (options === true) {
+        if ((closeIfOpened || options) === true) {
             // @ts-ignore: can accept if no such property
             closeFlyout(element, source && waterpipe.eval('`' + source.value));
         } else {

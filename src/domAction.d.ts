@@ -76,5 +76,6 @@ export function openFlyout(selector: Element | string, states: any, source: Elem
  * Toggles flyout and returns a promise that when resolved, receives the value passed to `closeFlyout`.
  * @param selector A DOM element or a CSS selector that refers to a flyout.
  * @param source Source element which triggered the flyout.
+ * @param options A dictionary containing options to alter flyout's behavior.
  */
-export function toggleFlyout(selector: Element | string, source?: Element): Promise<any>;
+export function toggleFlyout(selector: Element | string, source?: Element, options?: FlyoutOptions): Promise<any>;
