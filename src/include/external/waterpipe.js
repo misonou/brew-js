@@ -18,5 +18,4 @@ waterpipe_.pipes['{'] = function (_, varargs) {
     globals.new = prev;
     return o;
 };
-// @ts-ignore: add member to function
 waterpipe_.pipes['{'].varargs = true;

@@ -256,7 +256,6 @@ definePrototype(Route, {
         return extend({}, this);
     },
     toString: function () {
-        // @ts-ignore: unable to infer this
         return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
     }
 });

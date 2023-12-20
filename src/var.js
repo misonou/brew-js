@@ -31,7 +31,6 @@ var inited = true;
 function VarContext() {
     var self = this;
     var element = self.element;
-    // @ts-ignore: does not throw error when property dataset does not exist
     each(element.dataset, function (i, v) {
         defineOwnProperty(self, i, waterpipe.eval('`' + trim(v || 'null')));
     });
@@ -60,7 +59,6 @@ function getDeclaredVar(element, resetToNull, state) {
                     return;
                 }
             }
-            // @ts-ignore: v should be object
             for (var j in v) {
                 initValues[j] = v[j] === undefined || resetToNull ? null : v[j];
             }
@@ -100,7 +98,6 @@ export function setVar(element, name, value) {
     if (typeof element === 'string') {
         batch(function () {
             $(element).each(function (i, v) {
-                // @ts-ignore: boolean arithmetics
                 hasUpdated |= setVar(v, values);
             });
         });
@@ -162,7 +159,6 @@ export function getVar(element, name) {
     if (name !== true) {
         return name ? values[name] : extend({}, values);
     }
-    // @ts-ignore: element property exists on tree node
     if (values.element !== element) {
         return {};
     }

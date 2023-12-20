@@ -15,7 +15,6 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         bounce: false
     }, defaultOptions);
 
-    // @ts-ignore: non-standard member
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
 
     function getOptions(context) {
@@ -254,7 +253,6 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             var rootRect = getRect(dom.root);
             var thisRect = getRect(v);
             var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0));
-            // @ts-ignore: boolean arithmetics
             if ((isInView ^ getClass(v, 'tweening-in')) && (isInView || v.attributes['animate-out'])) {
                 (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
             }

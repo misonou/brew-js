@@ -16,7 +16,6 @@ export default addExtension(true, 'preloadImage', ['?htmlRouter'], function (app
                 }
                 if (props.style) {
                     each(IMAGE_STYLE_PROPS, function (i, v) {
-                        // @ts-ignore: props.style checked for truthiness
                         var imageUrl = isCssUrlValue(props.style[v]);
                         if (imageUrl) {
                             urls[toAbsoluteUrl(imageUrl)] = true;

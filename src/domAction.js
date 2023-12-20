@@ -49,7 +49,6 @@ export function isFlyoutOpen(selector) {
  */
 export function closeFlyout(flyout, value) {
     /** @type {Element[]} */
-    // @ts-ignore: type inference issue
     var elements = $(flyout || '[is-flyout].open').get();
     return resolveAll(elements.map(function (v) {
         var state = flyoutStates.get(v);
@@ -102,10 +101,8 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     var prev = flyoutStates.get(element);
     if (prev && !prev.closePromise) {
         if ((closeIfOpened || options) === true) {
-            // @ts-ignore: can accept if no such property
             closeFlyout(element, source && waterpipe.eval('`' + source.value));
         } else {
-            // @ts-ignore: extended app property
             prev.path = app.path;
         }
         return prev.promise;
@@ -128,7 +125,6 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
         source: source,
         promise: promise,
         resolve: resolve,
-        // @ts-ignore: extended app property
         path: app.path
     });
     if (focusFriend) {

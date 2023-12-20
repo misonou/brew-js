@@ -249,7 +249,6 @@ export default addExtension(true, 'template', function (app) {
     addAsyncAction('validate', function (e) {
         var target = selectClosestRelative(getAttr(this, 'validate') || '', e.target);
         if (target) {
-            // @ts-ignore: type inference issue
             var valid = dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
             if (!valid) {
                 e.stopImmediatePropagation();
@@ -269,7 +268,6 @@ export default addExtension(true, 'template', function (app) {
         var method = camel(getAttr(self, 'context-method') || '');
         if (isFunction(app[method])) {
             var formSelector = getAttr(self, 'context-form');
-            // @ts-ignore: acceptable if self.form is undefined
             var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
             var params;
             var valid = true;
