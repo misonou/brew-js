@@ -1,7 +1,7 @@
 import { bind } from "../include/zeta-dom/domUtil.js";
 import dom from "../include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet } from "../include/zeta-dom/util.js";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject } from "../include/zeta-dom/util.js";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";
@@ -73,7 +73,7 @@ definePrototype(HistoryStorage, Map, {
         return mapProto.delete.call(this, stringOrSymbol(k));
     },
     toJSON: function () {
-        return Object.fromEntries(this.entries());
+        return mapObject(this, pipe);
     }
 });
 
