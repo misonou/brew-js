@@ -1,4 +1,4 @@
-/*! brew-js v0.6.0 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.1 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -362,6 +362,7 @@ var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_d
     createNodeIterator = domUtil_zeta$util.createNodeIterator,
     createTreeWalker = domUtil_zeta$util.createTreeWalker,
     bind = domUtil_zeta$util.bind,
+    bindOnce = domUtil_zeta$util.bindOnce,
     bindUntil = domUtil_zeta$util.bindUntil,
     dispatchDOMMouseEvent = domUtil_zeta$util.dispatchDOMMouseEvent,
     removeNode = domUtil_zeta$util.removeNode,
@@ -1200,8 +1201,7 @@ waterpipe_.pipes['{'] = function (_, varargs) {
 
   globals.new = prev;
   return o;
-}; // @ts-ignore: add member to function
-
+};
 
 waterpipe_.pipes['{'].varargs = true;
 // CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
@@ -2011,8 +2011,7 @@ var inited = true;
 
 function VarContext() {
   var self = this;
-  var element = self.element; // @ts-ignore: does not throw error when property dataset does not exist
-
+  var element = self.element;
   each(element.dataset, function (i, v) {
     defineOwnProperty(self, i, waterpipe.eval('`' + trim(v || 'null')));
   });
@@ -2042,8 +2041,7 @@ function getDeclaredVar(element, resetToNull, state) {
         if (!isPlainObject(v)) {
           return;
         }
-      } // @ts-ignore: v should be object
-
+      }
 
       for (var j in v) {
         initValues[j] = v[j] === undefined || resetToNull ? null : v[j];
@@ -2090,7 +2088,6 @@ function setVar(element, name, value) {
   if (typeof element === 'string') {
     batch(function () {
       jquery(element).each(function (i, v) {
-        // @ts-ignore: boolean arithmetics
         hasUpdated |= setVar(v, values);
       });
     });
@@ -2156,8 +2153,7 @@ function getVar(element, name) {
 
   if (name !== true) {
     return name ? values[name] : extend({}, values);
-  } // @ts-ignore: element property exists on tree node
-
+  }
 
   if (values.element !== element) {
     return {};
@@ -2255,7 +2251,6 @@ function isFlyoutOpen(selector) {
 
 function closeFlyout(flyout, value) {
   /** @type {Element[]} */
-  // @ts-ignore: type inference issue
   var elements = jquery(flyout || '[is-flyout].open').get();
   return resolveAll(elements.map(function (v) {
     var state = flyoutStates.get(v);
@@ -2275,8 +2270,7 @@ function closeFlyout(flyout, value) {
         setClass(state.source, 'target-opened', false);
       }
 
-      promise = promise_polyfill.allSettled([runCSSTransition(v, 'closing'), animateOut(v, 'open')]);
-      promise = always(promise, function () {
+      promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
         if (flyoutStates.get(v) === state) {
           flyoutStates.delete(v);
           setClass(v, {
@@ -2293,17 +2287,18 @@ function closeFlyout(flyout, value) {
     return promise;
   }));
 }
-function toggleFlyout(selector, source) {
-  return openFlyout(selector, null, source, true);
+function toggleFlyout(selector, source, options) {
+  return openFlyout(selector, null, source, options, true);
 }
 /**
  * @param {string} selector
  * @param {any=} states
  * @param {Element=} source
  * @param {(Zeta.Dictionary | boolean)=} options
+ * @param {boolean=} closeIfOpened
  */
 
-function openFlyout(selector, states, source, options) {
+function openFlyout(selector, states, source, options, closeIfOpened) {
   var element = jquery(selector)[0];
 
   if (!element) {
@@ -2319,11 +2314,9 @@ function openFlyout(selector, states, source, options) {
   var prev = flyoutStates.get(element);
 
   if (prev && !prev.closePromise) {
-    if (options === true) {
-      // @ts-ignore: can accept if no such property
+    if ((closeIfOpened || options) === true) {
       closeFlyout(element, source && waterpipe.eval('`' + source.value));
     } else {
-      // @ts-ignore: extended app property
       prev.path = app.path;
     }
 
@@ -2349,7 +2342,6 @@ function openFlyout(selector, states, source, options) {
     source: source,
     promise: promise,
     resolve: resolve,
-    // @ts-ignore: extended app property
     path: app.path
   });
 
@@ -2369,9 +2361,15 @@ function openFlyout(selector, states, source, options) {
     visible: true,
     closing: false
   });
-  promise_polyfill.allSettled([runCSSTransition(element, 'open'), animateIn(element, 'open')]).then(function () {
-    if (options.focus !== false && !focused(element)) {
-      dom_focus(element);
+  resolveAll([runCSSTransition(element, 'open'), animateIn(element, 'open')].map(catchAsync), function () {
+    if (options.focus && !focused(element)) {
+      var focusTarget = options.focus === true ? element : jquery(element).find(options.focus)[0];
+
+      if (focusTarget) {
+        dom_focus(focusTarget);
+      } else {
+        dom_focus(element, false);
+      }
     }
   });
 
@@ -2968,7 +2966,6 @@ var template_root = zeta_dom_dom.root;
     var target = selectClosestRelative(getAttr(this, 'validate') || '', e.target);
 
     if (target) {
-      // @ts-ignore: type inference issue
       var valid = zeta_dom_dom.emit('validate', target) || !target.checkValidity || target.checkValidity();
 
       if (!valid) {
@@ -2988,8 +2985,7 @@ var template_root = zeta_dom_dom.root;
     var method = camel(getAttr(self, 'context-method') || '');
 
     if (isFunction(app[method])) {
-      var formSelector = getAttr(self, 'context-form'); // @ts-ignore: acceptable if self.form is undefined
-
+      var formSelector = getAttr(self, 'context-form');
       var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
       var params;
       var valid = true;
@@ -3333,7 +3329,6 @@ var preloadImage_IMAGE_STYLE_PROPS = 'background-image'.split(' ');
 
         if (props.style) {
           each(preloadImage_IMAGE_STYLE_PROPS, function (i, v) {
-            // @ts-ignore: props.style checked for truthiness
             var imageUrl = isCssUrlValue(props.style[v]);
 
             if (imageUrl) {
@@ -3366,8 +3361,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
   defaultOptions = extend({
     content: '[scrollable-target]:not(.disabled)',
     bounce: false
-  }, defaultOptions); // @ts-ignore: non-standard member
-
+  }, defaultOptions);
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
 
   function getOptions(context) {
@@ -3607,7 +3601,9 @@ var SELECTOR_TARGET = '[scrollable-target]';
     jquery(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
       jquery(v).toggleClass('disabled', !isElementActive(v));
     });
-    $scrollables.scrollable('refresh');
+    $scrollables.each(function (i, v) {
+      getDirectiveComponent(v).scrollable.refresh();
+    });
     $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
   }); // scroll-into-view animation trigger
 
@@ -3616,7 +3612,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
       var m = new DOMMatrix(getComputedStyle(v).transform);
       var rootRect = getRect(zeta_dom_dom.root);
       var thisRect = getRect(v);
-      var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0)); // @ts-ignore: boolean arithmetics
+      var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0));
 
       if (isInView ^ getClass(v, 'tweening-in') && (isInView || v.attributes['animate-out'])) {
         (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
@@ -3814,7 +3810,7 @@ definePrototype(HistoryStorage, Map, {
     return mapProto.delete.call(this, stringOrSymbol(k));
   },
   toJSON: function toJSON() {
-    return Object.fromEntries(this.entries());
+    return mapObject(this, pipe);
   }
 });
 
@@ -4026,7 +4022,6 @@ definePrototype(Route, {
     return extend({}, this);
   },
   toString: function toString() {
-    // @ts-ignore: unable to infer this
     return fromRoutePath(combinePath(router_(this).current.maxPath || '/', this.remainingSegments));
   }
 });
