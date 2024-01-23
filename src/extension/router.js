@@ -664,11 +664,13 @@ function configureRouter(app, options) {
     } else {
         setBaseUrl(baseUrl);
     }
-    var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam));
-    var includeQuery = !initialPath;
-    initialPath = initialPath || fromPathname(getCurrentPathAndQuery());
+    var initialPathHint = fromPathname(getCurrentPathAndQuery());
+    var initialPath = options.initialPath || (options.queryParam && getQueryParam(options.queryParam)) || initialPathHint;
+    var includeQuery = initialPath === initialPathHint || removeQueryAndHash(initialPath) === removeQueryAndHash(initialPathHint);
     if (!isSubPathOf(initialPath, basePath)) {
         initialPath = basePath;
+    } else if (includeQuery && removeQueryAndHash(initialPath) === initialPath) {
+        initialPath = initialPathHint;
     }
     var navigationType = ({ 1: 'reload', 2: 'back_forward' })[performance.navigation.type];
     if (navigationType) {
