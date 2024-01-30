@@ -4,7 +4,7 @@ import waterpipe from "./include/external/waterpipe.js"
 import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "./include/zeta-dom/util.js";
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
-import dom, { focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
+import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
 import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
@@ -57,12 +57,6 @@ export function closeFlyout(flyout, value) {
         }
         var promise = state.closePromise;
         if (!promise) {
-            releaseModal(v);
-            releaseFocus(v);
-            state.resolve(value);
-            if (state.source) {
-                setClass(state.source, 'target-opened', false);
-            }
             promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
                 if (flyoutStates.get(v) === state) {
                     flyoutStates.delete(v);
@@ -71,6 +65,13 @@ export function closeFlyout(flyout, value) {
                 }
             });
             state.closePromise = promise;
+            state.resolve(value);
+            releaseModal(v);
+            releaseFocus(v);
+            blur(v);
+            if (state.source) {
+                setClass(state.source, 'target-opened', false);
+            }
         }
         return promise;
     }));
