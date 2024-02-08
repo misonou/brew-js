@@ -37,6 +37,12 @@ declare namespace Brew {
 
     interface DirectiveComponent {
         readonly element: Element;
+
+        /**
+         * Toggles whether to apply `loading` CSS class when async operation is registered
+         * through `notifyAsync` or `runAsync`.
+         */
+        enableLoadingClass: boolean;
     }
 
     interface EventDispatcher<T extends string = string, M = any> {

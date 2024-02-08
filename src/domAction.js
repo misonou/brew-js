@@ -5,11 +5,12 @@ import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainOb
 import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "./include/zeta-dom/domUtil.js";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "./include/zeta-dom/dom.js";
-import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
+import { cancelLock, locked, notifyAsync, subscribeAsync } from "./include/zeta-dom/domLock.js";
 import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
 import { hasAttr, selectorForAttr } from "./util/common.js";
+import { registerSimpleDirective } from "./directive.js";
 
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 
@@ -172,6 +173,18 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     dom.emit('flyoutshow', element);
     return promise;
 }
+
+registerSimpleDirective('enableLoadingClass', 'loading-class', function (element) {
+    return subscribeAsync(element, function (loading) {
+        if (loading) {
+            setClass(element, 'loading', loading);
+        } else {
+            runCSSTransition(element, 'loading-complete', function () {
+                setClass(element, 'loading', false);
+            });
+        }
+    });
+});
 
 dom.ready.then(function () {
     watchElements(root, '[tab-root]', function (addedNodes, removedNodes) {
