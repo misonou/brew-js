@@ -1,11 +1,15 @@
-import { getDirectiveComponent, registerDirective } from "src/directive";
-import { after, initApp, initBody, mockFn } from "./testUtil";
+import { getDirectiveComponent, registerDirective, registerSimpleDirective } from "src/directive";
+import { after, initApp, initBody, mockFn, verifyCalls } from "./testUtil";
 
 const cbDestroy = mockFn();
 const cbInit = mockFn((_, context) => {
     context.on('destroy', cbDestroy);
     return {};
 });
+const cbInitFoo = mockFn(() => cbDestoryFoo);
+const cbInitBar = mockFn();
+const cbDestoryFoo = mockFn();
+const cbDestoryBar = mockFn();
 
 beforeAll(() => {
     return initApp(() => {
@@ -17,6 +21,8 @@ beforeAll(() => {
                 boolValue: { attribute: 'bool-value', type: 'boolean' },
             }
         });
+        registerSimpleDirective('testFoo', 'test-foo', cbInitFoo);
+        registerSimpleDirective('testBar', 'test-bar', cbInitBar, cbDestoryBar);
     });
 });
 
@@ -115,5 +121,39 @@ describe('registerDirective', () => {
         expect(context.boolValue).toBe(true);
         context.boolValue = 0;
         expect(context.boolValue).toBe(false);
+    });
+});
+
+describe('registerSimpleDirective', () => {
+    it('should expose boolean property', () => {
+        const { div } = initBody(`<div id="div"></div>`);
+        expect(getDirectiveComponent(div).testFoo).toBe(false);
+        div.setAttribute('test-foo', '');
+        expect(getDirectiveComponent(div).testFoo).toBe(true);
+        div.removeAttribute('test-foo');
+        expect(getDirectiveComponent(div).testFoo).toBe(false);
+    });
+
+    it('should set and delete attibute when property is set', () => {
+        const { div } = initBody(`<div id="div"></div>`);
+        getDirectiveComponent(div).testFoo = true;
+        expect(div).toHaveAttribute('test-foo', '');
+        getDirectiveComponent(div).testFoo = false;
+        expect(div).not.toHaveAttribute('test-foo');
+    });
+
+    it('should invoke init and dispose callback', () => {
+        const { div } = initBody(`<div id="div"></div>`);
+        getDirectiveComponent(div).testFoo = true;
+        getDirectiveComponent(div).testBar = true;
+        verifyCalls(cbInitFoo, [[div]]);
+        verifyCalls(cbInitBar, [[div]]);
+
+        getDirectiveComponent(div).testFoo = false;
+        getDirectiveComponent(div).testBar = false;
+        verifyCalls(cbDestoryFoo, [[]]);
+        verifyCalls(cbDestoryBar, [[div]]);
+        expect(cbInitFoo).toBeCalledTimes(1);
+        expect(cbInitBar).toBeCalledTimes(1);
     });
 });

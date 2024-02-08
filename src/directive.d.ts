@@ -45,6 +45,23 @@ export interface Directive {
 export function registerDirective<T extends Zeta.Dictionary<Directive> = {}>(key: string, selector: string, options: DirectiveInit<T>): void;
 
 /**
+ * Register a simple directive.
+ * @param key A unique name that expose the enabled flag on the object returned by {@link getDirectiveComponent}.
+ * @param selector Attribute name.
+ * @param init Callback for initialization. A dispose callback can be returned to clean up when the element is detached or the directive is removed from the element.
+ */
+export function registerSimpleDirective(key: string, attr: string, init: (element: Element) => Zeta.UnregisterCallback | undefined): void;
+
+/**
+ * Register a simple directive.
+ * @param key A unique name that expose the enabled flag on the object returned by {@link getDirectiveComponent}.
+ * @param selector Attribute name.
+ * @param init Callback for initialization.
+ * @param dispose Callback for cleaning up when the element is detached or the directive is removed from the element.
+ */
+export function registerSimpleDirective(key: string, attr: string, init: (element: Element) => void, dispose: (element: Element) => void): void;
+
+/**
  * Gets the plugin initialized for a given element.
  * @param element A DOM element.
  */
