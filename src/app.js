@@ -119,6 +119,9 @@ definePrototype(App, {
         }
         appInit.waitFor(promise.then(null, appReadyReject));
     },
+    halt: function () {
+        appInit.waitFor(new Promise(noop));
+    },
     isElementActive: function () {
         return true;
     },

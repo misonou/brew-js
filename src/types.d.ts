@@ -213,6 +213,14 @@ declare namespace Brew {
          */
         beforeInit(promise: PromiseLike<any> | (() => PromiseOrEmpty)): void;
 
+        /**
+         * Postpones app start indefinitely.
+         *
+         * It is intended to avoid unnecessary rendering when the page is about to navigate away during app init.
+         * It has no effects if initialization has ended, i.e. {@link AppInstance.readyState} is `ready` or `error`.
+         */
+        halt(): void;
+
         emit(event: string, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
 
         emit(event: string, target: Element, data?: any, options?: boolean | Zeta.EventEmitOptions): PromiseOrEmpty;
