@@ -1,4 +1,4 @@
-/*! brew-js v0.6.1 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.2 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -1212,6 +1212,7 @@ var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
     cancelLock = domLock_zeta$dom.cancelLock,
     subscribeAsync = domLock_zeta$dom.subscribeAsync,
     notifyAsync = domLock_zeta$dom.notifyAsync,
+    runAsync = domLock_zeta$dom.runAsync,
     preventLeave = domLock_zeta$dom.preventLeave;
 
 // CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
@@ -1373,6 +1374,9 @@ definePrototype(App, {
 
     appInit.waitFor(promise.then(null, appReadyReject));
   },
+  halt: function halt() {
+    appInit.waitFor(new Promise(noop));
+  },
   isElementActive: function isElementActive() {
     return true;
   },
@@ -1499,7 +1503,147 @@ function isElementActive(element) {
   return !app || app.isElementActive(element);
 }
 /* harmony default export */ const src_app = (init);
+// CONCATENATED MODULE: ./src/directive.js
+
+
+
+
+
+
+var directive_root = zeta_dom_dom.root;
+var directive_emitter = new ZetaEventContainer();
+
+var directive_toString = function toString(v) {
+  return isUndefinedOrNull(v) ? null : String(v);
+};
+
+var toNumber = function toNumber(v) {
+  return isUndefinedOrNull(v) || isNaN(v) ? null : +v;
+};
+
+var converters = {
+  string: [pipe, directive_toString],
+  number: [toNumber, function (v) {
+    return directive_toString(toNumber(v));
+  }],
+  boolean: [function (v) {
+    return !isUndefinedOrNull(v);
+  }, function (v) {
+    return v ? '' : null;
+  }]
+};
+
+function Component(element) {
+  defineOwnProperty(this, 'element', element, true);
+}
+
+function ComponentContext() {}
+
+definePrototype(ComponentContext, {
+  on: function on(event, handler) {
+    return directive_emitter.add(this, event, handler);
+  }
+});
+watchable(ComponentContext.prototype);
+
+function createContextClass(options) {
+  var attributes = map(options.directives, function (v) {
+    return v.attribute;
+  });
+  var directives = mapObject(options.directives, function (v) {
+    var name = v.attribute;
+    var converter = converters[v.type] || converters.string;
+    return {
+      get: function get(element) {
+        return converter[0](getAttr(element, name));
+      },
+      set: function set(element, value) {
+        value = converter[1](value);
+        setAttr(element, name, value);
+        return converter[0](value);
+      }
+    };
+  });
+
+  var Context = function Context(element) {
+    var self = this;
+    defineOwnProperty(self, 'element', element, true);
+
+    if (attributes[0]) {
+      var update = function update() {
+        each(directives, function (i, v) {
+          self[i] = v.get(element);
+        });
+      };
+
+      update();
+      var collectChange = watchOwnAttributes(element, attributes, update);
+      self.on('destroy', collectChange.dispose);
+    }
+  };
+
+  definePrototype(Context, ComponentContext);
+  each(directives, function (i) {
+    defineObservableProperty(Context.prototype, i, null, function (v) {
+      return directives[i].set(this.element, v);
+    });
+  });
+  return Context;
+}
+
+function getDirectiveComponent(element) {
+  return new Component(element);
+}
+function registerSimpleDirective(key, attr, init, dispose) {
+  var map = new WeakMap();
+
+  var set = function set(enabled, element) {
+    setAttr(element, attr, enabled ? '' : null);
+
+    if (!enabled) {
+      (mapRemove(map, element) || noop)();
+    } else if (!map.has(element)) {
+      map.set(element, isFunction(init(element)) || dispose && dispose.bind(undefined, element));
+    }
+  };
+
+  watchElements(directive_root, '[' + attr + ']', function (added, removed) {
+    removed.forEach(set.bind(0, false));
+    added.forEach(set.bind(0, true));
+  });
+  defineGetterProperty(Component.prototype, key, function () {
+    return getAttr(this.element, attr) !== null;
+  }, function (v) {
+    return set(v, this.element);
+  });
+}
+function registerDirective(key, selector, options) {
+  var Context = createContextClass(options);
+  var map = new WeakMap();
+  var collect = watchElements(directive_root, selector, function (added, removed) {
+    each(removed, function (i, v) {
+      directive_emitter.emit('destroy', mapRemove(map, v).context);
+    });
+    each(added, function (i, v) {
+      var context = new Context(v);
+      map.set(v, {
+        component: options.component(v, context),
+        context: context
+      });
+    });
+  }, true);
+  defineGetterProperty(Component.prototype, key, function () {
+    var element = this.element;
+
+    if (!map.has(element) && matchSelector(element, selector)) {
+      collect();
+    }
+
+    return (map.get(element) || '').component || null;
+  });
+}
 // CONCATENATED MODULE: ./src/domAction.js
+
 
 
 
@@ -1561,14 +1705,6 @@ function closeFlyout(flyout, value) {
     var promise = state.closePromise;
 
     if (!promise) {
-      releaseModal(v);
-      releaseFocus(v);
-      state.resolve(value);
-
-      if (state.source) {
-        setClass(state.source, 'target-opened', false);
-      }
-
       promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
         if (flyoutStates.get(v) === state) {
           flyoutStates.delete(v);
@@ -1581,6 +1717,14 @@ function closeFlyout(flyout, value) {
         }
       });
       state.closePromise = promise;
+      state.resolve(value);
+      releaseModal(v);
+      releaseFocus(v);
+      dom_blur(v);
+
+      if (state.source) {
+        setClass(state.source, 'target-opened', false);
+      }
     }
 
     return promise;
@@ -1700,6 +1844,17 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
   zeta_dom_dom.emit('flyoutshow', element);
   return promise;
 }
+registerSimpleDirective('enableLoadingClass', 'loading-class', function (element) {
+  return subscribeAsync(element, function (loading) {
+    if (loading) {
+      setClass(element, 'loading', loading);
+    } else {
+      runCSSTransition(element, 'loading-complete', function () {
+        setClass(element, 'loading', false);
+      });
+    }
+  });
+});
 zeta_dom_dom.ready.then(function () {
   watchElements(domAction_root, '[tab-root]', function (addedNodes, removedNodes) {
     addedNodes.forEach(setTabRoot);
@@ -1807,121 +1962,6 @@ zeta_dom_dom.ready.then(function () {
     }
   });
 });
-// CONCATENATED MODULE: ./src/directive.js
-
-
-
-
-
-
-var directive_emitter = new ZetaEventContainer();
-
-var directive_toString = function toString(v) {
-  return isUndefinedOrNull(v) ? null : String(v);
-};
-
-var toNumber = function toNumber(v) {
-  return isUndefinedOrNull(v) || isNaN(v) ? null : +v;
-};
-
-var converters = {
-  string: [pipe, directive_toString],
-  number: [toNumber, function (v) {
-    return directive_toString(toNumber(v));
-  }],
-  boolean: [function (v) {
-    return !isUndefinedOrNull(v);
-  }, function (v) {
-    return v ? '' : null;
-  }]
-};
-
-function Component(element) {
-  defineOwnProperty(this, 'element', element, true);
-}
-
-function ComponentContext() {}
-
-definePrototype(ComponentContext, {
-  on: function on(event, handler) {
-    return directive_emitter.add(this, event, handler);
-  }
-});
-watchable(ComponentContext.prototype);
-
-function createContextClass(options) {
-  var attributes = map(options.directives, function (v) {
-    return v.attribute;
-  });
-  var directives = mapObject(options.directives, function (v) {
-    var name = v.attribute;
-    var converter = converters[v.type] || converters.string;
-    return {
-      get: function get(element) {
-        return converter[0](getAttr(element, name));
-      },
-      set: function set(element, value) {
-        value = converter[1](value);
-        setAttr(element, name, value);
-        return converter[0](value);
-      }
-    };
-  });
-
-  var Context = function Context(element) {
-    var self = this;
-    defineOwnProperty(self, 'element', element, true);
-
-    if (attributes[0]) {
-      var update = function update() {
-        each(directives, function (i, v) {
-          self[i] = v.get(element);
-        });
-      };
-
-      update();
-      var collectChange = watchOwnAttributes(element, attributes, update);
-      self.on('destroy', collectChange.dispose);
-    }
-  };
-
-  definePrototype(Context, ComponentContext);
-  each(directives, function (i) {
-    defineObservableProperty(Context.prototype, i, null, function (v) {
-      return directives[i].set(this.element, v);
-    });
-  });
-  return Context;
-}
-
-function getDirectiveComponent(element) {
-  return new Component(element);
-}
-function registerDirective(key, selector, options) {
-  var Context = createContextClass(options);
-  var map = new WeakMap();
-  var collect = watchElements(zeta_dom_dom.root, selector, function (added, removed) {
-    each(removed, function (i, v) {
-      directive_emitter.emit('destroy', mapRemove(map, v).context);
-    });
-    each(added, function (i, v) {
-      var context = new Context(v);
-      map.set(v, {
-        component: options.component(v, context),
-        context: context
-      });
-    });
-  }, true);
-  defineGetterProperty(Component.prototype, key, function () {
-    var element = this.element;
-
-    if (!map.has(element) && matchSelector(element, selector)) {
-      collect();
-    }
-
-    return (map.get(element) || '').component || null;
-  });
-}
 // CONCATENATED MODULE: ./src/extension/i18n.js
 
 
@@ -3162,12 +3202,14 @@ function configureRouter(app, options) {
     setBaseUrl(router_baseUrl);
   }
 
-  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam);
-  var includeQuery = !initialPath;
-  initialPath = initialPath || fromPathname(getCurrentPathAndQuery());
+  var initialPathHint = fromPathname(getCurrentPathAndQuery());
+  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam) || initialPathHint;
+  var includeQuery = initialPath === initialPathHint || removeQueryAndHash(initialPath) === removeQueryAndHash(initialPathHint);
 
   if (!isSubPathOf(initialPath, basePath)) {
     initialPath = basePath;
+  } else if (includeQuery && removeQueryAndHash(initialPath) === initialPath) {
+    initialPath = initialPathHint;
   }
 
   var navigationType = {
