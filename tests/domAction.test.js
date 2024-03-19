@@ -270,6 +270,26 @@ describe('openFlyout', () => {
             [expect.objectContaining({ animationType: 'in', animationTrigger: 'open' }), flyout]
         ]);
     });
+
+    it('should emit flyoutshow event with passed data', async () => {
+        const data = {};
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        bindEvent(flyout, 'flyoutshow', cb);
+        openFlyout(flyout, data);
+        verifyCalls(cb, [
+            [expect.objectContaining({ data }), _]
+        ]);
+    });
+
+    it('should not emit flyoutshow event if flyout is already opened', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout);
+        bindEvent(flyout, 'flyoutshow', cb);
+        openFlyout(flyout);
+        expect(cb).not.toBeCalled();
+    });
 });
 
 describe('closeFlyout', () => {

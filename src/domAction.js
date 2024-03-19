@@ -170,7 +170,7 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
         dom.on(source || element, 'focusout', closeHandler),
         dom.on(element, 'gesture', closeHandler)
     ));
-    dom.emit('flyoutshow', element);
+    dom.emit('flyoutshow', element, { data: states });
     return promise;
 }
 
