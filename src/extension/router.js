@@ -707,7 +707,7 @@ function configureRouter(app, options) {
             return pushState(path, replace, false, data).promise;
         },
         back: function (defaultPath) {
-            if (currentIndex > 0) {
+            if (this.canNavigateBack) {
                 return popState(currentIndex - 1).promise;
             } else {
                 return !!defaultPath && pushState(defaultPath).promise;
