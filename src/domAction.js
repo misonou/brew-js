@@ -73,6 +73,7 @@ export function closeFlyout(flyout, value) {
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
             }
+            dom.emit('flyoutclose', v);
         }
         return promise;
     }));

@@ -314,6 +314,18 @@ describe('closeFlyout', () => {
         await expect(p2).resolves.toBe('test');
     });
 
+    it('should emit flyoutclose event before flyout is closed', async () => {
+        const cb = mockFn();
+        const flyout = await mount(`<div is-flyout></div>`);
+        bindEvent(flyout, 'flyoutclose', cb);
+        openFlyout(flyout);
+
+        closeFlyout(flyout);
+        verifyCalls(cb, [
+            [expect.objectContaining({ type: 'flyoutclose', target: flyout }), _]
+        ]);
+    });
+
     it('should emit flyouthide event after flyout is closed', async () => {
         const cb = mockFn();
         const flyout = await mount(`<div is-flyout></div>`);
