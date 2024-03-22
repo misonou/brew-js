@@ -154,6 +154,17 @@ describe('setQueryParam', () => {
         history.replaceState(null, '', '?q=1');
         expect(setQueryParam('foo', 'bar', '')).toEqual('?foo=bar');
     });
+
+    it('should remove specified param when value is false, null, or undefined', () => {
+        expect(setQueryParam('foo', '', '?foo=bar')).toEqual('?foo=');
+        expect(setQueryParam('foo', false, '?foo=bar')).toEqual('?');
+        expect(setQueryParam('foo', null, '?foo=bar')).toEqual('?');
+        expect(setQueryParam('foo', undefined, '?foo=bar')).toEqual('?');
+
+        expect(setQueryParam('foo', undefined, '?baz=baz')).toEqual('?baz=baz');
+        expect(setQueryParam('foo', undefined, '?')).toEqual('');
+        expect(setQueryParam('foo', undefined, '')).toEqual('');
+    });
 });
 
 describe('getCookie', () => {

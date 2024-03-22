@@ -99,7 +99,7 @@ export function setQueryParam(name, value, current) {
     }
     var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
     return current.replace(re, function (v, a, i, n) {
-        return (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value);
+        return value || value === '' ? (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value) : a || '';
     });
 }
 

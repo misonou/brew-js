@@ -77,17 +77,17 @@ export function getQueryParam(name: string, url: string): string | false;
 /**
  * Returns a query string that includes the specific parameter, along with existing query parameters in current location.
  * @param name Name of the query parameter.
- * @param value Value to set.
+ * @param value Value to set. When given `false` or `null`, the parameter will be removed from query string.
  */
-export function setQueryParam(name: string, value: string): string;
+export function setQueryParam(name: string, value: string | false | null): string;
 
 /**
  * Returns a query string that includes the specific parameter, along with query parameters from the given query string.
  * @param name Name of the query parameter.
- * @param value Value to set.
+ * @param value Value to set. When given `false` or `null`, the parameter will be removed from query string.
  * @param url A query string or a URL.
  */
-export function setQueryParam(name: string, value: string, url: string): string;
+export function setQueryParam(name: string, value: string | false | null, url: string): string;
 
 /**
  * Gets the value of a cookie from the current document.
