@@ -2,7 +2,7 @@ import $ from "../include/external/jquery.js";
 import Promise from "../include/external/promise-polyfill.js";
 import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
 import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta-dom/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "../include/zeta-dom/util.js";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "../include/zeta-dom/util.js";
 import { combinePath, withBaseUrl } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -82,7 +82,10 @@ export function getFormValues(form) {
  * @param {string} name
  */
 export function getQueryParam(name, current) {
-    return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(current || location.search) && decodeURIComponent(RegExp.$1);
+    if (isUndefinedOrNull(current)) {
+        current = location.search;
+    }
+    return new RegExp('[?&]' + name + '=([^&]*)', 'i').test(current) && decodeURIComponent(RegExp.$1);
 }
 
 /**
@@ -91,8 +94,11 @@ export function getQueryParam(name, current) {
  * @param {string=} current
  */
 export function setQueryParam(name, value, current) {
+    if (isUndefinedOrNull(current)) {
+        current = location.search;
+    }
     var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
-    return (current || location.search).replace(re, function (v, a, i, n) {
+    return current.replace(re, function (v, a, i, n) {
         return (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value);
     });
 }

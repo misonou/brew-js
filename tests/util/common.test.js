@@ -98,6 +98,11 @@ describe('getQueryParam', () => {
         expect(getQueryParam('xxx', '?foo=baz')).toEqual(false);
     });
 
+    it('should return empty string as is', () => {
+        expect(getQueryParam('foo', '?foo=')).toEqual('');
+        expect(getQueryParam('foo', '?foo=&bar=baz')).toEqual('');
+    });
+
     it('should be case-insensitive', () => {
         history.replaceState(null, '', '?foo=bar');
         expect(getQueryParam('FOO')).toEqual('bar');
@@ -108,6 +113,11 @@ describe('getQueryParam', () => {
         history.replaceState(null, '', '?foo=%3F%25%3D%20');
         expect(getQueryParam('foo')).toEqual('?%= ');
         expect(getQueryParam('foo', '?foo=baz%3F%25%3D%20')).toEqual('baz?%= ');
+    });
+
+    it('should accept empty string as last argument', () => {
+        history.replaceState(null, '', '?foo=bar');
+        expect(getQueryParam('foo', '')).toEqual(false);
     });
 });
 
@@ -138,6 +148,11 @@ describe('setQueryParam', () => {
     it('should decode URL-encoded characters', () => {
         history.replaceState(null, '', '');
         expect(setQueryParam('foo', '?%= ')).toEqual('?foo=%3F%25%3D%20');
+    });
+
+    it('should accept empty string as last argument', () => {
+        history.replaceState(null, '', '?q=1');
+        expect(setQueryParam('foo', 'bar', '')).toEqual('?foo=bar');
     });
 });
 
