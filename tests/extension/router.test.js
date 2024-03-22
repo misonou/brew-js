@@ -515,6 +515,26 @@ describe('app.navigate', () => {
         await app.navigate('/test-1');
         expect(cb).not.toBeCalled();
     });
+
+    it('should always perform navigation when data is provided', async () => {
+        const cb = mockFn();
+        bindEvent(app, 'navigate', cb);
+        bindEvent(app, 'beforepageload', cb);
+
+        const data = {};
+        const pageId = app.page.pageId;
+        await expect(app.navigate(app.path, false, data)).resolves.toEqual(objectContaining({
+            path: app.path,
+            navigated: true,
+            redirected: false,
+            originalPath: null
+        }));
+        expect(app.page.pageId).not.toBe(pageId);
+        verifyCalls(cb, [
+            [objectContaining({ type: 'navigate', data: sameObject(data) }), _],
+            [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
+        ]);
+    });
 });
 
 describe('app.back', () => {

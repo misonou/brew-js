@@ -457,19 +457,21 @@ function configureRouter(app, options) {
         var currentState = states[currentIndex];
         var previous = currentState;
         if (currentState) {
-            var pathNoQuery = removeQueryAndHash(path);
             if (snapshot) {
                 storageMap = new HistoryStorage(previous.storage.toJSON());
-            } else if (pathNoQuery === currentState.pathname) {
-                if (!currentState.done || replace || path === currentState.path) {
-                    return updateQueryAndHash(currentState, path, currentState.path);
+            } else if (isUndefinedOrNull(data)) {
+                var pathNoQuery = removeQueryAndHash(path);
+                if (pathNoQuery === currentState.pathname) {
+                    if (!currentState.done || replace || path === currentState.path) {
+                        return updateQueryAndHash(currentState, path, currentState.path);
+                    }
+                    snapshot = true;
+                    storageMap = currentState.storage;
+                } else if (pathNoQuery === lastState.pathname && removeQueryAndHash(currentPath) === pathNoQuery) {
+                    snapshot = true;
+                    previous = lastState;
+                    storageMap = lastState.storage;
                 }
-                snapshot = true;
-                storageMap = currentState.storage;
-            } else if (pathNoQuery === lastState.pathname && removeQueryAndHash(currentPath) === pathNoQuery) {
-                snapshot = true;
-                previous = lastState;
-                storageMap = lastState.storage;
             }
         }
         var id = randomId();
