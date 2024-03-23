@@ -346,7 +346,6 @@ function configureRouter(app, options) {
             pageId: pageId,
             sessionId: sessionId,
             resumedId: resumedId,
-            handled: previous && snapshot && !!previous.done,
             get done() {
                 return resolved;
             },
@@ -368,7 +367,6 @@ function configureRouter(app, options) {
                 return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
             },
             reset: function () {
-                state.handled = false;
                 if (resolved) {
                     resolved = false;
                     promise = null;
@@ -386,7 +384,6 @@ function configureRouter(app, options) {
                 var previousState = lastState;
                 resolved = result || createNavigateResult(id, state.path);
                 resolvePromise(resolved);
-                state.handled = true;
                 if (states[currentIndex] === state) {
                     lastState = state;
                     if (resolved.navigated) {
@@ -425,7 +422,7 @@ function configureRouter(app, options) {
         return state;
     }
 
-    function applyState(state, replace, snapshot, callback) {
+    function applyState(state, replace, snapshot, previous, callback) {
         var currentState = states[currentIndex];
         if (currentState && currentState !== state && !currentState.done) {
             if (replace) {
@@ -443,7 +440,7 @@ function configureRouter(app, options) {
                 state.reject(errorWithCode(ErrorCode.navigationRejected));
             });
         } else if (callback() !== false) {
-            if (snapshot && currentState.done) {
+            if (snapshot && previous.done) {
                 state.resolve(createNavigateResult(state.pageId, state.path, null, false));
                 updateQueryAndHash(state, state.path, currentState.path);
             } else {
@@ -479,7 +476,7 @@ function configureRouter(app, options) {
         var replaceHistory = replace || (currentState && !currentState.done);
         var index = Math.max(0, currentIndex + !replaceHistory);
         var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
-        applyState(state, replace, snapshot, function () {
+        applyState(state, replace, snapshot, previous, function () {
             currentIndex = index;
             if (!replace) {
                 each(states.splice(currentIndex), function (i, v) {
@@ -498,12 +495,12 @@ function configureRouter(app, options) {
     function popState(index, isNative) {
         var state = states[index].reset();
         var step = state.index - states[currentIndex].index;
-        var snapshot = states[index].pageId === states[currentIndex].pageId;
+        var snapshot = state.pageId === states[currentIndex].pageId;
         var isLocked = !snapshot && locked(root);
         if (isLocked && isNative) {
             history.go(-step);
         }
-        applyState(state, false, snapshot, function () {
+        applyState(state, false, snapshot, states[currentIndex], function () {
             state.type = 'back_forward';
             currentIndex = index;
             if (isLocked && isNative && history.state === state.id) {
@@ -589,11 +586,10 @@ function configureRouter(app, options) {
         }
         var state = states[currentIndex];
         var newPath = state.path;
-        if (lastState === state || state.handled) {
+        if (lastState === state) {
             state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
             return;
         }
-        state.handled = true;
 
         // prevent infinite redirection loop
         // redirectSource will not be reset until processPageChange is fired
