@@ -1,4 +1,4 @@
-/*! brew-js v0.6.2 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.3 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -8,3391 +8,11 @@
 		exports["brew-js"] = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
 	else
 		root["brew"] = factory(root["zeta"], root["jQuery"], root["jq-scrollable"], root["waterpipe"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__163__, __WEBPACK_EXTERNAL_MODULE__254__, __WEBPACK_EXTERNAL_MODULE__172__, __WEBPACK_EXTERNAL_MODULE__160__) {
+})(self, function(__WEBPACK_EXTERNAL_MODULE__231__, __WEBPACK_EXTERNAL_MODULE__914__, __WEBPACK_EXTERNAL_MODULE__649__, __WEBPACK_EXTERNAL_MODULE__87__) {
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 268:
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  "default": function() { return /* binding */ entry_slim; }
-});
-
-// NAMESPACE OBJECT: ./src/util/path.js
-var path_namespaceObject = {};
-__webpack_require__.r(path_namespaceObject);
-__webpack_require__.d(path_namespaceObject, {
-  "baseUrl": function() { return baseUrl; },
-  "combinePath": function() { return combinePath; },
-  "isSubPathOf": function() { return isSubPathOf; },
-  "normalizePath": function() { return normalizePath; },
-  "parsePath": function() { return parsePath; },
-  "removeQueryAndHash": function() { return removeQueryAndHash; },
-  "setBaseUrl": function() { return setBaseUrl; },
-  "toAbsoluteUrl": function() { return toAbsoluteUrl; },
-  "toRelativeUrl": function() { return toRelativeUrl; },
-  "toSegments": function() { return toSegments; },
-  "withBaseUrl": function() { return withBaseUrl; }
-});
-
-// NAMESPACE OBJECT: ./src/errorCode.js
-var errorCode_namespaceObject = {};
-__webpack_require__.r(errorCode_namespaceObject);
-__webpack_require__.d(errorCode_namespaceObject, {
-  "apiError": function() { return apiError; },
-  "navigationCancelled": function() { return navigationCancelled; },
-  "navigationRejected": function() { return navigationRejected; },
-  "networkError": function() { return networkError; },
-  "resourceError": function() { return resourceError; },
-  "timeout": function() { return timeout; },
-  "validationFailed": function() { return validationFailed; }
-});
-
-// NAMESPACE OBJECT: ./src/util/common.js
-var common_namespaceObject = {};
-__webpack_require__.r(common_namespaceObject);
-__webpack_require__.d(common_namespaceObject, {
-  "addStyleSheet": function() { return addStyleSheet; },
-  "api": function() { return api; },
-  "cookie": function() { return common_cookie; },
-  "copyAttr": function() { return copyAttr; },
-  "deleteCookie": function() { return deleteCookie; },
-  "getAttr": function() { return getAttr; },
-  "getAttrValues": function() { return getAttrValues; },
-  "getCookie": function() { return getCookie; },
-  "getFormValues": function() { return getFormValues; },
-  "getJSON": function() { return getJSON; },
-  "getQueryParam": function() { return getQueryParam; },
-  "hasAttr": function() { return hasAttr; },
-  "isBoolAttr": function() { return isBoolAttr; },
-  "loadScript": function() { return loadScript; },
-  "openDeferredURL": function() { return openDeferredURL; },
-  "preloadImages": function() { return preloadImages; },
-  "selectorForAttr": function() { return selectorForAttr; },
-  "setAttr": function() { return setAttr; },
-  "setCookie": function() { return setCookie; },
-  "setQueryParam": function() { return setQueryParam; }
-});
-
-// NAMESPACE OBJECT: ./src/util/storage.js
-var storage_namespaceObject = {};
-__webpack_require__.r(storage_namespaceObject);
-__webpack_require__.d(storage_namespaceObject, {
-  "createObjectStorage": function() { return createObjectStorage; }
-});
-
-// NAMESPACE OBJECT: ./src/anim.js
-var anim_namespaceObject = {};
-__webpack_require__.r(anim_namespaceObject);
-__webpack_require__.d(anim_namespaceObject, {
-  "addAnimateIn": function() { return addAnimateIn; },
-  "addAnimateOut": function() { return addAnimateOut; },
-  "animateIn": function() { return animateIn; },
-  "animateOut": function() { return animateOut; }
-});
-
-// NAMESPACE OBJECT: ./src/domAction.js
-var domAction_namespaceObject = {};
-__webpack_require__.r(domAction_namespaceObject);
-__webpack_require__.d(domAction_namespaceObject, {
-  "addAsyncAction": function() { return addAsyncAction; },
-  "closeFlyout": function() { return closeFlyout; },
-  "isFlyoutOpen": function() { return isFlyoutOpen; },
-  "openFlyout": function() { return openFlyout; },
-  "toggleFlyout": function() { return toggleFlyout; }
-});
-
-// EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
-var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(163);
-// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
-
-var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
-    noop = _zeta$util.noop,
-    pipe = _zeta$util.pipe,
-    either = _zeta$util.either,
-    sameValueZero = _zeta$util.sameValueZero,
-    is = _zeta$util.is,
-    isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
-    isArray = _zeta$util.isArray,
-    isFunction = _zeta$util.isFunction,
-    isThenable = _zeta$util.isThenable,
-    isPlainObject = _zeta$util.isPlainObject,
-    isArrayLike = _zeta$util.isArrayLike,
-    makeArray = _zeta$util.makeArray,
-    extend = _zeta$util.extend,
-    each = _zeta$util.each,
-    map = _zeta$util.map,
-    grep = _zeta$util.grep,
-    splice = _zeta$util.splice,
-    any = _zeta$util.any,
-    single = _zeta$util.single,
-    kv = _zeta$util.kv,
-    fill = _zeta$util.fill,
-    pick = _zeta$util.pick,
-    exclude = _zeta$util.exclude,
-    mapObject = _zeta$util.mapObject,
-    mapGet = _zeta$util.mapGet,
-    mapRemove = _zeta$util.mapRemove,
-    arrRemove = _zeta$util.arrRemove,
-    setAdd = _zeta$util.setAdd,
-    equal = _zeta$util.equal,
-    combineFn = _zeta$util.combineFn,
-    executeOnce = _zeta$util.executeOnce,
-    createPrivateStore = _zeta$util.createPrivateStore,
-    util_setTimeout = _zeta$util.setTimeout,
-    setTimeoutOnce = _zeta$util.setTimeoutOnce,
-    util_setInterval = _zeta$util.setInterval,
-    setIntervalSafe = _zeta$util.setIntervalSafe,
-    setImmediate = _zeta$util.setImmediate,
-    setImmediateOnce = _zeta$util.setImmediateOnce,
-    clearImmediateOnce = _zeta$util.clearImmediateOnce,
-    util_throws = _zeta$util.throws,
-    throwNotFunction = _zeta$util.throwNotFunction,
-    errorWithCode = _zeta$util.errorWithCode,
-    isErrorWithCode = _zeta$util.isErrorWithCode,
-    util_keys = _zeta$util.keys,
-    values = _zeta$util.values,
-    util_hasOwnProperty = _zeta$util.hasOwnProperty,
-    getOwnPropertyDescriptors = _zeta$util.getOwnPropertyDescriptors,
-    util_define = _zeta$util.define,
-    definePrototype = _zeta$util.definePrototype,
-    defineOwnProperty = _zeta$util.defineOwnProperty,
-    defineGetterProperty = _zeta$util.defineGetterProperty,
-    defineHiddenProperty = _zeta$util.defineHiddenProperty,
-    defineAliasProperty = _zeta$util.defineAliasProperty,
-    defineObservableProperty = _zeta$util.defineObservableProperty,
-    watch = _zeta$util.watch,
-    watchOnce = _zeta$util.watchOnce,
-    watchable = _zeta$util.watchable,
-    inherit = _zeta$util.inherit,
-    freeze = _zeta$util.freeze,
-    deepFreeze = _zeta$util.deepFreeze,
-    iequal = _zeta$util.iequal,
-    randomId = _zeta$util.randomId,
-    repeat = _zeta$util.repeat,
-    camel = _zeta$util.camel,
-    hyphenate = _zeta$util.hyphenate,
-    ucfirst = _zeta$util.ucfirst,
-    lcfirst = _zeta$util.lcfirst,
-    trim = _zeta$util.trim,
-    matchWord = _zeta$util.matchWord,
-    matchWordMulti = _zeta$util.matchWordMulti,
-    htmlDecode = _zeta$util.htmlDecode,
-    resolve = _zeta$util.resolve,
-    reject = _zeta$util.reject,
-    always = _zeta$util.always,
-    resolveAll = _zeta$util.resolveAll,
-    retryable = _zeta$util.retryable,
-    deferrable = _zeta$util.deferrable,
-    catchAsync = _zeta$util.catchAsync,
-    setPromiseTimeout = _zeta$util.setPromiseTimeout,
-    delay = _zeta$util.delay,
-    makeAsync = _zeta$util.makeAsync;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
-
-// CONCATENATED MODULE: ./src/util/path.js
-var defaultPort = {
-  http: 80,
-  https: 443
-};
-var baseUrl = '/';
-/**
- * @param {string} b
- */
-
-function setBaseUrl(b) {
-  baseUrl = normalizePath(b, true);
-}
-/**
- * @param {string} a
- * @param {string} b
- */
-
-function combinePath(a, b) {
-  a = normalizePath(a);
-  b = normalizePath(b);
-
-  if (b === '/') {
-    return a;
-  }
-
-  if (a === '/' || b.indexOf('://') > 0) {
-    return b;
-  }
-
-  return a + b;
-}
-/**
- * @param {string} path
- */
-
-function parsePath(path) {
-  var a = document.createElement('a');
-  a.href = path;
-  return a;
-}
-/**
- * @param {string} path
- * @param {boolean=} resolveDotDir
- * @param {boolean=} returnEmpty
- */
-
-function normalizePath(path, resolveDotDir, returnEmpty) {
-  if (!path || path === '/') {
-    return returnEmpty ? '' : '/';
-  }
-
-  if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
-    var a = parsePath(path);
-    return ((RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
-  }
-
-  path = String(path).replace(/\/+(\/|$)/g, '$1');
-
-  if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
-    var segments = path.split('/');
-
-    for (var j = 0; j < segments.length;) {
-      if (segments[j] === '.' || segments[j] === '..' && !j) {
-        segments.splice(j, 1);
-      } else if (segments[j] === '..') {
-        segments.splice(--j, 2);
-      } else {
-        j++;
-      }
-    }
-
-    path = segments.join('/');
-  }
-
-  return path[0] === '/' ? path : '/' + path;
-}
-function removeQueryAndHash(path) {
-  var pos1 = path.indexOf('?') + 1;
-  var pos2 = path.indexOf('#') + 1;
-
-  if (!pos1 && !pos2) {
-    return path;
-  }
-
-  return path.slice(0, Math.min(pos1 || pos2, pos2 || pos1) - 1);
-}
-/**
- * @param {string} url
- */
-
-function withBaseUrl(url) {
-  url = normalizePath(url);
-  return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? combinePath(baseUrl, url) : url;
-}
-/**
- * @param {string} url
- */
-
-function toAbsoluteUrl(url) {
-  return url.indexOf('://') > 0 ? url : location.origin + withBaseUrl(url);
-}
-/**
- * @param {string} url
- */
-
-function toRelativeUrl(url) {
-  return isSubPathOf(url, location.origin) || url;
-}
-/**
- * @param {string} a
- * @param {string} b
- */
-
-function isSubPathOf(a, b) {
-  var len = b.length;
-  return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && (a[len] === '/' ? '' : '/') + a.slice(len);
-}
-/**
- * @param {string} path
- */
-
-function toSegments(path) {
-  path = normalizePath(path);
-  return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
-}
-// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
-var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(254);
-// EXTERNAL MODULE: external "jq-scrollable"
-var external_jq_scrollable_ = __webpack_require__(172);
-// CONCATENATED MODULE: ./src/include/external/jquery.js
-
-
-/* harmony default export */ const jquery = (external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_);
-// CONCATENATED MODULE: ./src/include/external/promise-polyfill.js
-var promise_polyfill_Promise = window.Promise;
-/* harmony default export */ const promise_polyfill = (promise_polyfill_Promise);
-// CONCATENATED MODULE: ./tmp/zeta-dom/cssUtil.js
-
-var _zeta$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.css,
-    parseCSS = _zeta$css.parseCSS,
-    isCssUrlValue = _zeta$css.isCssUrlValue,
-    runCSSTransition = _zeta$css.runCSSTransition;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/cssUtil.js
-
-// CONCATENATED MODULE: ./tmp/zeta-dom/domUtil.js
-
-var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
-    domReady = domUtil_zeta$util.domReady,
-    tagName = domUtil_zeta$util.tagName,
-    isVisible = domUtil_zeta$util.isVisible,
-    matchSelector = domUtil_zeta$util.matchSelector,
-    comparePosition = domUtil_zeta$util.comparePosition,
-    connected = domUtil_zeta$util.connected,
-    containsOrEquals = domUtil_zeta$util.containsOrEquals,
-    acceptNode = domUtil_zeta$util.acceptNode,
-    combineNodeFilters = domUtil_zeta$util.combineNodeFilters,
-    iterateNode = domUtil_zeta$util.iterateNode,
-    iterateNodeToArray = domUtil_zeta$util.iterateNodeToArray,
-    getCommonAncestor = domUtil_zeta$util.getCommonAncestor,
-    parentsAndSelf = domUtil_zeta$util.parentsAndSelf,
-    selectIncludeSelf = domUtil_zeta$util.selectIncludeSelf,
-    selectClosestRelative = domUtil_zeta$util.selectClosestRelative,
-    createNodeIterator = domUtil_zeta$util.createNodeIterator,
-    createTreeWalker = domUtil_zeta$util.createTreeWalker,
-    bind = domUtil_zeta$util.bind,
-    bindOnce = domUtil_zeta$util.bindOnce,
-    bindUntil = domUtil_zeta$util.bindUntil,
-    dispatchDOMMouseEvent = domUtil_zeta$util.dispatchDOMMouseEvent,
-    removeNode = domUtil_zeta$util.removeNode,
-    getClass = domUtil_zeta$util.getClass,
-    setClass = domUtil_zeta$util.setClass,
-    getSafeAreaInset = domUtil_zeta$util.getSafeAreaInset,
-    getScrollOffset = domUtil_zeta$util.getScrollOffset,
-    getScrollParent = domUtil_zeta$util.getScrollParent,
-    getContentRect = domUtil_zeta$util.getContentRect,
-    scrollBy = domUtil_zeta$util.scrollBy,
-    scrollIntoView = domUtil_zeta$util.scrollIntoView,
-    makeSelection = domUtil_zeta$util.makeSelection,
-    getRect = domUtil_zeta$util.getRect,
-    getRects = domUtil_zeta$util.getRects,
-    toPlainRect = domUtil_zeta$util.toPlainRect,
-    rectEquals = domUtil_zeta$util.rectEquals,
-    rectCovers = domUtil_zeta$util.rectCovers,
-    rectIntersects = domUtil_zeta$util.rectIntersects,
-    pointInRect = domUtil_zeta$util.pointInRect,
-    mergeRect = domUtil_zeta$util.mergeRect,
-    elementFromPoint = domUtil_zeta$util.elementFromPoint;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
-
-// CONCATENATED MODULE: ./src/errorCode.js
-var networkError = 'brew/network-error';
-var resourceError = 'brew/resource-error';
-var apiError = 'brew/api-error';
-var validationFailed = 'brew/validation-failed';
-var navigationCancelled = 'brew/navigation-cancelled';
-var navigationRejected = 'brew/navigation-rejected';
-var timeout = "brew/timeout";
-// CONCATENATED MODULE: ./src/util/common.js
-
-
-
-
-
-
-
-/** @type {Zeta.Dictionary<Promise<void>>} */
-
-var preloadImagesCache = {};
-/** @type {Zeta.Dictionary<Promise<Zeta.Dictionary>>} */
-
-var loadScriptCache = {};
-var boolAttrMap = {};
-each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
-  boolAttrMap[v.toLowerCase()] = v;
-});
-function getAttrValues(element) {
-  var values = {};
-  each(element.attributes, function (i, v) {
-    values[v.name] = v.value;
-  });
-  return values;
-}
-function isBoolAttr(element, name) {
-  return name === 'itemscope' || boolAttrMap[name] in Object.getPrototypeOf(element);
-}
-function hasAttr(element, name) {
-  return !!element.attributes[name];
-}
-function getAttr(element, name) {
-  return element.getAttribute(name);
-}
-function setAttr(element, name, value) {
-  if (typeof name !== 'string') {
-    each(name, setAttr.bind(0, element));
-  } else if (value === null) {
-    element.removeAttribute(name);
-  } else {
-    value = String(value);
-
-    if (getAttr(element, name) !== value) {
-      element.setAttribute(name, value);
-    }
-  }
-}
-function copyAttr(src, dst) {
-  each(src.attributes, function (i, v) {
-    setAttr(dst, v.name, v.value);
-  });
-}
-function selectorForAttr(attr) {
-  if (isPlainObject(attr)) {
-    attr = util_keys(attr);
-  }
-
-  return attr[0] ? '[' + attr.join('],[') + ']' : '';
-}
-/**
- * @param {HTMLFormElement} form
- */
-
-function getFormValues(form) {
-  var values = {};
-  each(form.elements, function (i, v) {
-    if (v.name && !(v.name in values)) {
-      var item = form.elements[v.name];
-      defineGetterProperty(values, v.name, function () {
-        return item.type === 'checkbox' ? item.checked : item.value;
-      });
-    }
-  });
-  return values;
-}
-/**
- * @param {string} name
- */
-
-function getQueryParam(name, current) {
-  return new RegExp('[?&]' + name + '=([^&]+)', 'i').test(current || location.search) && decodeURIComponent(RegExp.$1);
-}
-/**
- * @param {string} name
- * @param {string} value
- * @param {string=} current
- */
-
-function setQueryParam(name, value, current) {
-  var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
-  return (current || location.search).replace(re, function (v, a, i, n) {
-    return (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value);
-  });
-}
-/**
- * @param {string} name
- */
-
-function getCookie(name) {
-  return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;
-}
-/**
- * @param {string} name
- * @param {string} value
- * @param {number=} expiry
- */
-
-function setCookie(name, value, expiry) {
-  document.cookie = name + '=' + value + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
-  return value;
-}
-/**
- * @param {string} name
- */
-
-function deleteCookie(name) {
-  document.cookie = name + '=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
-}
-/**
- * @param {string} name
- * @param {number=} expiry
- */
-
-function common_cookie(name, expiry) {
-  return {
-    get: function get() {
-      return getCookie(name);
-    },
-    set: function set(value) {
-      return setCookie(name, value, expiry);
-    },
-    delete: function _delete() {
-      return deleteCookie(name);
-    }
-  };
-}
-/**
- * @param {Brew.APIMethod | Brew.APIOptions} options
- * @param {=} extra
- */
-
-function api(options, extra) {
-  var httpMethods = 'get post put delete';
-
-  if (typeof options === 'string' && matchWord(options, httpMethods)) {
-    extra = extend({}, typeof extra === 'string' ? {
-      baseUrl: extra
-    } : extra, {
-      methods: options
-    });
-    return api(extra)[options];
-  }
-
-  options = extend({}, options);
-  var obj = {
-    baseUrl: options.baseUrl,
-    token: options.token
-  };
-  each(options.methods || httpMethods, function (i, v) {
-    if (matchWord(v, httpMethods)) {
-      defineHiddenProperty(obj, v, function request(method, data) {
-        if (!obj.baseUrl) {
-          return watchOnce(obj, 'baseUrl', function () {
-            return request(method, data);
-          });
-        }
-
-        var headers = {
-          'Content-Type': 'application/json'
-        };
-
-        if (obj.token) {
-          headers.Authorization = 'Bearer ' + obj.token;
-        }
-
-        return jquery.ajax({
-          method: v,
-          url: combinePath(obj.baseUrl, method),
-          headers: headers,
-          dataType: 'json',
-          data: JSON.stringify(data || {}),
-          success: function success(response) {
-            if (isFunction(options.getTokenFromResponse)) {
-              obj.token = options.getTokenFromResponse(response, obj.token);
-            }
-          }
-        }).catch(function (e) {
-          if (e.status === 0) {
-            throw errorWithCode(networkError);
-          }
-
-          var response = e.responseJSON;
-
-          if (response) {
-            console.error(method + ':', response.error || response.message);
-            throw errorWithCode(apiError, response.error || response.message);
-          }
-
-          throw errorWithCode(apiError, e.statusText);
-        });
-      });
-      defineAliasProperty(obj[v], 'baseUrl', obj);
-      defineAliasProperty(obj[v], 'token', obj);
-    }
-  });
-  return obj;
-}
-/**
- * @param {string} path
- */
-
-function getJSON(path) {
-  return jquery.getJSON(withBaseUrl(path));
-}
-/**
- * @param {string | string[]} url
- * @param {{ nomodule?: boolean; module?: boolean }=} options
- */
-
-function loadScript(url, options) {
-  if (isArray(url)) {
-    return url.reduce(function (v, a) {
-      return v.then(function () {
-        return loadScript(a, options);
-      });
-    }, resolve());
-  }
-
-  if (!loadScriptCache[url]) {
-    loadScriptCache[url] = new promise_polyfill(function (resolve, reject) {
-      var script = document.createElement('script');
-      options = options || {};
-
-      if (options.nomodule) {
-        if ('noModule' in script) {
-          resolve();
-          return;
-        }
-
-        script.setAttribute('nomodule', '');
-      }
-
-      if (options.module) {
-        script.setAttribute('type', 'module');
-      }
-
-      script.addEventListener('load', function () {
-        resolve({});
-      });
-      script.addEventListener('error', function () {
-        reject(errorWithCode(resourceError));
-      });
-      script.src = withBaseUrl(url);
-      document.head.appendChild(script);
-    });
-  }
-
-  return loadScriptCache[url];
-}
-/**
- * @param {string} url
- * @param {string=} media
- */
-
-function addStyleSheet(url, media) {
-  var link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = withBaseUrl(url);
-
-  if (media) {
-    link.media = media;
-  }
-
-  document.head.appendChild(link);
-}
-/**
- * @param {string[]|Element} urls
- * @param {number=} ms
- */
-
-function preloadImages(urls, ms) {
-  if (!isArray(urls)) {
-    var map = {};
-
-    var testValue = function testValue(value) {
-      if (isCssUrlValue(value)) {
-        map[RegExp.$1 || RegExp.$2 || RegExp.$3] = true;
-      }
-    };
-
-    iterateNode(createNodeIterator(urls, 1), function (node) {
-      if (matchSelector(node, 'img') && node.src) {
-        map[node.src] = true;
-      }
-
-      testValue(getComputedStyle(node).backgroundImage);
-      testValue(getComputedStyle(node, '::before').backgroundImage);
-      testValue(getComputedStyle(node, '::after').backgroundImage);
-    });
-    urls = util_keys(map);
-  }
-
-  var promises = [];
-  var preloadUrls = [];
-  urls.forEach(function (url) {
-    promises.push(preloadImagesCache[url] || (preloadImagesCache[url] = new promise_polyfill(function (resolve) {
-      preloadUrls.push(url);
-      jquery('<img>').on('load error', function () {
-        preloadImagesCache[url] = true;
-        resolve();
-      }).attr('src', url);
-    })));
-  });
-
-  if (!promises.length || promises.every(function (v) {
-    return v === true;
-  })) {
-    return resolve();
-  }
-
-  if (preloadUrls.length) {
-    console.log('Preload image', {
-      urls: preloadUrls
-    });
-  }
-
-  return promise_polyfill.race([delay(ms), resolveAll(values(preloadImagesCache))]);
-}
-function openDeferredURL(promise, loadingUrl, target, features) {
-  var win = window.open(loadingUrl || 'data:text/html;base64,TG9hZGluZy4uLg==', target || '_blank', features || '');
-
-  if (!win) {
-    return resolve(false);
-  }
-
-  return promise.then(function (url) {
-    if (win.closed) {
-      return false;
-    }
-
-    win.location.replace(url);
-    return true;
-  }, function (e) {
-    win.close();
-    throw e;
-  });
-}
-// EXTERNAL MODULE: ./node_modules/lz-string/libs/lz-string.js
-var lz_string = __webpack_require__(961);
-// CONCATENATED MODULE: ./src/include/external/lz-string.js
-
-var compressToUTF16 = lz_string.compressToUTF16;
-var decompressFromUTF16 = lz_string.decompressFromUTF16;
-// CONCATENATED MODULE: ./src/util/storage.js
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-
-
-var UNDEFINED = 'undefined';
-
-function isObject(value) {
-  return value && _typeof(value) === 'object';
-}
-
-function shouldIgnore(obj) {
-  return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
-}
-
-function createObjectStorage(storage, key) {
-  var objectCache = {};
-  var objectMap = new WeakMap();
-  var dirty = new Set();
-  var entries = Object.create(null);
-  var serialized = initFromStorage(entries) || ['{}'];
-  var emptyIds = map(serialized, function (v, i) {
-    return v ? null : i;
-  });
-
-  function initFromStorage(entries) {
-    try {
-      var serialized = decompressFromUTF16(storage.getItem(key)).split('\n');
-      extend(entries, JSON.parse(serialized[0] || '{}'));
-      return serialized;
-    } catch (e) {}
-  }
-
-  function getNextId() {
-    return emptyIds.length ? emptyIds.shift() : serialized.push('') - 1;
-  }
-
-  function cacheObject(id, obj) {
-    objectCache[id] = obj;
-
-    if (isObject(obj)) {
-      objectMap.set(obj, +id);
-    }
-  }
-
-  function uncacheObject(id) {
-    objectMap.delete(objectCache[id]);
-    delete objectCache[id];
-  }
-
-  function serialize(obj, visited) {
-    var counter = 0;
-    return JSON.stringify(obj, function (k, v) {
-      if (!isObject(v)) {
-        return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
-      }
-
-      if (shouldIgnore(v)) {
-        return counter ? undefined : {};
-      }
-
-      if (!counter++) {
-        return v;
-      }
-
-      var id = objectMap.get(v) || getNextId();
-      cacheObject(id, v);
-
-      if (!visited[id]) {
-        visited[id] = true;
-        serialized[id] = serialize(v, visited);
-        dirty.delete(v);
-      }
-
-      return '#' + id;
-    });
-  }
-
-  function deserialize(str, refs) {
-    if (!str || str === UNDEFINED) {
-      return;
-    }
-
-    return JSON.parse(str, function (k, v) {
-      if (typeof v === 'string' && v[0] === '#') {
-        v = v.slice(1);
-
-        if (v[0] !== '#') {
-          refs.push({
-            o: this,
-            k: k,
-            v: v
-          });
-
-          if (!(v in objectCache)) {
-            objectCache[v] = null;
-            cacheObject(v, deserialize(serialized[v], refs));
-          }
-
-          return null;
-        }
-      }
-
-      return v;
-    });
-  }
-
-  function _revive(key, callback) {
-    var id = entries[key];
-
-    if (id && serialized[id] && !(id in objectCache)) {
-      try {
-        var refs = [];
-        var value = deserialize(serialized[id], refs);
-        each(refs, function (i, v) {
-          v.o[v.k] = objectCache[v.v];
-        });
-        cacheObject(id, (callback || pipe)(value));
-      } catch (e) {
-        serialized[id] = UNDEFINED;
-      }
-    }
-
-    return objectCache[id];
-  }
-
-  function _persist() {
-    var visited = {};
-    each(dirty, function (i, v) {
-      var id = objectMap.get(v);
-
-      if (id) {
-        serialized[id] = serialize(v, visited);
-      }
-    });
-    visited = {
-      0: true
-    };
-    each(entries, function visit(_, id) {
-      if (!visited[id]) {
-        visited[id] = true;
-        serialized[id].replace(/[\[:,]"#(\d+)"/g, visit);
-      }
-    });
-    each(serialized, function (i) {
-      if (!visited[i] && serialized[i]) {
-        serialized[i] = '';
-        emptyIds.push(i);
-        uncacheObject(i);
-      }
-    });
-    dirty.clear();
-    serialized[0] = JSON.stringify(entries);
-    storage.setItem(key, compressToUTF16(serialized.join('\n').trim()));
-  }
-
-  return {
-    keys: function keys() {
-      return util_keys(entries);
-    },
-    has: function has(key) {
-      return !!entries[key];
-    },
-    get: function get(key) {
-      return _revive(key);
-    },
-    revive: function revive(key, callback) {
-      uncacheObject(entries[key]);
-      return _revive(key, callback);
-    },
-    set: function set(key, value) {
-      var id = entries[key] || (entries[key] = getNextId());
-
-      if (!isObject(value)) {
-        serialized[id] = serialize(value) || UNDEFINED;
-      } else {
-        cacheObject(id, value);
-        dirty.add(value);
-      }
-
-      setImmediateOnce(_persist);
-    },
-    persist: function persist(obj) {
-      dirty.add(obj);
-      setImmediateOnce(_persist);
-    },
-    persistAll: function persistAll() {
-      each(entries, function (i, v) {
-        if (isObject(objectCache[v])) {
-          dirty.add(objectCache[v]);
-        }
-      });
-      setImmediateOnce(_persist);
-    },
-    delete: function _delete(key) {
-      if (entries[key]) {
-        delete entries[key];
-        setImmediateOnce(_persist);
-      }
-    },
-    clear: function clear() {
-      serialized.splice(0, serialized.length, '{}');
-      emptyIds.splice(0);
-      dirty.clear();
-      objectMap = new WeakMap();
-      objectCache = {};
-      entries = Object.create(null);
-      setImmediateOnce(_persist);
-    }
-  };
-}
-// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
-
-var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    observe = _zeta$dom.observe,
-    registerCleanup = _zeta$dom.registerCleanup,
-    createAutoCleanupMap = _zeta$dom.createAutoCleanupMap,
-    afterDetached = _zeta$dom.afterDetached,
-    watchElements = _zeta$dom.watchElements,
-    watchAttributes = _zeta$dom.watchAttributes,
-    watchOwnAttributes = _zeta$dom.watchOwnAttributes;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
-
-// CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
-
-var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
-/* harmony default export */ const dom = (_defaultExport);
-var dom_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    textInputAllowed = dom_zeta$dom.textInputAllowed,
-    beginDrag = dom_zeta$dom.beginDrag,
-    beginPinchZoom = dom_zeta$dom.beginPinchZoom,
-    insertText = dom_zeta$dom.insertText,
-    getShortcut = dom_zeta$dom.getShortcut,
-    setShortcut = dom_zeta$dom.setShortcut,
-    focusable = dom_zeta$dom.focusable,
-    focused = dom_zeta$dom.focused,
-    setTabRoot = dom_zeta$dom.setTabRoot,
-    unsetTabRoot = dom_zeta$dom.unsetTabRoot,
-    setModal = dom_zeta$dom.setModal,
-    releaseModal = dom_zeta$dom.releaseModal,
-    retainFocus = dom_zeta$dom.retainFocus,
-    releaseFocus = dom_zeta$dom.releaseFocus,
-    iterateFocusPath = dom_zeta$dom.iterateFocusPath,
-    dom_focus = dom_zeta$dom.focus,
-    dom_blur = dom_zeta$dom.blur;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
-
-
-/* harmony default export */ const zeta_dom_dom = (dom);
-// CONCATENATED MODULE: ./src/anim.js
-
-
-
-
-
-
-
-var customAnimateIn = {};
-var customAnimateOut = {};
-var animateScopes = createAutoCleanupMap(noop);
-var collectChanges = watchElements(zeta_dom_dom.root, '[animate-in],[animate-sequence],[is-animate-sequence]', handleMutations);
-
-function getShouldAnimate(element, trigger, scope, filterCallback) {
-  var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
-  return function (v) {
-    return matchSelector(v, filter) && (!scope || containsOrEquals(jquery(v).closest(scope)[0] || zeta_dom_dom.root, element)) && (!filterCallback || filterCallback(v)) && isVisible(v);
-  };
-}
-
-function handleMutations(addNodes) {
-  if (addNodes[0]) {
-    each(animateScopes, function (i, v) {
-      each(v, function (j, v) {
-        v.start();
-      });
-    });
-  }
-}
-
-function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
-  var sequences = new WeakMap();
-  var deferred = deferrable();
-  var promise = setPromiseTimeout(deferred, 1500).catch(function () {
-    console.warn('Animation might take longer than expected', {
-      element: element,
-      animationType: animationType,
-      animationTrigger: animationTrigger
-    });
-  });
-  var fireEvent = executeOnce(function () {
-    zeta_dom_dom.emit('animationstart', element, {
-      animationType: animationType,
-      animationTrigger: animationTrigger
-    }, true);
-    promise.then(function () {
-      zeta_dom_dom.emit('animationcomplete', element, {
-        animationType: animationType,
-        animationTrigger: animationTrigger
-      }, true);
-    });
-  });
-
-  var animate = function animate(element) {
-    // transform cannot apply on inline elements
-    if (jquery(element).css('display') === 'inline') {
-      jquery(element).css('display', 'inline-block');
-    }
-
-    var effects = fill(getAttr(element, 'animate-in') || '', true);
-    var ms = parseFloat(jquery(element).css('transition-delay')) * 1000 || 0;
-    fireEvent();
-    deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), zeta_dom_dom.emit('animate' + animationType, element));
-    each(customAnimation, function (i, v) {
-      if (effects[i] || element.attributes[i]) {
-        var fn = v.bind(undefined, element, getAttr(element, i) || '');
-        deferred.waitFor(ms ? delay(ms, fn) : fn());
-      }
-    });
-  };
-
-  return {
-    promise: promise.then(callback),
-    animate: animate,
-    sequence: function sequence(element, filter, attr) {
-      var queue = mapGet(sequences, element, Array);
-      var reverse = getAttr(element, 'animate-sequence-reverse');
-      var selector = getAttr(element, 'animate-sequence') || '';
-      var elements = jquery(element).find(selector[0] === '>' ? selector : jquery(selector)).filter(filter).attr(attr || {}).get();
-
-      if (reverse === '' || reverse === animationType) {
-        elements.reverse();
-      }
-
-      each(elements, function (i, v) {
-        if (queue.indexOf(v) < 0 && queue.push(v) === 1) {
-          fireEvent();
-          deferred.waitFor(delay(50, function next() {
-            animate(queue.shift());
-            return queue[0] && delay(50, next);
-          }));
-        }
-      });
-    }
-  };
-}
-/**
- * @param {Element} element
- * @param {string} trigger
- * @param {string=} scope
- * @param {((elm: Element) => boolean) | boolean=} filterCallback
- */
-
-
-function animateIn(element, trigger, scope, filterCallback) {
-  var dict = mapGet(animateScopes, element, Object);
-  var scopeObject = dict[trigger] || (dict[trigger] = {
-    start: filterCallback === true ? animateIn.bind(0, element, trigger, scope) : noop
-  });
-  var shouldAnimate = getShouldAnimate(element, trigger, scope, isFunction(filterCallback));
-  var anim = scopeObject.anim || (scopeObject.anim = handleAnimation(element, 'in', trigger, customAnimateIn, function () {
-    scopeObject.anim = null;
-  }));
-  selectIncludeSelf('[animate-in]:not([is-animate-sequence],.tweening-in)', element).filter(shouldAnimate).forEach(function (v) {
-    anim.animate(v);
-  });
-  selectIncludeSelf('[animate-sequence]', element).filter(shouldAnimate).forEach(function (v) {
-    if (!getClass(v, 'tweening-in')) {
-      setAttr(v, 'animate-in', '');
-      anim.animate(v);
-    }
-
-    anim.sequence(v, ':not(.tweening-in)', {
-      'animate-in': getAttr(v, 'animate-sequence-type') || '',
-      'animate-on': trigger,
-      'is-animate-sequence': ''
-    });
-  });
-  collectChanges(true);
-  return anim.promise;
-}
-/**
- * @param {Element} element
- * @param {string} trigger
- * @param {string=} scope
- * @param {((elm: Element) => boolean)=} filterCallback
- * @param {boolean=} excludeSelf
- */
-
-function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
-  var shouldAnimate = getShouldAnimate(element, trigger, scope, filterCallback);
-  var elements = selectIncludeSelf('.tweening-in,[animate-out]', element);
-
-  if (excludeSelf && elements[0] === element) {
-    elements.splice(0, 1);
-  }
-
-  var filtered = elements.filter(shouldAnimate);
-  var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function () {
-    jquery(trigger === 'show' ? elements : filtered).removeClass('tweening-in tweening-out');
-  });
-  jquery(filtered).filter('[animate-out]:not([is-animate-sequence],.tweening-out)').each(function (i, v) {
-    anim.animate(v);
-  });
-  jquery(filtered).filter('[animate-out][animate-sequence]').each(function (i, v) {
-    anim.sequence(v, '.tweening-in');
-  });
-  delete mapGet(animateScopes, element, Object)[trigger];
-  return anim.promise;
-}
-/**
- * @param {string} name
- * @param {(elm: Element, attrValue: string) => Promise<any>} callback
- */
-
-function addAnimateIn(name, callback) {
-  customAnimateIn[name] = throwNotFunction(callback);
-}
-/**
- * @param {string} name
- * @param {(elm: Element, attrValue: string) => Promise<any>} callback
- */
-
-function addAnimateOut(name, callback) {
-  customAnimateOut[name] = throwNotFunction(callback);
-}
-// EXTERNAL MODULE: external "waterpipe"
-var external_waterpipe_ = __webpack_require__(160);
-// CONCATENATED MODULE: ./src/include/external/waterpipe.js
-
-/* harmony default export */ const waterpipe = (external_waterpipe_); // assign to a new variable to avoid incompatble declaration issue by typescript compiler
-
-var waterpipe_ = external_waterpipe_;
-
-waterpipe_.pipes['{'] = function (_, varargs) {
-  var globals = varargs.globals;
-  var prev = globals.new;
-  var o = {};
-  globals.new = o;
-
-  while (varargs.hasArgs()) {
-    var key = varargs.raw();
-
-    if (key === '}') {
-      break;
-    }
-
-    o[String(key).replace(/:$/, '')] = varargs.next();
-  }
-
-  globals.new = prev;
-  return o;
-};
-
-waterpipe_.pipes['{'].varargs = true;
-// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
-
-var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
-    lock = domLock_zeta$dom.lock,
-    locked = domLock_zeta$dom.locked,
-    cancelLock = domLock_zeta$dom.cancelLock,
-    subscribeAsync = domLock_zeta$dom.subscribeAsync,
-    notifyAsync = domLock_zeta$dom.notifyAsync,
-    runAsync = domLock_zeta$dom.runAsync,
-    preventLeave = domLock_zeta$dom.preventLeave;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
-
-// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
-
-var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
-
-// CONCATENATED MODULE: ./src/libCheck.js
-
-var BREW_KEY = '__BREW__';
-
-if (window[BREW_KEY]) {
-  throw new Error('Another copy of brew-js is instantiated. Please check your dependencies.');
-}
-
-defineHiddenProperty(window, BREW_KEY, true, true);
-/* harmony default export */ const libCheck = (null);
-// CONCATENATED MODULE: ./src/defaults.js
-/** @deprecated @type {Zeta.Dictionary} */
-var defaults = {};
-/* harmony default export */ const src_defaults = (defaults);
-// CONCATENATED MODULE: ./src/app.js
-
-
-
-
-
-
-
-
-var emitter = new ZetaEventContainer();
-var root = zeta_dom_dom.root;
-var featureDetections = {};
-var dependencies = {};
-var extensions = {};
-var initList = [];
-/** @type {Brew.AppInstance} */
-
-var app;
-/** @type {boolean} */
-
-var appReady;
-/** @type {boolean} */
-
-var appInited;
-/** @type {Promise<void> & Zeta.Deferrable} */
-
-var appInit;
-var appReadyResolve;
-var appReadyReject;
-
-function exactTargetWrapper(handler) {
-  return function (e) {
-    if (e.target === e.context) {
-      return handler.apply(this, arguments);
-    }
-  };
-}
-
-function wrapEventHandlers(event, handler, noChildren) {
-  if (isPlainObject(event)) {
-    return noChildren ? mapObject(event, exactTargetWrapper) : event;
-  }
-
-  if (noChildren) {
-    handler = exactTargetWrapper(handler);
-  }
-
-  return (event.indexOf(' ') >= 0 ? fill : kv)(event, handler);
-}
-
-function initExtension(app, name, deps, options, callback) {
-  if (extensions[name]) {
-    throw new Error('Extension' + name + 'is already initiated');
-  }
-
-  deps = grep(deps, function (v) {
-    return !extensions[v.replace(/^\?/, '')];
-  });
-  var counter = deps.length || 1;
-
-  var wrapper = function wrapper(loaded) {
-    if (loaded && ! --counter) {
-      extensions[name] = true;
-      callback(app, options || {});
-
-      if (dependencies[name]) {
-        combineFn(dependencies[name].splice(0))(true);
-      }
-    }
-  };
-
-  if (deps[0]) {
-    each(deps, function (i, v) {
-      var key = v.replace(/^\?/, '');
-      var arr = dependencies[key] || (dependencies[key] = []);
-      arr.push(key === v ? wrapper : wrapper.bind(0, true));
-    });
-  } else {
-    wrapper(true);
-  }
-}
-
-function defineUseMethod(name, deps, callback) {
-  var method = camel('use-' + name);
-  definePrototype(App, kv(method, function (options) {
-    initExtension(this, name, deps, options, callback);
-  }));
-}
-
-function App() {
-  var self = this;
-  var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
-  defineOwnProperty(self, 'element', root, true);
-  defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
-    appReadyResolve = resolve.bind(0, self);
-    appReadyReject = reject;
-  }), true);
-  always(self.ready, function (resolved) {
-    setReadyState(resolved ? 'ready' : 'error');
-
-    if (resolved) {
-      appReady = true;
-      app.emit('ready');
-    }
-  });
-}
-
-definePrototype(App, {
-  emit: function emit(event, element, data, options) {
-    if (!is(element, Node)) {
-      return emitter.emit(event, this, element, data);
-    }
-
-    var result = zeta_dom_dom.emit(event, element, data, options);
-
-    if (!result && (element === root || options === true || (options || '').bubbles)) {
-      // backward compatibility where app will receive event bubbled up from dom element
-      data = extend({
-        target: element
-      }, isPlainObject(data) || {
-        data: data
-      });
-      result = emitter.emit(event, this, data, options);
-    }
-
-    return result;
-  },
-  define: function define(props) {
-    util_define(this, props);
-  },
-  beforeInit: function beforeInit(promise) {
-    if (isFunction(promise)) {
-      promise = makeAsync(promise).call(this);
-    }
-
-    appInit.waitFor(promise.then(null, appReadyReject));
-  },
-  halt: function halt() {
-    appInit.waitFor(new Promise(noop));
-  },
-  isElementActive: function isElementActive() {
-    return true;
-  },
-  detect: function detect(names, callback) {
-    var app = this;
-    var supports = {};
-    each(names, function (i, v) {
-      if (featureDetections[v]) {
-        supports[v] = isFunction(featureDetections[v]) ? featureDetections[v] = resolveAll(featureDetections[v]()).catch(function (e) {
-          console.warn('Detection for ' + v + ' has thrown exception:', e);
-          return false;
-        }) : featureDetections[v];
-      }
-    });
-    this.beforeInit(resolveAll(supports, function (supports) {
-      supports = Object.freeze(extend({}, app.supports, supports));
-
-      util_define(app, {
-        supports: supports
-      });
-
-      return isFunction(callback) && callback(supports);
-    }));
-  },
-  when: function when(value, callback) {
-    this.beforeInit(resolveAll(value, function (value) {
-      if (value) {
-        return callback();
-      }
-    }));
-  },
-  on: function on(target, event, handler, noChildren) {
-    if (isFunction(event) || event === undefined) {
-      return emitter.add(this, wrapEventHandlers(target, event));
-    }
-
-    var handlers = wrapEventHandlers(event, handler, (noChildren || handler) === true);
-
-    if (!is(target, Node)) {
-      return combineFn(jquery(target).get().map(function (v) {
-        return zeta_dom_dom.on(v, handlers);
-      }));
-    }
-
-    return zeta_dom_dom.on(target, handlers);
-  },
-  matchElement: noop,
-  beforeUpdate: noop
-});
-watchable(App.prototype);
-var defaultApp = new App();
-app = {
-  on: defaultApp.on.bind(defaultApp)
-};
-
-function init(callback) {
-  throwNotFunction(callback);
-
-  if (appInit) {
-    throw new Error('brew() can only be called once');
-  }
-
-  appInit = deferrable(zeta_dom_dom.ready);
-  app = defaultApp;
-  each(src_defaults, function (i, v) {
-    var fn = v && isFunction(app[camel('use-' + i)]);
-
-    if (fn) {
-      fn.call(app, v);
-    }
-  });
-  each(initList, function (i, v) {
-    if (isPlainObject(v)) {
-      util_define(app, v);
-    } else {
-      throwNotFunction(v)(app);
-    }
-  });
-  app.beforeInit(makeAsync(callback)(app));
-  each(dependencies, function (i, v) {
-    combineFn(v)();
-  });
-  appInited = true;
-  notifyAsync(root, appInit);
-  appInit.then(appReadyResolve);
-  bind(window, 'pagehide', function (e) {
-    app.emit('unload', {
-      persisted: e.persisted
-    }, {
-      handleable: false
-    });
-  });
-  return app;
-}
-
-util_define(init, {
-  with: function _with() {
-    initList.push.apply(initList, arguments);
-    return this;
-  }
-});
-
-function install(name, callback) {
-  defineUseMethod(name, [], throwNotFunction(callback));
-}
-function addExtension(autoInit, name, deps, callback) {
-  callback = throwNotFunction(callback || deps || name);
-  deps = isArray(deps) || isArray(name) || [];
-  return function (app) {
-    if (autoInit === true) {
-      initExtension(app, name, deps, {}, callback);
-    } else {
-      defineUseMethod(autoInit, deps, callback);
-    }
-  };
-}
-function addDetect(name, callback) {
-  featureDetections[name] = throwNotFunction(callback);
-}
-function emitAppEvent() {
-  return defaultApp.emit.apply(defaultApp, arguments);
-}
-function isElementActive(element) {
-  return !app || app.isElementActive(element);
-}
-/* harmony default export */ const src_app = (init);
-// CONCATENATED MODULE: ./src/directive.js
-
-
-
-
-
-
-var directive_root = zeta_dom_dom.root;
-var directive_emitter = new ZetaEventContainer();
-
-var directive_toString = function toString(v) {
-  return isUndefinedOrNull(v) ? null : String(v);
-};
-
-var toNumber = function toNumber(v) {
-  return isUndefinedOrNull(v) || isNaN(v) ? null : +v;
-};
-
-var converters = {
-  string: [pipe, directive_toString],
-  number: [toNumber, function (v) {
-    return directive_toString(toNumber(v));
-  }],
-  boolean: [function (v) {
-    return !isUndefinedOrNull(v);
-  }, function (v) {
-    return v ? '' : null;
-  }]
-};
-
-function Component(element) {
-  defineOwnProperty(this, 'element', element, true);
-}
-
-function ComponentContext() {}
-
-definePrototype(ComponentContext, {
-  on: function on(event, handler) {
-    return directive_emitter.add(this, event, handler);
-  }
-});
-watchable(ComponentContext.prototype);
-
-function createContextClass(options) {
-  var attributes = map(options.directives, function (v) {
-    return v.attribute;
-  });
-  var directives = mapObject(options.directives, function (v) {
-    var name = v.attribute;
-    var converter = converters[v.type] || converters.string;
-    return {
-      get: function get(element) {
-        return converter[0](getAttr(element, name));
-      },
-      set: function set(element, value) {
-        value = converter[1](value);
-        setAttr(element, name, value);
-        return converter[0](value);
-      }
-    };
-  });
-
-  var Context = function Context(element) {
-    var self = this;
-    defineOwnProperty(self, 'element', element, true);
-
-    if (attributes[0]) {
-      var update = function update() {
-        each(directives, function (i, v) {
-          self[i] = v.get(element);
-        });
-      };
-
-      update();
-      var collectChange = watchOwnAttributes(element, attributes, update);
-      self.on('destroy', collectChange.dispose);
-    }
-  };
-
-  definePrototype(Context, ComponentContext);
-  each(directives, function (i) {
-    defineObservableProperty(Context.prototype, i, null, function (v) {
-      return directives[i].set(this.element, v);
-    });
-  });
-  return Context;
-}
-
-function getDirectiveComponent(element) {
-  return new Component(element);
-}
-function registerSimpleDirective(key, attr, init, dispose) {
-  var map = new WeakMap();
-
-  var set = function set(enabled, element) {
-    setAttr(element, attr, enabled ? '' : null);
-
-    if (!enabled) {
-      (mapRemove(map, element) || noop)();
-    } else if (!map.has(element)) {
-      map.set(element, isFunction(init(element)) || dispose && dispose.bind(undefined, element));
-    }
-  };
-
-  watchElements(directive_root, '[' + attr + ']', function (added, removed) {
-    removed.forEach(set.bind(0, false));
-    added.forEach(set.bind(0, true));
-  });
-  defineGetterProperty(Component.prototype, key, function () {
-    return getAttr(this.element, attr) !== null;
-  }, function (v) {
-    return set(v, this.element);
-  });
-}
-function registerDirective(key, selector, options) {
-  var Context = createContextClass(options);
-  var map = new WeakMap();
-  var collect = watchElements(directive_root, selector, function (added, removed) {
-    each(removed, function (i, v) {
-      directive_emitter.emit('destroy', mapRemove(map, v).context);
-    });
-    each(added, function (i, v) {
-      var context = new Context(v);
-      map.set(v, {
-        component: options.component(v, context),
-        context: context
-      });
-    });
-  }, true);
-  defineGetterProperty(Component.prototype, key, function () {
-    var element = this.element;
-
-    if (!map.has(element) && matchSelector(element, selector)) {
-      collect();
-    }
-
-    return (map.get(element) || '').component || null;
-  });
-}
-// CONCATENATED MODULE: ./src/domAction.js
-
-
-
-
-
-
-
-
-
-
-
-
-
-var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
-var domAction_root = zeta_dom_dom.root;
-var flyoutStates = createAutoCleanupMap(function (element, state) {
-  state.resolve();
-});
-var executedAsyncActions = new Map();
-/** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
-
-var asyncActions = {};
-
-function disableEvent(e) {
-  e.preventDefault();
-  e.stopImmediatePropagation();
-}
-
-function isSameWindow(target) {
-  return !target || target === '_self' || target === window.name;
-}
-/**
- * @param {string} attr
- * @param {(this: Element, e: JQuery.UIEventBase) => Brew.PromiseOrEmpty} callback
- */
-
-
-function addAsyncAction(attr, callback) {
-  asyncActions[attr] = throwNotFunction(callback);
-}
-function isFlyoutOpen(selector) {
-  var state = flyoutStates.get(jquery(selector)[0]);
-  return !!state && !state.closePromise;
-}
-/**
- * @param {Element | string=} flyout
- * @param {any=} value
- */
-
-function closeFlyout(flyout, value) {
-  /** @type {Element[]} */
-  var elements = jquery(flyout || '[is-flyout].open').get();
-  return resolveAll(elements.map(function (v) {
-    var state = flyoutStates.get(v);
-
-    if (!state) {
-      return resolve();
-    }
-
-    var promise = state.closePromise;
-
-    if (!promise) {
-      promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
-        if (flyoutStates.get(v) === state) {
-          flyoutStates.delete(v);
-          setClass(v, {
-            open: false,
-            closing: false,
-            visible: false
-          });
-          zeta_dom_dom.emit('flyouthide', v);
-        }
-      });
-      state.closePromise = promise;
-      state.resolve(value);
-      releaseModal(v);
-      releaseFocus(v);
-      dom_blur(v);
-
-      if (state.source) {
-        setClass(state.source, 'target-opened', false);
-      }
-    }
-
-    return promise;
-  }));
-}
-function toggleFlyout(selector, source, options) {
-  return openFlyout(selector, null, source, options, true);
-}
-/**
- * @param {string} selector
- * @param {any=} states
- * @param {Element=} source
- * @param {(Zeta.Dictionary | boolean)=} options
- * @param {boolean=} closeIfOpened
- */
-
-function openFlyout(selector, states, source, options, closeIfOpened) {
-  var element = jquery(selector)[0];
-
-  if (!element) {
-    return reject();
-  }
-
-  if (is(states, Node) || isPlainObject(source)) {
-    options = source;
-    source = states;
-    states = null;
-  }
-
-  var prev = flyoutStates.get(element);
-
-  if (prev && !prev.closePromise) {
-    if ((closeIfOpened || options) === true) {
-      closeFlyout(element, source && waterpipe.eval('`' + source.value));
-    } else {
-      prev.path = app.path;
-    }
-
-    return prev.promise;
-  }
-
-  options = extend({
-    focus: !source || !textInputAllowed(source),
-    tabThrough: hasAttr(element, 'tab-through'),
-    modal: hasAttr(element, 'is-modal')
-  }, options);
-  var focusFriend = source;
-
-  if (!focusFriend && !focusable(element)) {
-    focusFriend = zeta_dom_dom.modalElement;
-  }
-
-  var resolve;
-  var promise = new promise_polyfill(function (resolve_) {
-    resolve = resolve_;
-  });
-  flyoutStates.set(element, {
-    source: source,
-    promise: promise,
-    resolve: resolve,
-    path: app.path
-  });
-
-  if (focusFriend) {
-    retainFocus(focusFriend, element);
-  }
-
-  if (source) {
-    setClass(source, 'target-opened', true);
-  }
-
-  if (states && app.setVar) {
-    app.setVar(element, states);
-  }
-
-  setClass(element, {
-    visible: true,
-    closing: false
-  });
-  resolveAll([runCSSTransition(element, 'open'), animateIn(element, 'open')].map(catchAsync), function () {
-    if (options.focus && !focused(element)) {
-      var focusTarget = options.focus === true ? element : jquery(element).find(options.focus)[0];
-
-      if (focusTarget) {
-        dom_focus(focusTarget);
-      } else {
-        dom_focus(element, false);
-      }
-    }
-  });
-
-  if (options.modal) {
-    setModal(element);
-  }
-
-  if (options.tabThrough) {
-    unsetTabRoot(element);
-  } else {
-    setTabRoot(element);
-  }
-
-  var closeHandler = function closeHandler(e) {
-    var swipeDismiss = element.getAttribute('swipe-dismiss');
-
-    if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
-      closeFlyout(element);
-
-      if (zeta_dom_dom.event) {
-        zeta_dom_dom.event.preventDefault();
-      }
-
-      e.handled();
-    }
-  };
-
-  always(promise, combineFn(zeta_dom_dom.on(source || element, 'focusout', closeHandler), zeta_dom_dom.on(element, 'gesture', closeHandler)));
-  zeta_dom_dom.emit('flyoutshow', element);
-  return promise;
-}
-registerSimpleDirective('enableLoadingClass', 'loading-class', function (element) {
-  return subscribeAsync(element, function (loading) {
-    if (loading) {
-      setClass(element, 'loading', loading);
-    } else {
-      runCSSTransition(element, 'loading-complete', function () {
-        setClass(element, 'loading', false);
-      });
-    }
-  });
-});
-zeta_dom_dom.ready.then(function () {
-  watchElements(domAction_root, '[tab-root]', function (addedNodes, removedNodes) {
-    addedNodes.forEach(setTabRoot);
-    removedNodes.forEach(unsetTabRoot);
-  }, true);
-  app.on('mounted', function (e) {
-    var selector = selectorForAttr(asyncActions);
-
-    if (selector) {
-      jquery(selectIncludeSelf(selector, e.target)).attr('async-action', '');
-    }
-  });
-  app.on('beforepageload', function () {
-    flyoutStates.forEach(function (v, i) {
-      if (v.path && v.path !== app.path) {
-        closeFlyout(i);
-      }
-    });
-  });
-  /**
-   * @param {JQuery.UIEventBase} e
-   */
-
-  function handleAsyncAction(e) {
-    var element = e.currentTarget;
-
-    if (matchSelector(element, SELECTOR_DISABLED)) {
-      mapRemove(executedAsyncActions, element);
-      disableEvent(e);
-      return;
-    }
-
-    var executed = mapGet(executedAsyncActions, element, Array);
-    var callback = null;
-
-    var next = function next(_next) {
-      if (focusable(element)) {
-        _next(e);
-      } else {
-        mapRemove(executedAsyncActions, element);
-      }
-    };
-
-    each(asyncActions, function (i, v) {
-      if (element.attributes[i] && executed.indexOf(v) < 0) {
-        callback = v;
-        return false;
-      }
-    });
-
-    if (!callback) {
-      executedAsyncActions.delete(element);
-    } else {
-      executed.push(callback);
-      var returnValue = callback.call(element, e);
-
-      if (!e.isImmediatePropagationStopped()) {
-        if (isThenable(returnValue)) {
-          disableEvent(e);
-          notifyAsync(element, returnValue);
-          returnValue.then(function () {
-            next(dispatchDOMMouseEvent);
-          }, function (e) {
-            executedAsyncActions.delete(element);
-            console.warn('Action threw an error:', e);
-          });
-        } else {
-          next(handleAsyncAction);
-        }
-      }
-    }
-  }
-
-  watchElements(domAction_root, '[async-action]', function (added, removed) {
-    jquery(added).on('click', handleAsyncAction);
-    jquery(removed).off('click', handleAsyncAction);
-  });
-  jquery('body').on('submit', 'form:not([action])', function (e) {
-    e.preventDefault();
-  });
-  jquery('body').on('click', SELECTOR_DISABLED, disableEvent);
-  jquery('body').on('click', 'a[href]:not([download]), [data-href]', function (e) {
-    if (e.isDefaultPrevented()) {
-      return;
-    }
-
-    var self = e.currentTarget;
-    var href = (self.origin === location.origin ? '' : self.origin) + self.pathname + self.search + self.hash;
-    var dataHref = self.getAttribute('data-href');
-    e.stopPropagation();
-
-    if (!isSameWindow(self.target)) {
-      return;
-    }
-
-    if ('navigate' in app && (dataHref || app.isAppPath(href))) {
-      e.preventDefault();
-      app.navigate(dataHref || app.fromHref(href));
-    } else if (locked(domAction_root)) {
-      e.preventDefault();
-      cancelLock(domAction_root).then(function () {
-        var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
-        window.open(dataHref || href, '_self', features.join(','));
-      });
-    }
-  });
-});
-// CONCATENATED MODULE: ./src/extension/i18n.js
-
-
-
-
-function toDictionary(languages) {
-  if (languages) {
-    var dict = {};
-    each(languages, function (i, v) {
-      var key = v.toLowerCase();
-      dict[key] = v;
-
-      if (key.indexOf('-') > 0) {
-        dict[key.split('-')[0]] = v;
-      }
-    });
-    return dict;
-  }
-}
-
-function getCanonicalValue(languages, value) {
-  if (languages && value) {
-    return languages[value.toLowerCase()];
-  }
-
-  return value;
-}
-
-function detectLanguage(languages, defaultLanguage) {
-  var userLanguages = navigator.languages || [navigator.language || ''];
-
-  if (!languages) {
-    return userLanguages[0];
-  }
-
-  userLanguages = toDictionary(userLanguages);
-
-  if (isArray(languages)) {
-    languages = toDictionary(languages);
-  }
-
-  return single(userLanguages, function (v, i) {
-    return languages[i];
-  }) || defaultLanguage || util_keys(languages)[0];
-}
-
-/* harmony default export */ const i18n = (addExtension('i18n', function (app, options) {
-  var languages = toDictionary(options.languages);
-  var routeParam = app.route && options.routeParam;
-
-  var cookie = options.cookie && common_cookie(options.cookie, 86400000);
-
-  var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || (options.detectLanguage !== false ? detectLanguage : getCanonicalValue)(languages, options.defaultLanguage);
-
-  var setLanguage = function setLanguage(newLangauge) {
-    app.language = newLangauge;
-  };
-
-  defineObservableProperty(app, 'language', language, function (newLangauge) {
-    newLangauge = getCanonicalValue(languages, newLangauge) || language;
-
-    if (cookie) {
-      cookie.set(newLangauge);
-    }
-
-    if (routeParam && appReady) {
-      app.route.replace(routeParam, newLangauge.toLowerCase());
-    }
-
-    if (language !== newLangauge) {
-      language = newLangauge;
-
-      if (options.reloadOnChange) {
-        location.reload();
-      }
-    }
-
-    return language;
-  });
-  app.define({
-    setLanguage: setLanguage,
-    detectLanguage: detectLanguage
-  });
-
-  if (routeParam) {
-    app.route.watch(routeParam, setLanguage);
-    app.on('ready', function () {
-      app.route.replace(routeParam, language.toLowerCase());
-    });
-  }
-}));
-// CONCATENATED MODULE: ./src/extension/scrollable.js
-
-
-
-
-
-
-
-var SELECTOR_SCROLLABLE = '[scrollable]';
-var SELECTOR_TARGET = '[scrollable-target]';
-/* harmony default export */ const scrollable = (addExtension('scrollable', function (app, defaultOptions) {
-  defaultOptions = extend({
-    content: '[scrollable-target]:not(.disabled)',
-    bounce: false
-  }, defaultOptions);
-  var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-
-  function getOptions(context) {
-    return {
-      handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
-      hScroll: !matchWord(context.dir, 'y-only'),
-      vScroll: !matchWord(context.dir, 'x-only'),
-      pageItem: context.selector,
-      snapToPage: context.paged === 'always' || context.paged === app.orientation
-    };
-  }
-
-  function initScrollable(container, context) {
-    var scrollable = jquery.scrollable(container, extend({}, defaultOptions, getOptions(context)));
-    var cleanup = [];
-    cleanup.push(zeta_dom_dom.on(container, {
-      drag: function drag() {
-        beginDrag();
-      },
-      getContentRect: function getContentRect(e) {
-        if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
-          var padding = scrollable.scrollPadding(e.target);
-          return getRect(container).expand(padding, -1);
-        }
-      },
-      scrollBy: function scrollBy(e) {
-        var result = scrollable.scrollBy(e.x, e.y, e.behavior === 'instant' ? 0 : 200);
-        return {
-          x: result.deltaX,
-          y: result.deltaY
-        };
-      }
-    }));
-
-    function initPageIndex(enabled) {
-      if (!enabled || initPageIndex.d++) {
-        return;
-      }
-
-      var scrolling = false;
-      var needRefresh = false;
-      var isControlledScroll;
-      var currentIndex = 0;
-      var timeout;
-
-      function getItem(index) {
-        return context.selector && jquery(context.selector, container).get()[index];
-      }
-
-      function setState(index) {
-        var oldIndex = currentIndex;
-        currentIndex = index;
-
-        if (context.varname && app.setVar) {
-          app.setVar(container, context.varname, index);
-        }
-
-        if (oldIndex !== index) {
-          app.emit('scrollIndexChange', container, {
-            oldIndex: oldIndex,
-            newIndex: index
-          }, true);
-        }
-      }
-
-      function scrollTo(index, align) {
-        var item = getItem(index);
-        align = align || 'center top';
-
-        if (!scrolling && isVisible(container) && item) {
-          scrolling = true;
-          isControlledScroll = true;
-          setState(index);
-          scrollable.scrollToElement(item, align, align, 200, function () {
-            scrolling = false;
-            isControlledScroll = false;
-          });
-        }
-      }
-
-      function refresh() {
-        var isPaged = context.paged === 'always' || context.paged === app.orientation;
-
-        if (isPaged && isVisible(container)) {
-          if (scrolling) {
-            needRefresh = true;
-          } else {
-            needRefresh = false;
-            scrollTo(currentIndex);
-          }
-        }
-      }
-
-      cleanup.push(app.on('orientationchange', function () {
-        scrollable.setOptions({
-          snapToPage: context.paged === 'always' || context.paged === app.orientation
-        });
-      }), app.on(container, {
-        statechange: function statechange(e) {
-          if (context.selector && !scrolling) {
-            var newIndex = e.data[context.varname];
-
-            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
-              scrollTo(newIndex, 'left center');
-            } else {
-              scrollTo(newIndex);
-            }
-          }
-        },
-        scrollMove: function scrollMove(e) {
-          scrolling = true;
-
-          if (context.selector && !isControlledScroll) {
-            setState(e.pageIndex);
-          }
-        },
-        scrollStop: function scrollStop(e) {
-          scrolling = false;
-
-          if (context.selector) {
-            setState(e.pageIndex);
-
-            if (needRefresh) {
-              refresh();
-            }
-          }
-        }
-      }, true), bind(window, 'resize', function () {
-        if (context.selector) {
-          clearTimeout(timeout);
-          timeout = setTimeout(refresh, 200);
-        }
-      }));
-    }
-
-    function initPersistScroll(enabled) {
-      if (!enabled || initPersistScroll.d++) {
-        return;
-      }
-
-      var savedOffset = {};
-      var hasAsync = false;
-
-      var restoreScroll = function restoreScroll() {
-        var offset = savedOffset[history.state];
-
-        if (offset) {
-          scrollable.scrollTo(offset.x, offset.y, 0);
-        }
-      };
-
-      cleanup.push(zeta_dom_dom.on('asyncStart', function () {
-        hasAsync = true;
-      }), zeta_dom_dom.on('asyncEnd', function () {
-        hasAsync = false;
-
-        if (context.persistScroll) {
-          restoreScroll();
-        }
-      }), app.on(container, 'scrollStart', function (e) {
-        if (e.source !== 'script') {
-          delete savedOffset[history.state];
-        }
-      }, true), app.on('navigate', function (e) {
-        savedOffset[e.oldStateId] = {
-          x: scrollable.scrollLeft(),
-          y: scrollable.scrollTop()
-        };
-        setTimeout(function () {
-          if (!hasAsync && context.persistScroll) {
-            restoreScroll();
-          }
-        });
-      }));
-    }
-
-    initPageIndex.d = 0;
-    initPersistScroll.d = 0;
-    context.watch(function () {
-      scrollable.setOptions(getOptions(context));
-    });
-    context.watch('selector', initPageIndex, true);
-    context.watch('persistScroll', initPersistScroll, true);
-    context.on('destroy', function () {
-      combineFn(cleanup)();
-      scrollable.destroy();
-    });
-    scrollable[focusable(container) ? 'enable' : 'disable']();
-    return scrollable;
-  }
-
-  registerDirective('scrollable', SELECTOR_SCROLLABLE, {
-    component: initScrollable,
-    directives: {
-      dir: {
-        attribute: 'scrollable'
-      },
-      paged: {
-        attribute: 'scroller-snap-page'
-      },
-      varname: {
-        attribute: 'scroller-state'
-      },
-      selector: {
-        attribute: 'scroller-page'
-      },
-      persistScroll: {
-        attribute: 'persist-scroll',
-        type: 'boolean'
-      }
-    }
-  });
-  jquery.scrollable.hook({
-    scrollStart: function scrollStart(e) {
-      app.emit('scrollStart', this, e, true);
-    },
-    scrollMove: function scrollMove(e) {
-      app.emit('scrollMove', this, e, true);
-    },
-    scrollEnd: function scrollEnd(e) {
-      app.emit('scrollStop', this, e, true);
-    },
-    scrollProgressChange: function scrollProgressChange(e) {
-      app.emit('scrollProgressChange', this, e, true);
-    }
-  }); // update scroller on events other than window resize
-
-  function refresh() {
-    jquery(SELECTOR_SCROLLABLE).scrollable('refresh');
-  }
-
-  app.on('statechange orientationchange animationcomplete', function () {
-    setTimeoutOnce(refresh);
-  });
-  app.on('pageenter', function (e) {
-    var $scrollables = jquery(selectIncludeSelf(SELECTOR_SCROLLABLE, e.target)).add(jquery(e.target).parents(SELECTOR_SCROLLABLE));
-    jquery(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
-      jquery(v).toggleClass('disabled', !isElementActive(v));
-    });
-    $scrollables.each(function (i, v) {
-      getDirectiveComponent(v).scrollable.refresh();
-    });
-    $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
-  }); // scroll-into-view animation trigger
-
-  function updateScrollIntoView() {
-    jquery('[animate-on~="scroll-into-view"]').filter(':visible').each(function (i, v) {
-      var m = new DOMMatrix(getComputedStyle(v).transform);
-      var rootRect = getRect(zeta_dom_dom.root);
-      var thisRect = getRect(v);
-      var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0));
-
-      if (isInView ^ getClass(v, 'tweening-in') && (isInView || v.attributes['animate-out'])) {
-        (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
-      }
-    });
-  }
-
-  app.on('resize pageenter statechange scrollMove orientationchange', function () {
-    setTimeoutOnce(updateScrollIntoView);
-  });
-  zeta_dom_dom.on('modalchange', function () {
-    jquery(SELECTOR_SCROLLABLE).each(function (i, v) {
-      jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
-    });
-  });
-  zeta_dom_dom.on('keystroke', function (e) {
-    var originalEvent = zeta_dom_dom.event;
-
-    if (zeta_dom_dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
-      var target = selectIncludeSelf(SELECTOR_SCROLLABLE, zeta_dom_dom.modalElement)[0];
-
-      if (target) {
-        jquery(target).triggerHandler(jquery.Event('keydown', {
-          keyCode: originalEvent.keyCode
-        }));
-      }
-    }
-  });
-}));
-// CONCATENATED MODULE: ./tmp/zeta-dom/env.js
-
-var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
-    IS_IE10 = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE10,
-    IS_IE = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE,
-    IS_MAC = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_MAC,
-    IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_TOUCH;
-
-// CONCATENATED MODULE: ./src/include/zeta-dom/env.js
-
-// CONCATENATED MODULE: ./src/extension/viewport.js
-
-
-
-
-
-
-
-/* harmony default export */ const viewport = (addExtension(true, 'viewport', function (app) {
-  var setOrientation = defineObservableProperty(app, 'orientation', '', true);
-  var visualViewport = window.visualViewport;
-  var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
-  var aspectRatio, viewportWidth, viewportHeight;
-
-  function checkViewportSize(triggerEvent) {
-    if (visualViewport) {
-      viewportWidth = visualViewport.width;
-      viewportHeight = visualViewport.height;
-    } else {
-      var availWidth = screen.availWidth;
-      var availHeight = screen.availHeight;
-      viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
-      viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
-    }
-
-    var previousAspectRatio = aspectRatio;
-    aspectRatio = viewportWidth / viewportHeight;
-    setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
-
-    if (triggerEvent !== false) {
-      var data = {
-        aspectRatio: aspectRatio,
-        orientation: app.orientation,
-        viewportWidth: viewportWidth,
-        viewportHeight: viewportHeight
-      };
-      app.emit('resize', data);
-
-      if (either(aspectRatio >= 1, previousAspectRatio >= 1)) {
-        app.emit('orientationchange', data);
-      }
-    }
-  }
-
-  util_define(app, {
-    get aspectRatio() {
-      return aspectRatio;
-    },
-
-    get viewportWidth() {
-      return viewportWidth;
-    },
-
-    get viewportHeight() {
-      return viewportHeight;
-    }
-
-  });
-  app.on('orientationchange', function () {
-    animateIn(zeta_dom_dom.root, 'orientationchange');
-  });
-
-  if (visualViewport) {
-    bind(visualViewport, 'resize', checkViewportSize);
-    checkViewportSize(false);
-  } else {
-    jquery(window).on('resize', function () {
-      setTimeoutOnce(checkViewportSize);
-    });
-    jquery(function () {
-      checkViewportSize(false);
-    });
-  }
-}));
-// CONCATENATED MODULE: ./src/extension/router.js
-function router_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { router_typeof = function _typeof(obj) { return typeof obj; }; } else { router_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return router_typeof(obj); }
-
-
-
-
-
-
-
-
-
-
-
-var _ = createPrivateStore();
-
-var mapProto = Map.prototype;
-var parsedRoutes = {};
-var router_root = zeta_dom_dom.root;
-var states = [];
-var router_baseUrl;
-var storage;
-
-var constant = function constant(value) {
-  return pipe.bind(0, value);
-};
-
-var isAppPath = function isAppPath(path) {
-  return !!isSubPathOf(path, router_baseUrl);
-};
-
-var fromPathname = function fromPathname(path) {
-  return isSubPathOf(path, router_baseUrl) || '/';
-};
-
-var toPathname = function toPathname(path) {
-  return combinePath(router_baseUrl, path);
-};
-
-var fromRoutePath = pipe;
-var toRoutePath = pipe;
-function matchRoute(route, segments, ignoreExact) {
-  if (!route || !route.test) {
-    route = parseRoute(route);
-  }
-
-  if (!isArray(segments)) {
-    segments = toSegments(segments);
-  }
-
-  return route.test(segments, ignoreExact);
-}
-
-function getCurrentQuery() {
-  return location.search + location.hash;
-}
-
-function getCurrentPathAndQuery() {
-  return location.pathname + getCurrentQuery();
-}
-
-function HistoryStorage(obj) {
-  var map = new Map(obj && Object.entries(obj));
-  Object.setPrototypeOf(map, HistoryStorage.prototype);
-  return map;
-}
-
-function stringOrSymbol(key) {
-  return router_typeof(key) === 'symbol' ? key : String(key);
-}
-
-definePrototype(HistoryStorage, Map, {
-  has: function has(k) {
-    return mapProto.has.call(this, stringOrSymbol(k));
-  },
-  get: function get(k) {
-    return mapProto.get.call(this, stringOrSymbol(k));
-  },
-  set: function set(k, v) {
-    return mapProto.set.call(this, stringOrSymbol(k), v);
-  },
-  delete: function _delete(k) {
-    return mapProto.delete.call(this, stringOrSymbol(k));
-  },
-  toJSON: function toJSON() {
-    return mapObject(this, pipe);
-  }
-});
-
-function RoutePattern(props) {
-  extend(this, props);
-}
-
-definePrototype(RoutePattern, Array, {
-  has: function has(name) {
-    return name in this.params;
-  },
-  match: function match(index, value) {
-    if (typeof index === 'string') {
-      index = this.params[index];
-    }
-
-    var part = this[index];
-    return !!part && (part.name ? part.test(value) : iequal(part, value));
-  },
-  test: function test(segments, ignoreExact) {
-    var self = this;
-    return segments.length >= self.minLength && (ignoreExact || !self.exact || segments.length <= self.length) && !any(self, function (v, i) {
-      return segments[i] && !(v.name ? v.test(segments[i]) : iequal(segments[i], v));
-    });
-  }
-});
-
-function parseRoute(path) {
-  path = String(path);
-
-  if (!parsedRoutes[path]) {
-    var tokens = new RoutePattern();
-    var params = {};
-    var minLength;
-    path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
-      if (c && !minLength) {
-        minLength = tokens.length;
-      }
-
-      if (b) {
-        var re = d ? new RegExp('^' + d + '$', 'i') : /./;
-        params[b] = tokens.length;
-        tokens.push({
-          name: b,
-          test: re.test.bind(re)
-        });
-      } else {
-        tokens.push(a.toLowerCase());
-      }
-    });
-    extend(tokens, {
-      pattern: path,
-      params: params,
-      exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
-      minLength: minLength || tokens.length
-    });
-    parsedRoutes[path] = deepFreeze(tokens);
-  }
-
-  return parsedRoutes[path];
-}
-
-function createRouteState(route, segments, params) {
-  route = route || [];
-  segments = segments.map(encodeURIComponent);
-  return {
-    route: route,
-    params: exclude(params, ['remainingSegments']),
-    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-    maxPath: normalizePath(segments.slice(0, route.length).join('/'))
-  };
-}
-
-function matchRouteByParams(routes, params, partial) {
-  var matched = single(routes, function (tokens) {
-    var valid = single(tokens.params, function (v, i) {
-      return params[i] !== null;
-    });
-
-    if (valid && !partial) {
-      valid = !single(params, function (v, i) {
-        return v && i !== 'remainingSegments' && !tokens.has(i);
-      });
-    }
-
-    if (!valid) {
-      return;
-    }
-
-    var segments = [];
-
-    for (var i = 0, len = tokens.length; i < len; i++) {
-      var varname = tokens[i].name;
-
-      if (varname && !tokens[i].test(params[varname] || '')) {
-        if (i < tokens.minLength || params[varname]) {
-          return false;
-        }
-
-        break;
-      }
-
-      segments[i] = varname ? params[varname] : tokens[i];
-    }
-
-    return createRouteState(tokens, segments, pick(params, util_keys(tokens.params)));
-  });
-  return matched || !partial && matchRouteByParams(routes, params, true);
-}
-
-function Route(app, routes, initialPath) {
-  var self = this;
-  var params = {};
-
-  var state = _(self, {
-    routes: routes.map(parseRoute),
-    params: params,
-    app: app
-  });
-
-  each(state.routes, function (i, v) {
-    each(v.params, function (i) {
-      params[i] = null;
-    });
-  });
-  extend(self, params, self.parse(initialPath));
-  state.current = state.lastMatch;
-  state.handleChanges = watch(self, true);
-  Object.preventExtensions(self);
-  Object.getOwnPropertyNames(self).forEach(function (prop) {
-    defineObservableProperty(self, prop, null, function (v) {
-      return isUndefinedOrNull(v) || v === '' ? null : String(v);
-    });
-  });
-  watch(self, function () {
-    var current = state.lastMatch;
-
-    if (!equal(current.params, exclude(self, ['remainingSegments']))) {
-      current = matchRouteByParams(state.routes, self) || state.current;
-    }
-
-    var remainingSegments = current.route.exact ? '/' : normalizePath(self.remainingSegments);
-    var newPath = fromRoutePath(combinePath(current.maxPath, remainingSegments));
-    state.current = current;
-    self.set(extend({}, state.params, current.params, {
-      remainingSegments: remainingSegments
-    }));
-
-    if (!iequal(newPath, removeQueryAndHash(app.path))) {
-      app.path = newPath;
-    }
-  });
-}
-
-definePrototype(Route, {
-  parse: function parse(path) {
-    var self = this;
-
-    var state = _(self);
-
-    var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
-    var matched = any(state.routes, function (tokens) {
-      return matchRoute(tokens, segments, true);
-    });
-    var params = {};
-
-    if (matched) {
-      for (var i in state.params) {
-        params[i] = segments[matched.params[i]] || null;
-      }
-
-      params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
-    }
-
-    state.lastMatch = createRouteState(matched, segments, params);
-    return params;
-  },
-  set: function set(params) {
-    var self = this;
-
-    if (typeof params === 'string') {
-      if (iequal(params, self.toString())) {
-        return;
-      }
-
-      params = self.parse(params);
-    }
-
-    _(self).handleChanges(function () {
-      extend(self, params);
-    });
-  },
-  replace: function replace(key, value) {
-    var self = this;
-    var result;
-
-    _(self).handleChanges(function () {
-      var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-      result = _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
-    });
-
-    return result;
-  },
-  getPath: function getPath(params) {
-    var matched = matchRouteByParams(_(this).routes, params);
-    return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
-  },
-  toJSON: function toJSON() {
-    return extend({}, this);
-  },
-  toString: function toString() {
-    return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
-  }
-});
-watchable(Route.prototype);
-
-function PageInfo(props) {
-  for (var i in props) {
-    defineOwnProperty(this, i, props[i], true);
-  }
-}
-
-function pageInfoForEachState(self, callback) {
-  var pageId = self.pageId;
-  each(states, function (i, v) {
-    if (v.pageId === pageId) {
-      callback(v);
-    }
-  });
-}
-
-definePrototype(PageInfo, {
-  clearNavigateData: function clearNavigateData() {
-    pageInfoForEachState(this, function (v) {
-      v.data = null;
-    });
-    defineOwnProperty(this, 'data', null, true);
-  },
-  clearHistoryStorage: function clearHistoryStorage() {
-    pageInfoForEachState(this, function (v) {
-      v.storage.clear();
-    });
-  }
-});
-/**
- * @param {Brew.AppInstance<Brew.WithRouter>} app
- * @param {Record<string, any>} options
- */
-
-function configureRouter(app, options) {
-  var sessionId = randomId();
-  var resumedId = sessionId;
-  var route;
-  var basePath = '/';
-  var currentPath = '';
-  var redirectSource = {};
-  var currentIndex = 0;
-  var indexOffset = 0;
-  var pendingState;
-  var lastState = {};
-  var pageInfos = {};
-
-  function getPersistedStorage(key, ctor) {
-    return storage.revive(key, ctor) || mapGet(storage, key, ctor);
-  }
-
-  function createNavigateResult(id, path, originalPath, navigated) {
-    return Object.freeze({
-      id: id,
-      path: path,
-      navigated: navigated !== false,
-      redirected: !!originalPath,
-      originalPath: originalPath || null
-    });
-  }
-
-  function createState(id, path, index, snapshot, data, sessionId, previous, keepPreviousPath, storageMap) {
-    previous = previous || states[currentIndex];
-
-    if (storageMap) {
-      storage.set(id, storageMap);
-    }
-
-    var resolvePromise = noop;
-    var rejectPromise = noop;
-    var pathNoQuery = removeQueryAndHash(path);
-    var pageId = previous && snapshot ? previous.pageId : id;
-    var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
-    var resolved, promise;
-    var savedState = [id, path, index, snapshot, data, sessionId];
-    var state = {
-      id: id,
-      path: path,
-      index: index,
-      pathname: pathNoQuery,
-      route: freeze(route.parse(pathNoQuery)),
-      data: data,
-      type: 'navigate',
-      previous: previous,
-      previousPath: previous && (keepPreviousPath || snapshot ? previous.previousPath : previous.path),
-      pageId: pageId,
-      sessionId: sessionId,
-      resumedId: resumedId,
-      handled: previous && snapshot && !!previous.done,
-
-      get done() {
-        return resolved;
-      },
-
-      get promise() {
-        return promise || (promise = resolve(resolved || new Promise(function (resolve_, reject_) {
-          resolvePromise = resolve_;
-          rejectPromise = reject_;
-        })));
-      },
-
-      get pageInfo() {
-        return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
-          path: pathNoQuery,
-          pageId: pageId,
-          params: state.route,
-          data: data
-        }));
-      },
-
-      get storage() {
-        return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
-      },
-
-      reset: function reset() {
-        state.handled = false;
-
-        if (resolved) {
-          resolved = false;
-          promise = null;
-        }
-
-        return state;
-      },
-      forward: function forward(other) {
-        if (promise && !resolved) {
-          other.promise.then(function (data) {
-            state.resolve(createNavigateResult(data.id, data.path, state.path, data.navigated));
-          }, state.reject);
-        }
-      },
-      resolve: function resolve(result) {
-        var previousState = lastState;
-        resolved = result || createNavigateResult(id, state.path);
-        resolvePromise(resolved);
-        state.handled = true;
-
-        if (states[currentIndex] === state) {
-          lastState = state;
-
-          if (resolved.navigated) {
-            app.emit('pageload', {
-              pathname: state.path
-            }, {
-              handleable: false
-            });
-          } else if (state.type === 'back_forward') {
-            app.emit('popstate', {
-              oldStateId: previousState.id,
-              newStateId: state.id
-            }, {
-              handleable: false
-            });
-          }
-        }
-      },
-      reject: function reject(error) {
-        promise = null;
-        rejectPromise(error || errorWithCode(navigationCancelled));
-      },
-      toJSON: function toJSON() {
-        savedState[1] = state.path;
-        savedState[4] = state.data;
-        return savedState;
-      }
-    };
-    return state;
-  }
-
-  function updateQueryAndHash(state, newPath, oldPath) {
-    state.path = newPath;
-    history.replaceState(state.id, '', toPathname(newPath));
-
-    if (state.done) {
-      var oldHash = parsePath(oldPath).hash;
-      var newHash = parsePath(newPath).hash;
-      currentPath = newPath;
-      app.path = newPath;
-
-      if (oldHash !== newHash) {
-        app.emit('hashchange', {
-          oldHash: oldHash,
-          newHash: newHash
-        }, {
-          handleable: false
-        });
-      }
-
-      return {
-        promise: resolve(createNavigateResult(state.pageId, newPath, null, false))
-      };
-    }
-
-    return state;
-  }
-
-  function applyState(state, replace, snapshot, callback) {
-    var currentState = states[currentIndex];
-
-    if (currentState && currentState !== state && !currentState.done) {
-      if (replace) {
-        currentState.forward(state);
-      } else {
-        currentState.reject();
-      }
-    }
-
-    if (appReady && !snapshot && locked(router_root)) {
-      cancelLock(router_root).then(function () {
-        if (states[currentIndex] === currentState && callback() !== false) {
-          setImmediateOnce(handlePathChange);
-        }
-      }, function () {
-        state.reject(errorWithCode(navigationRejected));
-      });
-    } else if (callback() !== false) {
-      if (snapshot && currentState.done) {
-        state.resolve(createNavigateResult(state.pageId, state.path, null, false));
-        updateQueryAndHash(state, state.path, currentState.path);
-      } else {
-        setImmediateOnce(handlePathChange);
-      }
-    }
-  }
-
-  function pushState(path, replace, snapshot, data, storageMap) {
-    path = resolvePath(path);
-
-    if (!isSubPathOf(path, basePath)) {
-      return {
-        promise: reject(errorWithCode(navigationRejected))
-      };
-    }
-
-    var currentState = states[currentIndex];
-    var previous = currentState;
-
-    if (currentState) {
-      var pathNoQuery = removeQueryAndHash(path);
-
-      if (snapshot) {
-        storageMap = new HistoryStorage(previous.storage.toJSON());
-      } else if (pathNoQuery === currentState.pathname) {
-        if (!currentState.done || replace || path === currentState.path) {
-          return updateQueryAndHash(currentState, path, currentState.path);
-        }
-
-        snapshot = true;
-        storageMap = currentState.storage;
-      } else if (pathNoQuery === lastState.pathname && removeQueryAndHash(currentPath) === pathNoQuery) {
-        snapshot = true;
-        previous = lastState;
-        storageMap = lastState.storage;
-      }
-    }
-
-    var id = randomId();
-    var replaceHistory = replace || currentState && !currentState.done;
-    var index = Math.max(0, currentIndex + !replaceHistory);
-    var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
-    applyState(state, replace, snapshot, function () {
-      currentIndex = index;
-
-      if (!replace) {
-        each(states.splice(currentIndex), function (i, v) {
-          storage.delete(v.id);
-
-          if (v.resumedId !== resumedId) {
-            storage.delete(v.resumedId);
-          }
-        });
-      }
-
-      states[currentIndex] = state;
-      history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
-    });
-    return state;
-  }
-
-  function popState(index, isNative) {
-    var state = states[index].reset();
-    var step = state.index - states[currentIndex].index;
-    var snapshot = states[index].pageId === states[currentIndex].pageId;
-    var isLocked = !snapshot && locked(router_root);
-
-    if (isLocked && isNative) {
-      history.go(-step);
-    }
-
-    applyState(state, false, snapshot, function () {
-      state.type = 'back_forward';
-      currentIndex = index;
-
-      if (isLocked && isNative && history.state === state.id) {
-        // lock is cancelled before popstate event take place
-        // history.go has no effect until then
-        var unbind = bind(window, 'popstate', function () {
-          unbind();
-          history.go(step);
-        });
-        return false;
-      }
-
-      if (!isNative || isLocked) {
-        history.go(step);
-      }
-    });
-    return state;
-  }
-
-  function getHistoryIndex(stateId) {
-    return states.findIndex(function (v, i) {
-      return v.id === stateId;
-    });
-  }
-
-  function resolvePath(path, currentPath, isRoutePath) {
-    var parsedState;
-    path = decodeURI(path) || '/';
-    currentPath = currentPath || app.path;
-
-    if (path[0] === '#' || path[0] === '?') {
-      var parts = parsePath(currentPath);
-      return parts.pathname + (path[0] === '#' ? parts.search + path : path);
-    }
-
-    if (path[0] === '~' || path.indexOf('{') >= 0) {
-      var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
-      parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
-      path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
-        return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
-      });
-    }
-
-    if (path[0] === '~') {
-      path = (isRoutePath ? pipe : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
-    } else if (path[0] !== '/') {
-      path = combinePath(removeQueryAndHash(currentPath), path);
-    }
-
-    return normalizePath(path, true);
-  }
-
-  function emitNavigationEvent(eventName, state, data, options) {
-    data = extend({
-      navigationType: state.type,
-      pathname: state.path,
-      oldPathname: lastState.path,
-      oldStateId: lastState.id,
-      newStateId: state.id,
-      route: state.route,
-      data: state.data
-    }, data);
-    return app.emit(eventName, data, options);
-  }
-
-  function processPageChange(state) {
-    var path = state.path;
-    var deferred = deferrable();
-    currentPath = path;
-    pendingState = state;
-    app.path = path;
-    route.set(path);
-    emitNavigationEvent('beforepageload', state, {
-      waitFor: deferred.waitFor
-    }, {
-      handleable: false
-    });
-    always(deferred, function () {
-      if (states[currentIndex] === state) {
-        pendingState = null;
-        redirectSource = {};
-        state.resolve();
-      }
-    });
-  }
-
-  function handlePathChange() {
-    if (!appReady) {
-      return;
-    }
-
-    var state = states[currentIndex];
-    var newPath = state.path;
-
-    if (lastState === state || state.handled) {
-      state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
-      return;
-    }
-
-    state.handled = true; // prevent infinite redirection loop
-    // redirectSource will not be reset until processPageChange is fired
-
-    var previous = state.previous;
-
-    if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
-      processPageChange(state);
-      return;
-    }
-
-    redirectSource[newPath] = true;
-    console.log('Nagivate', newPath);
-    var promise = resolve(emitNavigationEvent('navigate', state));
-    notifyAsync(router_root, promise);
-    promise.then(function () {
-      if (states[currentIndex] === state) {
-        processPageChange(state);
-      }
-    });
-  }
-
-  defineObservableProperty(app, 'path', '', function (newValue) {
-    if (!appReady) {
-      return currentPath;
-    }
-
-    newValue = resolvePath(newValue);
-
-    if (newValue !== currentPath) {
-      pushState(newValue);
-    }
-
-    return currentPath;
-  });
-  router_baseUrl = normalizePath(options.baseUrl);
-
-  if (options.urlMode === 'none') {
-    router_baseUrl = '/';
-    isAppPath = constant(false);
-
-    fromPathname = function fromPathname(path) {
-      var parts = parsePath(currentPath);
-      return parts.pathname + parts.search + parsePath(path).hash;
-    };
-
-    toPathname = function toPathname(path) {
-      return location.pathname + location.search + parsePath(path).hash;
-    };
-  } else if (options.urlMode === 'query') {
-    router_baseUrl = '/';
-
-    isAppPath = function isAppPath(path) {
-      return (path || '')[0] === '?' || /^\/($|[?#])/.test(isSubPathOf(path, location.pathname) || '');
-    };
-
-    fromPathname = function fromPathname(path) {
-      var parts = parsePath(path);
-      var value = getQueryParam(options.queryParam, parts.search);
-      var l = RegExp.leftContext;
-      var r = RegExp.rightContext;
-      return normalizePath(value || '') + (value === false ? parts.search : l + (l || !r ? r : '?' + r.slice(1))) + parts.hash;
-    };
-
-    toPathname = function toPathname(path) {
-      path = parsePath(path);
-      return location.pathname + setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
-    };
-  } else if (router_baseUrl === '/') {
-    fromPathname = pipe;
-    toPathname = pipe;
-  } else if (options.explicitBaseUrl) {
-    fromRoutePath = toPathname;
-    toRoutePath = fromPathname;
-    fromPathname = pipe;
-    toPathname = pipe;
-    basePath = router_baseUrl;
-  } else {
-    setBaseUrl(router_baseUrl);
-  }
-
-  var initialPathHint = fromPathname(getCurrentPathAndQuery());
-  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam) || initialPathHint;
-  var includeQuery = initialPath === initialPathHint || removeQueryAndHash(initialPath) === removeQueryAndHash(initialPathHint);
-
-  if (!isSubPathOf(initialPath, basePath)) {
-    initialPath = basePath;
-  } else if (includeQuery && removeQueryAndHash(initialPath) === initialPath) {
-    initialPath = initialPathHint;
-  }
-
-  var navigationType = {
-    1: 'reload',
-    2: 'back_forward'
-  }[performance.navigation.type];
-
-  if (navigationType) {
-    options.resume = false;
-  } else if (options.resume) {
-    navigationType = 'resume';
-  }
-
-  route = new Route(app, options.routes, initialPath);
-  storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
-  app.define({
-    get canNavigateBack() {
-      return (states[currentIndex - 1] || '').sessionId === sessionId;
-    },
-
-    get canNavigateForward() {
-      return (states[currentIndex + 1] || '').sessionId === sessionId;
-    },
-
-    get previousPath() {
-      return states[currentIndex].previousPath || null;
-    },
-
-    get page() {
-      return (pendingState || lastState).pageInfo;
-    },
-
-    matchRoute: matchRoute,
-    parseRoute: parseRoute,
-    resolvePath: resolvePath,
-    isAppPath: isAppPath,
-    toHref: toPathname,
-    fromHref: fromPathname,
-    snapshot: function snapshot() {
-      return states[currentIndex] === lastState && !!pushState(currentPath, false, true);
-    },
-    navigate: function navigate(path, replace, data) {
-      return pushState(path, replace, false, data).promise;
-    },
-    back: function back(defaultPath) {
-      if (currentIndex > 0) {
-        return popState(currentIndex - 1).promise;
-      } else {
-        return !!defaultPath && pushState(defaultPath).promise;
-      }
-    },
-    historyStorage: {
-      get current() {
-        return (pendingState || lastState).storage;
-      },
-
-      for: function _for(stateId) {
-        var state = states[getHistoryIndex(stateId)];
-        return state ? state.storage : null;
-      }
-    }
-  });
-  defineOwnProperty(app, 'basePath', basePath, true);
-  defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
-  defineOwnProperty(app, 'route', route, true);
-  defineOwnProperty(app, 'routes', freeze(options.routes));
-  defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
-  bind(window, 'popstate', function () {
-    var index = getHistoryIndex(history.state);
-
-    if (index < 0) {
-      pushState(fromPathname(getCurrentPathAndQuery()));
-    } else if (index !== currentIndex) {
-      popState(index, true);
-    }
-  });
-
-  try {
-    each(storage.get('s'), function (i, v) {
-      states.push(createState.apply(0, v));
-      currentIndex = i;
-    });
-  } catch (e) {}
-
-  var initialState;
-  var index = getHistoryIndex(navigationType === 'resume' ? storage.get('c') : history.state);
-
-  if (index >= 0) {
-    resumedId = states[index].resumedId;
-    currentIndex = index;
-
-    if (navigationType === 'resume') {
-      indexOffset = history.length - currentIndex - 1;
-      pushState(states[index].path, false, true);
-    } else {
-      indexOffset = states[index].index - currentIndex;
-      sessionId = states[index].sessionId || sessionId;
-
-      if (navigationType === 'reload' && !options.resumeOnReload) {
-        storage.delete(history.state);
-        initialState = options.urlMode === 'none';
-      }
-    }
-
-    states[currentIndex].type = navigationType;
-  } else {
-    currentIndex = states.length;
-    indexOffset = history.length - currentIndex;
-    initialState = true;
-  }
-
-  if (initialState) {
-    initialState = pushState(initialPath, true);
-  }
-
-  app.on('ready', function () {
-    if (initialState && states[currentIndex] === initialState && includeQuery) {
-      pushState(fromPathname(getCurrentPathAndQuery()), true);
-    }
-
-    handlePathChange();
-  });
-  app.on('unload', function () {
-    storage.set('c', states[currentIndex].id);
-    storage.set('s', states);
-    storage.persistAll();
-  });
-  defineOwnProperty(app, 'sessionId', resumedId, true);
-  defineOwnProperty(app, 'sessionStorage', getPersistedStorage(resumedId, HistoryStorage), true);
-}
-
-parsedRoutes['/*'] = deepFreeze(new RoutePattern({
-  value: '/*',
-  exact: false,
-  length: 0,
-  minLength: 0,
-  params: {},
-  test: function test() {
-    return true;
-  }
-}));
-/* harmony default export */ const router = (addExtension('router', configureRouter));
-// CONCATENATED MODULE: ./src/entry-slim.js
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-
-
-
-
-
-
-
-
-
-
-util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
-  ErrorCode: errorCode_namespaceObject,
-  defaults: src_defaults
-}, common_namespaceObject), storage_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
-  getDirectiveComponent: getDirectiveComponent,
-  registerDirective: registerDirective,
-  install: install,
-  addDetect: addDetect,
-  addExtension: addExtension
-}));
-
-
-
-
-
-function exportAppToGlobal(app) {
-  window.app = app;
-}
-
-/* harmony default export */ const entry_slim = (src_app.with(exportAppToGlobal, i18n, scrollable, viewport, router));
-
-/***/ }),
-
-/***/ 961:
+/***/ 992:
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
@@ -3899,35 +519,35 @@ if (true) {
 
 /***/ }),
 
-/***/ 172:
+/***/ 649:
 /***/ (function(module) {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__172__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__649__;
 
 /***/ }),
 
-/***/ 160:
+/***/ 87:
 /***/ (function(module) {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__160__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__87__;
 
 /***/ }),
 
-/***/ 254:
+/***/ 914:
 /***/ (function(module) {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__254__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__914__;
 
 /***/ }),
 
-/***/ 163:
+/***/ 231:
 /***/ (function(module) {
 
 "use strict";
-module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
+module.exports = __WEBPACK_EXTERNAL_MODULE__231__;
 
 /***/ })
 
@@ -3939,8 +559,9 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -3986,11 +607,3399 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__163__;
 /******/ 	}();
 /******/ 	
 /************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(268);
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+!function() {
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "default": function() { return /* binding */ entry_slim; }
+});
+
+// NAMESPACE OBJECT: ./src/util/path.js
+var path_namespaceObject = {};
+__webpack_require__.r(path_namespaceObject);
+__webpack_require__.d(path_namespaceObject, {
+  baseUrl: function() { return baseUrl; },
+  combinePath: function() { return combinePath; },
+  isSubPathOf: function() { return isSubPathOf; },
+  normalizePath: function() { return normalizePath; },
+  parsePath: function() { return parsePath; },
+  removeQueryAndHash: function() { return removeQueryAndHash; },
+  setBaseUrl: function() { return setBaseUrl; },
+  toAbsoluteUrl: function() { return toAbsoluteUrl; },
+  toRelativeUrl: function() { return toRelativeUrl; },
+  toSegments: function() { return toSegments; },
+  withBaseUrl: function() { return withBaseUrl; }
+});
+
+// NAMESPACE OBJECT: ./src/errorCode.js
+var errorCode_namespaceObject = {};
+__webpack_require__.r(errorCode_namespaceObject);
+__webpack_require__.d(errorCode_namespaceObject, {
+  apiError: function() { return apiError; },
+  navigationCancelled: function() { return navigationCancelled; },
+  navigationRejected: function() { return navigationRejected; },
+  networkError: function() { return networkError; },
+  resourceError: function() { return resourceError; },
+  timeout: function() { return timeout; },
+  validationFailed: function() { return validationFailed; }
+});
+
+// NAMESPACE OBJECT: ./src/util/common.js
+var common_namespaceObject = {};
+__webpack_require__.r(common_namespaceObject);
+__webpack_require__.d(common_namespaceObject, {
+  addStyleSheet: function() { return addStyleSheet; },
+  api: function() { return api; },
+  cookie: function() { return common_cookie; },
+  copyAttr: function() { return copyAttr; },
+  deleteCookie: function() { return deleteCookie; },
+  getAttr: function() { return getAttr; },
+  getAttrValues: function() { return getAttrValues; },
+  getCookie: function() { return getCookie; },
+  getFormValues: function() { return getFormValues; },
+  getJSON: function() { return getJSON; },
+  getQueryParam: function() { return getQueryParam; },
+  hasAttr: function() { return hasAttr; },
+  isBoolAttr: function() { return isBoolAttr; },
+  loadScript: function() { return loadScript; },
+  openDeferredURL: function() { return openDeferredURL; },
+  preloadImages: function() { return preloadImages; },
+  selectorForAttr: function() { return selectorForAttr; },
+  setAttr: function() { return setAttr; },
+  setCookie: function() { return setCookie; },
+  setQueryParam: function() { return setQueryParam; }
+});
+
+// NAMESPACE OBJECT: ./src/util/storage.js
+var storage_namespaceObject = {};
+__webpack_require__.r(storage_namespaceObject);
+__webpack_require__.d(storage_namespaceObject, {
+  createObjectStorage: function() { return createObjectStorage; }
+});
+
+// NAMESPACE OBJECT: ./src/anim.js
+var anim_namespaceObject = {};
+__webpack_require__.r(anim_namespaceObject);
+__webpack_require__.d(anim_namespaceObject, {
+  addAnimateIn: function() { return addAnimateIn; },
+  addAnimateOut: function() { return addAnimateOut; },
+  animateIn: function() { return animateIn; },
+  animateOut: function() { return animateOut; }
+});
+
+// NAMESPACE OBJECT: ./src/domAction.js
+var domAction_namespaceObject = {};
+__webpack_require__.r(domAction_namespaceObject);
+__webpack_require__.d(domAction_namespaceObject, {
+  addAsyncAction: function() { return addAsyncAction; },
+  closeFlyout: function() { return closeFlyout; },
+  isFlyoutOpen: function() { return isFlyoutOpen; },
+  openFlyout: function() { return openFlyout; },
+  toggleFlyout: function() { return toggleFlyout; }
+});
+
+// EXTERNAL MODULE: external {"commonjs":"zeta-dom","commonjs2":"zeta-dom","amd":"zeta-dom","root":"zeta"}
+var external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_ = __webpack_require__(231);
+;// CONCATENATED MODULE: ./tmp/zeta-dom/util.js
+
+var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    noop = _zeta$util.noop,
+    pipe = _zeta$util.pipe,
+    either = _zeta$util.either,
+    sameValueZero = _zeta$util.sameValueZero,
+    is = _zeta$util.is,
+    isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
+    isArray = _zeta$util.isArray,
+    isFunction = _zeta$util.isFunction,
+    isThenable = _zeta$util.isThenable,
+    isPlainObject = _zeta$util.isPlainObject,
+    isArrayLike = _zeta$util.isArrayLike,
+    makeArray = _zeta$util.makeArray,
+    extend = _zeta$util.extend,
+    each = _zeta$util.each,
+    map = _zeta$util.map,
+    grep = _zeta$util.grep,
+    splice = _zeta$util.splice,
+    any = _zeta$util.any,
+    single = _zeta$util.single,
+    kv = _zeta$util.kv,
+    fill = _zeta$util.fill,
+    pick = _zeta$util.pick,
+    exclude = _zeta$util.exclude,
+    mapObject = _zeta$util.mapObject,
+    mapGet = _zeta$util.mapGet,
+    mapRemove = _zeta$util.mapRemove,
+    arrRemove = _zeta$util.arrRemove,
+    setAdd = _zeta$util.setAdd,
+    equal = _zeta$util.equal,
+    combineFn = _zeta$util.combineFn,
+    executeOnce = _zeta$util.executeOnce,
+    createPrivateStore = _zeta$util.createPrivateStore,
+    util_setTimeout = _zeta$util.setTimeout,
+    setTimeoutOnce = _zeta$util.setTimeoutOnce,
+    util_setInterval = _zeta$util.setInterval,
+    setIntervalSafe = _zeta$util.setIntervalSafe,
+    setImmediate = _zeta$util.setImmediate,
+    setImmediateOnce = _zeta$util.setImmediateOnce,
+    clearImmediateOnce = _zeta$util.clearImmediateOnce,
+    util_throws = _zeta$util.throws,
+    throwNotFunction = _zeta$util.throwNotFunction,
+    errorWithCode = _zeta$util.errorWithCode,
+    isErrorWithCode = _zeta$util.isErrorWithCode,
+    util_keys = _zeta$util.keys,
+    values = _zeta$util.values,
+    util_hasOwnProperty = _zeta$util.hasOwnProperty,
+    getOwnPropertyDescriptors = _zeta$util.getOwnPropertyDescriptors,
+    util_define = _zeta$util.define,
+    definePrototype = _zeta$util.definePrototype,
+    defineOwnProperty = _zeta$util.defineOwnProperty,
+    defineGetterProperty = _zeta$util.defineGetterProperty,
+    defineHiddenProperty = _zeta$util.defineHiddenProperty,
+    defineAliasProperty = _zeta$util.defineAliasProperty,
+    defineObservableProperty = _zeta$util.defineObservableProperty,
+    watch = _zeta$util.watch,
+    watchOnce = _zeta$util.watchOnce,
+    watchable = _zeta$util.watchable,
+    inherit = _zeta$util.inherit,
+    freeze = _zeta$util.freeze,
+    deepFreeze = _zeta$util.deepFreeze,
+    iequal = _zeta$util.iequal,
+    randomId = _zeta$util.randomId,
+    repeat = _zeta$util.repeat,
+    camel = _zeta$util.camel,
+    hyphenate = _zeta$util.hyphenate,
+    ucfirst = _zeta$util.ucfirst,
+    lcfirst = _zeta$util.lcfirst,
+    trim = _zeta$util.trim,
+    matchWord = _zeta$util.matchWord,
+    matchWordMulti = _zeta$util.matchWordMulti,
+    htmlDecode = _zeta$util.htmlDecode,
+    resolve = _zeta$util.resolve,
+    reject = _zeta$util.reject,
+    always = _zeta$util.always,
+    resolveAll = _zeta$util.resolveAll,
+    retryable = _zeta$util.retryable,
+    deferrable = _zeta$util.deferrable,
+    catchAsync = _zeta$util.catchAsync,
+    setPromiseTimeout = _zeta$util.setPromiseTimeout,
+    delay = _zeta$util.delay,
+    makeAsync = _zeta$util.makeAsync;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/util.js
+
+;// CONCATENATED MODULE: ./src/util/path.js
+var defaultPort = {
+  http: 80,
+  https: 443
+};
+var baseUrl = '/';
+/**
+ * @param {string} b
+ */
+
+function setBaseUrl(b) {
+  baseUrl = normalizePath(b, true);
+}
+/**
+ * @param {string} a
+ * @param {string} b
+ */
+
+function combinePath(a, b) {
+  a = normalizePath(a);
+  b = normalizePath(b);
+
+  if (b === '/') {
+    return a;
+  }
+
+  if (a === '/' || b.indexOf('://') > 0) {
+    return b;
+  }
+
+  return a + b;
+}
+/**
+ * @param {string} path
+ */
+
+function parsePath(path) {
+  var a = document.createElement('a');
+  a.href = path;
+  return a;
+}
+/**
+ * @param {string} path
+ * @param {boolean=} resolveDotDir
+ * @param {boolean=} returnEmpty
+ */
+
+function normalizePath(path, resolveDotDir, returnEmpty) {
+  if (!path || path === '/') {
+    return returnEmpty ? '' : '/';
+  }
+
+  if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
+    var a = parsePath(path);
+    return ((RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
+  }
+
+  path = String(path).replace(/\/+(\/|$)/g, '$1');
+
+  if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
+    var segments = path.split('/');
+
+    for (var j = 0; j < segments.length;) {
+      if (segments[j] === '.' || segments[j] === '..' && !j) {
+        segments.splice(j, 1);
+      } else if (segments[j] === '..') {
+        segments.splice(--j, 2);
+      } else {
+        j++;
+      }
+    }
+
+    path = segments.join('/');
+  }
+
+  return path[0] === '/' ? path : '/' + path;
+}
+function removeQueryAndHash(path) {
+  var pos1 = path.indexOf('?') + 1;
+  var pos2 = path.indexOf('#') + 1;
+
+  if (!pos1 && !pos2) {
+    return path;
+  }
+
+  return path.slice(0, Math.min(pos1 || pos2, pos2 || pos1) - 1);
+}
+/**
+ * @param {string} url
+ */
+
+function withBaseUrl(url) {
+  url = normalizePath(url);
+  return baseUrl && url[0] === '/' && !isSubPathOf(url, baseUrl) ? combinePath(baseUrl, url) : url;
+}
+/**
+ * @param {string} url
+ */
+
+function toAbsoluteUrl(url) {
+  return url.indexOf('://') > 0 ? url : location.origin + withBaseUrl(url);
+}
+/**
+ * @param {string} url
+ */
+
+function toRelativeUrl(url) {
+  return isSubPathOf(url, location.origin) || url;
+}
+/**
+ * @param {string} a
+ * @param {string} b
+ */
+
+function isSubPathOf(a, b) {
+  var len = b.length;
+  return a.substr(0, len) === b && (!a[len] || /[/?#]/.test(a[len]) || b[len - 1] === '/') && (a[len] === '/' ? '' : '/') + a.slice(len);
+}
+/**
+ * @param {string} path
+ */
+
+function toSegments(path) {
+  path = normalizePath(path);
+  return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
+}
+// EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
+var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(914);
+// EXTERNAL MODULE: external "jq-scrollable"
+var external_jq_scrollable_ = __webpack_require__(649);
+;// CONCATENATED MODULE: ./src/include/external/jquery.js
+
+
+/* harmony default export */ var jquery = (external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_);
+;// CONCATENATED MODULE: ./src/include/external/promise-polyfill.js
+var promise_polyfill_Promise = window.Promise;
+/* harmony default export */ var promise_polyfill = (promise_polyfill_Promise);
+;// CONCATENATED MODULE: ./tmp/zeta-dom/cssUtil.js
+
+var _zeta$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.css,
+    parseCSS = _zeta$css.parseCSS,
+    isCssUrlValue = _zeta$css.isCssUrlValue,
+    runCSSTransition = _zeta$css.runCSSTransition;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/cssUtil.js
+
+;// CONCATENATED MODULE: ./tmp/zeta-dom/domUtil.js
+
+var domUtil_zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
+    domReady = domUtil_zeta$util.domReady,
+    tagName = domUtil_zeta$util.tagName,
+    isVisible = domUtil_zeta$util.isVisible,
+    matchSelector = domUtil_zeta$util.matchSelector,
+    comparePosition = domUtil_zeta$util.comparePosition,
+    connected = domUtil_zeta$util.connected,
+    containsOrEquals = domUtil_zeta$util.containsOrEquals,
+    acceptNode = domUtil_zeta$util.acceptNode,
+    combineNodeFilters = domUtil_zeta$util.combineNodeFilters,
+    iterateNode = domUtil_zeta$util.iterateNode,
+    iterateNodeToArray = domUtil_zeta$util.iterateNodeToArray,
+    getCommonAncestor = domUtil_zeta$util.getCommonAncestor,
+    parentsAndSelf = domUtil_zeta$util.parentsAndSelf,
+    selectIncludeSelf = domUtil_zeta$util.selectIncludeSelf,
+    selectClosestRelative = domUtil_zeta$util.selectClosestRelative,
+    createNodeIterator = domUtil_zeta$util.createNodeIterator,
+    createTreeWalker = domUtil_zeta$util.createTreeWalker,
+    bind = domUtil_zeta$util.bind,
+    bindOnce = domUtil_zeta$util.bindOnce,
+    bindUntil = domUtil_zeta$util.bindUntil,
+    dispatchDOMMouseEvent = domUtil_zeta$util.dispatchDOMMouseEvent,
+    removeNode = domUtil_zeta$util.removeNode,
+    getClass = domUtil_zeta$util.getClass,
+    setClass = domUtil_zeta$util.setClass,
+    getSafeAreaInset = domUtil_zeta$util.getSafeAreaInset,
+    getScrollOffset = domUtil_zeta$util.getScrollOffset,
+    getScrollParent = domUtil_zeta$util.getScrollParent,
+    getContentRect = domUtil_zeta$util.getContentRect,
+    scrollBy = domUtil_zeta$util.scrollBy,
+    scrollIntoView = domUtil_zeta$util.scrollIntoView,
+    makeSelection = domUtil_zeta$util.makeSelection,
+    getRect = domUtil_zeta$util.getRect,
+    getRects = domUtil_zeta$util.getRects,
+    toPlainRect = domUtil_zeta$util.toPlainRect,
+    rectEquals = domUtil_zeta$util.rectEquals,
+    rectCovers = domUtil_zeta$util.rectCovers,
+    rectIntersects = domUtil_zeta$util.rectIntersects,
+    pointInRect = domUtil_zeta$util.pointInRect,
+    mergeRect = domUtil_zeta$util.mergeRect,
+    elementFromPoint = domUtil_zeta$util.elementFromPoint;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/domUtil.js
+
+;// CONCATENATED MODULE: ./src/errorCode.js
+var networkError = 'brew/network-error';
+var resourceError = 'brew/resource-error';
+var apiError = 'brew/api-error';
+var validationFailed = 'brew/validation-failed';
+var navigationCancelled = 'brew/navigation-cancelled';
+var navigationRejected = 'brew/navigation-rejected';
+var timeout = "brew/timeout";
+;// CONCATENATED MODULE: ./src/util/common.js
+
+
+
+
+
+
+
+/** @type {Zeta.Dictionary<Promise<void>>} */
+
+var preloadImagesCache = {};
+/** @type {Zeta.Dictionary<Promise<Zeta.Dictionary>>} */
+
+var loadScriptCache = {};
+var boolAttrMap = {};
+each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
+  boolAttrMap[v.toLowerCase()] = v;
+});
+function getAttrValues(element) {
+  var values = {};
+  each(element.attributes, function (i, v) {
+    values[v.name] = v.value;
+  });
+  return values;
+}
+function isBoolAttr(element, name) {
+  return name === 'itemscope' || boolAttrMap[name] in Object.getPrototypeOf(element);
+}
+function hasAttr(element, name) {
+  return !!element.attributes[name];
+}
+function getAttr(element, name) {
+  return element.getAttribute(name);
+}
+function setAttr(element, name, value) {
+  if (typeof name !== 'string') {
+    each(name, setAttr.bind(0, element));
+  } else if (value === null) {
+    element.removeAttribute(name);
+  } else {
+    value = String(value);
+
+    if (getAttr(element, name) !== value) {
+      element.setAttribute(name, value);
+    }
+  }
+}
+function copyAttr(src, dst) {
+  each(src.attributes, function (i, v) {
+    setAttr(dst, v.name, v.value);
+  });
+}
+function selectorForAttr(attr) {
+  if (isPlainObject(attr)) {
+    attr = util_keys(attr);
+  }
+
+  return attr[0] ? '[' + attr.join('],[') + ']' : '';
+}
+/**
+ * @param {HTMLFormElement} form
+ */
+
+function getFormValues(form) {
+  var values = {};
+  each(form.elements, function (i, v) {
+    if (v.name && !(v.name in values)) {
+      var item = form.elements[v.name];
+      defineGetterProperty(values, v.name, function () {
+        return item.type === 'checkbox' ? item.checked : item.value;
+      });
+    }
+  });
+  return values;
+}
+/**
+ * @param {string} name
+ */
+
+function getQueryParam(name, current) {
+  if (isUndefinedOrNull(current)) {
+    current = location.search;
+  }
+
+  return new RegExp('[?&]' + name + '=([^&]*)', 'i').test(current) && decodeURIComponent(RegExp.$1);
+}
+/**
+ * @param {string} name
+ * @param {string} value
+ * @param {string=} current
+ */
+
+function setQueryParam(name, value, current) {
+  if (isUndefinedOrNull(current)) {
+    current = location.search;
+  }
+
+  var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
+  return current.replace(re, function (v, a, i, n) {
+    return value || value === '' ? (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value) : a || '';
+  });
+}
+/**
+ * @param {string} name
+ */
+
+function getCookie(name) {
+  return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;
+}
+/**
+ * @param {string} name
+ * @param {string} value
+ * @param {number=} expiry
+ */
+
+function setCookie(name, value, expiry) {
+  document.cookie = name + '=' + value + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
+  return value;
+}
+/**
+ * @param {string} name
+ */
+
+function deleteCookie(name) {
+  document.cookie = name + '=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+}
+/**
+ * @param {string} name
+ * @param {number=} expiry
+ */
+
+function common_cookie(name, expiry) {
+  return {
+    get: function get() {
+      return getCookie(name);
+    },
+    set: function set(value) {
+      return setCookie(name, value, expiry);
+    },
+    delete: function _delete() {
+      return deleteCookie(name);
+    }
+  };
+}
+/**
+ * @param {Brew.APIMethod | Brew.APIOptions} options
+ * @param {=} extra
+ */
+
+function api(options, extra) {
+  var httpMethods = 'get post put delete';
+
+  if (typeof options === 'string' && matchWord(options, httpMethods)) {
+    extra = extend({}, typeof extra === 'string' ? {
+      baseUrl: extra
+    } : extra, {
+      methods: options
+    });
+    return api(extra)[options];
+  }
+
+  options = extend({}, options);
+  var obj = {
+    baseUrl: options.baseUrl,
+    token: options.token
+  };
+  each(options.methods || httpMethods, function (i, v) {
+    if (matchWord(v, httpMethods)) {
+      defineHiddenProperty(obj, v, function request(method, data) {
+        if (!obj.baseUrl) {
+          return watchOnce(obj, 'baseUrl', function () {
+            return request(method, data);
+          });
+        }
+
+        var headers = {
+          'Content-Type': 'application/json'
+        };
+
+        if (obj.token) {
+          headers.Authorization = 'Bearer ' + obj.token;
+        }
+
+        return jquery.ajax({
+          method: v,
+          url: combinePath(obj.baseUrl, method),
+          headers: headers,
+          dataType: 'json',
+          data: JSON.stringify(data || {}),
+          success: function success(response) {
+            if (isFunction(options.getTokenFromResponse)) {
+              obj.token = options.getTokenFromResponse(response, obj.token);
+            }
+          }
+        }).catch(function (e) {
+          if (e.status === 0) {
+            throw errorWithCode(networkError);
+          }
+
+          var response = e.responseJSON;
+
+          if (response) {
+            console.error(method + ':', response.error || response.message);
+            throw errorWithCode(apiError, response.error || response.message);
+          }
+
+          throw errorWithCode(apiError, e.statusText);
+        });
+      });
+      defineAliasProperty(obj[v], 'baseUrl', obj);
+      defineAliasProperty(obj[v], 'token', obj);
+    }
+  });
+  return obj;
+}
+/**
+ * @param {string} path
+ */
+
+function getJSON(path) {
+  return jquery.getJSON(withBaseUrl(path));
+}
+/**
+ * @param {string | string[]} url
+ * @param {{ nomodule?: boolean; module?: boolean }=} options
+ */
+
+function loadScript(url, options) {
+  if (isArray(url)) {
+    return url.reduce(function (v, a) {
+      return v.then(function () {
+        return loadScript(a, options);
+      });
+    }, resolve());
+  }
+
+  if (!loadScriptCache[url]) {
+    loadScriptCache[url] = new promise_polyfill(function (resolve, reject) {
+      var script = document.createElement('script');
+      options = options || {};
+
+      if (options.nomodule) {
+        if ('noModule' in script) {
+          resolve();
+          return;
+        }
+
+        script.setAttribute('nomodule', '');
+      }
+
+      if (options.module) {
+        script.setAttribute('type', 'module');
+      }
+
+      script.addEventListener('load', function () {
+        resolve({});
+      });
+      script.addEventListener('error', function () {
+        reject(errorWithCode(resourceError));
+      });
+      script.src = withBaseUrl(url);
+      document.head.appendChild(script);
+    });
+  }
+
+  return loadScriptCache[url];
+}
+/**
+ * @param {string} url
+ * @param {string=} media
+ */
+
+function addStyleSheet(url, media) {
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = withBaseUrl(url);
+
+  if (media) {
+    link.media = media;
+  }
+
+  document.head.appendChild(link);
+}
+/**
+ * @param {string[]|Element} urls
+ * @param {number=} ms
+ */
+
+function preloadImages(urls, ms) {
+  if (!isArray(urls)) {
+    var map = {};
+
+    var testValue = function testValue(value) {
+      if (isCssUrlValue(value)) {
+        map[RegExp.$1 || RegExp.$2 || RegExp.$3] = true;
+      }
+    };
+
+    iterateNode(createNodeIterator(urls, 1), function (node) {
+      if (matchSelector(node, 'img') && node.src) {
+        map[node.src] = true;
+      }
+
+      testValue(getComputedStyle(node).backgroundImage);
+      testValue(getComputedStyle(node, '::before').backgroundImage);
+      testValue(getComputedStyle(node, '::after').backgroundImage);
+    });
+    urls = util_keys(map);
+  }
+
+  var promises = [];
+  var preloadUrls = [];
+  urls.forEach(function (url) {
+    promises.push(preloadImagesCache[url] || (preloadImagesCache[url] = new promise_polyfill(function (resolve) {
+      preloadUrls.push(url);
+      jquery('<img>').on('load error', function () {
+        preloadImagesCache[url] = true;
+        resolve();
+      }).attr('src', url);
+    })));
+  });
+
+  if (!promises.length || promises.every(function (v) {
+    return v === true;
+  })) {
+    return resolve();
+  }
+
+  if (preloadUrls.length) {
+    console.log('Preload image', {
+      urls: preloadUrls
+    });
+  }
+
+  return promise_polyfill.race([delay(ms), resolveAll(values(preloadImagesCache))]);
+}
+function openDeferredURL(promise, loadingUrl, target, features) {
+  var win = window.open(loadingUrl || 'data:text/html;base64,TG9hZGluZy4uLg==', target || '_blank', features || '');
+
+  if (!win) {
+    return resolve(false);
+  }
+
+  return promise.then(function (url) {
+    if (win.closed) {
+      return false;
+    }
+
+    win.location.replace(url);
+    return true;
+  }, function (e) {
+    win.close();
+    throw e;
+  });
+}
+// EXTERNAL MODULE: ./node_modules/lz-string/libs/lz-string.js
+var lz_string = __webpack_require__(992);
+;// CONCATENATED MODULE: ./src/include/external/lz-string.js
+
+var compressToUTF16 = lz_string.compressToUTF16;
+var decompressFromUTF16 = lz_string.decompressFromUTF16;
+;// CONCATENATED MODULE: ./src/util/storage.js
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+
+
+var UNDEFINED = 'undefined';
+
+function isObject(value) {
+  return value && _typeof(value) === 'object';
+}
+
+function shouldIgnore(obj) {
+  return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
+}
+
+function createObjectStorage(storage, key) {
+  var objectCache = {};
+  var objectMap = new WeakMap();
+  var dirty = new Set();
+  var entries = Object.create(null);
+  var serialized = initFromStorage(entries) || ['{}'];
+  var emptyIds = map(serialized, function (v, i) {
+    return v ? null : i;
+  });
+
+  function initFromStorage(entries) {
+    try {
+      var serialized = decompressFromUTF16(storage.getItem(key)).split('\n');
+      extend(entries, JSON.parse(serialized[0] || '{}'));
+      return serialized;
+    } catch (e) {}
+  }
+
+  function getNextId() {
+    return emptyIds.length ? emptyIds.shift() : serialized.push('') - 1;
+  }
+
+  function cacheObject(id, obj) {
+    objectCache[id] = obj;
+
+    if (isObject(obj)) {
+      objectMap.set(obj, +id);
+    }
+  }
+
+  function uncacheObject(id) {
+    objectMap.delete(objectCache[id]);
+    delete objectCache[id];
+  }
+
+  function serialize(obj, visited) {
+    var counter = 0;
+    return JSON.stringify(obj, function (k, v) {
+      if (!isObject(v)) {
+        return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
+      }
+
+      if (shouldIgnore(v)) {
+        return counter ? undefined : {};
+      }
+
+      if (!counter++) {
+        return v;
+      }
+
+      var id = objectMap.get(v) || getNextId();
+      cacheObject(id, v);
+
+      if (!visited[id]) {
+        visited[id] = true;
+        serialized[id] = serialize(v, visited);
+        dirty.delete(v);
+      }
+
+      return '#' + id;
+    });
+  }
+
+  function deserialize(str, refs) {
+    if (!str || str === UNDEFINED) {
+      return;
+    }
+
+    return JSON.parse(str, function (k, v) {
+      if (typeof v === 'string' && v[0] === '#') {
+        v = v.slice(1);
+
+        if (v[0] !== '#') {
+          refs.push({
+            o: this,
+            k: k,
+            v: v
+          });
+
+          if (!(v in objectCache)) {
+            objectCache[v] = null;
+            cacheObject(v, deserialize(serialized[v], refs));
+          }
+
+          return null;
+        }
+      }
+
+      return v;
+    });
+  }
+
+  function _revive(key, callback) {
+    var id = entries[key];
+
+    if (id && serialized[id] && !(id in objectCache)) {
+      try {
+        var refs = [];
+        var value = deserialize(serialized[id], refs);
+        each(refs, function (i, v) {
+          v.o[v.k] = objectCache[v.v];
+        });
+        cacheObject(id, (callback || pipe)(value));
+      } catch (e) {
+        serialized[id] = UNDEFINED;
+      }
+    }
+
+    return objectCache[id];
+  }
+
+  function _persist() {
+    var visited = {};
+    each(dirty, function (i, v) {
+      var id = objectMap.get(v);
+
+      if (id) {
+        serialized[id] = serialize(v, visited);
+      }
+    });
+    visited = {
+      0: true
+    };
+    each(entries, function visit(_, id) {
+      if (!visited[id]) {
+        visited[id] = true;
+        serialized[id].replace(/[\[:,]"#(\d+)"/g, visit);
+      }
+    });
+    each(serialized, function (i) {
+      if (!visited[i] && serialized[i]) {
+        serialized[i] = '';
+        emptyIds.push(i);
+        uncacheObject(i);
+      }
+    });
+    dirty.clear();
+    serialized[0] = JSON.stringify(entries);
+    storage.setItem(key, compressToUTF16(serialized.join('\n').trim()));
+  }
+
+  return {
+    keys: function keys() {
+      return util_keys(entries);
+    },
+    has: function has(key) {
+      return !!entries[key];
+    },
+    get: function get(key) {
+      return _revive(key);
+    },
+    revive: function revive(key, callback) {
+      uncacheObject(entries[key]);
+      return _revive(key, callback);
+    },
+    set: function set(key, value) {
+      var id = entries[key] || (entries[key] = getNextId());
+
+      if (!isObject(value)) {
+        serialized[id] = serialize(value) || UNDEFINED;
+      } else {
+        cacheObject(id, value);
+        dirty.add(value);
+      }
+
+      setImmediateOnce(_persist);
+    },
+    persist: function persist(obj) {
+      dirty.add(obj);
+      setImmediateOnce(_persist);
+    },
+    persistAll: function persistAll() {
+      each(entries, function (i, v) {
+        if (isObject(objectCache[v])) {
+          dirty.add(objectCache[v]);
+        }
+      });
+      setImmediateOnce(_persist);
+    },
+    delete: function _delete(key) {
+      if (entries[key]) {
+        delete entries[key];
+        setImmediateOnce(_persist);
+      }
+    },
+    clear: function clear() {
+      serialized.splice(0, serialized.length, '{}');
+      emptyIds.splice(0);
+      dirty.clear();
+      objectMap = new WeakMap();
+      objectCache = {};
+      entries = Object.create(null);
+      setImmediateOnce(_persist);
+    }
+  };
+}
+;// CONCATENATED MODULE: ./tmp/zeta-dom/observe.js
+
+var _zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    observe = _zeta$dom.observe,
+    registerCleanup = _zeta$dom.registerCleanup,
+    createAutoCleanupMap = _zeta$dom.createAutoCleanupMap,
+    afterDetached = _zeta$dom.afterDetached,
+    watchElements = _zeta$dom.watchElements,
+    watchAttributes = _zeta$dom.watchAttributes,
+    watchOwnAttributes = _zeta$dom.watchOwnAttributes;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/observe.js
+
+;// CONCATENATED MODULE: ./tmp/zeta-dom/dom.js
+
+var _defaultExport = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom;
+/* harmony default export */ var dom = (_defaultExport);
+var dom_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    reportError = dom_zeta$dom.reportError,
+    textInputAllowed = dom_zeta$dom.textInputAllowed,
+    beginDrag = dom_zeta$dom.beginDrag,
+    beginPinchZoom = dom_zeta$dom.beginPinchZoom,
+    insertText = dom_zeta$dom.insertText,
+    getShortcut = dom_zeta$dom.getShortcut,
+    setShortcut = dom_zeta$dom.setShortcut,
+    focusable = dom_zeta$dom.focusable,
+    focused = dom_zeta$dom.focused,
+    setTabRoot = dom_zeta$dom.setTabRoot,
+    unsetTabRoot = dom_zeta$dom.unsetTabRoot,
+    setModal = dom_zeta$dom.setModal,
+    releaseModal = dom_zeta$dom.releaseModal,
+    retainFocus = dom_zeta$dom.retainFocus,
+    releaseFocus = dom_zeta$dom.releaseFocus,
+    iterateFocusPath = dom_zeta$dom.iterateFocusPath,
+    dom_focus = dom_zeta$dom.focus,
+    dom_blur = dom_zeta$dom.blur;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/dom.js
+
+
+/* harmony default export */ var zeta_dom_dom = (dom);
+;// CONCATENATED MODULE: ./src/anim.js
+
+
+
+
+
+
+
+var customAnimateIn = {};
+var customAnimateOut = {};
+var animateScopes = createAutoCleanupMap(noop);
+var collectChanges = watchElements(zeta_dom_dom.root, '[animate-in],[animate-sequence],[is-animate-sequence]', handleMutations);
+
+function getShouldAnimate(element, trigger, scope, filterCallback) {
+  var filter = trigger === 'show' ? ':not([animate-on]), [animate-on~="' + trigger + '"]' : '[animate-on~="' + trigger + '"]';
+  return function (v) {
+    return matchSelector(v, filter) && (!scope || containsOrEquals(jquery(v).closest(scope)[0] || zeta_dom_dom.root, element)) && (!filterCallback || filterCallback(v)) && isVisible(v);
+  };
+}
+
+function handleMutations(addNodes) {
+  if (addNodes[0]) {
+    each(animateScopes, function (i, v) {
+      each(v, function (j, v) {
+        v.start();
+      });
+    });
+  }
+}
+
+function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+  var sequences = new WeakMap();
+  var deferred = deferrable();
+  var promise = setPromiseTimeout(deferred, 1500).catch(function () {
+    console.warn('Animation might take longer than expected', {
+      element: element,
+      animationType: animationType,
+      animationTrigger: animationTrigger
+    });
+  });
+  var fireEvent = executeOnce(function () {
+    zeta_dom_dom.emit('animationstart', element, {
+      animationType: animationType,
+      animationTrigger: animationTrigger
+    }, true);
+    promise.then(function () {
+      zeta_dom_dom.emit('animationcomplete', element, {
+        animationType: animationType,
+        animationTrigger: animationTrigger
+      }, true);
+    });
+  });
+
+  var animate = function animate(element) {
+    // transform cannot apply on inline elements
+    if (jquery(element).css('display') === 'inline') {
+      jquery(element).css('display', 'inline-block');
+    }
+
+    var effects = fill(getAttr(element, 'animate-in') || '', true);
+    var ms = parseFloat(jquery(element).css('transition-delay')) * 1000 || 0;
+    fireEvent();
+    deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), zeta_dom_dom.emit('animate' + animationType, element));
+    each(customAnimation, function (i, v) {
+      if (effects[i] || element.attributes[i]) {
+        var fn = v.bind(undefined, element, getAttr(element, i) || '');
+        deferred.waitFor(ms ? delay(ms, fn) : fn());
+      }
+    });
+  };
+
+  return {
+    promise: promise.then(callback),
+    animate: animate,
+    sequence: function sequence(element, filter, attr) {
+      var queue = mapGet(sequences, element, Array);
+      var reverse = getAttr(element, 'animate-sequence-reverse');
+      var selector = getAttr(element, 'animate-sequence') || '';
+      var elements = jquery(element).find(selector[0] === '>' ? selector : jquery(selector)).filter(filter).attr(attr || {}).get();
+
+      if (reverse === '' || reverse === animationType) {
+        elements.reverse();
+      }
+
+      each(elements, function (i, v) {
+        if (queue.indexOf(v) < 0 && queue.push(v) === 1) {
+          fireEvent();
+          deferred.waitFor(delay(50, function next() {
+            animate(queue.shift());
+            return queue[0] && delay(50, next);
+          }));
+        }
+      });
+    }
+  };
+}
+/**
+ * @param {Element} element
+ * @param {string} trigger
+ * @param {string=} scope
+ * @param {((elm: Element) => boolean) | boolean=} filterCallback
+ */
+
+
+function animateIn(element, trigger, scope, filterCallback) {
+  var dict = mapGet(animateScopes, element, Object);
+  var scopeObject = dict[trigger] || (dict[trigger] = {
+    start: filterCallback === true ? animateIn.bind(0, element, trigger, scope) : noop
+  });
+  var shouldAnimate = getShouldAnimate(element, trigger, scope, isFunction(filterCallback));
+  var anim = scopeObject.anim || (scopeObject.anim = handleAnimation(element, 'in', trigger, customAnimateIn, function () {
+    scopeObject.anim = null;
+  }));
+  selectIncludeSelf('[animate-in]:not([is-animate-sequence],.tweening-in)', element).filter(shouldAnimate).forEach(function (v) {
+    anim.animate(v);
+  });
+  selectIncludeSelf('[animate-sequence]', element).filter(shouldAnimate).forEach(function (v) {
+    if (!getClass(v, 'tweening-in')) {
+      setAttr(v, 'animate-in', '');
+      anim.animate(v);
+    }
+
+    anim.sequence(v, ':not(.tweening-in)', {
+      'animate-in': getAttr(v, 'animate-sequence-type') || '',
+      'animate-on': trigger,
+      'is-animate-sequence': ''
+    });
+  });
+  collectChanges(true);
+  return anim.promise;
+}
+/**
+ * @param {Element} element
+ * @param {string} trigger
+ * @param {string=} scope
+ * @param {((elm: Element) => boolean)=} filterCallback
+ * @param {boolean=} excludeSelf
+ */
+
+function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
+  var shouldAnimate = getShouldAnimate(element, trigger, scope, filterCallback);
+  var elements = selectIncludeSelf('.tweening-in,[animate-out]', element);
+
+  if (excludeSelf && elements[0] === element) {
+    elements.splice(0, 1);
+  }
+
+  var filtered = elements.filter(shouldAnimate);
+  var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function () {
+    jquery(trigger === 'show' ? elements : filtered).removeClass('tweening-in tweening-out');
+  });
+  jquery(filtered).filter('[animate-out]:not([is-animate-sequence],.tweening-out)').each(function (i, v) {
+    anim.animate(v);
+  });
+  jquery(filtered).filter('[animate-out][animate-sequence]').each(function (i, v) {
+    anim.sequence(v, '.tweening-in');
+  });
+  delete mapGet(animateScopes, element, Object)[trigger];
+  return anim.promise;
+}
+/**
+ * @param {string} name
+ * @param {(elm: Element, attrValue: string) => Promise<any>} callback
+ */
+
+function addAnimateIn(name, callback) {
+  customAnimateIn[name] = throwNotFunction(callback);
+}
+/**
+ * @param {string} name
+ * @param {(elm: Element, attrValue: string) => Promise<any>} callback
+ */
+
+function addAnimateOut(name, callback) {
+  customAnimateOut[name] = throwNotFunction(callback);
+}
+// EXTERNAL MODULE: external "waterpipe"
+var external_waterpipe_ = __webpack_require__(87);
+;// CONCATENATED MODULE: ./src/include/external/waterpipe.js
+
+/* harmony default export */ var waterpipe = (external_waterpipe_); // assign to a new variable to avoid incompatble declaration issue by typescript compiler
+
+var waterpipe_ = external_waterpipe_;
+
+waterpipe_.pipes['{'] = function (_, varargs) {
+  var globals = varargs.globals;
+  var prev = globals.new;
+  var o = {};
+  globals.new = o;
+
+  while (varargs.hasArgs()) {
+    var key = varargs.raw();
+
+    if (key === '}') {
+      break;
+    }
+
+    o[String(key).replace(/:$/, '')] = varargs.next();
+  }
+
+  globals.new = prev;
+  return o;
+};
+
+waterpipe_.pipes['{'].varargs = true;
+;// CONCATENATED MODULE: ./tmp/zeta-dom/domLock.js
+
+var domLock_zeta$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+    lock = domLock_zeta$dom.lock,
+    locked = domLock_zeta$dom.locked,
+    cancelLock = domLock_zeta$dom.cancelLock,
+    subscribeAsync = domLock_zeta$dom.subscribeAsync,
+    notifyAsync = domLock_zeta$dom.notifyAsync,
+    runAsync = domLock_zeta$dom.runAsync,
+    preventLeave = domLock_zeta$dom.preventLeave;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/domLock.js
+
+;// CONCATENATED MODULE: ./tmp/zeta-dom/events.js
+
+var ZetaEventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/events.js
+
+;// CONCATENATED MODULE: ./src/libCheck.js
+
+var BREW_KEY = '__BREW__';
+
+if (window[BREW_KEY]) {
+  throw new Error('Another copy of brew-js is instantiated. Please check your dependencies.');
+}
+
+defineHiddenProperty(window, BREW_KEY, true, true);
+/* harmony default export */ var libCheck = (null);
+;// CONCATENATED MODULE: ./src/defaults.js
+/** @deprecated @type {Zeta.Dictionary} */
+var defaults = {};
+/* harmony default export */ var src_defaults = (defaults);
+;// CONCATENATED MODULE: ./src/app.js
+
+
+
+
+
+
+
+
+var emitter = new ZetaEventContainer();
+var root = zeta_dom_dom.root;
+var featureDetections = {};
+var dependencies = {};
+var extensions = {};
+var initList = [];
+/** @type {Brew.AppInstance} */
+
+var app;
+/** @type {boolean} */
+
+var appReady;
+/** @type {boolean} */
+
+var appInited;
+/** @type {Promise<void> & Zeta.Deferrable} */
+
+var appInit;
+var appReadyResolve;
+var appReadyReject;
+
+function exactTargetWrapper(handler) {
+  return function (e) {
+    if (e.target === e.context) {
+      return handler.apply(this, arguments);
+    }
+  };
+}
+
+function wrapEventHandlers(event, handler, noChildren) {
+  if (isPlainObject(event)) {
+    return noChildren ? mapObject(event, exactTargetWrapper) : event;
+  }
+
+  if (noChildren) {
+    handler = exactTargetWrapper(handler);
+  }
+
+  return (event.indexOf(' ') >= 0 ? fill : kv)(event, handler);
+}
+
+function initExtension(app, name, deps, options, callback) {
+  if (extensions[name]) {
+    throw new Error('Extension' + name + 'is already initiated');
+  }
+
+  deps = grep(deps, function (v) {
+    return !extensions[v.replace(/^\?/, '')];
+  });
+  var counter = deps.length || 1;
+
+  var wrapper = function wrapper(loaded) {
+    if (loaded && ! --counter) {
+      extensions[name] = true;
+      callback(app, options || {});
+
+      if (dependencies[name]) {
+        combineFn(dependencies[name].splice(0))(true);
+      }
+    }
+  };
+
+  if (deps[0]) {
+    each(deps, function (i, v) {
+      var key = v.replace(/^\?/, '');
+      var arr = dependencies[key] || (dependencies[key] = []);
+      arr.push(key === v ? wrapper : wrapper.bind(0, true));
+    });
+  } else {
+    wrapper(true);
+  }
+}
+
+function defineUseMethod(name, deps, callback) {
+  var method = camel('use-' + name);
+  definePrototype(App, kv(method, function (options) {
+    initExtension(this, name, deps, options, callback);
+  }));
+}
+
+function App() {
+  var self = this;
+  var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
+  defineOwnProperty(self, 'element', root, true);
+  defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
+    appReadyResolve = resolve.bind(0, self);
+    appReadyReject = reject;
+  }), true);
+  always(self.ready, function (resolved, error) {
+    setReadyState(resolved ? 'ready' : 'error');
+
+    if (resolved) {
+      appReady = true;
+      app.emit('ready');
+    } else {
+      console.error(error);
+    }
+  });
+}
+
+definePrototype(App, {
+  emit: function emit(event, element, data, options) {
+    if (!is(element, Node)) {
+      return emitter.emit(event, this, element, data);
+    }
+
+    var result = zeta_dom_dom.emit(event, element, data, options);
+
+    if (!result && (element === root || options === true || (options || '').bubbles)) {
+      // backward compatibility where app will receive event bubbled up from dom element
+      data = extend({
+        target: element
+      }, isPlainObject(data) || {
+        data: data
+      });
+      result = emitter.emit(event, this, data, options);
+    }
+
+    return result;
+  },
+  define: function define(props) {
+    util_define(this, props);
+  },
+  beforeInit: function beforeInit(promise) {
+    if (isFunction(promise)) {
+      promise = makeAsync(promise).call(this);
+    }
+
+    appInit.waitFor(promise.then(null, appReadyReject));
+  },
+  halt: function halt() {
+    appInit.waitFor(new Promise(noop));
+  },
+  isElementActive: function isElementActive() {
+    return true;
+  },
+  detect: function detect(names, callback) {
+    var app = this;
+    var supports = {};
+    each(names, function (i, v) {
+      if (featureDetections[v]) {
+        supports[v] = isFunction(featureDetections[v]) ? featureDetections[v] = resolveAll(featureDetections[v]()).catch(function (e) {
+          console.warn('Detection for ' + v + ' has thrown exception:', e);
+          return false;
+        }) : featureDetections[v];
+      }
+    });
+    this.beforeInit(resolveAll(supports, function (supports) {
+      supports = Object.freeze(extend({}, app.supports, supports));
+
+      util_define(app, {
+        supports: supports
+      });
+
+      return isFunction(callback) && callback(supports);
+    }));
+  },
+  when: function when(value, callback) {
+    this.beforeInit(resolveAll(value, function (value) {
+      if (value) {
+        return callback();
+      }
+    }));
+  },
+  on: function on(target, event, handler, noChildren) {
+    if (isFunction(event) || event === undefined) {
+      return emitter.add(this, wrapEventHandlers(target, event));
+    }
+
+    var handlers = wrapEventHandlers(event, handler, (noChildren || handler) === true);
+
+    if (!is(target, Node)) {
+      return combineFn(jquery(target).get().map(function (v) {
+        return zeta_dom_dom.on(v, handlers);
+      }));
+    }
+
+    return zeta_dom_dom.on(target, handlers);
+  },
+  matchElement: noop,
+  beforeUpdate: noop
+});
+watchable(App.prototype);
+var defaultApp = new App();
+app = {
+  on: defaultApp.on.bind(defaultApp)
+};
+
+function init(callback) {
+  throwNotFunction(callback);
+
+  if (appInit) {
+    throw new Error('brew() can only be called once');
+  }
+
+  appInit = deferrable(zeta_dom_dom.ready);
+  app = defaultApp;
+  each(src_defaults, function (i, v) {
+    var fn = v && isFunction(app[camel('use-' + i)]);
+
+    if (fn) {
+      fn.call(app, v);
+    }
+  });
+  each(initList, function (i, v) {
+    if (isPlainObject(v)) {
+      util_define(app, v);
+    } else {
+      throwNotFunction(v)(app);
+    }
+  });
+  app.beforeInit(makeAsync(callback)(app));
+  each(dependencies, function (i, v) {
+    combineFn(v)();
+  });
+  appInited = true;
+  notifyAsync(root, appInit);
+  appInit.then(appReadyResolve);
+  bind(window, 'pagehide', function (e) {
+    app.emit('unload', {
+      persisted: e.persisted
+    }, {
+      handleable: false
+    });
+  });
+  return app;
+}
+
+util_define(init, {
+  with: function _with() {
+    initList.push.apply(initList, arguments);
+    return this;
+  }
+});
+
+function install(name, callback) {
+  defineUseMethod(name, [], throwNotFunction(callback));
+}
+function addExtension(autoInit, name, deps, callback) {
+  callback = throwNotFunction(callback || deps || name);
+  deps = isArray(deps) || isArray(name) || [];
+  return function (app) {
+    if (autoInit === true) {
+      initExtension(app, name, deps, {}, callback);
+    } else {
+      defineUseMethod(autoInit, deps, callback);
+    }
+  };
+}
+function addDetect(name, callback) {
+  featureDetections[name] = throwNotFunction(callback);
+}
+function emitAppEvent() {
+  return defaultApp.emit.apply(defaultApp, arguments);
+}
+function isElementActive(element) {
+  return !app || app.isElementActive(element);
+}
+/* harmony default export */ var src_app = (init);
+;// CONCATENATED MODULE: ./src/directive.js
+
+
+
+
+
+
+var directive_root = zeta_dom_dom.root;
+var directive_emitter = new ZetaEventContainer();
+
+var directive_toString = function toString(v) {
+  return isUndefinedOrNull(v) ? null : String(v);
+};
+
+var toNumber = function toNumber(v) {
+  return isUndefinedOrNull(v) || isNaN(v) ? null : +v;
+};
+
+var converters = {
+  string: [pipe, directive_toString],
+  number: [toNumber, function (v) {
+    return directive_toString(toNumber(v));
+  }],
+  boolean: [function (v) {
+    return !isUndefinedOrNull(v);
+  }, function (v) {
+    return v ? '' : null;
+  }]
+};
+
+function Component(element) {
+  defineOwnProperty(this, 'element', element, true);
+}
+
+function ComponentContext() {}
+
+definePrototype(ComponentContext, {
+  on: function on(event, handler) {
+    return directive_emitter.add(this, event, handler);
+  }
+});
+watchable(ComponentContext.prototype);
+
+function createContextClass(options) {
+  var attributes = map(options.directives, function (v) {
+    return v.attribute;
+  });
+  var directives = mapObject(options.directives, function (v) {
+    var name = v.attribute;
+    var converter = converters[v.type] || converters.string;
+    return {
+      get: function get(element) {
+        return converter[0](getAttr(element, name));
+      },
+      set: function set(element, value) {
+        value = converter[1](value);
+        setAttr(element, name, value);
+        return converter[0](value);
+      }
+    };
+  });
+
+  var Context = function Context(element) {
+    var self = this;
+    defineOwnProperty(self, 'element', element, true);
+
+    if (attributes[0]) {
+      var update = function update() {
+        each(directives, function (i, v) {
+          self[i] = v.get(element);
+        });
+      };
+
+      update();
+      var collectChange = watchOwnAttributes(element, attributes, update);
+      self.on('destroy', collectChange.dispose);
+    }
+  };
+
+  definePrototype(Context, ComponentContext);
+  each(directives, function (i) {
+    defineObservableProperty(Context.prototype, i, null, function (v) {
+      return directives[i].set(this.element, v);
+    });
+  });
+  return Context;
+}
+
+function getDirectiveComponent(element) {
+  return new Component(element);
+}
+function registerSimpleDirective(key, attr, init, dispose) {
+  var map = new WeakMap();
+
+  var set = function set(enabled, element) {
+    setAttr(element, attr, enabled ? '' : null);
+
+    if (!enabled) {
+      (mapRemove(map, element) || noop)();
+    } else if (!map.has(element)) {
+      map.set(element, isFunction(init(element)) || dispose && dispose.bind(undefined, element));
+    }
+  };
+
+  watchElements(directive_root, '[' + attr + ']', function (added, removed) {
+    removed.forEach(set.bind(0, false));
+    added.forEach(set.bind(0, true));
+  });
+  defineGetterProperty(Component.prototype, key, function () {
+    return getAttr(this.element, attr) !== null;
+  }, function (v) {
+    return set(v, this.element);
+  });
+}
+function registerDirective(key, selector, options) {
+  var Context = createContextClass(options);
+  var map = new WeakMap();
+  var collect = watchElements(directive_root, selector, function (added, removed) {
+    each(removed, function (i, v) {
+      directive_emitter.emit('destroy', mapRemove(map, v).context);
+    });
+    each(added, function (i, v) {
+      var context = new Context(v);
+      map.set(v, {
+        component: options.component(v, context),
+        context: context
+      });
+    });
+  }, true);
+  defineGetterProperty(Component.prototype, key, function () {
+    var element = this.element;
+
+    if (!map.has(element) && matchSelector(element, selector)) {
+      collect();
+    }
+
+    return (map.get(element) || '').component || null;
+  });
+}
+;// CONCATENATED MODULE: ./src/domAction.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
+var domAction_root = zeta_dom_dom.root;
+var flyoutStates = createAutoCleanupMap(function (element, state) {
+  state.resolve();
+});
+var executedAsyncActions = new Map();
+/** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
+
+var asyncActions = {};
+
+function disableEvent(e) {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}
+
+function isSameWindow(target) {
+  return !target || target === '_self' || target === window.name;
+}
+/**
+ * @param {string} attr
+ * @param {(this: Element, e: JQuery.UIEventBase) => Brew.PromiseOrEmpty} callback
+ */
+
+
+function addAsyncAction(attr, callback) {
+  asyncActions[attr] = throwNotFunction(callback);
+}
+function isFlyoutOpen(selector) {
+  var state = flyoutStates.get(jquery(selector)[0]);
+  return !!state && !state.closePromise;
+}
+/**
+ * @param {Element | string=} flyout
+ * @param {any=} value
+ */
+
+function closeFlyout(flyout, value) {
+  /** @type {Element[]} */
+  var elements = jquery(flyout || '[is-flyout].open').get();
+  return resolveAll(elements.map(function (v) {
+    var state = flyoutStates.get(v);
+
+    if (!state) {
+      return resolve();
+    }
+
+    var promise = state.closePromise;
+
+    if (!promise) {
+      promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
+        if (flyoutStates.get(v) === state) {
+          flyoutStates.delete(v);
+          setClass(v, {
+            open: false,
+            closing: false,
+            visible: false
+          });
+          zeta_dom_dom.emit('flyouthide', v);
+        }
+      });
+      state.closePromise = promise;
+      state.resolve(value);
+      releaseModal(v);
+      releaseFocus(v);
+      dom_blur(v);
+
+      if (state.source) {
+        setClass(state.source, 'target-opened', false);
+      }
+
+      zeta_dom_dom.emit('flyoutclose', v);
+    }
+
+    return promise;
+  }));
+}
+function toggleFlyout(selector, source, options) {
+  return openFlyout(selector, null, source, options, true);
+}
+/**
+ * @param {string} selector
+ * @param {any=} states
+ * @param {Element=} source
+ * @param {(Zeta.Dictionary | boolean)=} options
+ * @param {boolean=} closeIfOpened
+ */
+
+function openFlyout(selector, states, source, options, closeIfOpened) {
+  var element = jquery(selector)[0];
+
+  if (!element) {
+    return reject();
+  }
+
+  if (is(states, Node) || isPlainObject(source)) {
+    options = source;
+    source = states;
+    states = null;
+  }
+
+  var prev = flyoutStates.get(element);
+
+  if (prev && !prev.closePromise) {
+    if ((closeIfOpened || options) === true) {
+      closeFlyout(element, source && waterpipe.eval('`' + source.value));
+    } else {
+      prev.path = app.path;
+    }
+
+    return prev.promise;
+  }
+
+  options = extend({
+    focus: !source || !textInputAllowed(source),
+    tabThrough: hasAttr(element, 'tab-through'),
+    modal: hasAttr(element, 'is-modal')
+  }, options);
+  var focusFriend = source;
+
+  if (!focusFriend && !focusable(element)) {
+    focusFriend = zeta_dom_dom.modalElement;
+  }
+
+  var resolve;
+  var promise = new promise_polyfill(function (resolve_) {
+    resolve = resolve_;
+  });
+  flyoutStates.set(element, {
+    source: source,
+    promise: promise,
+    resolve: resolve,
+    path: app.path
+  });
+
+  if (focusFriend) {
+    retainFocus(focusFriend, element);
+  }
+
+  if (source) {
+    setClass(source, 'target-opened', true);
+  }
+
+  if (states && app.setVar) {
+    app.setVar(element, states);
+  }
+
+  setClass(element, {
+    visible: true,
+    closing: false
+  });
+  resolveAll([runCSSTransition(element, 'open'), animateIn(element, 'open')].map(catchAsync), function () {
+    if (options.focus && !focused(element)) {
+      var focusTarget = options.focus === true ? element : jquery(element).find(options.focus)[0];
+
+      if (focusTarget) {
+        dom_focus(focusTarget);
+      } else {
+        dom_focus(element, false);
+      }
+    }
+  });
+
+  if (options.modal) {
+    setModal(element);
+  }
+
+  if (options.tabThrough) {
+    unsetTabRoot(element);
+  } else {
+    setTabRoot(element);
+  }
+
+  var closeHandler = function closeHandler(e) {
+    var swipeDismiss = element.getAttribute('swipe-dismiss');
+
+    if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
+      closeFlyout(element);
+
+      if (zeta_dom_dom.event) {
+        zeta_dom_dom.event.preventDefault();
+      }
+
+      e.handled();
+    }
+  };
+
+  always(promise, combineFn(zeta_dom_dom.on(source || element, 'focusout', closeHandler), zeta_dom_dom.on(element, 'gesture', closeHandler)));
+  zeta_dom_dom.emit('flyoutshow', element, {
+    data: states
+  });
+  return promise;
+}
+registerSimpleDirective('enableLoadingClass', 'loading-class', function (element) {
+  return subscribeAsync(element, function (loading) {
+    if (loading) {
+      setClass(element, 'loading', loading);
+    } else {
+      runCSSTransition(element, 'loading-complete', function () {
+        setClass(element, 'loading', false);
+      });
+    }
+  });
+});
+zeta_dom_dom.ready.then(function () {
+  watchElements(domAction_root, '[tab-root]', function (addedNodes, removedNodes) {
+    addedNodes.forEach(setTabRoot);
+    removedNodes.forEach(unsetTabRoot);
+  }, true);
+  app.on('mounted', function (e) {
+    var selector = selectorForAttr(asyncActions);
+
+    if (selector) {
+      jquery(selectIncludeSelf(selector, e.target)).attr('async-action', '');
+    }
+  });
+  app.on('beforepageload', function () {
+    flyoutStates.forEach(function (v, i) {
+      if (v.path && v.path !== app.path) {
+        closeFlyout(i);
+      }
+    });
+  });
+  /**
+   * @param {JQuery.UIEventBase} e
+   */
+
+  function handleAsyncAction(e) {
+    var element = e.currentTarget;
+
+    if (matchSelector(element, SELECTOR_DISABLED)) {
+      mapRemove(executedAsyncActions, element);
+      disableEvent(e);
+      return;
+    }
+
+    var executed = mapGet(executedAsyncActions, element, Array);
+    var callback = null;
+
+    var next = function next(_next) {
+      if (focusable(element)) {
+        _next(e);
+      } else {
+        mapRemove(executedAsyncActions, element);
+      }
+    };
+
+    each(asyncActions, function (i, v) {
+      if (element.attributes[i] && executed.indexOf(v) < 0) {
+        callback = v;
+        return false;
+      }
+    });
+
+    if (!callback) {
+      executedAsyncActions.delete(element);
+    } else {
+      executed.push(callback);
+      var returnValue = callback.call(element, e);
+
+      if (!e.isImmediatePropagationStopped()) {
+        if (isThenable(returnValue)) {
+          disableEvent(e);
+          notifyAsync(element, returnValue);
+          returnValue.then(function () {
+            next(dispatchDOMMouseEvent);
+          }, function (e) {
+            executedAsyncActions.delete(element);
+            console.warn('Action threw an error:', e);
+          });
+        } else {
+          next(handleAsyncAction);
+        }
+      }
+    }
+  }
+
+  watchElements(domAction_root, '[async-action]', function (added, removed) {
+    jquery(added).on('click', handleAsyncAction);
+    jquery(removed).off('click', handleAsyncAction);
+  });
+  jquery('body').on('submit', 'form:not([action])', function (e) {
+    e.preventDefault();
+  });
+  jquery('body').on('click', SELECTOR_DISABLED, disableEvent);
+  jquery('body').on('click', 'a[href]:not([download]), [data-href]', function (e) {
+    if (e.isDefaultPrevented()) {
+      return;
+    }
+
+    var self = e.currentTarget;
+    var href = (self.origin === location.origin ? '' : self.origin) + self.pathname + self.search + self.hash;
+    var dataHref = self.getAttribute('data-href');
+    e.stopPropagation();
+
+    if (!isSameWindow(self.target)) {
+      return;
+    }
+
+    if ("navigate" in app && (dataHref || app.isAppPath(href))) {
+      e.preventDefault();
+      app.navigate(dataHref || app.fromHref(href));
+    } else if (locked(domAction_root)) {
+      e.preventDefault();
+      cancelLock(domAction_root).then(function () {
+        var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
+        window.open(dataHref || href, '_self', features.join(','));
+      });
+    }
+  });
+});
+;// CONCATENATED MODULE: ./src/extension/i18n.js
+
+
+
+
+function toDictionary(languages) {
+  if (languages) {
+    var dict = {};
+    each(languages, function (i, v) {
+      var key = v.toLowerCase();
+      dict[key] = v;
+
+      if (key.indexOf('-') > 0) {
+        dict[key.split('-')[0]] = v;
+      }
+    });
+    return dict;
+  }
+}
+
+function getCanonicalValue(languages, value) {
+  if (languages && value) {
+    return languages[value.toLowerCase()];
+  }
+
+  return value;
+}
+
+function detectLanguage(languages, defaultLanguage) {
+  var userLanguages = navigator.languages || [navigator.language || ''];
+
+  if (!languages) {
+    return userLanguages[0];
+  }
+
+  userLanguages = toDictionary(userLanguages);
+
+  if (isArray(languages)) {
+    languages = toDictionary(languages);
+  }
+
+  return single(userLanguages, function (v, i) {
+    return languages[i];
+  }) || defaultLanguage || util_keys(languages)[0];
+}
+
+/* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
+  var languages = toDictionary(options.languages);
+  var routeParam = app.route && options.routeParam;
+
+  var cookie = options.cookie && common_cookie(options.cookie, 86400000);
+
+  var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || (options.detectLanguage !== false ? detectLanguage : getCanonicalValue)(languages, options.defaultLanguage);
+
+  var setLanguage = function setLanguage(newLangauge) {
+    app.language = newLangauge;
+  };
+
+  defineObservableProperty(app, 'language', language, function (newLangauge) {
+    newLangauge = getCanonicalValue(languages, newLangauge) || language;
+
+    if (cookie) {
+      cookie.set(newLangauge);
+    }
+
+    if (routeParam && appReady) {
+      app.route.replace(routeParam, newLangauge.toLowerCase());
+    }
+
+    if (language !== newLangauge) {
+      language = newLangauge;
+
+      if (options.reloadOnChange) {
+        location.reload();
+      }
+    }
+
+    return language;
+  });
+  app.define({
+    setLanguage: setLanguage,
+    detectLanguage: detectLanguage
+  });
+
+  if (routeParam) {
+    app.route.watch(routeParam, setLanguage);
+    app.on('ready', function () {
+      app.route.replace(routeParam, language.toLowerCase());
+    });
+  }
+}));
+;// CONCATENATED MODULE: ./src/extension/scrollable.js
+
+
+
+
+
+
+
+var SELECTOR_SCROLLABLE = '[scrollable]';
+var SELECTOR_TARGET = '[scrollable-target]';
+/* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
+  defaultOptions = extend({
+    content: '[scrollable-target]:not(.disabled)',
+    bounce: false
+  }, defaultOptions);
+  var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
+
+  function getOptions(context) {
+    return {
+      handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
+      hScroll: !matchWord(context.dir, 'y-only'),
+      vScroll: !matchWord(context.dir, 'x-only'),
+      pageItem: context.selector,
+      snapToPage: context.paged === 'always' || context.paged === app.orientation
+    };
+  }
+
+  function initScrollable(container, context) {
+    var scrollable = jquery.scrollable(container, extend({}, defaultOptions, getOptions(context)));
+    var cleanup = [];
+    cleanup.push(zeta_dom_dom.on(container, {
+      drag: function drag() {
+        beginDrag();
+      },
+      getContentRect: function getContentRect(e) {
+        if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
+          var padding = scrollable.scrollPadding(e.target);
+          return getRect(container).expand(padding, -1);
+        }
+      },
+      scrollBy: function scrollBy(e) {
+        var result = scrollable.scrollBy(e.x, e.y, e.behavior === 'instant' ? 0 : 200);
+        return {
+          x: result.deltaX,
+          y: result.deltaY
+        };
+      }
+    }));
+
+    function initPageIndex(enabled) {
+      if (!enabled || initPageIndex.d++) {
+        return;
+      }
+
+      var scrolling = false;
+      var needRefresh = false;
+      var isControlledScroll;
+      var currentIndex = 0;
+      var timeout;
+
+      function getItem(index) {
+        return context.selector && jquery(context.selector, container).get()[index];
+      }
+
+      function setState(index) {
+        var oldIndex = currentIndex;
+        currentIndex = index;
+
+        if (context.varname && app.setVar) {
+          app.setVar(container, context.varname, index);
+        }
+
+        if (oldIndex !== index) {
+          app.emit('scrollIndexChange', container, {
+            oldIndex: oldIndex,
+            newIndex: index
+          }, true);
+        }
+      }
+
+      function scrollTo(index, align) {
+        var item = getItem(index);
+        align = align || 'center top';
+
+        if (!scrolling && isVisible(container) && item) {
+          scrolling = true;
+          isControlledScroll = true;
+          setState(index);
+          scrollable.scrollToElement(item, align, align, 200, function () {
+            scrolling = false;
+            isControlledScroll = false;
+          });
+        }
+      }
+
+      function refresh() {
+        var isPaged = context.paged === 'always' || context.paged === app.orientation;
+
+        if (isPaged && isVisible(container)) {
+          if (scrolling) {
+            needRefresh = true;
+          } else {
+            needRefresh = false;
+            scrollTo(currentIndex);
+          }
+        }
+      }
+
+      cleanup.push(app.on('orientationchange', function () {
+        scrollable.setOptions({
+          snapToPage: context.paged === 'always' || context.paged === app.orientation
+        });
+      }), app.on(container, {
+        statechange: function statechange(e) {
+          if (context.selector && !scrolling) {
+            var newIndex = e.data[context.varname];
+
+            if ((getRect(getItem(newIndex)).width | 0) > (getRect().width | 0)) {
+              scrollTo(newIndex, 'left center');
+            } else {
+              scrollTo(newIndex);
+            }
+          }
+        },
+        scrollMove: function scrollMove(e) {
+          scrolling = true;
+
+          if (context.selector && !isControlledScroll) {
+            setState(e.pageIndex);
+          }
+        },
+        scrollStop: function scrollStop(e) {
+          scrolling = false;
+
+          if (context.selector) {
+            setState(e.pageIndex);
+
+            if (needRefresh) {
+              refresh();
+            }
+          }
+        }
+      }, true), bind(window, 'resize', function () {
+        if (context.selector) {
+          clearTimeout(timeout);
+          timeout = setTimeout(refresh, 200);
+        }
+      }));
+    }
+
+    function initPersistScroll(enabled) {
+      if (!enabled || initPersistScroll.d++) {
+        return;
+      }
+
+      var savedOffset = {};
+      var hasAsync = false;
+
+      var restoreScroll = function restoreScroll() {
+        var offset = savedOffset[history.state];
+
+        if (offset) {
+          scrollable.scrollTo(offset.x, offset.y, 0);
+        }
+      };
+
+      cleanup.push(zeta_dom_dom.on('asyncStart', function () {
+        hasAsync = true;
+      }), zeta_dom_dom.on('asyncEnd', function () {
+        hasAsync = false;
+
+        if (context.persistScroll) {
+          restoreScroll();
+        }
+      }), app.on(container, 'scrollStart', function (e) {
+        if (e.source !== 'script') {
+          delete savedOffset[history.state];
+        }
+      }, true), app.on('navigate', function (e) {
+        savedOffset[e.oldStateId] = {
+          x: scrollable.scrollLeft(),
+          y: scrollable.scrollTop()
+        };
+        setTimeout(function () {
+          if (!hasAsync && context.persistScroll) {
+            restoreScroll();
+          }
+        });
+      }));
+    }
+
+    initPageIndex.d = 0;
+    initPersistScroll.d = 0;
+    context.watch(function () {
+      scrollable.setOptions(getOptions(context));
+    });
+    context.watch('selector', initPageIndex, true);
+    context.watch('persistScroll', initPersistScroll, true);
+    context.on('destroy', function () {
+      combineFn(cleanup)();
+      scrollable.destroy();
+    });
+    scrollable[focusable(container) ? 'enable' : 'disable']();
+    return scrollable;
+  }
+
+  registerDirective('scrollable', SELECTOR_SCROLLABLE, {
+    component: initScrollable,
+    directives: {
+      dir: {
+        attribute: 'scrollable'
+      },
+      paged: {
+        attribute: 'scroller-snap-page'
+      },
+      varname: {
+        attribute: 'scroller-state'
+      },
+      selector: {
+        attribute: 'scroller-page'
+      },
+      persistScroll: {
+        attribute: 'persist-scroll',
+        type: 'boolean'
+      }
+    }
+  });
+  jquery.scrollable.hook({
+    scrollStart: function scrollStart(e) {
+      app.emit('scrollStart', this, e, true);
+    },
+    scrollMove: function scrollMove(e) {
+      app.emit('scrollMove', this, e, true);
+    },
+    scrollEnd: function scrollEnd(e) {
+      app.emit('scrollStop', this, e, true);
+    },
+    scrollProgressChange: function scrollProgressChange(e) {
+      app.emit('scrollProgressChange', this, e, true);
+    }
+  }); // update scroller on events other than window resize
+
+  function refresh() {
+    jquery(SELECTOR_SCROLLABLE).scrollable('refresh');
+  }
+
+  app.on('statechange orientationchange animationcomplete', function () {
+    setTimeoutOnce(refresh);
+  });
+  app.on('pageenter', function (e) {
+    var $scrollables = jquery(selectIncludeSelf(SELECTOR_SCROLLABLE, e.target)).add(jquery(e.target).parents(SELECTOR_SCROLLABLE));
+    jquery(selectIncludeSelf(SELECTOR_TARGET, e.target)).each(function (i, v) {
+      jquery(v).toggleClass('disabled', !isElementActive(v));
+    });
+    $scrollables.each(function (i, v) {
+      getDirectiveComponent(v).scrollable.refresh();
+    });
+    $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
+  }); // scroll-into-view animation trigger
+
+  function updateScrollIntoView() {
+    jquery('[animate-on~="scroll-into-view"]').filter(':visible').each(function (i, v) {
+      var m = new DOMMatrix(getComputedStyle(v).transform);
+      var rootRect = getRect(zeta_dom_dom.root);
+      var thisRect = getRect(v);
+      var isInView = rectIntersects(rootRect, thisRect.translate(-m.e || 0, 0)) || rectIntersects(rootRect, thisRect.translate(0, -m.f || 0));
+
+      if (isInView ^ getClass(v, 'tweening-in') && (isInView || v.attributes['animate-out'])) {
+        (isInView ? animateIn : animateOut)(v, 'scroll-into-view');
+      }
+    });
+  }
+
+  app.on('resize pageenter statechange scrollMove orientationchange', function () {
+    setTimeoutOnce(updateScrollIntoView);
+  });
+  zeta_dom_dom.on('modalchange', function () {
+    jquery(SELECTOR_SCROLLABLE).each(function (i, v) {
+      jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
+    });
+  });
+  zeta_dom_dom.on('keystroke', function (e) {
+    var originalEvent = zeta_dom_dom.event;
+
+    if (zeta_dom_dom.modalElement && originalEvent && originalEvent.target === document.body && matchWord(e.data, 'space pageUp pageDown leftArrow rightArrow upArrow downArrow')) {
+      var target = selectIncludeSelf(SELECTOR_SCROLLABLE, zeta_dom_dom.modalElement)[0];
+
+      if (target) {
+        jquery(target).triggerHandler(jquery.Event('keydown', {
+          keyCode: originalEvent.keyCode
+        }));
+      }
+    }
+  });
+}));
+;// CONCATENATED MODULE: ./tmp/zeta-dom/env.js
+
+var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IOS,
+    IS_IE10 = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE10,
+    IS_IE = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_IE,
+    IS_MAC = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_MAC,
+    IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_TOUCH;
+
+;// CONCATENATED MODULE: ./src/include/zeta-dom/env.js
+
+;// CONCATENATED MODULE: ./src/extension/viewport.js
+
+
+
+
+
+
+
+/* harmony default export */ var viewport = (addExtension(true, 'viewport', function (app) {
+  var setOrientation = defineObservableProperty(app, 'orientation', '', true);
+  var visualViewport = window.visualViewport;
+  var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
+  var aspectRatio, viewportWidth, viewportHeight;
+
+  function checkViewportSize(triggerEvent) {
+    if (visualViewport) {
+      viewportWidth = visualViewport.width;
+      viewportHeight = visualViewport.height;
+    } else {
+      var availWidth = screen.availWidth;
+      var availHeight = screen.availHeight;
+      viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
+      viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
+    }
+
+    var previousAspectRatio = aspectRatio;
+    aspectRatio = viewportWidth / viewportHeight;
+    setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
+
+    if (triggerEvent !== false) {
+      var data = {
+        aspectRatio: aspectRatio,
+        orientation: app.orientation,
+        viewportWidth: viewportWidth,
+        viewportHeight: viewportHeight
+      };
+      app.emit('resize', data);
+
+      if (either(aspectRatio >= 1, previousAspectRatio >= 1)) {
+        app.emit('orientationchange', data);
+      }
+    }
+  }
+
+  util_define(app, {
+    get aspectRatio() {
+      return aspectRatio;
+    },
+
+    get viewportWidth() {
+      return viewportWidth;
+    },
+
+    get viewportHeight() {
+      return viewportHeight;
+    }
+
+  });
+  app.on('orientationchange', function () {
+    animateIn(zeta_dom_dom.root, 'orientationchange');
+  });
+
+  if (visualViewport) {
+    bind(visualViewport, 'resize', checkViewportSize);
+    checkViewportSize(false);
+  } else {
+    jquery(window).on('resize', function () {
+      setTimeoutOnce(checkViewportSize);
+    });
+    jquery(function () {
+      checkViewportSize(false);
+    });
+  }
+}));
+;// CONCATENATED MODULE: ./src/extension/router.js
+function router_typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { router_typeof = function _typeof(obj) { return typeof obj; }; } else { router_typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return router_typeof(obj); }
+
+
+
+
+
+
+
+
+
+
+
+var _ = createPrivateStore();
+
+var mapProto = Map.prototype;
+var parsedRoutes = {};
+var router_root = zeta_dom_dom.root;
+var states = [];
+var router_baseUrl;
+var storage;
+
+var constant = function constant(value) {
+  return pipe.bind(0, value);
+};
+
+var isAppPath = function isAppPath(path) {
+  return !!isSubPathOf(path, router_baseUrl);
+};
+
+var fromPathname = function fromPathname(path) {
+  return isSubPathOf(path, router_baseUrl) || '/';
+};
+
+var toPathname = function toPathname(path) {
+  return combinePath(router_baseUrl, path);
+};
+
+var fromRoutePath = pipe;
+var toRoutePath = pipe;
+function matchRoute(route, segments, ignoreExact) {
+  if (!route || !route.test) {
+    route = parseRoute(route);
+  }
+
+  if (!isArray(segments)) {
+    segments = toSegments(segments);
+  }
+
+  return route.test(segments, ignoreExact);
+}
+
+function getCurrentQuery() {
+  return location.search + location.hash;
+}
+
+function getCurrentPathAndQuery() {
+  return location.pathname + getCurrentQuery();
+}
+
+function HistoryStorage(obj) {
+  var map = new Map(obj && Object.entries(obj));
+  Object.setPrototypeOf(map, HistoryStorage.prototype);
+  return map;
+}
+
+function stringOrSymbol(key) {
+  return router_typeof(key) === 'symbol' ? key : String(key);
+}
+
+definePrototype(HistoryStorage, Map, {
+  has: function has(k) {
+    return mapProto.has.call(this, stringOrSymbol(k));
+  },
+  get: function get(k) {
+    return mapProto.get.call(this, stringOrSymbol(k));
+  },
+  set: function set(k, v) {
+    return mapProto.set.call(this, stringOrSymbol(k), v);
+  },
+  delete: function _delete(k) {
+    return mapProto.delete.call(this, stringOrSymbol(k));
+  },
+  toJSON: function toJSON() {
+    return mapObject(this, pipe);
+  }
+});
+
+function RoutePattern(props) {
+  extend(this, props);
+}
+
+definePrototype(RoutePattern, Array, {
+  has: function has(name) {
+    return name in this.params;
+  },
+  match: function match(index, value) {
+    if (typeof index === 'string') {
+      index = this.params[index];
+    }
+
+    var part = this[index];
+    return !!part && (part.name ? part.test(value) : iequal(part, value));
+  },
+  test: function test(segments, ignoreExact) {
+    var self = this;
+    return segments.length >= self.minLength && (ignoreExact || !self.exact || segments.length <= self.length) && !any(self, function (v, i) {
+      return segments[i] && !(v.name ? v.test(segments[i]) : iequal(segments[i], v));
+    });
+  }
+});
+
+function parseRoute(path) {
+  path = String(path);
+
+  if (!parsedRoutes[path]) {
+    var tokens = new RoutePattern();
+    var params = {};
+    var minLength;
+    path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
+      if (c && !minLength) {
+        minLength = tokens.length;
+      }
+
+      if (b) {
+        var re = d ? new RegExp('^' + d + '$', 'i') : /./;
+        params[b] = tokens.length;
+        tokens.push({
+          name: b,
+          test: re.test.bind(re)
+        });
+      } else {
+        tokens.push(a.toLowerCase());
+      }
+    });
+    extend(tokens, {
+      pattern: path,
+      params: params,
+      exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
+      minLength: minLength || tokens.length
+    });
+    parsedRoutes[path] = deepFreeze(tokens);
+  }
+
+  return parsedRoutes[path];
+}
+
+function createRouteState(route, segments, params) {
+  route = route || [];
+  segments = segments.map(encodeURIComponent);
+  return {
+    route: route,
+    params: exclude(params, ['remainingSegments']),
+    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
+    maxPath: normalizePath(segments.slice(0, route.length).join('/'))
+  };
+}
+
+function matchRouteByParams(routes, params, partial) {
+  var matched = single(routes, function (tokens) {
+    var valid = single(tokens.params, function (v, i) {
+      return params[i] !== null;
+    });
+
+    if (valid && !partial) {
+      valid = !single(params, function (v, i) {
+        return v && i !== 'remainingSegments' && !tokens.has(i);
+      });
+    }
+
+    if (!valid) {
+      return;
+    }
+
+    var segments = [];
+
+    for (var i = 0, len = tokens.length; i < len; i++) {
+      var varname = tokens[i].name;
+
+      if (varname && !tokens[i].test(params[varname] || '')) {
+        if (i < tokens.minLength || params[varname]) {
+          return false;
+        }
+
+        break;
+      }
+
+      segments[i] = varname ? params[varname] : tokens[i];
+    }
+
+    return createRouteState(tokens, segments, pick(params, util_keys(tokens.params)));
+  });
+  return matched || !partial && matchRouteByParams(routes, params, true);
+}
+
+function Route(app, routes, initialPath) {
+  var self = this;
+  var params = {};
+
+  var state = _(self, {
+    routes: routes.map(parseRoute),
+    params: params,
+    app: app
+  });
+
+  each(state.routes, function (i, v) {
+    each(v.params, function (i) {
+      params[i] = null;
+    });
+  });
+  extend(self, params, self.parse(initialPath));
+  state.current = state.lastMatch;
+  state.handleChanges = watch(self, true);
+  Object.preventExtensions(self);
+  Object.getOwnPropertyNames(self).forEach(function (prop) {
+    defineObservableProperty(self, prop, null, function (v) {
+      return isUndefinedOrNull(v) || v === '' ? null : String(v);
+    });
+  });
+  watch(self, function () {
+    var current = state.lastMatch;
+
+    if (!equal(current.params, exclude(self, ['remainingSegments']))) {
+      current = matchRouteByParams(state.routes, self) || state.current;
+    }
+
+    var remainingSegments = current.route.exact ? '/' : normalizePath(self.remainingSegments);
+    var newPath = fromRoutePath(combinePath(current.maxPath, remainingSegments));
+    state.current = current;
+    self.set(extend({}, state.params, current.params, {
+      remainingSegments: remainingSegments
+    }));
+
+    if (!iequal(newPath, removeQueryAndHash(app.path))) {
+      app.path = newPath;
+    }
+  });
+}
+
+definePrototype(Route, {
+  parse: function parse(path) {
+    var self = this;
+
+    var state = _(self);
+
+    var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
+    var matched = any(state.routes, function (tokens) {
+      return matchRoute(tokens, segments, true);
+    });
+    var params = {};
+
+    if (matched) {
+      for (var i in state.params) {
+        params[i] = segments[matched.params[i]] || null;
+      }
+
+      params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
+    }
+
+    state.lastMatch = createRouteState(matched, segments, params);
+    return params;
+  },
+  set: function set(params) {
+    var self = this;
+
+    if (typeof params === 'string') {
+      if (iequal(params, self.toString())) {
+        return;
+      }
+
+      params = self.parse(params);
+    }
+
+    _(self).handleChanges(function () {
+      extend(self, params);
+    });
+  },
+  replace: function replace(key, value) {
+    var self = this;
+    var result;
+
+    _(self).handleChanges(function () {
+      var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
+      result = _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+    });
+
+    return result;
+  },
+  getPath: function getPath(params) {
+    var matched = matchRouteByParams(_(this).routes, params);
+    return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
+  },
+  toJSON: function toJSON() {
+    return extend({}, this);
+  },
+  toString: function toString() {
+    return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
+  }
+});
+watchable(Route.prototype);
+
+function PageInfo(props) {
+  for (var i in props) {
+    defineOwnProperty(this, i, props[i], true);
+  }
+}
+
+function pageInfoForEachState(self, callback) {
+  var pageId = self.pageId;
+  each(states, function (i, v) {
+    if (v.pageId === pageId) {
+      callback(v);
+    }
+  });
+}
+
+definePrototype(PageInfo, {
+  clearNavigateData: function clearNavigateData() {
+    pageInfoForEachState(this, function (v) {
+      v.data = null;
+    });
+    defineOwnProperty(this, 'data', null, true);
+  },
+  clearHistoryStorage: function clearHistoryStorage() {
+    pageInfoForEachState(this, function (v) {
+      v.storage.clear();
+    });
+  }
+});
+/**
+ * @param {Brew.AppInstance<Brew.WithRouter>} app
+ * @param {Record<string, any>} options
+ */
+
+function configureRouter(app, options) {
+  var sessionId = randomId();
+  var resumedId = sessionId;
+  var route;
+  var basePath = '/';
+  var currentPath = '';
+  var redirectSource = {};
+  var currentIndex = 0;
+  var indexOffset = 0;
+  var pendingState;
+  var lastState = {};
+  var pageInfos = {};
+
+  function getPersistedStorage(key, ctor) {
+    return storage.revive(key, ctor) || mapGet(storage, key, ctor);
+  }
+
+  function createNavigateResult(id, path, originalPath, navigated) {
+    return Object.freeze({
+      id: id,
+      path: path,
+      navigated: navigated !== false,
+      redirected: !!originalPath,
+      originalPath: originalPath || null
+    });
+  }
+
+  function createState(id, path, index, snapshot, data, sessionId, previous, keepPreviousPath, storageMap) {
+    previous = previous || states[currentIndex];
+
+    if (storageMap) {
+      storage.set(id, storageMap);
+    }
+
+    var resolvePromise = noop;
+    var rejectPromise = noop;
+    var pathNoQuery = removeQueryAndHash(path);
+    var pageId = previous && snapshot ? previous.pageId : id;
+    var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
+    var resolved, promise;
+    var savedState = [id, path, index, snapshot, data, sessionId];
+    var state = {
+      id: id,
+      path: path,
+      index: index,
+      pathname: pathNoQuery,
+      route: freeze(route.parse(pathNoQuery)),
+      data: data,
+      type: 'navigate',
+      previous: previous,
+      previousPath: previous && (keepPreviousPath || snapshot ? previous.previousPath : previous.path),
+      pageId: pageId,
+      sessionId: sessionId,
+      resumedId: resumedId,
+
+      get done() {
+        return resolved;
+      },
+
+      get promise() {
+        return promise || (promise = resolve(resolved || new Promise(function (resolve_, reject_) {
+          resolvePromise = resolve_;
+          rejectPromise = reject_;
+        })));
+      },
+
+      get pageInfo() {
+        return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
+          path: pathNoQuery,
+          pageId: pageId,
+          params: state.route,
+          data: data
+        }));
+      },
+
+      get storage() {
+        return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
+      },
+
+      reset: function reset() {
+        if (resolved) {
+          resolved = false;
+          promise = null;
+        }
+
+        return state;
+      },
+      forward: function forward(other) {
+        if (promise && !resolved) {
+          other.promise.then(function (data) {
+            state.resolve(createNavigateResult(data.id, data.path, state.path, data.navigated));
+          }, state.reject);
+        }
+      },
+      resolve: function resolve(result) {
+        var previousState = lastState;
+        resolved = result || createNavigateResult(id, state.path);
+        resolvePromise(resolved);
+
+        if (states[currentIndex] === state) {
+          lastState = state;
+
+          if (resolved.navigated) {
+            app.emit('pageload', {
+              pathname: state.path
+            }, {
+              handleable: false
+            });
+          } else if (state.type === 'back_forward') {
+            app.emit('popstate', {
+              oldStateId: previousState.id,
+              newStateId: state.id
+            }, {
+              handleable: false
+            });
+          }
+        }
+      },
+      reject: function reject(error) {
+        promise = null;
+        rejectPromise(error || errorWithCode(navigationCancelled));
+      },
+      toJSON: function toJSON() {
+        savedState[1] = state.path;
+        savedState[4] = state.data;
+        return savedState;
+      }
+    };
+    return state;
+  }
+
+  function updateQueryAndHash(state, newPath, oldPath) {
+    state.path = newPath;
+    history.replaceState(state.id, '', toPathname(newPath));
+
+    if (state.done) {
+      var oldHash = parsePath(oldPath).hash;
+      var newHash = parsePath(newPath).hash;
+      currentPath = newPath;
+      app.path = newPath;
+
+      if (oldHash !== newHash) {
+        app.emit('hashchange', {
+          oldHash: oldHash,
+          newHash: newHash
+        }, {
+          handleable: false
+        });
+      }
+
+      return {
+        promise: resolve(createNavigateResult(state.pageId, newPath, null, false))
+      };
+    }
+
+    return state;
+  }
+
+  function applyState(state, replace, snapshot, previous, callback) {
+    var currentState = states[currentIndex];
+
+    if (currentState && currentState !== state && !currentState.done) {
+      if (replace) {
+        currentState.forward(state);
+      } else {
+        currentState.reject();
+      }
+    }
+
+    if (appReady && !snapshot && locked(router_root)) {
+      cancelLock(router_root).then(function () {
+        if (states[currentIndex] === currentState && callback() !== false) {
+          setImmediateOnce(handlePathChange);
+        }
+      }, function () {
+        state.reject(errorWithCode(navigationRejected));
+      });
+    } else if (callback() !== false) {
+      if (snapshot && previous.done) {
+        state.resolve(createNavigateResult(state.pageId, state.path, null, false));
+        updateQueryAndHash(state, state.path, currentState.path);
+      } else {
+        setImmediateOnce(handlePathChange);
+      }
+    }
+  }
+
+  function pushState(path, replace, snapshot, data, storageMap) {
+    path = resolvePath(path);
+
+    if (!isSubPathOf(path, basePath)) {
+      return {
+        promise: reject(errorWithCode(navigationRejected))
+      };
+    }
+
+    var currentState = states[currentIndex];
+    var previous = currentState;
+
+    if (currentState) {
+      if (snapshot) {
+        storageMap = new HistoryStorage(previous.storage.toJSON());
+      } else if (isUndefinedOrNull(data)) {
+        var pathNoQuery = removeQueryAndHash(path);
+
+        if (pathNoQuery === currentState.pathname) {
+          if (!currentState.done || replace || path === currentState.path) {
+            return updateQueryAndHash(currentState, path, currentState.path);
+          }
+
+          snapshot = true;
+          storageMap = currentState.storage;
+        } else if (pathNoQuery === lastState.pathname && removeQueryAndHash(currentPath) === pathNoQuery) {
+          snapshot = true;
+          previous = lastState;
+          storageMap = lastState.storage;
+        }
+      }
+    }
+
+    var id = randomId();
+    var replaceHistory = replace || currentState && !currentState.done;
+    var index = Math.max(0, currentIndex + !replaceHistory);
+    var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
+    applyState(state, replace, snapshot, previous, function () {
+      currentIndex = index;
+
+      if (!replace) {
+        each(states.splice(currentIndex), function (i, v) {
+          storage.delete(v.id);
+
+          if (v.resumedId !== resumedId) {
+            storage.delete(v.resumedId);
+          }
+        });
+      }
+
+      states[currentIndex] = state;
+      history[replaceHistory ? 'replaceState' : 'pushState'](id, '', toPathname(path));
+    });
+    return state;
+  }
+
+  function popState(index, isNative) {
+    var state = states[index].reset();
+    var step = state.index - states[currentIndex].index;
+    var snapshot = state.pageId === states[currentIndex].pageId;
+    var isLocked = !snapshot && locked(router_root);
+
+    if (isLocked && isNative) {
+      history.go(-step);
+    }
+
+    applyState(state, false, snapshot, states[currentIndex], function () {
+      state.type = 'back_forward';
+      currentIndex = index;
+
+      if (isLocked && isNative && history.state === state.id) {
+        // lock is cancelled before popstate event take place
+        // history.go has no effect until then
+        var unbind = bind(window, 'popstate', function () {
+          unbind();
+          history.go(step);
+        });
+        return false;
+      }
+
+      if (!isNative || isLocked) {
+        history.go(step);
+      }
+    });
+    return state;
+  }
+
+  function getHistoryIndex(stateId) {
+    return states.findIndex(function (v, i) {
+      return v.id === stateId;
+    });
+  }
+
+  function resolvePath(path, currentPath, isRoutePath) {
+    var parsedState;
+    path = decodeURI(path) || '/';
+    currentPath = currentPath || app.path;
+
+    if (path[0] === '#' || path[0] === '?') {
+      var parts = parsePath(currentPath);
+      return parts.pathname + (path[0] === '#' ? parts.search + path : path);
+    }
+
+    if (path[0] === '~' || path.indexOf('{') >= 0) {
+      var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
+      parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
+      path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
+        return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
+      });
+    }
+
+    if (path[0] === '~') {
+      path = (isRoutePath ? pipe : fromRoutePath)(combinePath(parsedState.minPath, path.slice(1)));
+    } else if (path[0] !== '/') {
+      path = combinePath(removeQueryAndHash(currentPath), path);
+    }
+
+    return normalizePath(path, true);
+  }
+
+  function emitNavigationEvent(eventName, state, data, options) {
+    data = extend({
+      navigationType: state.type,
+      pathname: state.path,
+      oldPathname: lastState.path,
+      oldStateId: lastState.id,
+      newStateId: state.id,
+      route: state.route,
+      data: state.data
+    }, data);
+    return app.emit(eventName, data, options);
+  }
+
+  function processPageChange(state) {
+    var path = state.path;
+    var deferred = deferrable();
+    currentPath = path;
+    pendingState = state;
+    app.path = path;
+    route.set(path);
+    emitNavigationEvent('beforepageload', state, {
+      waitFor: deferred.waitFor
+    }, {
+      handleable: false
+    });
+    always(deferred, function () {
+      if (states[currentIndex] === state) {
+        pendingState = null;
+        redirectSource = {};
+        state.resolve();
+      }
+    });
+  }
+
+  function handlePathChange() {
+    if (!appReady) {
+      return;
+    }
+
+    var state = states[currentIndex];
+    var newPath = state.path;
+
+    if (lastState === state) {
+      state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
+      return;
+    } // prevent infinite redirection loop
+    // redirectSource will not be reset until processPageChange is fired
+
+
+    var previous = state.previous;
+
+    if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
+      processPageChange(state);
+      return;
+    }
+
+    redirectSource[newPath] = true;
+    console.log('Nagivate', newPath);
+    var promise = resolve(emitNavigationEvent('navigate', state));
+    notifyAsync(router_root, promise);
+    promise.then(function () {
+      if (states[currentIndex] === state) {
+        processPageChange(state);
+      }
+    });
+  }
+
+  defineObservableProperty(app, 'path', '', function (newValue) {
+    if (!appReady) {
+      return currentPath;
+    }
+
+    newValue = resolvePath(newValue);
+
+    if (newValue !== currentPath) {
+      pushState(newValue);
+    }
+
+    return currentPath;
+  });
+  router_baseUrl = normalizePath(options.baseUrl);
+
+  if (options.urlMode === 'none') {
+    router_baseUrl = '/';
+    isAppPath = constant(false);
+
+    fromPathname = function fromPathname(path) {
+      var parts = parsePath(currentPath);
+      return parts.pathname + parts.search + parsePath(path).hash;
+    };
+
+    toPathname = function toPathname(path) {
+      return location.pathname + location.search + parsePath(path).hash;
+    };
+  } else if (options.urlMode === 'query') {
+    router_baseUrl = '/';
+
+    isAppPath = function isAppPath(path) {
+      return (path || '')[0] === '?' || /^\/($|[?#])/.test(isSubPathOf(path, location.pathname) || '');
+    };
+
+    fromPathname = function fromPathname(path) {
+      var parts = parsePath(path);
+      var value = getQueryParam(options.queryParam, parts.search);
+      var l = RegExp.leftContext;
+      var r = RegExp.rightContext;
+      return normalizePath(value || '') + (value === false ? parts.search : l + (l || !r ? r : '?' + r.slice(1))) + parts.hash;
+    };
+
+    toPathname = function toPathname(path) {
+      path = parsePath(path);
+      return location.pathname + setQueryParam(options.queryParam, path.pathname, path.search || '?') + path.hash;
+    };
+  } else if (router_baseUrl === '/') {
+    fromPathname = pipe;
+    toPathname = pipe;
+  } else if (options.explicitBaseUrl) {
+    fromRoutePath = toPathname;
+    toRoutePath = fromPathname;
+    fromPathname = pipe;
+    toPathname = pipe;
+    basePath = router_baseUrl;
+  } else {
+    setBaseUrl(router_baseUrl);
+  }
+
+  var initialPathHint = fromPathname(getCurrentPathAndQuery());
+  var initialPath = options.initialPath || options.queryParam && getQueryParam(options.queryParam) || initialPathHint;
+  var includeQuery = initialPath === initialPathHint || removeQueryAndHash(initialPath) === removeQueryAndHash(initialPathHint);
+
+  if (!isSubPathOf(initialPath, basePath)) {
+    initialPath = basePath;
+  } else if (includeQuery && removeQueryAndHash(initialPath) === initialPath) {
+    initialPath = initialPathHint;
+  }
+
+  var navigationType = {
+    1: 'reload',
+    2: 'back_forward'
+  }[performance.navigation.type];
+
+  if (navigationType) {
+    options.resume = false;
+  } else if (options.resume) {
+    navigationType = 'resume';
+  }
+
+  route = new Route(app, options.routes, initialPath);
+  storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
+  app.define({
+    get canNavigateBack() {
+      return (states[currentIndex - 1] || '').sessionId === sessionId;
+    },
+
+    get canNavigateForward() {
+      return (states[currentIndex + 1] || '').sessionId === sessionId;
+    },
+
+    get previousPath() {
+      return states[currentIndex].previousPath || null;
+    },
+
+    get page() {
+      return (pendingState || lastState).pageInfo;
+    },
+
+    matchRoute: matchRoute,
+    parseRoute: parseRoute,
+    resolvePath: resolvePath,
+    isAppPath: isAppPath,
+    toHref: toPathname,
+    fromHref: fromPathname,
+    snapshot: function snapshot() {
+      return states[currentIndex] === lastState && !!pushState(currentPath, false, true);
+    },
+    navigate: function navigate(path, replace, data) {
+      return pushState(path, replace, false, data).promise;
+    },
+    back: function back(defaultPath) {
+      if (this.canNavigateBack) {
+        return popState(currentIndex - 1).promise;
+      } else {
+        return !!defaultPath && pushState(defaultPath).promise;
+      }
+    },
+    historyStorage: {
+      get current() {
+        return (pendingState || lastState).storage;
+      },
+
+      for: function _for(stateId) {
+        var state = states[getHistoryIndex(stateId)];
+        return state ? state.storage : null;
+      }
+    }
+  });
+  defineOwnProperty(app, 'basePath', basePath, true);
+  defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
+  defineOwnProperty(app, 'route', route, true);
+  defineOwnProperty(app, 'routes', freeze(options.routes));
+  defineOwnProperty(app, 'cache', getPersistedStorage('g', HistoryStorage), true);
+  bind(window, 'popstate', function () {
+    var index = getHistoryIndex(history.state);
+
+    if (index < 0) {
+      pushState(fromPathname(getCurrentPathAndQuery()));
+    } else if (index !== currentIndex) {
+      popState(index, true);
+    }
+  });
+
+  try {
+    each(storage.get('s'), function (i, v) {
+      states.push(createState.apply(0, v));
+      currentIndex = i;
+    });
+  } catch (e) {}
+
+  var initialState;
+  var index = getHistoryIndex(navigationType === 'resume' ? storage.get('c') : history.state);
+
+  if (index >= 0) {
+    resumedId = states[index].resumedId;
+    currentIndex = index;
+
+    if (navigationType === 'resume') {
+      indexOffset = history.length - currentIndex - 1;
+      pushState(states[index].path, false, true);
+    } else {
+      indexOffset = states[index].index - currentIndex;
+      sessionId = states[index].sessionId || sessionId;
+
+      if (navigationType === 'reload' && !options.resumeOnReload) {
+        storage.delete(history.state);
+        initialState = options.urlMode === 'none';
+      }
+    }
+
+    states[currentIndex].type = navigationType;
+  } else {
+    currentIndex = states.length;
+    indexOffset = history.length - currentIndex;
+    initialState = true;
+  }
+
+  if (initialState) {
+    initialState = pushState(initialPath, true);
+  }
+
+  app.on('ready', function () {
+    if (initialState && states[currentIndex] === initialState && includeQuery) {
+      pushState(fromPathname(getCurrentPathAndQuery()), true);
+    }
+
+    handlePathChange();
+  });
+  app.on('unload', function () {
+    storage.set('c', states[currentIndex].id);
+    storage.set('s', states);
+    storage.persistAll();
+  });
+  defineOwnProperty(app, 'sessionId', resumedId, true);
+  defineOwnProperty(app, 'sessionStorage', getPersistedStorage(resumedId, HistoryStorage), true);
+}
+
+parsedRoutes['/*'] = deepFreeze(new RoutePattern({
+  value: '/*',
+  exact: false,
+  length: 0,
+  minLength: 0,
+  params: {},
+  test: function test() {
+    return true;
+  }
+}));
+/* harmony default export */ var router = (addExtension('router', configureRouter));
+;// CONCATENATED MODULE: ./src/entry-slim.js
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+
+
+
+
+
+
+
+
+util_define(src_app, _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+  ErrorCode: errorCode_namespaceObject,
+  defaults: src_defaults
+}, common_namespaceObject), storage_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
+  getDirectiveComponent: getDirectiveComponent,
+  registerDirective: registerDirective,
+  install: install,
+  addDetect: addDetect,
+  addExtension: addExtension
+}));
+
+
+
+
+
+function exportAppToGlobal(app) {
+  window.app = app;
+}
+
+/* harmony default export */ var entry_slim = (src_app.with(exportAppToGlobal, i18n, scrollable, viewport, router));
+}();
+__webpack_exports__ = __webpack_exports__["default"];
+/******/ 	return __webpack_exports__;
 /******/ })()
-.default;
+;
 });
 //# sourceMappingURL=brew-slim.js.map
