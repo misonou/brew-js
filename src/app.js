@@ -86,11 +86,13 @@ function App() {
         appReadyResolve = resolve.bind(0, self);
         appReadyReject = reject;
     }), true);
-    always(self.ready, function (resolved) {
+    always(self.ready, function (resolved, error) {
         setReadyState(resolved ? 'ready' : 'error');
         if (resolved) {
             appReady = true;
             app.emit('ready');
+        } else {
+            console.error(error);
         }
     });
 }
