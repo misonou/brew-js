@@ -119,6 +119,11 @@ describe('getQueryParam', () => {
         history.replaceState(null, '', '?foo=bar');
         expect(getQueryParam('foo', '')).toEqual(false);
     });
+
+    it('should handle input with hash', () => {
+        expect(getQueryParam('foo', '?foo=baz#hash')).toEqual('baz');
+        expect(getQueryParam('foo', '#hash?foo=baz')).toEqual(false);
+    });
 });
 
 describe('setQueryParam', () => {
@@ -138,6 +143,8 @@ describe('setQueryParam', () => {
         expect(setQueryParam('foo', 'baz')).toBe('?foo=baz&q=1');
         history.replaceState(null, '', '?q=1&foo=bar');
         expect(setQueryParam('foo', 'baz')).toBe('?q=1&foo=baz');
+        history.replaceState(null, '', '?foo=');
+        expect(setQueryParam('foo', 'baz')).toBe('?foo=baz');
     });
 
     it('should be case-insensitive', () => {
@@ -157,13 +164,39 @@ describe('setQueryParam', () => {
 
     it('should remove specified param when value is false, null, or undefined', () => {
         expect(setQueryParam('foo', '', '?foo=bar')).toEqual('?foo=');
-        expect(setQueryParam('foo', false, '?foo=bar')).toEqual('?');
-        expect(setQueryParam('foo', null, '?foo=bar')).toEqual('?');
-        expect(setQueryParam('foo', undefined, '?foo=bar')).toEqual('?');
+        expect(setQueryParam('foo', false, '?foo=bar')).toEqual('');
+        expect(setQueryParam('foo', null, '?foo=bar')).toEqual('');
 
-        expect(setQueryParam('foo', undefined, '?baz=baz')).toEqual('?baz=baz');
-        expect(setQueryParam('foo', undefined, '?')).toEqual('');
-        expect(setQueryParam('foo', undefined, '')).toEqual('');
+        expect(setQueryParam('foo', null, '?foo=bar&foo=baz')).toEqual('?foo=baz');
+        expect(setQueryParam('foo', null, '?foo=bar&baz=baz')).toEqual('?baz=baz');
+        expect(setQueryParam('foo', null, '?baz=baz&foo=baz')).toEqual('?baz=baz');
+        expect(setQueryParam('foo', null, '?baz=baz')).toEqual('?baz=baz');
+        expect(setQueryParam('foo', null, '?')).toEqual('');
+        expect(setQueryParam('foo', null, '')).toEqual('');
+    });
+
+    it('should handle input with pathname', () => {
+        expect(setQueryParam('foo', 'baz', '/path?q=1&foo=bar')).toEqual('/path?q=1&foo=baz');
+        expect(setQueryParam('foo', 'baz', '/path?foo=bar')).toEqual('/path?foo=baz');
+        expect(setQueryParam('foo', 'baz', '/path?')).toEqual('/path?foo=baz');
+        expect(setQueryParam('foo', 'baz', '/path')).toEqual('/path?foo=baz');
+
+        expect(setQueryParam('foo', null, '/path?q=1&foo=bar')).toEqual('/path?q=1');
+        expect(setQueryParam('foo', null, '/path?foo=bar')).toEqual('/path');
+        expect(setQueryParam('foo', null, '/path?')).toEqual('/path');
+        expect(setQueryParam('foo', null, '/path')).toEqual('/path');
+    });
+
+    it('should handle input with hash', () => {
+        expect(setQueryParam('foo', 'baz', '?foo=bar#hash')).toEqual('?foo=baz#hash');
+        expect(setQueryParam('foo', 'baz', '?q=1#hash')).toEqual('?q=1&foo=baz#hash');
+        expect(setQueryParam('foo', 'baz', '#hash')).toEqual('?foo=baz#hash');
+        expect(setQueryParam('foo', 'baz', '#hash?foo=baz')).toEqual('?foo=baz#hash?foo=baz');
+
+        expect(setQueryParam('foo', null, '?foo=bar#hash')).toEqual('#hash');
+        expect(setQueryParam('foo', null, '?q=1#hash')).toEqual('?q=1#hash');
+        expect(setQueryParam('foo', null, '#hash')).toEqual('#hash');
+        expect(setQueryParam('foo', null, '#hash?foo=baz')).toEqual('#hash?foo=baz');
     });
 });
 

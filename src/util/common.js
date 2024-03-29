@@ -85,7 +85,8 @@ export function getQueryParam(name, current) {
     if (isUndefinedOrNull(current)) {
         current = location.search;
     }
-    return new RegExp('[?&]' + name + '=([^&]*)', 'i').test(current) && decodeURIComponent(RegExp.$1);
+    var m = new RegExp('[?&]' + name + '=([^&#]*)|#', 'i').exec(current) || [];
+    return m[1] !== undefined && decodeURIComponent(m[1]);
 }
 
 /**
@@ -97,9 +98,10 @@ export function setQueryParam(name, value, current) {
     if (isUndefinedOrNull(current)) {
         current = location.search;
     }
-    var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
-    return current.replace(re, function (v, a, i, n) {
-        return value || value === '' ? (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value) : a || '';
+    var re = new RegExp('([?&])' + name + '=[^&#]*(&?)|(?=#)|(?:\\?)?$', 'i');
+    return current.replace(re, function (v, a, b, i, n) {
+        b = b || '';
+        return value || value === '' ? (a || (i && i >= (n.lastIndexOf('?', i) + 1 || n.length + 1) ? '&' : '?')) + name + '=' + encodeURIComponent(value) + b : b && a;
     });
 }
 
