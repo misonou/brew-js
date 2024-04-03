@@ -24,7 +24,7 @@ export function createObjectStorage(storage, key) {
     function initFromStorage(entries) {
         try {
             var serialized = decompressFromUTF16(storage.getItem(key)).split('\n');
-            extend(entries, JSON.parse(serialized[0] || '{}'));
+            extend(entries, JSON.parse(serialized[0]));
             return serialized;
         } catch (e) { }
     }
