@@ -1,4 +1,4 @@
-/*! brew-js v0.6.3 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.4 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -1074,7 +1074,8 @@ function getQueryParam(name, current) {
     current = location.search;
   }
 
-  return new RegExp('[?&]' + name + '=([^&]*)', 'i').test(current) && decodeURIComponent(RegExp.$1);
+  var m = new RegExp('[?&]' + name + '=([^&#]*)|#', 'i').exec(current) || [];
+  return m[1] !== undefined && decodeURIComponent(m[1]);
 }
 /**
  * @param {string} name
@@ -1087,9 +1088,10 @@ function setQueryParam(name, value, current) {
     current = location.search;
   }
 
-  var re = new RegExp('([?&])' + name + '=[^&]+|(?:\\?)?$', 'i');
-  return current.replace(re, function (v, a, i, n) {
-    return value || value === '' ? (a || (n[1] ? '&' : '?')) + name + '=' + encodeURIComponent(value) : a || '';
+  var re = new RegExp('([?&])' + name + '=[^&#]*(&?)|(?=#)|(?:\\?)?$', 'i');
+  return current.replace(re, function (v, a, b, i, n) {
+    b = b || '';
+    return value || value === '' ? (a || (i && i >= (n.lastIndexOf('?', i) + 1 || n.length + 1) ? '&' : '?')) + name + '=' + encodeURIComponent(value) + b : b && a;
   });
 }
 /**
@@ -1379,7 +1381,7 @@ function createObjectStorage(storage, key) {
   function initFromStorage(entries) {
     try {
       var serialized = decompressFromUTF16(storage.getItem(key)).split('\n');
-      extend(entries, JSON.parse(serialized[0] || '{}'));
+      extend(entries, JSON.parse(serialized[0]));
       return serialized;
     } catch (e) {}
   }
