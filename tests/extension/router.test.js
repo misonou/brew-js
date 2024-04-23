@@ -626,6 +626,16 @@ describe('app.back', () => {
         ]);
     });
 
+    it('should emit popstate event after app.path has updated', async () => {
+        await app.navigate('/test-1');
+        app.navigate('/test-1?foo=bar');
+
+        const cb = mockFn(() => app.path);
+        cleanupAfterTest(app.on('popstate', cb));
+        await app.back();
+        expect(cb).toReturnWith('/test-1');
+    });
+
     it('should not emit navigate event when returned to previous snapshot of the same page', async () => {
         await app.navigate('/test-1');
         app.snapshot();

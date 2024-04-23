@@ -311,6 +311,11 @@ function configureRouter(app, options) {
         return storage.revive(key, ctor) || mapGet(storage, key, ctor);
     }
 
+    function commitPath(newPath) {
+        currentPath = newPath;
+        app.path = newPath;
+    }
+
     function createNavigateResult(id, path, originalPath, navigated) {
         return Object.freeze({
             id: id,
@@ -386,6 +391,7 @@ function configureRouter(app, options) {
                 resolvePromise(resolved);
                 if (states[currentIndex] === state) {
                     lastState = state;
+                    commitPath(state.path);
                     if (resolved.navigated) {
                         app.emit('pageload', { pathname: state.path }, { handleable: false });
                     } else if (state.type === 'back_forward') {
@@ -412,8 +418,7 @@ function configureRouter(app, options) {
         if (state.done) {
             var oldHash = parsePath(oldPath).hash;
             var newHash = parsePath(newPath).hash;
-            currentPath = newPath;
-            app.path = newPath;
+            commitPath(newPath);
             if (oldHash !== newHash) {
                 app.emit('hashchange', { oldHash, newHash }, { handleable: false });
             }
@@ -567,9 +572,8 @@ function configureRouter(app, options) {
         var path = state.path;
         var deferred = deferrable();
 
-        currentPath = path;
         pendingState = state;
-        app.path = path;
+        commitPath(path);
         route.set(path);
         emitNavigationEvent('beforepageload', state, { waitFor: deferred.waitFor }, { handleable: false });
 
