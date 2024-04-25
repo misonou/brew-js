@@ -1,4 +1,3 @@
-import $ from "../include/external/jquery.js";
 import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta-dom/util.js";
 import { bind } from "../include/zeta-dom/domUtil.js";
 import { IS_TOUCH } from "../include/zeta-dom/env.js";
@@ -59,11 +58,13 @@ export default addExtension(true, 'viewport', function (app) {
         bind(visualViewport, 'resize', checkViewportSize);
         checkViewportSize(false);
     } else {
-        $(window).on('resize', function () {
+        bind(window, 'resize', function () {
             setTimeoutOnce(checkViewportSize);
         });
-        $(function () {
-            checkViewportSize(false);
+        app.beforeInit(function () {
+            return dom.ready.then(function () {
+                checkViewportSize(false);
+            });
         });
     }
 });
