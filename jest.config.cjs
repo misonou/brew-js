@@ -1,4 +1,4 @@
-{
+const config = {
     "testEnvironment": "./tests/environment",
     "transform": {},
     "clearMocks": true,
@@ -17,7 +17,15 @@
         "!src/{entry,entry-slim,errorCode,libCheck}.js"
     ],
     "moduleNameMapper": {
-        "^src/(.*)$": "<rootDir>/src/$1",
-        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1"
+        "^src/(.*)$": "<rootDir>/src/$1"
     }
 }
+
+if (process.env.CI !== 'true' && require('fs').existsSync('../zeta-dom')) {
+    config.moduleNameMapper = {
+        ...config.moduleNameMapper,
+        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1"
+    };
+}
+
+module.exports = config;
