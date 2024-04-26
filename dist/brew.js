@@ -1,4 +1,4 @@
-/*! brew-js v0.6.4 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.5 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("jq-scrollable"), require("waterpipe"));
@@ -709,6 +709,7 @@ var _zeta$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root
     noop = _zeta$util.noop,
     pipe = _zeta$util.pipe,
     either = _zeta$util.either,
+    sameValue = _zeta$util.sameValue,
     sameValueZero = _zeta$util.sameValueZero,
     is = _zeta$util.is,
     isUndefinedOrNull = _zeta$util.isUndefinedOrNull,
@@ -4311,7 +4312,6 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
 
 
 
-
 /* harmony default export */ var viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
   var visualViewport = window.visualViewport;
@@ -4370,11 +4370,13 @@ var IS_IOS = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zet
     bind(visualViewport, 'resize', checkViewportSize);
     checkViewportSize(false);
   } else {
-    jquery(window).on('resize', function () {
+    bind(window, 'resize', function () {
       setTimeoutOnce(checkViewportSize);
     });
-    jquery(function () {
-      checkViewportSize(false);
+    app.beforeInit(function () {
+      return zeta_dom_dom.ready.then(function () {
+        checkViewportSize(false);
+      });
     });
   }
 }));
@@ -4729,6 +4731,11 @@ function configureRouter(app, options) {
     return storage.revive(key, ctor) || mapGet(storage, key, ctor);
   }
 
+  function commitPath(newPath) {
+    currentPath = newPath;
+    app.path = newPath;
+  }
+
   function createNavigateResult(id, path, originalPath, navigated) {
     return Object.freeze({
       id: id,
@@ -4813,6 +4820,7 @@ function configureRouter(app, options) {
 
         if (states[currentIndex] === state) {
           lastState = state;
+          commitPath(state.path);
 
           if (resolved.navigated) {
             app.emit('pageload', {
@@ -4850,8 +4858,7 @@ function configureRouter(app, options) {
     if (state.done) {
       var oldHash = parsePath(oldPath).hash;
       var newHash = parsePath(newPath).hash;
-      currentPath = newPath;
-      app.path = newPath;
+      commitPath(newPath);
 
       if (oldHash !== newHash) {
         app.emit('hashchange', {
@@ -5035,9 +5042,8 @@ function configureRouter(app, options) {
   function processPageChange(state) {
     var path = state.path;
     var deferred = deferrable();
-    currentPath = path;
     pendingState = state;
-    app.path = path;
+    commitPath(path);
     route.set(path);
     emitNavigationEvent('beforepageload', state, {
       waitFor: deferred.waitFor
