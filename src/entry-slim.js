@@ -1,4 +1,4 @@
-import { define } from "./include/zeta-dom/util.js";
+import { define } from "zeta-dom/util";
 import * as path from "./util/path.js";
 import * as commonUtil from "./util/common.js";
 import * as storageUtil from "./util/storage.js";

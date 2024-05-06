@@ -1,8 +1,8 @@
-import { each, defineGetterProperty, defineOwnProperty, definePrototype, mapRemove, isUndefinedOrNull, mapObject, defineObservableProperty, map, watchable, pipe, isFunction, noop } from "./include/zeta-dom/util.js";
-import { matchSelector } from "./include/zeta-dom/domUtil.js";
-import { watchElements, watchOwnAttributes } from "./include/zeta-dom/observe.js";
-import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import dom from "./include/zeta-dom/dom.js";
+import { each, defineGetterProperty, defineOwnProperty, definePrototype, mapRemove, isUndefinedOrNull, mapObject, defineObservableProperty, map, watchable, pipe, isFunction, noop } from "zeta-dom/util";
+import { matchSelector } from "zeta-dom/domUtil";
+import { watchElements, watchOwnAttributes } from "zeta-dom/observe";
+import { ZetaEventContainer } from "zeta-dom/events";
+import dom from "zeta-dom/dom";
 import { getAttr, setAttr } from "./util/common.js";
 
 const root = dom.root;

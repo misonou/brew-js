@@ -1,8 +1,8 @@
 import $ from "../include/external/jquery.js";
 import Promise from "../include/external/promise-polyfill.js";
-import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
-import { createNodeIterator, iterateNode, matchSelector } from "../include/zeta-dom/domUtil.js";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "../include/zeta-dom/util.js";
+import { isCssUrlValue } from "zeta-dom/cssUtil";
+import { createNodeIterator, iterateNode, matchSelector } from "zeta-dom/domUtil";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "zeta-dom/util";
 import { combinePath, withBaseUrl } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 

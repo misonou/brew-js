@@ -1,5 +1,5 @@
-import { setIntervalSafe } from "../include/zeta-dom/util.js";
-import { bind } from "../include/zeta-dom/domUtil.js";
+import { setIntervalSafe } from "zeta-dom/util";
+import { bind } from "zeta-dom/domUtil";
 import { addExtension } from "../app.js";
 
 export default addExtension('idleTimeout', function (app, options) {

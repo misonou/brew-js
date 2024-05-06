@@ -1,9 +1,9 @@
 import $ from "./include/external/jquery.js";
-import dom from "./include/zeta-dom/dom.js";
-import { notifyAsync } from "./include/zeta-dom/domLock.js";
-import { bind } from "./include/zeta-dom/domUtil.js";
-import { ZetaEventContainer } from "./include/zeta-dom/events.js";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always } from "./include/zeta-dom/util.js";
+import dom from "zeta-dom/dom";
+import { notifyAsync } from "zeta-dom/domLock";
+import { bind } from "zeta-dom/domUtil";
+import { ZetaEventContainer } from "zeta-dom/events";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always } from "zeta-dom/util";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 

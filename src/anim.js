@@ -1,9 +1,9 @@
 import $ from "./include/external/jquery.js";
-import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "./include/zeta-dom/domUtil.js";
-import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill } from "./include/zeta-dom/util.js";
-import { runCSSTransition } from "./include/zeta-dom/cssUtil.js";
-import { createAutoCleanupMap, watchElements } from "./include/zeta-dom/observe.js";
-import dom from "./include/zeta-dom/dom.js";
+import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "zeta-dom/domUtil";
+import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill } from "zeta-dom/util";
+import { runCSSTransition } from "zeta-dom/cssUtil";
+import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
+import dom from "zeta-dom/dom";
 import { getAttr, setAttr } from "./util/common.js";
 
 const customAnimateIn = {};

@@ -1,5 +1,5 @@
-import { compressToUTF16, decompressFromUTF16 } from '../include/external/lz-string.js';
-import { each, extend, is, keys, map, pipe, setImmediateOnce } from '../include/zeta-dom/util.js';
+import { compressToUTF16, decompressFromUTF16 } from "../include/external/lz-string.js";
+import { each, extend, is, keys, map, pipe, setImmediateOnce } from "zeta-dom/util";
 
 const UNDEFINED = 'undefined';
 

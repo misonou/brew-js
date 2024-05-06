@@ -1,10 +1,10 @@
 import $ from "./include/external/jquery.js";
 import waterpipe from "./include/external/waterpipe.js"
-import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, isFunction, isPlainObject, kv, noop, pick, setImmediateOnce, trim } from "./include/zeta-dom/util.js";
-import dom from "./include/zeta-dom/dom.js";
+import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, isFunction, isPlainObject, kv, noop, pick, setImmediateOnce, trim } from "zeta-dom/util";
+import dom from "zeta-dom/dom";
 import { app, appReady } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
-import { InheritedNodeTree } from "./include/zeta-dom/tree.js";
+import { InheritedNodeTree } from "zeta-dom/tree";
 import { getAttr, selectorForAttr } from "./util/common.js";
 
 const root = dom.root;

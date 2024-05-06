@@ -1,10 +1,10 @@
 import $ from "../include/external/jquery.js";
-import dom from "../include/zeta-dom/dom.js";
-import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
-import { setClass, selectIncludeSelf, containsOrEquals } from "../include/zeta-dom/domUtil.js";
-import { notifyAsync } from "../include/zeta-dom/domLock.js";
-import { watchElements } from "../include/zeta-dom/observe.js";
-import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define } from "../include/zeta-dom/util.js";
+import dom from "zeta-dom/dom";
+import { isCssUrlValue } from "zeta-dom/cssUtil";
+import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
+import { notifyAsync } from "zeta-dom/domLock";
+import { watchElements } from "zeta-dom/observe";
+import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define } from "zeta-dom/util";
 import { removeQueryAndHash, isSubPathOf, toSegments, withBaseUrl, toRelativeUrl } from "../util/path.js";
 import { groupLog } from "../util/console.js";
 import { animateIn, animateOut } from "../anim.js";

@@ -1,4 +1,4 @@
-import { defineHiddenProperty } from "./include/zeta-dom/util.js";
+import { defineHiddenProperty } from "zeta-dom/util";
 
 const BREW_KEY = '__BREW__';
 if (window[BREW_KEY]) {

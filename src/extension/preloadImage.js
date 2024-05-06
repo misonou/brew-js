@@ -1,5 +1,5 @@
-import { each, keys } from "../include/zeta-dom/util.js";
-import { isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
+import { each, keys } from "zeta-dom/util";
+import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { preloadImages } from "../util/common.js";
 import { toAbsoluteUrl } from "../util/path.js";
 import { addExtension, isElementActive } from "../app.js";

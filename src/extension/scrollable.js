@@ -1,7 +1,7 @@
 import $ from "../include/external/jquery.js";
-import { combineFn, extend, matchWord, setTimeoutOnce } from "../include/zeta-dom/util.js";
-import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "../include/zeta-dom/domUtil.js";
-import dom, { beginDrag, focusable } from "../include/zeta-dom/dom.js";
+import { combineFn, extend, matchWord, setTimeoutOnce } from "zeta-dom/util";
+import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "zeta-dom/domUtil";
+import dom, { beginDrag, focusable } from "zeta-dom/dom";
 import { animateIn, animateOut } from "../anim.js";
 import { addExtension, isElementActive } from "../app.js";
 import { getDirectiveComponent, registerDirective } from "../directive.js";

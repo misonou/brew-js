@@ -1,11 +1,11 @@
 import waterpipe from "../include/external/waterpipe.js"
 import $ from "../include/external/jquery.js";
-import { parseCSS, isCssUrlValue } from "../include/zeta-dom/cssUtil.js";
-import { bind, selectClosestRelative, selectIncludeSelf, setClass } from "../include/zeta-dom/domUtil.js";
-import { camel, combineFn, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "../include/zeta-dom/util.js";
-import { registerCleanup, watchAttributes, watchElements } from "../include/zeta-dom/observe.js";
-import dom from "../include/zeta-dom/dom.js";
-import { preventLeave } from "../include/zeta-dom/domLock.js";
+import { parseCSS, isCssUrlValue } from "zeta-dom/cssUtil";
+import { bind, selectClosestRelative, selectIncludeSelf, setClass } from "zeta-dom/domUtil";
+import { camel, combineFn, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "zeta-dom/util";
+import { registerCleanup, watchAttributes, watchElements } from "zeta-dom/observe";
+import dom from "zeta-dom/dom";
+import { preventLeave } from "zeta-dom/domLock";
 import { addExtension, isElementActive } from "../app.js";
 import { addRenderer, addSelectHandlers, addTransformer, hookBeforeUpdate, isDirective, matchElement, mountElement } from "../dom.js";
 import { addAsyncAction, closeFlyout, toggleFlyout } from "../domAction.js";

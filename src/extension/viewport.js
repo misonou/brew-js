@@ -1,7 +1,7 @@
-import { define, defineObservableProperty, either, setTimeoutOnce } from "../include/zeta-dom/util.js";
-import { bind } from "../include/zeta-dom/domUtil.js";
-import { IS_TOUCH } from "../include/zeta-dom/env.js";
-import dom from "../include/zeta-dom/dom.js";
+import { define, defineObservableProperty, either, setTimeoutOnce } from "zeta-dom/util";
+import { bind } from "zeta-dom/domUtil";
+import { IS_TOUCH } from "zeta-dom/env";
+import dom from "zeta-dom/dom";
 import { animateIn } from "../anim.js";
 import { addExtension } from "../app.js";
 

@@ -1,5 +1,5 @@
-import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "../include/zeta-dom/util.js";
-import { cancelLock } from "../include/zeta-dom/domLock.js";
+import { catchAsync, defineObservableProperty, either, extend, isFunction, resolve, resolveAll } from "zeta-dom/util";
+import { cancelLock } from "zeta-dom/domLock";
 import { cookie } from "../util/common.js";
 import { addExtension } from "../app.js";
 

@@ -1,4 +1,4 @@
-import { is, makeArray } from "../include/zeta-dom/util.js";
+import { is, makeArray } from "zeta-dom/util";
 
 function toElementTag(element) {
     return element.tagName.toLowerCase() + (element.id ? '#' + element.id : element.className.trim() && element.className.replace(/^\s*|\s+(?=\S)/g, '.'));

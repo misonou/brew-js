@@ -1,4 +1,4 @@
-import { defineObservableProperty, each, isArray, keys, single } from "../include/zeta-dom/util.js";
+import { defineObservableProperty, each, isArray, keys, single } from "zeta-dom/util";
 import { addExtension, appReady } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 

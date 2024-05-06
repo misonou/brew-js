@@ -1,7 +1,7 @@
-import { bind } from "../include/zeta-dom/domUtil.js";
-import dom from "../include/zeta-dom/dom.js";
-import { cancelLock, locked, notifyAsync } from "../include/zeta-dom/domLock.js";
-import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject } from "../include/zeta-dom/util.js";
+import { bind } from "zeta-dom/domUtil";
+import dom from "zeta-dom/dom";
+import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
+import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject } from "zeta-dom/util";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";

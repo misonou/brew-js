@@ -1,8 +1,8 @@
 import $ from "./include/external/jquery.js";
-import { setClass, selectIncludeSelf, containsOrEquals } from "./include/zeta-dom/domUtil.js";
-import { cancelLock, locked, notifyAsync } from "./include/zeta-dom/domLock.js";
-import dom from "./include/zeta-dom/dom.js";
-import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "./include/zeta-dom/util.js";
+import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
+import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
+import dom from "zeta-dom/dom";
+import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "zeta-dom/util";
 import { app, appReady, emitAppEvent } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
