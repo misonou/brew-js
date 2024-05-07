@@ -42,6 +42,8 @@ describe('router', () => {
 
         expect(app.path).toBe('/foo');
         expect(app.canNavigateForward).toBe(true);
+        expect(app.canNavigateBack).toBe(false);
+        expect(app.previousPath).toBeNull();
         expect(history.state).toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'reload',

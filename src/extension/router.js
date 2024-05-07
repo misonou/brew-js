@@ -328,6 +328,9 @@ function configureRouter(app, options) {
 
     function createState(id, path, index, snapshot, data, sessionId, previous, keepPreviousPath, storageMap) {
         previous = previous || states[currentIndex];
+        if (previous && previous.sessionId !== sessionId) {
+            previous = null;
+        }
         if (storageMap) {
             storage.set(id, storageMap);
         }
@@ -335,7 +338,6 @@ function configureRouter(app, options) {
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
         var pageId = previous && snapshot ? previous.pageId : id;
-        var resumedId = previous && (snapshot || sessionId === previous.sessionId) ? previous.resumedId : sessionId;
         var resolved, promise;
         var savedState = [id, path, index, snapshot, data, sessionId];
         var state = {
@@ -346,11 +348,10 @@ function configureRouter(app, options) {
             route: freeze(route.parse(pathNoQuery)),
             data: data,
             type: 'navigate',
-            previous: previous,
-            previousPath: previous && (keepPreviousPath || snapshot ? previous.previousPath : previous.path),
+            previous: previous && (keepPreviousPath || snapshot ? previous.previous : previous),
             pageId: pageId,
             sessionId: sessionId,
-            resumedId: resumedId,
+            resumedId: previous ? previous.resumedId : sessionId,
             get done() {
                 return resolved;
             },
@@ -599,8 +600,7 @@ function configureRouter(app, options) {
 
         // prevent infinite redirection loop
         // redirectSource will not be reset until processPageChange is fired
-        var previous = state.previous;
-        if (previous && redirectSource[newPath] && redirectSource[previous.path]) {
+        if (redirectSource[newPath]) {
             processPageChange(state);
             return;
         }
@@ -691,7 +691,7 @@ function configureRouter(app, options) {
             return (states[currentIndex + 1] || '').sessionId === sessionId;
         },
         get previousPath() {
-            return states[currentIndex].previousPath || null;
+            return (states[currentIndex].previous || '').path || null;
         },
         get page() {
             return (pendingState || lastState).pageInfo;

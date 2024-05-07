@@ -38,6 +38,8 @@ describe('router', () => {
 
         expect(app.path).toBe('/foo')
         expect(app.canNavigateForward).toBe(false);
+        expect(app.canNavigateBack).toBe(false);
+        expect(app.previousPath).toBeNull();
         expect(history.state).not.toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'resume',
