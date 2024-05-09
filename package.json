@@ -40,6 +40,14 @@
     "jest": "^27.5.1",
     "jest-environment-jsdom": "^27.5.1"
   },
+  "exports": {
+    ".": "./src/index.js",
+    "./*": "./src/*.js",
+    "./extension/*": "./src/extension/*.js",
+    "./styles": "./src/styles/index.js",
+    "./util": "./src/util/index.js",
+    "./util/*": "./src/util/*.js"
+  },
   "umdExports": {
     "index": "lib",
     "anim": "lib",
