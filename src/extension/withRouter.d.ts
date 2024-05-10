@@ -213,12 +213,18 @@ declare namespace Brew {
          */
         navigate(path: string, replace?: boolean, data?: any): Promise<NavigateResult>;
         /**
-         * Navigate to the previous path in history stack.
-         * @param defaultPath Path to navigate when there is no previous path.
-         * @returns A promise that is fulfilled when the call has caused a page load, or is a no-op
-         * or is rejected if the navigation is cancelled due to another navigation or due to user actions.
+         * Navigate to the previous path or snapshot in history stack.
+         * @returns A promise that is fulfilled when navigation completes, or is rejected if navigation is cancelled;
+         * or `false` if there is no previous path or snapshot navigateable, i.e. when {@link WithRouter.canNavigateBack} is `false`.
          */
-        back(defaultPath?: string): Promise<NavigateResult> | false;
+        back(): Promise<NavigateResult> | false;
+        /**
+         * Navigate to the previous path or snapshot in history stack.
+         * @param defaultPath Path to navigate when there is no previous path or snapshot navigateable.
+         * @returns A promise that is fulfilled when navigation completes, or is rejected if navigation is cancelled.
+         * @deprecated Use the combination of the parameterless overload and {@link app.navigate}.
+         */
+        back(defaultPath: string): Promise<NavigateResult>;
         /**
          * Navigate back to previous path in history stack, skipping all snapshots taken in current path.
          * @returns A promise that is fulfilled when navigation completes or is rejected if navigation is cancelled;
