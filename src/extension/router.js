@@ -715,6 +715,10 @@ function configureRouter(app, options) {
                 return !!defaultPath && pushState(defaultPath).promise;
             }
         },
+        backToPreviousPath: function () {
+            var previous = states[currentIndex].previous;
+            return !!previous && popState(getHistoryIndex(previous.id)).promise;
+        },
         historyStorage: {
             get current() {
                 return (pendingState || lastState).storage;

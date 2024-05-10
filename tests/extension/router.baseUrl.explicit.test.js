@@ -8,7 +8,7 @@ import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
-import { fireEvent, screen } from "@testing-library/dom";
+import { fireEvent, screen, waitFor } from "@testing-library/dom";
 
 const { stringMatching, objectContaining, sameObject } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
@@ -595,6 +595,36 @@ describe('app#back', () => {
         cleanupAfterTest(app.on('pageload', cb));
         await app.back();
         expect(cb).not.toBeCalled();
+    });
+});
+
+describe('app#backToPreviousPath', () => {
+    it('should skip snaphots of current path', async () => {
+        const stateId = history.state;
+        const currentPath = app.path;
+        await app.navigate('/base/test-1');
+
+        expect(app.snapshot()).toBe(true);
+        await expect(app.backToPreviousPath()).resolves.toEqual({
+            id: stateId,
+            path: currentPath,
+            navigated: true,
+            redirected: false,
+            originalPath: null
+        });
+        expect(app.path).toBe(currentPath);
+        await waitFor(() => expect(history.state).toBe(stateId));
+    });
+
+    it('should return false if there is no previous page', async () => {
+        var promise;
+        while (app.canNavigateBack) {
+            promise = catchAsync(app.back());
+        }
+        await promise;
+        expect(app.backToPreviousPath()).toBeFalsy();
+        expect(app.snapshot()).toBe(true);
+        expect(app.backToPreviousPath()).toBeFalsy();
     });
 });
 

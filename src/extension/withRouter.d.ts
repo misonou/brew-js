@@ -220,6 +220,12 @@ declare namespace Brew {
          */
         back(defaultPath?: string): Promise<NavigateResult> | false;
         /**
+         * Navigate back to previous path in history stack, skipping all snapshots taken in current path.
+         * @returns A promise that is fulfilled when navigation completes or is rejected if navigation is cancelled;
+         * or `false` if there is no previous path navigateable, i.e. when {@link WithRouter.previousPath} is `null`.
+         */
+        backToPreviousPath(): Promise<NavigateResult> | false;
+        /**
          * Push a new state to history stack without navigation.
          * Note that it only works when the app is not navigating.
          * @returns Whether a new state is pushed to history stack.
