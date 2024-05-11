@@ -1,5 +1,5 @@
-import $ from "./include/external/jquery.js";
-import waterpipe from "./include/external/waterpipe.js"
+import $ from "./include/jquery.js";
+import waterpipe from "./include/waterpipe.js"
 import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, isFunction, isPlainObject, kv, noop, pick, setImmediateOnce, trim } from "zeta-dom/util";
 import dom from "zeta-dom/dom";
 import { app, appReady } from "./app.js";

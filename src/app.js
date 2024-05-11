@@ -1,4 +1,4 @@
-import $ from "./include/external/jquery.js";
+import $ from "./include/jquery.js";
 import dom from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { bind } from "zeta-dom/domUtil";

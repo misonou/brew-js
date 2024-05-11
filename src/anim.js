@@ -1,4 +1,4 @@
-import $ from "./include/external/jquery.js";
+import $ from "./include/jquery.js";
 import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "zeta-dom/domUtil";
 import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";

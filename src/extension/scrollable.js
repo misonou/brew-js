@@ -1,4 +1,5 @@
-import $ from "../include/external/jquery.js";
+import $ from "../include/jquery.js";
+import _ from "jq-scrollable";
 import { combineFn, extend, matchWord, setTimeoutOnce } from "zeta-dom/util";
 import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "zeta-dom/domUtil";
 import dom, { beginDrag, focusable } from "zeta-dom/dom";

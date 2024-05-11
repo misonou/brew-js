@@ -1,5 +1,5 @@
-import waterpipe from "../include/external/waterpipe.js"
-import $ from "../include/external/jquery.js";
+import waterpipe from "../include/waterpipe.js"
+import $ from "../include/jquery.js";
 import { parseCSS, isCssUrlValue } from "zeta-dom/cssUtil";
 import { bind, selectClosestRelative, selectIncludeSelf, setClass } from "zeta-dom/domUtil";
 import { camel, combineFn, each, either, equal, errorWithCode, extend, isFunction, isThenable, keys, makeArray, map, matchWord, pick, resolve, resolveAll, setImmediateOnce } from "zeta-dom/util";

@@ -1,5 +1,4 @@
-import $ from "../include/external/jquery.js";
-import Promise from "../include/external/promise-polyfill.js";
+import $ from "../include/jquery.js";
 import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { createNodeIterator, iterateNode, matchSelector } from "zeta-dom/domUtil";
 import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "zeta-dom/util";

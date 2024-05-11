@@ -1,6 +1,5 @@
-import Promise from "./include/external/promise-polyfill.js";
-import $ from "./include/external/jquery.js";
-import waterpipe from "./include/external/waterpipe.js"
+import $ from "./include/jquery.js";
+import waterpipe from "./include/waterpipe.js"
 import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "zeta-dom/domUtil";

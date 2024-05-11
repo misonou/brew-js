@@ -1,4 +1,4 @@
-import $ from "./include/external/jquery.js";
+import $ from "./include/jquery.js";
 import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
 import dom from "zeta-dom/dom";
