@@ -369,7 +369,7 @@ declare namespace Brew {
         [s: string]: any;
     }
 
-    interface Route extends RouteParam, Zeta.Watchable<Route> {
+    interface Route extends RouteParam, Brew.Watchable {
         /**
          * Parses a given string and returns route parameters if any route matches the path.
          * @param path A string specifying a path.

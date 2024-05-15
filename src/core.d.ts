@@ -20,29 +20,24 @@ export interface Extension<T> {
     [SYMBOL_INTERFACE]: T;
 }
 
-const method = {
-    ErrorCode,
-    defaults,
-    ...commonUtil,
-    ...storageUtil,
-    ...path,
-    ...animation,
-    ...domAction,
-    getDirectiveComponent,
-    registerDirective,
-    getVar,
-    setVar,
-    declareVar,
-    evalAttr,
-    isElementActive,
-    handleAsync,
-    preventLeave,
-    install,
-    addDetect,
-    addExtension,
-    addRenderer,
-    addTransformer,
-    addTemplate
+type Util = typeof commonUtil & typeof storageUtil & typeof path & typeof animation & typeof domAction & {
+    ErrorCode: typeof ErrorCode,
+    defaults: typeof defaults,
+    getDirectiveComponent: typeof getDirectiveComponent,
+    registerDirective: typeof registerDirective,
+    getVar: typeof getVar,
+    setVar: typeof setVar,
+    declareVar: typeof declareVar,
+    evalAttr: typeof evalAttr,
+    isElementActive: typeof isElementActive,
+    handleAsync: typeof handleAsync,
+    preventLeave: typeof preventLeave,
+    install: typeof install,
+    addDetect: typeof addDetect,
+    addExtension: typeof addExtension,
+    addRenderer: typeof addRenderer,
+    addTransformer: typeof addTransformer,
+    addTemplate: typeof addTemplate
 };
-const brew: AppInit & typeof method;
+declare const brew: AppInit & Util;
 export default brew;

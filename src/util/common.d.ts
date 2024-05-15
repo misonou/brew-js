@@ -131,7 +131,7 @@ export function api(method: Brew.HTTPMethod, baseUrl: string): Brew.APIMethod;
 /**
  * Creates a function that executes a specific type of HTTP requests.
  */
-export function api(method: Brew.HTTPMethod, options?: Omit<Brew.APIOptions<T>, 'methods'>): Brew.APIMethod;
+export function api(method: Brew.HTTPMethod, options?: Omit<Brew.APIOptions, 'methods'>): Brew.APIMethod;
 
 /**
  * @deprecated

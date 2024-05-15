@@ -1,4 +1,4 @@
-namespace Brew {
+declare namespace Brew {
     interface WithTemplate {
         /**
          * Gets template variables defined on the specified element.

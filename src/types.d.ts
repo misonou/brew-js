@@ -165,7 +165,23 @@ declare namespace Brew {
     interface ValidateEvent extends Zeta.ZetaAsyncHandleableEvent<boolean> {
     }
 
-    interface App<T = {}> extends EventDispatcher<BrewEventName, BrewEventMap>, Zeta.Watchable<AppInstance<T>> {
+    interface Watchable {
+        /**
+         * Watches a property on the object.
+         * @param prop Property name.
+         * @param handler Callback to be fired and the property is changed.
+         * @param fireInit Optionally fire the handler immediately.
+         */
+        watch<P extends keyof this>(prop: P, handler?: (this: this, newValue: Zeta.PropertyTypeOrAny<this, P>, oldValue: Zeta.PropertyTypeOrAny<this, P>, prop: P, obj: this) => void, fireInit?: boolean): Zeta.UnregisterCallback;
+        /**
+         * Watches a property and resolves when the property is changed.
+         * @param prop Property name.
+         * @param handler Callback to be fired when the property is changed.
+         */
+        watchOnce<P extends keyof this>(prop: P, handler?: (this: this, newValue: Zeta.PropertyTypeOrAny<this, P>, oldValue: Zeta.PropertyTypeOrAny<this, P>, prop: P, obj: this) => void): Promise<Zeta.PropertyTypeOrAny<this, P>>;
+    }
+
+    interface App<T = {}> extends EventDispatcher<BrewEventName, BrewEventMap>, Watchable {
         /**
          * Gets the root element associated with the app.
          */
@@ -192,7 +208,14 @@ declare namespace Brew {
          * @param names Names of feature.
          * @param callback
          */
-        detect<T extends string | string[]>(names: T, callback?: (result: Record<T, any>) => void): void;
+        detect<T extends string>(names: T, callback?: (result: Record<T, any>) => void): void;
+
+        /**
+         * Performs feature detections before the app starts.
+         * @param names Names of feature.
+         * @param callback
+         */
+        detect<T extends string[]>(names: T, callback?: (result: Record<Zeta.ArrayMember<T>, any>) => void): void;
 
         /**
          * Registers a callback that will be fired only when the promise resolves to a truthy value.

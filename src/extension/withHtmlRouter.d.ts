@@ -1,6 +1,6 @@
 /// <reference path="withRouter.d.ts"/>
 
-namespace Brew {
+declare namespace Brew {
     interface WithHtmlRouter extends WithRouter {
         /**
          * Registers hook to perform operation before `pageenter` event.
