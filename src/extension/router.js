@@ -632,7 +632,7 @@ function configureRouter(app, options) {
         baseUrl = '/';
         isAppPath = constant(false);
         fromPathname = function (path) {
-            var parts = parsePath(currentPath);
+            var parts = parsePath(currentPath || '/' + getCurrentQuery());
             return parts.pathname + parts.search + parsePath(path).hash;
         };
         toPathname = function (path) {

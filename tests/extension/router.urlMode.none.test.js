@@ -9,9 +9,11 @@ const initialPath = '/';
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
 var initialAppPath;
+var initialLocation;
 
 beforeAll(async () => {
-    history.replaceState('', '', '/?a=1#b=1');
+    history.replaceState('', '', '/dummy/?a=1#b=1');
+    initialLocation = new URL(location.href);
     app = await initApp(router, template, app => {
         app.useRouter({
             urlMode: 'none',
@@ -61,9 +63,15 @@ describe('app', () => {
 
 describe('app.navigate', () => {
     it('should not update location pathname', async () => {
-        expect(location.pathname).toBe('/');
+        expect(location.pathname).toBe(initialLocation.pathname);
         await app.navigate('/test-1');
-        expect(location.pathname).toBe('/');
+        expect(location.pathname).toBe(initialLocation.pathname);
+    });
+
+    it('should not update query string', async () => {
+        expect(location.search).toBe(initialLocation.search);
+        await app.navigate('/test-1');
+        expect(location.search).toBe(initialLocation.search);
     });
 
     it('should push a history entry when query string or hash is changed', async () => {
