@@ -345,7 +345,6 @@ function configureRouter(app, options) {
             path: path,
             index: index,
             pathname: pathNoQuery,
-            route: freeze(route.parse(pathNoQuery)),
             data: data,
             type: 'navigate',
             previous: previous && (keepPreviousPath || snapshot ? previous.previous : previous),
@@ -365,7 +364,7 @@ function configureRouter(app, options) {
                 return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
                     path: pathNoQuery,
                     pageId: pageId,
-                    params: state.route,
+                    params: freeze(route.parse(pathNoQuery)),
                     data: data
                 }));
             },
@@ -563,7 +562,7 @@ function configureRouter(app, options) {
             oldPathname: lastState.path,
             oldStateId: lastState.id,
             newStateId: state.id,
-            route: state.route,
+            route: state.pageInfo.params,
             data: state.data
         }, data);
         return app.emit(eventName, data, options);
