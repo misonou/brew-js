@@ -331,6 +331,9 @@ function configureRouter(app, options) {
         if (previous && previous.sessionId !== sessionId) {
             previous = null;
         }
+        if (data === undefined) {
+            data = null;
+        }
         if (storageMap) {
             storage.set(id, storageMap);
         }

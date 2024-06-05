@@ -119,6 +119,7 @@ declare namespace Brew {
         readonly params: RouteParam;
         /**
          * Gets data passed by {@link WithRouter.navigate}.
+         * When no data is passed or is cleared by {@link PageInfo.clearNavigateData}, `null` is returned.
          */
         readonly data: any;
         /**

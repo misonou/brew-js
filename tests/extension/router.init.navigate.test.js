@@ -43,7 +43,7 @@ describe('router', () => {
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'navigate',
             pathname: '/',
-            data: undefined
+            data: null
         }), _);
         expect(app.historyStorage.current.has('foo')).toBe(false);
         expect(app.sessionId).not.toBe(sessionId);
