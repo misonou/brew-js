@@ -33,6 +33,15 @@ export function createObjectStorage(storage, key) {
         return emptyIds.length ? emptyIds.shift() : serialized.push('') - 1;
     }
 
+    function getNextIdForKey(key) {
+        var id = entries[key];
+        if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[\[\{]/.test(serialized[id]))) {
+            // reuse existing index only if target is not an object as it may still be referenced
+            return id;
+        }
+        return getNextId();
+    }
+
     function cacheObject(id, obj) {
         objectCache[id] = obj;
         if (isObject(obj)) {
@@ -147,7 +156,8 @@ export function createObjectStorage(storage, key) {
             return revive(key, callback);
         },
         set: function (key, value) {
-            var id = entries[key] || (entries[key] = getNextId());
+            var id = objectMap.get(value) || getNextIdForKey(key);
+            entries[key] = id;
             if (!isObject(value)) {
                 serialized[id] = serialize(value) || UNDEFINED;
             } else {

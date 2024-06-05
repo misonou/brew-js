@@ -119,6 +119,37 @@ describe('ObjectStorage.set', () => {
         expect(store2.get('test')).toEqual({ a: 1 });
         expect(toJSON).toBeCalledTimes(1);
     });
+
+    it('should persist correctly when multiple keys references the same object', async () => {
+        const data = { foo: 'bar' };
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('foo', data);
+        store.set('bar', data);
+        await delay();
+
+        const snapshot = sessionStorage.getItem(TEST_KEY);
+
+        // restore as same reference
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        const restored = store2.get('foo');
+        expect(restored).toEqual(data);
+        expect(store2.get('bar')).toBe(restored);
+
+        // updating one key not affecting other
+        store.set('bar', { foo: 'baz' });
+        await delay();
+
+        const store3 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store3.get('foo')).toEqual(data);
+        expect(store3.get('bar')).toEqual({ foo: 'baz' });
+
+        // updating before getting
+        sessionStorage.setItem(TEST_KEY, snapshot);
+
+        const store4 = createObjectStorage(sessionStorage, TEST_KEY);
+        store4.set('bar', { foo: 'baz' });
+        expect(store4.get('foo')).toEqual(data);
+    });
 });
 
 describe('ObjectStorage.revive', () => {
