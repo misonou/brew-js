@@ -1,4 +1,4 @@
-/*! brew-js v0.6.6 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.7 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1283,6 +1283,14 @@ function createObjectStorage(storage, key) {
   function getNextId() {
     return emptyIds.length ? emptyIds.shift() : serialized.push('') - 1;
   }
+  function getNextIdForKey(key) {
+    var id = entries[key];
+    if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[\[\{]/.test(serialized[id]))) {
+      // reuse existing index only if target is not an object as it may still be referenced
+      return id;
+    }
+    return getNextId();
+  }
   function cacheObject(id, obj) {
     objectCache[id] = obj;
     if (isObject(obj)) {
@@ -1397,7 +1405,8 @@ function createObjectStorage(storage, key) {
       return _revive(key, callback);
     },
     set: function set(key, value) {
-      var id = entries[key] || (entries[key] = getNextId());
+      var id = objectMap.get(value) || getNextIdForKey(key);
+      entries[key] = id;
       if (!isObject(value)) {
         serialized[id] = serialize(value) || UNDEFINED;
       } else {
@@ -3041,6 +3050,9 @@ function configureRouter(app, options) {
     if (previous && previous.sessionId !== sessionId) {
       previous = null;
     }
+    if (data === undefined) {
+      data = null;
+    }
     if (storageMap) {
       storage.set(id, storageMap);
     }
@@ -3055,7 +3067,6 @@ function configureRouter(app, options) {
       path: path,
       index: index,
       pathname: pathNoQuery,
-      route: freeze(route.parse(pathNoQuery)),
       data: data,
       type: 'navigate',
       previous: previous && (keepPreviousPath || snapshot ? previous.previous : previous),
@@ -3075,7 +3086,7 @@ function configureRouter(app, options) {
         return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
           path: pathNoQuery,
           pageId: pageId,
-          params: state.route,
+          params: freeze(route.parse(pathNoQuery)),
           data: data
         }));
       },
@@ -3284,7 +3295,7 @@ function configureRouter(app, options) {
       oldPathname: lastState.path,
       oldStateId: lastState.id,
       newStateId: state.id,
-      route: state.route,
+      route: state.pageInfo.params,
       data: state.data
     }, data);
     return app.emit(eventName, data, options);
@@ -3350,7 +3361,7 @@ function configureRouter(app, options) {
     router_baseUrl = '/';
     isAppPath = constant(false);
     fromPathname = function fromPathname(path) {
-      var parts = parsePath(currentPath);
+      var parts = parsePath(currentPath || '/' + getCurrentQuery());
       return parts.pathname + parts.search + parsePath(path).hash;
     };
     toPathname = function toPathname(path) {
