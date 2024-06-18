@@ -179,9 +179,9 @@ registerSimpleDirective('enableLoadingClass', 'loading-class', function (element
         if (loading) {
             setClass(element, 'loading', loading);
         } else {
-            runCSSTransition(element, 'loading-complete', function () {
+            catchAsync(runCSSTransition(element, 'loading-complete', function () {
                 setClass(element, 'loading', false);
-            });
+            }));
         }
     });
 });
@@ -276,15 +276,18 @@ dom.ready.then(function () {
         if (!isSameWindow(self.target)) {
             return;
         }
+        var oncancel = function () {
+            console.warn('Navigation cancelled');
+        };
         if ('navigate' in app && (dataHref || app.isAppPath(href))) {
             e.preventDefault();
-            app.navigate(dataHref || app.fromHref(href));
+            app.navigate(dataHref || app.fromHref(href)).catch(oncancel);
         } else if (locked(root)) {
             e.preventDefault();
             cancelLock(root).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
                 window.open(dataHref || href, '_self', features.join(','));
-            });
+            }, oncancel);
         }
     });
 });
