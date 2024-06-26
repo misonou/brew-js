@@ -33,7 +33,7 @@ beforeAll(async () => {
                 '/{bar:bar}/{id?:[a-z]+}',
                 '/{bar:bar}/{optional?:[a-z]+}',
                 '/baz/{another?}',
-                '/*'
+                '/{test:test-.+}/*'
             ]
         });
         initialCanNavigateBack = app.canNavigateBack;
@@ -1002,11 +1002,24 @@ describe('app.route', () => {
             baz: null,
             id: 'bar',
             optional: null,
+            test: null,
             remainingSegments: "/",
         }
         expect(app.route.parse('/foo/bar?a=1&b=1')).toEqual(result);
         expect(app.route.parse('/foo/bar#a=1&b=1')).toEqual(result);
         expect(app.route.parse('/foo/bar#a=1&b=1?c=1')).toEqual(result);
+    });
+
+    it('should return object containing all params when path being parsed matches no routes', () => {
+        expect(app.route.parse('/unknown')).toEqual({
+            another: null,
+            bar: null,
+            baz: null,
+            id: null,
+            optional: null,
+            test: null,
+            remainingSegments: '/',
+        });
     });
 });
 

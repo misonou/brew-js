@@ -217,13 +217,13 @@ definePrototype(Route, {
         var matched = any(state.routes, function (tokens) {
             return matchRoute(tokens, segments, true);
         });
-        var params = {};
+        var params = extend({}, state.params);
         if (matched) {
-            for (var i in state.params) {
-                params[i] = segments[matched.params[i]] || null;
-            }
-            params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
+            each(matched.params, function (i, v) {
+                params[i] = segments[v];
+            });
         }
+        params.remainingSegments = !matched || matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
         state.lastMatch = createRouteState(matched, segments, params);
         return params;
     },
