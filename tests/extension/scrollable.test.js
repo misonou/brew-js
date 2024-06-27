@@ -190,6 +190,7 @@ describe('persist-scroll directive', () => {
         expect(scrollable).toMatchObject({ scrollX: 75, scrollY: 75 });
 
         await nativeHistoryBack();
+        await delay();
         expect(scrollable).toMatchObject({ scrollX: 50, scrollY: 50 });
     });
 
@@ -209,6 +210,7 @@ describe('persist-scroll directive', () => {
 
         root.removeAttribute('persist-scroll');
         await nativeHistoryBack();
+        await delay();
         expect(scrollable).toMatchObject({ scrollX: 75, scrollY: 75 });
     });
 });

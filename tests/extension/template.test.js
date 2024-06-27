@@ -1,6 +1,6 @@
 import $ from "jquery";
 import { jest } from "@jest/globals";
-import { uniqueName, root, after, mount, initApp, mockFn, verifyCalls } from "../testUtil";
+import { uniqueName, root, after, mount, initApp, mockFn, verifyCalls, delay } from "../testUtil";
 import { getVar, setVar } from "src/var";
 import template from "src/extension/template";
 import { setBaseUrl } from "src/util/path";
@@ -389,7 +389,8 @@ describe('error-scope directive', () => {
     it('should clear error variable on asyncStart event', async () => {
         const elm = await mount(`<div error-scope></div>`);
         setVar(elm, 'error', 'test');
-        notifyAsync(elm, Promise.reject(errorWithCode('test')));
+        notifyAsync(elm, delay(20).then(() => Promise.reject(errorWithCode('test2'))));
+        await delay();
         expect(getVar(elm, 'error')).toBe(null);
     });
 });
