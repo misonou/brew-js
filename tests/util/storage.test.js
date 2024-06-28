@@ -62,12 +62,15 @@ describe('ObjectStorage.set', () => {
         b.a = a;
 
         const store = createObjectStorage(sessionStorage, TEST_KEY);
-        store.set('test', { a });
+        store.set('foo', a);
+        store.set('bar', { a });
         await delay();
 
         const store2 = createObjectStorage(sessionStorage, TEST_KEY);
-        const data = store2.get('test');
-        expect(data.a).toBe(data.a.b.a);
+        const foo = store2.get('foo');
+        const bar = store2.get('bar');
+        expect(foo).toBe(foo.b.a);
+        expect(bar.a).toBe(bar.a.b.a);
     });
 
     it('should serialize primitive value except symbol', async () => {

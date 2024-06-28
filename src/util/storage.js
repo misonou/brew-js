@@ -1,5 +1,5 @@
 import { compressToUTF16, decompressFromUTF16 } from "../include/lz-string.js";
-import { each, extend, is, keys, map, pipe, setImmediateOnce } from "zeta-dom/util";
+import { each, extend, is, keys, map, setImmediateOnce } from "zeta-dom/util";
 
 const UNDEFINED = 'undefined';
 
@@ -85,12 +85,13 @@ export function createObjectStorage(storage, key) {
             if (typeof v === 'string' && v[0] === '#') {
                 v = v.slice(1);
                 if (v[0] !== '#') {
-                    refs.push({ o: this, k, v });
                     if (!(v in objectCache)) {
-                        objectCache[v] = null;
+                        objectCache[v] = undefined;
                         cacheObject(v, deserialize(serialized[v], refs));
+                    } else if (objectCache[v] === undefined) {
+                        refs.push({ o: this, k, v });
                     }
-                    return null;
+                    return objectCache[v];
                 }
             }
             return v;
@@ -102,11 +103,14 @@ export function createObjectStorage(storage, key) {
         if (id && serialized[id] && !(id in objectCache)) {
             try {
                 var refs = [];
-                var value = deserialize(serialized[id], refs);
+                var value = deserialize('{"": "#' + id + '"}', refs)[""];
                 each(refs, function (i, v) {
                     v.o[v.k] = objectCache[v.v];
                 });
-                cacheObject(id, (callback || pipe)(value));
+                if (callback) {
+                    uncacheObject(id);
+                    cacheObject(id, callback(value));
+                }
             } catch (e) {
                 serialized[id] = UNDEFINED;
             }
