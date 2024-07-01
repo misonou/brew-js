@@ -1,5 +1,5 @@
 import { compressToUTF16, decompressFromUTF16 } from "../include/lz-string.js";
-import { each, extend, is, keys, map, setImmediateOnce } from "zeta-dom/util";
+import { each, extend, is, keys, map, noop, setImmediateOnce, throws } from "zeta-dom/util";
 
 const UNDEFINED = 'undefined';
 
@@ -12,6 +12,10 @@ function shouldIgnore(obj) {
 }
 
 export function createObjectStorage(storage, key) {
+    var types = new Map([
+        [Date, '#Date '],
+        ['Date', [Date, noop]]
+    ]);
     var objectCache = {};
     var objectMap = new WeakMap();
     var dirty = new Set();
@@ -56,7 +60,7 @@ export function createObjectStorage(storage, key) {
 
     function serialize(obj, visited) {
         var counter = 0;
-        return JSON.stringify(obj, function (k, v) {
+        var str = JSON.stringify(obj, function (k, v) {
             if (!isObject(v)) {
                 return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
             }
@@ -75,11 +79,29 @@ export function createObjectStorage(storage, key) {
             }
             return '#' + id;
         });
+        var prefix = obj && typeof obj === 'object' && types.get(obj.constructor);
+        return (prefix || '') + str;
     }
 
     function deserialize(str, refs) {
         if (!str || str === UNDEFINED) {
             return;
+        }
+        if (str[0] === '#') {
+            var pos = str.indexOf(' ');
+            var type = types.get(str.slice(1, pos));
+            str = str.slice(pos + 1);
+            if (type) {
+                var len = refs.length;
+                var data = deserialize(str, refs);
+                if (refs.length === len) {
+                    return new type[0](data);
+                } else {
+                    var target = new type[0]();
+                    refs.push({ t: type[1].bind(undefined, target, data) });
+                    return target;
+                }
+            }
         }
         return JSON.parse(str, function (k, v) {
             if (typeof v === 'string' && v[0] === '#') {
@@ -105,7 +127,11 @@ export function createObjectStorage(storage, key) {
                 var refs = [];
                 var value = deserialize('{"": "#' + id + '"}', refs)[""];
                 each(refs, function (i, v) {
-                    v.o[v.k] = objectCache[v.v];
+                    if (v.t) {
+                        v.t();
+                    } else {
+                        v.o[v.k] = objectCache[v.v];
+                    }
                 });
                 if (callback) {
                     uncacheObject(id);
@@ -146,6 +172,13 @@ export function createObjectStorage(storage, key) {
     }
 
     return {
+        registerType: function (key, fn, setter) {
+            if (types.has(key) || types.has(fn)) {
+                throws('Key or constructor already registered');
+            }
+            types.set(fn, '#' + key + ' ');
+            types.set(key, [fn, setter]);
+        },
         keys: function () {
             return keys(entries);
         },

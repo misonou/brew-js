@@ -1,5 +1,5 @@
 import { createObjectStorage } from "src/util/storage";
-import { delay, mockFn } from "../testUtil";
+import { delay, mockFn, verifyCalls } from "../testUtil";
 
 const TEST_KEY = '__test__';
 
@@ -23,6 +23,85 @@ describe('ObjectStorage', () => {
 
         const store = createObjectStorage(sessionStorage, TEST_KEY);
         expect(store.get('foo')).toBeUndefined();
+    });
+
+    it('should deserialize object of custom class', async () => {
+        class Foo {
+            constructor(v) {
+                Object.assign(this, v);
+            }
+        };
+        const setter = mockFn((o, v) => {
+            Object.assign(o, v);
+        });
+        const a = new Foo({});
+        const b = {};
+        a.b = b;
+        a.a = a;
+        b.a = a;
+
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, setter);
+        store.set('foo', a);
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        store2.registerType('Foo', Foo, setter);
+        const foo = store2.get('foo');
+
+        expect(foo).toBeInstanceOf(Foo);
+        expect(foo).toBe(foo.a);
+        expect(foo).toBe(foo.b.a);
+        expect(foo).toEqual(a);
+        verifyCalls(setter, [
+            [foo, { a: foo, b: foo.b }],
+        ]);
+    });
+
+    it('should invoke constructor with data when there is no dependency', async () => {
+        const Foo = mockFn(function (arg) {
+            Object.assign(this, arg);
+        });
+        const setter = mockFn((o, v) => {
+            Object.assign(o, v);
+        });
+
+        const a = new Foo({ b: 1 });
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, setter);
+        store.set('foo', a);
+        Foo.mockClear();
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        store2.registerType('Foo', Foo, setter);
+        const foo = store2.get('foo');
+        expect(foo).toEqual(a);
+        expect(setter).not.toBeCalled();
+        expect(Foo).toBeCalledWith({ b: 1 });
+    });
+
+    it('should deserialize Date object by default', async () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('d', new Date(1719853695000));
+
+        await delay();
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        const d = store2.get('d');
+        expect(d).toBeInstanceOf(Date);
+        expect(+d).toBe(1719853695000);
+    });
+});
+
+describe('ObjectStorage.registerType', () => {
+    it('should throw if key or class is already registered', () => {
+        const Foo = function () { };
+        const Bar = function () { };
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, () => { });
+
+        expect(() => store.registerType('Bar', Foo, () => { })).toThrow();
+        expect(() => store.registerType('Foo', Bar, () => { })).toThrow();
     });
 });
 

@@ -1,5 +1,45 @@
 export interface ObjectStorage {
     /**
+     * Enables deserialization of object as custom class.
+     *
+     * Note that the constructor should instantiate with or without deserialized data, depending on whether data is fully deserialized.
+     * Also inherited classes must be registered explicitly.
+     *
+     * @param key A key identifying the class. It should be unique and contain only alphanumeric characters.
+     * @param ctor A constructible function or class.
+     * @param callback A callback to initialize object with deserialized data when data is not available during instantiation.
+     *
+     * @example
+     * ```javascript
+     * function Foo(data) {
+     *   if (data !== undefined) {
+     *     // restore from serialized state
+     *   }
+     * }
+     * Foo.prototype.toJSON = function () {
+     *   // return serialized state
+     * };
+     * store.registerType('Foo', Foo, (target, data) => Foo.call(target, data));
+     *
+     * class Bar {
+     *   constructor(data) {
+     *     if (data !== undefined) {
+     *       this.fromJSON(data);
+     *     }
+     *   }
+     *   fromJSON(data) {
+     *     // restore from serialized state
+     *   }
+     *   toJSON() {
+     *     // return serialized state
+     *   }
+     * }
+     * store.registerType('Bar', Bar, (target, data) => target.fromJSON(data));
+     * ```
+     */
+    registerType<T>(key: string, ctor: new (data?: any) => T, callback: (target: T, data: any) => void): void;
+
+    /**
      * Gets all keys present in storage.
      */
     keys(): string[];
