@@ -12,15 +12,21 @@ const navigationType = jest.spyOn(Object.getPrototypeOf(performance.navigation),
 navigationType.mockReturnValue(performance.navigation.TYPE_RELOAD);
 
 beforeAll(async () => {
-    var store = createObjectStorage(sessionStorage, 'brew.router./');
-    store.set('g', { baz: 'baz' });
+    const HistoryStorage = function (data) {
+        Object.assign(this, data);
+    };
+    const store = createObjectStorage(sessionStorage, 'brew.router./');
+    store.registerType('HistoryStorage', HistoryStorage, () => { });
+
+    const state1 = new HistoryStorage({ foo: 'foo' });
+    store.set('g', new HistoryStorage({ baz: 'baz', state1 }));
     store.set('c', stateId1);
     store.set('s', [
         [stateId1, '/foo', 0, false, { a: 1 }, sessionId],
         [stateId2, '/bar', 1, false, null, sessionId],
     ]);
-    store.set(stateId1, { foo: 'foo' });
-    store.set(sessionId, { bar: 'bar' });
+    store.set(stateId1, state1);
+    store.set(sessionId, new HistoryStorage({ bar: 'bar' }));
     history.replaceState(stateId1, '');
 });
 
@@ -55,5 +61,6 @@ describe('router', () => {
         expect(app.sessionId).toBe(sessionId);
         expect(app.sessionStorage.get('bar')).toBe('bar');
         expect(app.cache.get('baz')).toBe('baz');
+        expect(app.cache.get('state1')).toBe(app.historyStorage.current);
     });
 });

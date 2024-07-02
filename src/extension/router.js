@@ -49,6 +49,13 @@ function getCurrentPathAndQuery() {
     return location.pathname + getCurrentQuery();
 }
 
+function initStorage(path) {
+    storage = createObjectStorage(sessionStorage, 'brew.router.' + path);
+    storage.registerType('HistoryStorage', HistoryStorage, function (target, data) {
+        each(data, target.set.bind(target));
+    });
+}
+
 function HistoryStorage(obj) {
     var map = new Map(obj && Object.entries(obj));
     Object.setPrototypeOf(map, HistoryStorage.prototype);
@@ -683,7 +690,7 @@ function configureRouter(app, options) {
         navigationType = 'resume';
     }
     route = new Route(app, options.routes, initialPath);
-    storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
+    initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname);
 
     app.define({
         get canNavigateBack() {
