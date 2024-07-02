@@ -1,5 +1,5 @@
 import { compressToUTF16, decompressFromUTF16 } from "../include/lz-string.js";
-import { each, extend, is, keys, map, noop, setImmediateOnce, throws } from "zeta-dom/util";
+import { each, extend, hasOwnProperty, is, keys, map, noop, setImmediateOnce, throws } from "zeta-dom/util";
 
 const UNDEFINED = 'undefined';
 
@@ -120,12 +120,11 @@ export function createObjectStorage(storage, key) {
         });
     }
 
-    function revive(key, callback) {
-        var id = entries[key];
+    function revive(id) {
         if (id && serialized[id] && !(id in objectCache)) {
             try {
                 var refs = [];
-                var value = deserialize('{"": "#' + id + '"}', refs)[""];
+                deserialize('{"": "#' + id + '"}', refs);
                 each(refs, function (i, v) {
                     if (v.t) {
                         v.t();
@@ -133,10 +132,6 @@ export function createObjectStorage(storage, key) {
                         v.o[v.k] = objectCache[v.v];
                     }
                 });
-                if (callback) {
-                    uncacheObject(id);
-                    cacheObject(id, callback(value));
-                }
             } catch (e) {
                 serialized[id] = UNDEFINED;
             }
@@ -186,11 +181,19 @@ export function createObjectStorage(storage, key) {
             return !!entries[key];
         },
         get: function (key) {
-            return revive(key);
+            return revive(entries[key]);
         },
         revive: function (key, callback) {
-            uncacheObject(entries[key]);
-            return revive(key, callback);
+            var id = entries[key];
+            if (id) {
+                var value = revive(id);
+                var isConstructor = hasOwnProperty(callback, 'prototype');
+                if (!isConstructor || !(value instanceof callback)) {
+                    uncacheObject(id);
+                    cacheObject(id, isConstructor ? new callback(value) : callback(value));
+                }
+                return objectCache[id];
+            }
         },
         set: function (key, value) {
             var id = objectMap.get(value) || getNextIdForKey(key);

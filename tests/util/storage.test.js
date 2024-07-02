@@ -265,6 +265,35 @@ describe('ObjectStorage.revive', () => {
 
         expect(sessionStorage[TEST_KEY]).toMatch(/__this_should_still_exist_/);
     });
+
+    it('should purge living object if it is not an instance of the given constructor', async () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('test', { foo: 'bar' });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        const obj = store2.get('test');
+
+        const Base = function () { };
+        const Test = function (v) {
+            Object.assign(this, v);
+        };
+        Test.prototype = new Base();
+
+        const obj2 = store2.revive('test', Test);
+        expect(obj2).toBeInstanceOf(Test);
+        expect(obj2).not.toBe(obj);
+        expect(store2.revive('test', Test)).toBe(obj2);
+        expect(store2.revive('test', Base)).toBe(obj2);
+    });
+
+    it('should not throw if callback is not a constructor', () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('test', { foo: 'bar' });
+        expect(() => {
+            store.revive('test', v => v);
+        }).not.toThrow();
+    });
 });
 
 describe('ObjectStorage.persist', () => {

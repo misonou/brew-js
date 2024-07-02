@@ -52,11 +52,23 @@ export interface ObjectStorage {
     /**
      * Restores non-primitive objects from storage.
      *
-     * Unlike {@link ObjectStorage.get}, if the same key has been restored before,
-     * the previous object will be purged.
+     * It will replace previous object of the same key if it was not stored with its constructor registered.
+     * References to previous object are untouched, meaning that they will no longer point to the returned object.
+     *
+     * @param key A key associated to specific data.
+     * @param ctor Constructor registered with {@link ObjectStorage.registerType}.
+     */
+    revive<T>(key: string, ctor: new (data?: any) => T): T;
+
+    /**
+     * Restores non-primitive objects from storage.
+     *
+     * It will always replace previously object of the same key.
+     * References to previous object are untouched, meaning that they will no longer point to the returned object.
      *
      * @param key A key associated to specific data.
      * @param callback Callback to construct result object, receiving deserialized JSON data as the first argument.
+     * @deprecated Always use overload with constructor as the second argument.
      */
     revive<T>(key: string, callback: (data: any) => T): T;
 
