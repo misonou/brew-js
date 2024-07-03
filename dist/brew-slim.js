@@ -1,4 +1,4 @@
-/*! brew-js v0.6.7 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.8 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1331,16 +1331,17 @@ function createObjectStorage(storage, key) {
       if (typeof v === 'string' && v[0] === '#') {
         v = v.slice(1);
         if (v[0] !== '#') {
-          refs.push({
-            o: this,
-            k: k,
-            v: v
-          });
           if (!(v in objectCache)) {
-            objectCache[v] = null;
+            objectCache[v] = undefined;
             cacheObject(v, deserialize(serialized[v], refs));
+          } else if (objectCache[v] === undefined) {
+            refs.push({
+              o: this,
+              k: k,
+              v: v
+            });
           }
-          return null;
+          return objectCache[v];
         }
       }
       return v;
@@ -1351,11 +1352,14 @@ function createObjectStorage(storage, key) {
     if (id && serialized[id] && !(id in objectCache)) {
       try {
         var refs = [];
-        var value = deserialize(serialized[id], refs);
+        var value = deserialize('{"": "#' + id + '"}', refs)[""];
         each(refs, function (i, v) {
           v.o[v.k] = objectCache[v.v];
         });
-        cacheObject(id, (callback || pipe)(value));
+        if (callback) {
+          uncacheObject(id);
+          cacheObject(id, callback(value));
+        }
       } catch (e) {
         serialized[id] = UNDEFINED;
       }
@@ -2222,9 +2226,9 @@ registerSimpleDirective('enableLoadingClass', 'loading-class', function (element
     if (loading) {
       setClass(element, 'loading', loading);
     } else {
-      runCSSTransition(element, 'loading-complete', function () {
+      catchAsync(runCSSTransition(element, 'loading-complete', function () {
         setClass(element, 'loading', false);
-      });
+      }));
     }
   });
 });
@@ -2312,15 +2316,18 @@ zeta_dom_dom.ready.then(function () {
     if (!isSameWindow(self.target)) {
       return;
     }
+    var oncancel = function oncancel() {
+      console.warn('Navigation cancelled');
+    };
     if ("navigate" in app && (dataHref || app.isAppPath(href))) {
       e.preventDefault();
-      app.navigate(dataHref || app.fromHref(href));
+      app.navigate(dataHref || app.fromHref(href)).catch(oncancel);
     } else if (locked(domAction_root)) {
       e.preventDefault();
       cancelLock(domAction_root).then(function () {
         var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
         window.open(dataHref || href, '_self', features.join(','));
-      });
+      }, oncancel);
     }
   });
 });
@@ -2943,13 +2950,13 @@ definePrototype(Route, {
     var matched = any(state.routes, function (tokens) {
       return matchRoute(tokens, segments, true);
     });
-    var params = {};
+    var params = extend({}, state.params);
     if (matched) {
-      for (var i in state.params) {
-        params[i] = segments[matched.params[i]] || null;
-      }
-      params.remainingSegments = matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
+      each(matched.params, function (i, v) {
+        params[i] = segments[v];
+      });
     }
+    params.remainingSegments = !matched || matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
     state.lastMatch = createRouteState(matched, segments, params);
     return params;
   },
