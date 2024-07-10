@@ -15,10 +15,9 @@ const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/';
 const div = {};
 
-var initialCanNavigateBack;
-var initialCanNavigateForward;
-var initialPreviousPath;
-var initialRedirectError;
+/** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
+var initialProps;
+var firstNavigateEvent;
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
 
@@ -35,14 +34,14 @@ beforeAll(async () => {
                 '/{test:test-.+}/*'
             ]
         });
-        initialCanNavigateBack = app.canNavigateBack;
-        initialCanNavigateForward = app.canNavigateForward;
-        initialPreviousPath = app.previousPath;
-        try {
-            app.navigate('/test-1', true).catch(() => { });
-        } catch (e) {
-            initialRedirectError = e;
-        }
+        initialProps = {
+            ...app,
+            historyStorage: { ...app.historyStorage }
+        };
+        const unbind = app.on('navigate', e => {
+            firstNavigateEvent = e;
+            unbind();
+        });
     });
 });
 
@@ -365,10 +364,6 @@ describe('app.navigate', () => {
         expect(app.path).toEqual('/test-nested-nodefault/default');
     });
 
-    it('should not throw error when navigate with redirect before app init', () => {
-        expect(initialRedirectError).toBeUndefined();
-    });
-
     it('should update location pathname correctly', async () => {
         expect(location.pathname).toBe('/base');
         await app.navigate('/test-1');
@@ -688,6 +683,10 @@ describe('app.snapshot', () => {
 });
 
 describe('app.path', () => {
+    it('should be initially the initial path', () => {
+        expect(initialProps.path).toBe(initialPath);
+    });
+
     it('should trigger navigation when being set with new value', async () => {
         const cb = mockFn();
         bindEvent(app, 'navigate', cb);
@@ -701,13 +700,13 @@ describe('app.path', () => {
 
 describe('app.canNavigateBack', () => {
     it('should be initially false', () => {
-        expect(initialCanNavigateBack).toBeFalsy();
+        expect(initialProps.canNavigateBack).toBeFalsy();
     });
 });
 
 describe('app.canNavigateForward', () => {
     it('should be initially false', () => {
-        expect(initialCanNavigateForward).toBeFalsy();
+        expect(initialProps.canNavigateForward).toBeFalsy();
     });
 
     it('should return true after navigating back', async () => {
@@ -720,7 +719,7 @@ describe('app.canNavigateForward', () => {
 
 describe('app.previousPath', () => {
     it('should be initially null', () => {
-        expect(initialPreviousPath).toBeNull();
+        expect(initialProps.previousPath).toBeNull();
     });
 
     it('should return path of previous page load in history stack', async () => {

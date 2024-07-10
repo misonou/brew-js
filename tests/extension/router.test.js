@@ -16,10 +16,9 @@ const initialPath = '/';
 const div = {};
 const mounted = [];
 
-var initialCanNavigateBack;
-var initialCanNavigateForward;
-var initialPreviousPath;
-var initialRedirectError;
+/** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
+var initialProps;
+var firstNavigateEvent;
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var app;
 
@@ -36,14 +35,14 @@ beforeAll(async () => {
                 '/{test:test-.+}/*'
             ]
         });
-        initialCanNavigateBack = app.canNavigateBack;
-        initialCanNavigateForward = app.canNavigateForward;
-        initialPreviousPath = app.previousPath;
-        try {
-            app.navigate('/test-1', true).catch(() => { });
-        } catch (e) {
-            initialRedirectError = e;
-        }
+        initialProps = {
+            ...app,
+            historyStorage: { ...app.historyStorage }
+        };
+        const unbind = app.on('navigate', e => {
+            firstNavigateEvent = e;
+            unbind();
+        });
         initContent();
         app.on('mounted', e => {
             mounted.push(e.target);
@@ -365,10 +364,6 @@ describe('app.navigate', () => {
     it('should redirect to path of first match-path children', async () => {
         await app.navigate('/test-nested-nodefault');
         expect(app.path).toEqual('/test-nested-nodefault/default');
-    });
-
-    it('should not throw error when navigate with redirect before app init', () => {
-        expect(initialRedirectError).toBeUndefined();
     });
 
     it('should update location pathname correctly', async () => {
@@ -772,6 +767,10 @@ describe('app.snapshot', () => {
 });
 
 describe('app.path', () => {
+    it('should be initially the initial path', () => {
+        expect(initialProps.path).toBe(initialPath);
+    });
+
     it('should trigger navigation when being set with new value', async () => {
         const cb = mockFn();
         bindEvent(app, 'navigate', cb);
@@ -785,13 +784,13 @@ describe('app.path', () => {
 
 describe('app.canNavigateBack', () => {
     it('should be initially false', () => {
-        expect(initialCanNavigateBack).toBeFalsy();
+        expect(initialProps.canNavigateBack).toBeFalsy();
     });
 });
 
 describe('app.canNavigateForward', () => {
     it('should be initially false', () => {
-        expect(initialCanNavigateForward).toBeFalsy();
+        expect(initialProps.canNavigateForward).toBeFalsy();
     });
 
     it('should return true after navigating back', async () => {
@@ -804,7 +803,7 @@ describe('app.canNavigateForward', () => {
 
 describe('app.previousPath', () => {
     it('should be initially null', () => {
-        expect(initialPreviousPath).toBeNull();
+        expect(initialProps.previousPath).toBeNull();
     });
 
     it('should return path of previous page load in history stack', async () => {
@@ -1073,6 +1072,10 @@ describe('app.beforePageEnter', () => {
 });
 
 describe('app.historyStorage', () => {
+    it('should return instance for initial page before app ready', () => {
+        expect(initialProps.historyStorage.current).toBe(app.historyStorage.for(firstNavigateEvent.newStateId));
+    });
+
     it('should persist all states to session storage on pagehide event', async () => {
         const obj1 = {};
         await after(() => app.historyStorage.current.set('foo', obj1));
@@ -1149,6 +1152,13 @@ describe('app.historyStorage', () => {
 });
 
 describe('app.page', () => {
+    it('should expose information of initial page before app ready', () => {
+        expect(initialProps.page).toMatchObject({
+            pageId: firstNavigateEvent.newStateId,
+            path: initialPath
+        });
+    });
+
     it('should expose information of current page', async () => {
         const data = {};
         const { id, path } = await app.navigate('/test-1', false, data);
@@ -1460,7 +1470,7 @@ describe('popstate event', () => {
 
 describe('mounted event', () => {
     it('should be emitted on root element first', () => {
-        expect(mounted.slice(0, 2)).toEqual([root, div.test1]);
+        expect(mounted.slice(0, 2)).toEqual([root, div.initial]);
     });
 
     it('should be emitted on first-time matched element before pageenter event', async () => {

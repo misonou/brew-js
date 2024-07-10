@@ -381,6 +381,11 @@ function configureRouter(app, options) {
             get storage() {
                 return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
             },
+            commit: function () {
+                pendingState = state;
+                commitPath(state.path);
+                route.set(pathNoQuery);
+            },
             reset: function () {
                 if (resolved) {
                     resolved = false;
@@ -579,14 +584,9 @@ function configureRouter(app, options) {
     }
 
     function processPageChange(state) {
-        var path = state.path;
         var deferred = deferrable();
-
-        pendingState = state;
-        commitPath(path);
-        route.set(path);
+        state.commit();
         emitNavigationEvent('beforepageload', state, { waitFor: deferred.waitFor }, { handleable: false });
-
         always(deferred, function () {
             if (states[currentIndex] === state) {
                 pendingState = null;
@@ -624,17 +624,6 @@ function configureRouter(app, options) {
             }
         });
     }
-
-    defineObservableProperty(app, 'path', '', function (newValue) {
-        if (!appReady) {
-            return currentPath;
-        }
-        newValue = resolvePath(newValue);
-        if (newValue !== currentPath) {
-            pushState(newValue);
-        }
-        return currentPath;
-    });
 
     baseUrl = normalizePath(options.baseUrl);
     if (options.urlMode === 'none') {
@@ -738,6 +727,13 @@ function configureRouter(app, options) {
             }
         }
     });
+    defineObservableProperty(app, 'path', initialPath, function (newValue) {
+        newValue = resolvePath(newValue);
+        if (newValue !== currentPath) {
+            pushState(newValue);
+        }
+        return currentPath;
+    });
     defineOwnProperty(app, 'basePath', basePath, true);
     defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
     defineOwnProperty(app, 'route', route, true);
@@ -785,6 +781,7 @@ function configureRouter(app, options) {
     if (initialState) {
         initialState = pushState(initialPath, true);
     }
+    states[currentIndex].commit();
 
     app.on('ready', function () {
         if (initialState && states[currentIndex] === initialState && includeQuery) {
