@@ -268,31 +268,27 @@ definePrototype(Route, {
 });
 watchable(Route.prototype);
 
-function PageInfo(props) {
-    for (var i in props) {
-        defineOwnProperty(this, i, props[i], true);
-    }
-}
-
-function pageInfoForEachState(self, callback) {
-    var pageId = self.pageId;
-    each(states, function (i, v) {
-        if (v.pageId === pageId) {
-            callback(v);
-        }
-    });
+function PageInfo(page, path, params) {
+    var self = this;
+    defineOwnProperty(self, 'pageId', page.id, true);
+    defineOwnProperty(self, 'path', path, true);
+    defineOwnProperty(self, 'params', params, true);
+    _(self, page);
 }
 
 definePrototype(PageInfo, {
+    get data() {
+        return _(this).data;
+    },
     clearNavigateData: function () {
-        pageInfoForEachState(this, function (v) {
-            v.data = null;
-        });
-        defineOwnProperty(this, 'data', null, true);
+        _(this).data = null;
     },
     clearHistoryStorage: function () {
-        pageInfoForEachState(this, function (v) {
-            v.storage.clear();
+        var pageId = this.pageId;
+        each(states, function (i, v) {
+            if (v.page.id === pageId && storage.has(v.id)) {
+                v.storage.clear();
+            }
         });
     }
 });
@@ -312,7 +308,6 @@ function configureRouter(app, options) {
     var indexOffset = 0;
     var pendingState;
     var lastState = {};
-    var pageInfos = {};
 
     function getPersistedStorage(key, ctor) {
         return storage.revive(key, ctor) || mapGet(storage, key, ctor);
@@ -347,7 +342,7 @@ function configureRouter(app, options) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
-        var pageId = previous && snapshot ? previous.pageId : id;
+        var page = previous && snapshot ? previous.page : { id, data };
         var resolved, promise;
         var savedState = [id, path, index, snapshot, data, sessionId];
         var state = {
@@ -355,10 +350,9 @@ function configureRouter(app, options) {
             path: path,
             index: index,
             pathname: pathNoQuery,
-            data: data,
             type: 'navigate',
             previous: previous && (keepPreviousPath || snapshot ? previous.previous : previous),
-            pageId: pageId,
+            page: page,
             sessionId: sessionId,
             resumedId: previous ? previous.resumedId : sessionId,
             get done() {
@@ -371,12 +365,7 @@ function configureRouter(app, options) {
                 })));
             },
             get pageInfo() {
-                return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
-                    path: pathNoQuery,
-                    pageId: pageId,
-                    params: freeze(route.parse(pathNoQuery)),
-                    data: data
-                }));
+                return page.info || (page.info = new PageInfo(page, pathNoQuery, freeze(route.parse(pathNoQuery))));
             },
             get storage() {
                 return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
@@ -420,7 +409,7 @@ function configureRouter(app, options) {
             },
             toJSON: function () {
                 savedState[1] = state.path;
-                savedState[4] = state.data;
+                savedState[4] = page.data;
                 return savedState;
             }
         };
@@ -437,7 +426,7 @@ function configureRouter(app, options) {
             if (oldHash !== newHash) {
                 app.emit('hashchange', { oldHash, newHash }, { handleable: false });
             }
-            return { promise: resolve(createNavigateResult(state.pageId, newPath, null, false)) };
+            return { promise: resolve(createNavigateResult(state.page.id, newPath, null, false)) };
         }
         return state;
     }
@@ -461,7 +450,7 @@ function configureRouter(app, options) {
             });
         } else if (callback() !== false) {
             if (snapshot && previous.done) {
-                state.resolve(createNavigateResult(state.pageId, state.path, null, false));
+                state.resolve(createNavigateResult(state.page.id, state.path, null, false));
                 updateQueryAndHash(state, state.path, currentState.path);
             } else {
                 setImmediateOnce(handlePathChange);
@@ -497,7 +486,7 @@ function configureRouter(app, options) {
         var id = randomId();
         var replaceHistory = replace || (currentState && !currentState.done);
         var index = Math.max(0, currentIndex + !replaceHistory);
-        var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
+        var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.page.data : data, sessionId, previous, replaceHistory, storageMap);
         applyState(state, replace, snapshot, previous, function () {
             currentIndex = index;
             if (!replace) {
@@ -517,7 +506,7 @@ function configureRouter(app, options) {
     function popState(index, isNative) {
         var state = states[index].reset();
         var step = state.index - states[currentIndex].index;
-        var snapshot = state.pageId === states[currentIndex].pageId;
+        var snapshot = state.page === states[currentIndex].page;
         var isLocked = !snapshot && locked(root);
         if (isLocked && isNative) {
             history.go(-step);
@@ -578,7 +567,7 @@ function configureRouter(app, options) {
             oldStateId: lastState.id,
             newStateId: state.id,
             route: state.pageInfo.params,
-            data: state.data
+            data: state.page.data
         }, data);
         return app.emit(eventName, data, options);
     }
@@ -603,7 +592,7 @@ function configureRouter(app, options) {
         var state = states[currentIndex];
         var newPath = state.path;
         if (lastState === state) {
-            state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
+            state.resolve(createNavigateResult(lastState.page.id, newPath, null, false));
             return;
         }
 
