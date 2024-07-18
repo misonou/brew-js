@@ -1263,16 +1263,24 @@ describe('app.page', () => {
 
     it('should clear history storage instances of all snapshots', async () => {
         await app.navigate('/test-1');
+        const page = app.page;
+        const stateId1 = history.state;
         const storage1 = app.historyStorage.current;
         storage1.set('foo', 'bar');
 
         await app.snapshot();
+        const stateId2 = history.state;
         const storage2 = app.historyStorage.current;
         storage2.set('foo', 'baz');
         expect(storage1.size).toBe(1);
         expect(storage2.size).toBe(1);
 
-        app.page.clearHistoryStorage();
+        await app.back();
+        await app.navigate('/test-2');
+        expect(app.historyStorage.for(stateId1)).toBe(storage1);
+        expect(app.historyStorage.for(stateId2)).toBeNull();
+
+        page.clearHistoryStorage();
         expect(storage1.size).toBe(0);
         expect(storage2.size).toBe(0);
     });

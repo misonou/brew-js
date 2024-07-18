@@ -284,11 +284,8 @@ definePrototype(PageInfo, {
         _(this).data = null;
     },
     clearHistoryStorage: function () {
-        var pageId = this.pageId;
-        each(states, function (i, v) {
-            if (v.page.id === pageId && storage.has(v.id)) {
-                v.storage.clear();
-            }
+        each(_(this).states, function (i, v) {
+            v.storage.clear();
         });
     }
 });
@@ -342,7 +339,7 @@ function configureRouter(app, options) {
         var resolvePromise = noop;
         var rejectPromise = noop;
         var pathNoQuery = removeQueryAndHash(path);
-        var page = previous && snapshot ? previous.page : { id, data };
+        var page = previous && snapshot ? previous.page : { id, data, states: {} };
         var resolved, promise;
         var savedState = [id, path, index, snapshot, data, sessionId];
         var state = {
@@ -355,6 +352,7 @@ function configureRouter(app, options) {
             page: page,
             sessionId: sessionId,
             resumedId: previous ? previous.resumedId : sessionId,
+            deleted: false,
             get done() {
                 return resolved;
             },
@@ -368,7 +366,7 @@ function configureRouter(app, options) {
                 return page.info || (page.info = new PageInfo(page, pathNoQuery, freeze(route.parse(pathNoQuery))));
             },
             get storage() {
-                return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
+                return storageMap || (storageMap = state.deleted ? new HistoryStorage() : getPersistedStorage(id, HistoryStorage));
             },
             commit: function () {
                 pendingState = state;
@@ -413,6 +411,7 @@ function configureRouter(app, options) {
                 return savedState;
             }
         };
+        page.states[id] = state;
         return state;
     }
 
@@ -491,6 +490,7 @@ function configureRouter(app, options) {
             currentIndex = index;
             if (!replace) {
                 each(states.splice(currentIndex), function (i, v) {
+                    v.deleted = true;
                     storage.delete(v.id);
                     if (v.resumedId !== resumedId) {
                         storage.delete(v.resumedId);
