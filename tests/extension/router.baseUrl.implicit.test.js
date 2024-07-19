@@ -282,6 +282,17 @@ describe('app.navigate', () => {
         expect(resolved).toBeTruthy();
     });
 
+    it('should continue page load if error is thrown in navigate event', async () => {
+        const cb = mockFn(() => {
+            throw new Error();
+        });
+        bindEvent(app, 'navigate', cb);
+        await expect(app.navigate('/test-1')).resolves.toEqual(objectContaining({
+            navigated: true
+        }));
+        expect(cb).toBeCalledTimes(1);
+    });
+
     it('should cancel current navigation when navigating to other path in navigate event', async () => {
         let promise;
         const cb = mockFn(e => {

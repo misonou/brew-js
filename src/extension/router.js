@@ -607,7 +607,7 @@ function configureRouter(app, options) {
         console.log('Nagivate', newPath);
         var promise = resolve(emitNavigationEvent('navigate', state));
         notifyAsync(root, promise);
-        promise.then(function () {
+        always(promise, function () {
             if (states[currentIndex] === state) {
                 processPageChange(state);
             }
