@@ -21,6 +21,7 @@ beforeAll(async () => {
         [stateId1, '/foo', 1, false, { a: 1 }, sessionId],
         [stateId2, '/bar', 2, false, null, sessionId],
     ]);
+    store.set(stateId1, { foo: 'foo' });
     store.set(sessionId, { bar: 'bar' });
     history.replaceState(stateId1, '');
 });
@@ -54,6 +55,8 @@ describe('router', () => {
             newStateId: stateId1,
             data: { a: 1 }
         }), _);
+        expect(app.page.getSavedStates()).toEqual({ foo: 'foo' });
+        expect(app.historyStorage.current.get('foo')).toBe('foo');
         expect(app.sessionId).toBe(sessionId);
         expect(app.sessionStorage.get('bar')).toBe('bar');
         expect(app.cache.get('baz')).toBe('baz');

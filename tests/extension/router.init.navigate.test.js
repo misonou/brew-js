@@ -45,6 +45,7 @@ describe('router', () => {
             pathname: '/',
             data: null
         }), _);
+        expect(app.page.getSavedStates()).toEqual({});
         expect(app.historyStorage.current.has('foo')).toBe(false);
         expect(app.sessionId).not.toBe(sessionId);
         expect(app.sessionStorage.has('bar')).toBe(false);

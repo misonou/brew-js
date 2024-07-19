@@ -123,6 +123,11 @@ declare namespace Brew {
          */
         readonly data: any;
         /**
+         * Gets the data stored in history storage for this page.
+         * When there are multiple snapshots, the last visited snapshot will be returned.
+         */
+        getSavedStates(): Record<string | symbol, any>;
+        /**
          * Deletes data passed by {@link WithRouter.navigate}.
          */
         clearNavigateData(): void;

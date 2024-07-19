@@ -1256,6 +1256,20 @@ describe('app.page', () => {
         expect(app.page).toBe(page);
     });
 
+    it('should return data stored in history storage associated with the last visited snapshot', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+        app.historyStorage.current.set('foo', 'bar');
+        expect(page.getSavedStates()).toEqual({ foo: 'bar' });
+
+        await app.snapshot();
+        app.historyStorage.current.set('foo', 'baz');
+        expect(page.getSavedStates()).toEqual({ foo: 'baz' });
+
+        await app.back();
+        expect(page.getSavedStates()).toEqual({ foo: 'bar' });
+    });
+
     it('should clear navigation data', async () => {
         const cb = mockFn();
         const { id } = await app.navigate('/test-1', false, {});

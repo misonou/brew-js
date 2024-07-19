@@ -280,6 +280,9 @@ definePrototype(PageInfo, {
     get data() {
         return _(this).data;
     },
+    getSavedStates() {
+        return _(this).last.storage.toJSON();
+    },
     clearNavigateData: function () {
         _(this).data = null;
     },
@@ -370,6 +373,7 @@ function configureRouter(app, options) {
             },
             commit: function () {
                 pendingState = state;
+                page.last = state;
                 commitPath(state.path);
                 route.set(pathNoQuery);
             },
@@ -393,6 +397,7 @@ function configureRouter(app, options) {
                 resolvePromise(resolved);
                 if (states[currentIndex] === state) {
                     lastState = state;
+                    page.last = state;
                     commitPath(state.path);
                     if (resolved.navigated) {
                         app.emit('pageload', { pathname: state.path }, { handleable: false });
