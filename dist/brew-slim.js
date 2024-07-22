@@ -1,4 +1,4 @@
-/*! brew-js v0.6.8 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.9 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -764,6 +764,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   setTimeoutOnce = _lib$util.setTimeoutOnce,
   single = _lib$util.single,
   throwNotFunction = _lib$util.throwNotFunction,
+  util_throws = _lib$util.throws,
   trim = _lib$util.trim,
   values = _lib$util.values,
   watch = _lib$util.watch,
@@ -1265,6 +1266,7 @@ function shouldIgnore(obj) {
   return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
 }
 function createObjectStorage(storage, key) {
+  var types = new Map([[Date, '#Date '], ['Date', [Date, noop]]]);
   var objectCache = {};
   var objectMap = new WeakMap();
   var dirty = new Set();
@@ -1303,7 +1305,7 @@ function createObjectStorage(storage, key) {
   }
   function serialize(obj, visited) {
     var counter = 0;
-    return JSON.stringify(obj, function (k, v) {
+    var str = JSON.stringify(obj, function (k, v) {
       if (!isObject(v)) {
         return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
       }
@@ -1322,10 +1324,30 @@ function createObjectStorage(storage, key) {
       }
       return '#' + id;
     });
+    var prefix = obj && _typeof(obj) === 'object' && types.get(obj.constructor);
+    return (prefix || '') + str;
   }
   function deserialize(str, refs) {
     if (!str || str === UNDEFINED) {
       return;
+    }
+    if (str[0] === '#') {
+      var pos = str.indexOf(' ');
+      var type = types.get(str.slice(1, pos));
+      str = str.slice(pos + 1);
+      if (type) {
+        var len = refs.length;
+        var data = deserialize(str, refs);
+        if (refs.length === len) {
+          return new type[0](data);
+        } else {
+          var target = new type[0]();
+          refs.push({
+            t: type[1].bind(undefined, target, data)
+          });
+          return target;
+        }
+      }
     }
     return JSON.parse(str, function (k, v) {
       if (typeof v === 'string' && v[0] === '#') {
@@ -1347,19 +1369,18 @@ function createObjectStorage(storage, key) {
       return v;
     });
   }
-  function _revive(key, callback) {
-    var id = entries[key];
+  function _revive(id) {
     if (id && serialized[id] && !(id in objectCache)) {
       try {
         var refs = [];
-        var value = deserialize('{"": "#' + id + '"}', refs)[""];
+        deserialize('{"": "#' + id + '"}', refs);
         each(refs, function (i, v) {
-          v.o[v.k] = objectCache[v.v];
+          if (v.t) {
+            v.t();
+          } else {
+            v.o[v.k] = objectCache[v.v];
+          }
         });
-        if (callback) {
-          uncacheObject(id);
-          cacheObject(id, callback(value));
-        }
       } catch (e) {
         serialized[id] = UNDEFINED;
       }
@@ -1395,6 +1416,13 @@ function createObjectStorage(storage, key) {
     storage.setItem(key, compressToUTF16(serialized.join('\n').trim()));
   }
   return {
+    registerType: function registerType(key, fn, setter) {
+      if (types.has(key) || types.has(fn)) {
+        util_throws('Key or constructor already registered');
+      }
+      types.set(fn, '#' + key + ' ');
+      types.set(key, [fn, setter]);
+    },
     keys: function keys() {
       return util_keys(entries);
     },
@@ -1402,11 +1430,19 @@ function createObjectStorage(storage, key) {
       return !!entries[key];
     },
     get: function get(key) {
-      return _revive(key);
+      return _revive(entries[key]);
     },
     revive: function revive(key, callback) {
-      uncacheObject(entries[key]);
-      return _revive(key, callback);
+      var id = entries[key];
+      if (id) {
+        var value = _revive(id);
+        var isConstructor = util_hasOwnProperty(callback, 'prototype');
+        if (!isConstructor || !(value instanceof callback)) {
+          uncacheObject(id);
+          cacheObject(id, isConstructor ? new callback(value) : callback(value));
+        }
+        return objectCache[id];
+      }
     },
     set: function set(key, value) {
       var id = objectMap.get(value) || getNextIdForKey(key);
@@ -2789,6 +2825,12 @@ function getCurrentQuery() {
 function getCurrentPathAndQuery() {
   return location.pathname + getCurrentQuery();
 }
+function initStorage(path) {
+  storage = createObjectStorage(sessionStorage, 'brew.router.' + path);
+  storage.registerType('HistoryStorage', HistoryStorage, function (target, data) {
+    each(data, target.set.bind(target));
+  });
+}
 function HistoryStorage(obj) {
   var map = new Map(obj && Object.entries(obj));
   Object.setPrototypeOf(map, HistoryStorage.prototype);
@@ -2993,28 +3035,22 @@ definePrototype(Route, {
   }
 });
 watchable(Route.prototype);
-function PageInfo(props) {
-  for (var i in props) {
-    defineOwnProperty(this, i, props[i], true);
-  }
-}
-function pageInfoForEachState(self, callback) {
-  var pageId = self.pageId;
-  each(states, function (i, v) {
-    if (v.pageId === pageId) {
-      callback(v);
-    }
-  });
+function PageInfo(page, path, params) {
+  var self = this;
+  defineOwnProperty(self, 'pageId', page.id, true);
+  defineOwnProperty(self, 'path', path, true);
+  defineOwnProperty(self, 'params', params, true);
+  _(self, page);
 }
 definePrototype(PageInfo, {
+  get data() {
+    return _(this).data;
+  },
   clearNavigateData: function clearNavigateData() {
-    pageInfoForEachState(this, function (v) {
-      v.data = null;
-    });
-    defineOwnProperty(this, 'data', null, true);
+    _(this).data = null;
   },
   clearHistoryStorage: function clearHistoryStorage() {
-    pageInfoForEachState(this, function (v) {
+    each(_(this).states, function (i, v) {
       v.storage.clear();
     });
   }
@@ -3035,7 +3071,6 @@ function configureRouter(app, options) {
   var indexOffset = 0;
   var pendingState;
   var lastState = {};
-  var pageInfos = {};
   function getPersistedStorage(key, ctor) {
     return storage.revive(key, ctor) || mapGet(storage, key, ctor);
   }
@@ -3066,7 +3101,11 @@ function configureRouter(app, options) {
     var resolvePromise = noop;
     var rejectPromise = noop;
     var pathNoQuery = removeQueryAndHash(path);
-    var pageId = previous && snapshot ? previous.pageId : id;
+    var page = previous && snapshot ? previous.page : {
+      id: id,
+      data: data,
+      states: {}
+    };
     var resolved, promise;
     var savedState = [id, path, index, snapshot, data, sessionId];
     var state = {
@@ -3074,12 +3113,12 @@ function configureRouter(app, options) {
       path: path,
       index: index,
       pathname: pathNoQuery,
-      data: data,
       type: 'navigate',
       previous: previous && (keepPreviousPath || snapshot ? previous.previous : previous),
-      pageId: pageId,
+      page: page,
       sessionId: sessionId,
       resumedId: previous ? previous.resumedId : sessionId,
+      deleted: false,
       get done() {
         return resolved;
       },
@@ -3090,15 +3129,15 @@ function configureRouter(app, options) {
         })));
       },
       get pageInfo() {
-        return pageInfos[pageId] || (pageInfos[pageId] = new PageInfo({
-          path: pathNoQuery,
-          pageId: pageId,
-          params: freeze(route.parse(pathNoQuery)),
-          data: data
-        }));
+        return page.info || (page.info = new PageInfo(page, pathNoQuery, freeze(route.parse(pathNoQuery))));
       },
       get storage() {
-        return storageMap || (storageMap = getPersistedStorage(id, HistoryStorage));
+        return storageMap || (storageMap = state.deleted ? new HistoryStorage() : getPersistedStorage(id, HistoryStorage));
+      },
+      commit: function commit() {
+        pendingState = state;
+        commitPath(state.path);
+        route.set(pathNoQuery);
       },
       reset: function reset() {
         if (resolved) {
@@ -3143,10 +3182,11 @@ function configureRouter(app, options) {
       },
       toJSON: function toJSON() {
         savedState[1] = state.path;
-        savedState[4] = state.data;
+        savedState[4] = page.data;
         return savedState;
       }
     };
+    page.states[id] = state;
     return state;
   }
   function updateQueryAndHash(state, newPath, oldPath) {
@@ -3165,7 +3205,7 @@ function configureRouter(app, options) {
         });
       }
       return {
-        promise: resolve(createNavigateResult(state.pageId, newPath, null, false))
+        promise: resolve(createNavigateResult(state.page.id, newPath, null, false))
       };
     }
     return state;
@@ -3189,7 +3229,7 @@ function configureRouter(app, options) {
       });
     } else if (callback() !== false) {
       if (snapshot && previous.done) {
-        state.resolve(createNavigateResult(state.pageId, state.path, null, false));
+        state.resolve(createNavigateResult(state.page.id, state.path, null, false));
         updateQueryAndHash(state, state.path, currentState.path);
       } else {
         setImmediateOnce(handlePathChange);
@@ -3226,11 +3266,12 @@ function configureRouter(app, options) {
     var id = randomId();
     var replaceHistory = replace || currentState && !currentState.done;
     var index = Math.max(0, currentIndex + !replaceHistory);
-    var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.data : data, sessionId, previous, replaceHistory, storageMap);
+    var state = createState(id, path, indexOffset + index, snapshot, snapshot ? previous.page.data : data, sessionId, previous, replaceHistory, storageMap);
     applyState(state, replace, snapshot, previous, function () {
       currentIndex = index;
       if (!replace) {
         each(states.splice(currentIndex), function (i, v) {
+          v.deleted = true;
           storage.delete(v.id);
           if (v.resumedId !== resumedId) {
             storage.delete(v.resumedId);
@@ -3245,7 +3286,7 @@ function configureRouter(app, options) {
   function popState(index, isNative) {
     var state = states[index].reset();
     var step = state.index - states[currentIndex].index;
-    var snapshot = state.pageId === states[currentIndex].pageId;
+    var snapshot = state.page === states[currentIndex].page;
     var isLocked = !snapshot && locked(router_root);
     if (isLocked && isNative) {
       history.go(-step);
@@ -3303,16 +3344,13 @@ function configureRouter(app, options) {
       oldStateId: lastState.id,
       newStateId: state.id,
       route: state.pageInfo.params,
-      data: state.data
+      data: state.page.data
     }, data);
     return app.emit(eventName, data, options);
   }
   function processPageChange(state) {
-    var path = state.path;
     var deferred = deferrable();
-    pendingState = state;
-    commitPath(path);
-    route.set(path);
+    state.commit();
     emitNavigationEvent('beforepageload', state, {
       waitFor: deferred.waitFor
     }, {
@@ -3333,7 +3371,7 @@ function configureRouter(app, options) {
     var state = states[currentIndex];
     var newPath = state.path;
     if (lastState === state) {
-      state.resolve(createNavigateResult(lastState.pageId, newPath, null, false));
+      state.resolve(createNavigateResult(lastState.page.id, newPath, null, false));
       return;
     }
 
@@ -3347,22 +3385,12 @@ function configureRouter(app, options) {
     console.log('Nagivate', newPath);
     var promise = resolve(emitNavigationEvent('navigate', state));
     notifyAsync(router_root, promise);
-    promise.then(function () {
+    always(promise, function () {
       if (states[currentIndex] === state) {
         processPageChange(state);
       }
     });
   }
-  defineObservableProperty(app, 'path', '', function (newValue) {
-    if (!appReady) {
-      return currentPath;
-    }
-    newValue = resolvePath(newValue);
-    if (newValue !== currentPath) {
-      pushState(newValue);
-    }
-    return currentPath;
-  });
   router_baseUrl = normalizePath(options.baseUrl);
   if (options.urlMode === 'none') {
     router_baseUrl = '/';
@@ -3420,7 +3448,7 @@ function configureRouter(app, options) {
     navigationType = 'resume';
   }
   route = new Route(app, options.routes, initialPath);
-  storage = createObjectStorage(sessionStorage, 'brew.router.' + (typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname));
+  initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname);
   app.define({
     get canNavigateBack() {
       return (states[currentIndex - 1] || '').sessionId === sessionId;
@@ -3467,6 +3495,13 @@ function configureRouter(app, options) {
       }
     }
   });
+  defineObservableProperty(app, 'path', initialPath, function (newValue) {
+    newValue = resolvePath(newValue);
+    if (newValue !== currentPath) {
+      pushState(newValue);
+    }
+    return currentPath;
+  });
   defineOwnProperty(app, 'basePath', basePath, true);
   defineOwnProperty(app, 'initialPath', initialPath.replace(/#.*$/, ''), true);
   defineOwnProperty(app, 'route', route, true);
@@ -3511,6 +3546,7 @@ function configureRouter(app, options) {
   if (initialState) {
     initialState = pushState(initialPath, true);
   }
+  states[currentIndex].commit();
   app.on('ready', function () {
     if (initialState && states[currentIndex] === initialState && includeQuery) {
       pushState(fromPathname(getCurrentPathAndQuery()), true);
