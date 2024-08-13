@@ -32,7 +32,8 @@ beforeAll(async () => {
                 '/{bar:bar}/{id?:[a-z]+}',
                 '/{bar:bar}/{optional?:[a-z]+}',
                 '/baz/{another?}',
-                '/{test:test-.+}/*'
+                '/{test:test-.+}/*',
+                '/'
             ]
         });
         initialProps = {
@@ -949,6 +950,14 @@ describe('app.route', () => {
     it('should match route in declaring order', async () => {
         await app.navigate('/foo/baz');
         expect(app.route.id).toBeNull();
+    });
+
+    it('should match route with no parameter', async () => {
+        await app.navigate('/bar');
+        expect(app.route.bar).toBe('bar');
+
+        await after(() => app.route.bar = null);
+        expect(app.path).toEqual('/');
     });
 
     it('should match any sub-path if there is a trailing wildcard', async () => {

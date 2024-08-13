@@ -112,7 +112,7 @@ function parseRoute(path) {
     if (!parsedRoutes[path]) {
         var tokens = new RoutePattern();
         var params = {};
-        var minLength;
+        var minLength, hasParams;
         path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
             if (c && !minLength) {
                 minLength = tokens.length;
@@ -120,6 +120,7 @@ function parseRoute(path) {
             if (b) {
                 var re = d ? new RegExp('^' + d + '$', 'i') : /./;
                 params[b] = tokens.length;
+                hasParams = true;
                 tokens.push({ name: b, test: re.test.bind(re) });
             } else {
                 tokens.push(a.toLowerCase());
@@ -128,6 +129,7 @@ function parseRoute(path) {
         extend(tokens, {
             pattern: path,
             params: params,
+            hasParams: !!hasParams,
             exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
             minLength: minLength || tokens.length
         });
@@ -149,7 +151,7 @@ function createRouteState(route, segments, params) {
 
 function matchRouteByParams(routes, params, partial) {
     var matched = single(routes, function (tokens) {
-        var valid = single(tokens.params, function (v, i) {
+        var valid = !tokens.hasParams || single(tokens.params, function (v, i) {
             return params[i] !== null;
         });
         if (valid && !partial) {
