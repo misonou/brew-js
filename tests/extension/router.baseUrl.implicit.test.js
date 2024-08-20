@@ -4,16 +4,17 @@ import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
-import { mountElement } from "src/dom";
 import { catchAsync, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
+import { createObjectStorage } from "src/util/storage";
 import { fireEvent, screen, waitFor } from "@testing-library/dom";
 
-const { stringMatching, objectContaining, sameObject } = expect;
+const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
 const initialPath = '/';
 const div = {};
+const mounted = [];
 
 /** @type {Brew.AppInstance<Brew.WithHtmlRouter>} */
 var initialProps;
@@ -43,10 +44,14 @@ beforeAll(async () => {
             firstNavigateEvent = e;
             unbind();
         });
+        initContent();
+        app.on('mounted', e => {
+            mounted.push(e.target);
+        });
     });
 });
 
-beforeAll(async () => {
+function initContent() {
     Object.assign(div, initBody(`
         <div switch id="root" var="{ parentVar: 0 }">
             <div match-path="/" id="initial"></div>
@@ -99,10 +104,7 @@ beforeAll(async () => {
     div.audio.play = mockFn();
     div.video.pause = mockFn();
     div.audio.pause = mockFn();
-    await after(() => {
-        mountElement(div.root);
-    });
-});
+}
 
 beforeEach(async () => {
     resetVar(div.preventLeave);
@@ -147,6 +149,15 @@ describe('app', () => {
         // await app.back();
         // expect(history.state).toBe(id);
         // expect(location.hash).toBe('');
+    });
+
+    it('should update current state ID in session storage on pagehide event', async () => {
+        const storage1 = createObjectStorage(sessionStorage, 'brew.router./base');
+        expect(storage1.get('c')).not.toBe(history.state);
+
+        await after(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
+        const storage2 = createObjectStorage(sessionStorage, 'brew.router./base');
+        expect(storage2.get('c')).toBe(history.state);
     });
 
     it('should navigate to correct path when clicking link', async () => {
@@ -492,6 +503,19 @@ describe('app.navigate', () => {
         expect(app.historyStorage.current).toBe(storage);
     });
 
+    it('should pass data to navigate and beforepageload event', async () => {
+        const data = {};
+        const cb = mockFn();
+        bindEvent(app, 'navigate', cb);
+        bindEvent(app, 'beforepageload', cb);
+
+        await app.navigate('/test-1', false, data);
+        verifyCalls(cb, [
+            [objectContaining({ type: 'navigate', data: sameObject(data) }), _],
+            [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
+        ]);
+    });
+
     it('should not emit pageload event when only query string or hash has changed', async () => {
         const cb = mockFn();
         await app.navigate('/test-1');
@@ -499,6 +523,34 @@ describe('app.navigate', () => {
         cleanupAfterTest(app.on('pageload', cb));
         await app.navigate('/test-1?a=1');
         expect(cb).not.toBeCalled();
+    });
+
+    it('should not emit popstate event', async () => {
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+
+        await app.navigate('/test-1');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should always perform navigation when data is provided', async () => {
+        const cb = mockFn();
+        bindEvent(app, 'navigate', cb);
+        bindEvent(app, 'beforepageload', cb);
+
+        const data = {};
+        const pageId = app.page.pageId;
+        await expect(app.navigate(app.path, false, data)).resolves.toEqual(objectContaining({
+            path: app.path,
+            navigated: true,
+            redirected: false,
+            originalPath: null
+        }));
+        expect(app.page.pageId).not.toBe(pageId);
+        verifyCalls(cb, [
+            [objectContaining({ type: 'navigate', data: sameObject(data) }), _],
+            [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
+        ]);
     });
 });
 
@@ -576,6 +628,29 @@ describe('app.back', () => {
         verifyCalls(cb, [
             [objectContaining({ type: 'hashchange', oldHash: '#a=1', newHash: '' }), _]
         ]);
+    });
+
+    it('should emit popstate event when returned to previous snapshot of the same page', async () => {
+        const { id: newStateId } = await app.navigate('/test-1');
+        app.snapshot();
+
+        const oldStateId = history.state;
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+        await app.back();
+        verifyCalls(cb, [
+            [objectContaining({ type: 'popstate', oldStateId, newStateId }), _]
+        ]);
+    });
+
+    it('should emit popstate event after app.path has updated', async () => {
+        await app.navigate('/test-1');
+        app.navigate('/test-1?foo=bar');
+
+        const cb = mockFn(() => app.path);
+        cleanupAfterTest(app.on('popstate', cb));
+        await app.back();
+        expect(cb).toReturnWith('/test-1');
     });
 
     it('should not emit navigate event when returned to previous snapshot of the same page', async () => {
@@ -684,6 +759,15 @@ describe('app.snapshot', () => {
         }), _);
     });
 
+    it('should clone history storage from previous state', async () => {
+        const data = {};
+        const { id } = await app.navigate('/test-1');
+        app.historyStorage.current.set('foo', data);
+        app.snapshot();
+        expect(app.historyStorage.current.get('foo')).toBe(data);
+        expect(app.historyStorage.for(id)).not.toBe(app.historyStorage.current);
+    });
+
     it('should produce frame navigable even when dom is locked', async () => {
         const data = {};
         await app.navigate('/test-1', false, data);
@@ -691,6 +775,15 @@ describe('app.snapshot', () => {
 
         catchAsync(dom.lock(root, new Promise(() => { })));
         await expect(app.back()).resolves.toBeTruthy();
+    });
+
+    it('should not emit popstate event', async () => {
+        const cb = mockFn();
+        cleanupAfterTest(app.on('popstate', cb));
+        app.snapshot();
+
+        await delay();
+        expect(cb).not.toBeCalled();
     });
 });
 
@@ -1016,6 +1109,235 @@ describe('app.beforePageEnter', () => {
     });
 });
 
+describe('app.historyStorage', () => {
+    it('should return instance for initial page before app ready', () => {
+        expect(initialProps.historyStorage.current).toBe(app.historyStorage.for(firstNavigateEvent.newStateId));
+    });
+
+    it('should persist all states to session storage on pagehide event', async () => {
+        const obj1 = {};
+        await after(() => app.historyStorage.current.set('foo', obj1));
+        await app.navigate('/test-1');
+
+        const obj2 = {};
+        await after(() => app.historyStorage.current.set('foo', obj2));
+
+        obj1.bar = '__persist_on_pagehide_1__';
+        obj2.bar = '__persist_on_pagehide_2__';
+        await after(() => window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false })));
+        expect(sessionStorage['brew.router./base']).toMatch(/__persist_on_pagehide_1__/);
+        expect(sessionStorage['brew.router./base']).toMatch(/__persist_on_pagehide_2__/);
+    });
+
+    it('should convert key other than string or symbol to string', async () => {
+        const store = app.historyStorage.current;
+        const sym = Symbol();
+        store.clear();
+        store.set({}, 'foo');
+        store.set({ toString() { return 'bar' } }, 'bar');
+        store.set(1, 'num');
+        store.set(sym, 'sym');
+
+        expect([...store.entries()]).toEqual([
+            ['[object Object]', 'foo'],
+            ['bar', 'bar'],
+            ['1', 'num'],
+            [sym, 'sym'],
+        ]);
+
+        expect(store.has({})).toBe(true);
+        expect(store.has({ toString() { return 'bar' } })).toBe(true);
+        expect(store.has(1)).toBe(true);
+        expect(store.has(sym)).toBe(true);
+
+        expect(store.get({})).toBe('foo');
+        expect(store.get({ toString() { return 'bar' } })).toBe('bar');
+        expect(store.get(1)).toBe('num');
+        expect(store.get(sym)).toBe('sym');
+    });
+
+    it('should return instance to get/set values for other state', async () => {
+        const stateId = history.state;
+        const store = app.historyStorage.current;
+
+        await app.navigate('/test-1');
+        expect(app.historyStorage.for(stateId)).toBe(store);
+    });
+
+    it('should return null for invalid state ID', async () => {
+        expect(app.historyStorage.for('')).toBeNull();
+    });
+
+    it('should update between navigate and beforepageload event', async () => {
+        const cb = mockFn();
+        const storage = app.historyStorage.current;
+        cleanupAfterTest(app.on('navigate', () => cb('navigate event', app.historyStorage.current.get('foo'))));
+        cleanupAfterTest(app.on('beforepageload', () => cb('beforepageload event', app.historyStorage.current.get('foo'))));
+
+        storage.set('foo', 'bar');
+        expect(storage.size).toBe(1);
+
+        const promise = app.navigate('/test-1');
+        cb('after app.navigate', app.historyStorage.current.get('foo'));
+        await promise;
+
+        verifyCalls(cb, [
+            ['after app.navigate', 'bar'],
+            ['navigate event', 'bar'],
+            ['beforepageload event', undefined]
+        ]);
+    });
+});
+
+describe('app.page', () => {
+    it('should expose information of initial page before app ready', () => {
+        expect(initialProps.page).toMatchObject({
+            pageId: firstNavigateEvent.newStateId,
+            path: initialPath
+        });
+    });
+
+    it('should expose information of current page', async () => {
+        const data = {};
+        const { id, path } = await app.navigate('/test-1', false, data);
+        expect(app.page).toMatchObject({
+            pageId: id,
+            path: path,
+            params: app.route,
+            data: sameObject(data)
+        });
+    });
+
+    it('should update between navigate and beforepageload event', async () => {
+        const cb = mockFn();
+        const page = app.page;
+        cleanupAfterTest(app.on('navigate', () => cb('navigate event', app.page)));
+        cleanupAfterTest(app.on('beforepageload', () => cb('beforepageload event', app.page)));
+
+        const promise = app.navigate('/test-1');
+        cb('after app.navigate', app.page);
+        await promise;
+
+        verifyCalls(cb, [
+            ['after app.navigate', sameObject(page)],
+            ['navigate event', sameObject(page)],
+            ['beforepageload event', objectContaining({ path: '/test-1' })]
+        ]);
+    });
+
+    it('should return different object after redirection', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.navigate('/test-2', true);
+        expect(app.page).not.toBe(page);
+    });
+
+    it('should return different object after redirected back to previous page', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.navigate('/test-2');
+        const result = await app.navigate('/test-1', true);
+        expect(app.page).not.toBe(page);
+        expect(app.page).toMatchObject({
+            pageId: result.id,
+            path: '/test-1'
+        });
+    });
+
+    it('should return different object after redirected back to previous page in beforepageload event', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        const unbind = app.on('beforepageload', () => {
+            unbind();
+            app.navigate('/test-1', true);
+        });
+        const result = await app.navigate('/test-2');
+        expect(app.page).not.toBe(page);
+        expect(app.page).toMatchObject({
+            pageId: result.id,
+            path: '/test-1'
+        });
+    });
+
+    it('should return same object after redirected back to previous page in navigate event', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        const unbind = app.on('navigate', () => {
+            unbind();
+            app.navigate('/test-1', true);
+        });
+        const { navigated } = await app.navigate('/test-2');
+        expect(navigated).toBe(false);
+        expect(app.page).toBe(page);
+    });
+
+    it('should return same object after snapshot', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+
+        await app.snapshot();
+        expect(app.page).toBe(page);
+    });
+
+    it('should return data stored in history storage associated with the last visited snapshot', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+        app.historyStorage.current.set('foo', 'bar');
+        expect(page.getSavedStates()).toEqual({ foo: 'bar' });
+
+        await app.snapshot();
+        app.historyStorage.current.set('foo', 'baz');
+        expect(page.getSavedStates()).toEqual({ foo: 'baz' });
+
+        await app.back();
+        expect(page.getSavedStates()).toEqual({ foo: 'bar' });
+    });
+
+    it('should clear navigation data', async () => {
+        const cb = mockFn();
+        const { id } = await app.navigate('/test-1', false, {});
+        expect(app.page.data).toBeTruthy();
+        app.page.clearNavigateData();
+        expect(app.page.data).toBeNull();
+
+        await app.navigate('/test-2');
+        bindEvent(app, 'navigate', cb);
+        await app.back();
+        expect(cb).toBeCalledWith(objectContaining({
+            newStateId: id,
+            data: null
+        }), _)
+    });
+
+    it('should clear history storage instances of all snapshots', async () => {
+        await app.navigate('/test-1');
+        const page = app.page;
+        const stateId1 = history.state;
+        const storage1 = app.historyStorage.current;
+        storage1.set('foo', 'bar');
+
+        await app.snapshot();
+        const stateId2 = history.state;
+        const storage2 = app.historyStorage.current;
+        storage2.set('foo', 'baz');
+        expect(storage1.size).toBe(1);
+        expect(storage2.size).toBe(1);
+
+        await app.back();
+        await app.navigate('/test-2');
+        expect(app.historyStorage.for(stateId1)).toBe(storage1);
+        expect(app.historyStorage.for(stateId2)).toBeNull();
+
+        page.clearHistoryStorage();
+        expect(storage1.size).toBe(0);
+        expect(storage2.size).toBe(0);
+    });
+});
+
 describe('matchRoute', () => {
     it('should match path without optional segments', () => {
         expect(matchRoute('/foo/{id?}', '/foo')).toBeTruthy();
@@ -1207,6 +1529,10 @@ describe('popstate event', () => {
 });
 
 describe('mounted event', () => {
+    it('should be emitted on root element first', () => {
+        expect(mounted.slice(0, 2)).toEqual([root, div.initial]);
+    });
+
     it('should be emitted on first-time matched element before pageenter event', async () => {
         const cb = mockFn();
         bindEvent(div.mounted, 'mounted', cb);
