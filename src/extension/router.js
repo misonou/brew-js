@@ -675,7 +675,7 @@ function configureRouter(app, options) {
         navigationType = 'resume';
     }
     route = new Route(app, options.routes, initialPath);
-    initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname);
+    initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname(basePath)).pathname);
 
     app.define({
         get canNavigateBack() {
