@@ -1,4 +1,4 @@
-/*! brew-js v0.6.9 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.10 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -2882,7 +2882,7 @@ function parseRoute(path) {
   if (!parsedRoutes[path]) {
     var tokens = new RoutePattern();
     var params = {};
-    var minLength;
+    var minLength, hasParams;
     path.replace(/\/(\*|[^{][^\/]*|\{([a.-z_$][a-z0-9_$]*)(\?)?(?::(?![*+?])((?:(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])([*+?]|\{\d+(?:,\d+)\})?)+))?\})(?=\/|$)/gi, function (v, a, b, c, d) {
       if (c && !minLength) {
         minLength = tokens.length;
@@ -2890,6 +2890,7 @@ function parseRoute(path) {
       if (b) {
         var re = d ? new RegExp('^' + d + '$', 'i') : /./;
         params[b] = tokens.length;
+        hasParams = true;
         tokens.push({
           name: b,
           test: re.test.bind(re)
@@ -2901,6 +2902,7 @@ function parseRoute(path) {
     extend(tokens, {
       pattern: path,
       params: params,
+      hasParams: !!hasParams,
       exact: !(tokens[tokens.length - 1] === '*' && tokens.splice(-1)),
       minLength: minLength || tokens.length
     });
@@ -2920,7 +2922,7 @@ function createRouteState(route, segments, params) {
 }
 function matchRouteByParams(routes, params, partial) {
   var matched = single(routes, function (tokens) {
-    var valid = single(tokens.params, function (v, i) {
+    var valid = !tokens.hasParams || single(tokens.params, function (v, i) {
       return params[i] !== null;
     });
     if (valid && !partial) {
@@ -3046,6 +3048,9 @@ definePrototype(PageInfo, {
   get data() {
     return _(this).data;
   },
+  getSavedStates: function getSavedStates() {
+    return _(this).last.storage.toJSON();
+  },
   clearNavigateData: function clearNavigateData() {
     _(this).data = null;
   },
@@ -3136,6 +3141,7 @@ function configureRouter(app, options) {
       },
       commit: function commit() {
         pendingState = state;
+        page.last = state;
         commitPath(state.path);
         route.set(pathNoQuery);
       },
@@ -3159,6 +3165,7 @@ function configureRouter(app, options) {
         resolvePromise(resolved);
         if (states[currentIndex] === state) {
           lastState = state;
+          page.last = state;
           commitPath(state.path);
           if (resolved.navigated) {
             app.emit('pageload', {
@@ -3448,7 +3455,7 @@ function configureRouter(app, options) {
     navigationType = 'resume';
   }
   route = new Route(app, options.routes, initialPath);
-  initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname('/')).pathname);
+  initStorage(typeof options.resume === 'string' ? options.resume : parsePath(toPathname(basePath)).pathname);
   app.define({
     get canNavigateBack() {
       return (states[currentIndex - 1] || '').sessionId === sessionId;
