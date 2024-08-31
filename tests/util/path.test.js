@@ -112,6 +112,10 @@ describe('normalizePath', () => {
     it('should throw error when path contains ://', () => {
         expect(normalizePath('/foo/http://test.com')).toEqual('/foo/http:/test.com');
     });
+
+    it('should encode path properly', () => {
+        expect(normalizePath('/foo%2f ¥/bar')).toBe('/foo%2F%20%C2%A5/bar');
+    });
 });
 
 describe('removeQueryAndHash', () => {

@@ -46,11 +46,14 @@ export function normalizePath(path, resolveDotDir, returnEmpty) {
     if (!path || path === '/') {
         return returnEmpty ? '' : '/';
     }
-    if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
+    path = String(path);
+    if (!returnEmpty && /(^(?:[a-z0-9]+:)?\/\/)|[^A-Za-z0-9-._~:/\[\]@!$&'()*+,;=]/.test(path)) {
         var a = parsePath(path);
         return ((RegExp.$1 && (a.origin || (a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : '')))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
     }
-    path = String(path).replace(/\/+(\/|$)/g, '$1');
+    path = path.replace(/\/+(\/|$)|(%[0-9a-fA-F]{2})/g, function (v, a, b) {
+        return b ? b.toUpperCase() : a;
+    });
     if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
         var segments = path.split('/');
         for (var j = 0; j < segments.length;) {
