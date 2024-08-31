@@ -384,6 +384,11 @@ describe('app.navigate', () => {
         expect(location.pathname).toBe('/test-1');
     });
 
+    it('should encode path properly', async () => {
+        await app.navigate('/baz/foo%2f ¥');
+        expect(app.path).toEqual('/baz/foo%2F%20%C2%A5');
+    });
+
     it('should handle query string in path', async () => {
         const cb = mockFn();
         bindEvent(app, 'navigate', cb);
@@ -847,6 +852,10 @@ describe('app.resolvePath', () => {
         expect(app.resolvePath('~/bar', '/foo/bar')).toEqual('/foo/bar');
     });
 
+    it('should encode path properly', () => {
+        expect(app.resolvePath('/baz/foo%2f ¥')).toBe('/baz/foo%2F%20%C2%A5');
+    });
+
     it('should resolve parameters against current route', async () => {
         await app.navigate('/foo/bar');
         expect(app.resolvePath('/foo/{id}')).toEqual('/foo/bar');
@@ -911,6 +920,11 @@ describe('app.route', () => {
         expect(app.route.id).toBeNull();
         await app.navigate('/foo/bar');
         expect(app.route.id).toEqual('bar');
+    });
+
+    it('should return decoded value from pathname', async () => {
+        await app.navigate('/baz/foo%2f%20%c2%a5bar');
+        expect(app.route.another).toEqual('foo/ ¥bar');
     });
 
     it('should trigger navigation when parameter changes', async () => {

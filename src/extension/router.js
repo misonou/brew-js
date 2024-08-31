@@ -144,8 +144,8 @@ function createRouteState(route, segments, params) {
     return {
         route: route,
         params: exclude(params, ['remainingSegments']),
-        minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-        maxPath: normalizePath(segments.slice(0, route.length).join('/'))
+        minPath: '/' + segments.slice(0, route.minLength).join('/'),
+        maxPath: '/' + segments.slice(0, route.length).join('/')
     };
 }
 
