@@ -29,6 +29,14 @@ export interface FlyoutOptions {
      */
     closeOnBlur?: boolean;
     /**
+     * Specifies that the flyout should remain its state unless user is interacting
+     * within the specified element.
+     *
+     * This options is used in conjunction with {@link FlyoutOptions.closeOnBlur}.
+     * If a CSS selector is given, it will select the closest ancestor from the flyout element.
+     */
+    containment?: string | Element;
+    /**
      * Whether flyout content will be initially focused.
      * Default is `true` if source element is not an text input element.
      *

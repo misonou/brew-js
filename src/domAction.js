@@ -2,13 +2,13 @@ import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
 import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
-import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf } from "zeta-dom/domUtil";
+import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "zeta-dom/dom";
 import { cancelLock, locked, notifyAsync, subscribeAsync } from "zeta-dom/domLock";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
-import { hasAttr, selectorForAttr } from "./util/common.js";
+import { getAttr, hasAttr, selectorForAttr } from "./util/common.js";
 import { registerSimpleDirective } from "./directive.js";
 
 const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
@@ -114,6 +114,7 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
         modal: hasAttr(element, 'is-modal')
     }, options);
 
+    var scope = is(options.containment, Node) || $(element).closest(options.containment)[0] || root;
     var focusFriend = source;
     if (!focusFriend && !focusable(element)) {
         focusFriend = dom.modalElement;
@@ -156,19 +157,26 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     } else {
         setTabRoot(element);
     }
-    var closeHandler = function (e) {
-        var swipeDismiss = element.getAttribute('swipe-dismiss');
-        if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
-            closeFlyout(element);
-            if (dom.event) {
-                dom.event.preventDefault();
+    var createHandler = function (callback) {
+        return function (e) {
+            if (callback(e)) {
+                closeFlyout(element);
+                if (dom.event) {
+                    dom.event.preventDefault();
+                }
+                e.handled();
             }
-            e.handled();
-        }
+        };
+    };
+    var shouldCloseOnFocusEvent = function (e) {
+        return options.closeOnBlur !== false && !getAttr(element, 'swipe-dismiss') && (e.type === 'focusin' ? !containsOrEquals(element, dom.activeElement) : containsOrEquals(scope, dom.activeElement));
     };
     always(promise, combineFn(
-        dom.on(source || element, 'focusout', closeHandler),
-        dom.on(element, 'gesture', closeHandler)
+        dom.on(source || element, 'focusout', createHandler(shouldCloseOnFocusEvent)),
+        dom.on(scope, 'focusin', createHandler(shouldCloseOnFocusEvent)),
+        dom.on(element, 'gesture', createHandler(function (e) {
+            return e.data === camel('swipe-' + getAttr(element, 'swipe-dismiss'));
+        }))
     ));
     dom.emit('flyoutshow', element, { data: states });
     return promise;

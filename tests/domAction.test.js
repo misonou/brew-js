@@ -208,6 +208,37 @@ describe('openFlyout', () => {
         expect(flyout).toHaveClassName('open');
     });
 
+    it('should not have flyout closed upon focus leaving when focus is lost to out-of-scope element', async () => {
+        const { flyout, child, parent2 } = await mount(`
+            <div>
+                <div id="parent1" class="parent">
+                    <div id="flyout" is-flyout></div>
+                    <div id="child"></div>
+                </div>
+                <div id="parent2" class="parent"></div>
+            </div>
+        `);
+        openFlyout(flyout, null, { containment: '.parent' });
+        expect(flyout).toHaveClassName('open');
+        await delay(10);
+        expect(dom.activeElement).toBe(flyout);
+
+        dom.focus(parent2);
+        expect(dom.activeElement).toBe(parent2);
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
+
+        dom.focus(flyout);
+        expect(dom.activeElement).toBe(flyout);
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
+
+        dom.focus(child);
+        expect(dom.activeElement).toBe(child);
+        await delay(10);
+        expect(flyout).not.toHaveClassName('open');
+    });
+
     it('should set tab root by default', async () => {
         const { flyout, input } = await mount(`
             <div>
