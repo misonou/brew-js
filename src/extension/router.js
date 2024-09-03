@@ -548,8 +548,9 @@ function configureRouter(app, options) {
         path = decodeURI(path) || '/';
         currentPath = currentPath || app.path;
         if (path[0] === '#' || path[0] === '?') {
-            var parts = parsePath(currentPath);
-            return parts.pathname + (path[0] === '#' ? parts.search + path : path);
+            var a = parsePath(currentPath);
+            var b = parsePath(path);
+            return a.pathname + (path[0] === '#' ? a.search : b.search) + b.hash;
         }
         if (path[0] === '~' || path.indexOf('{') >= 0) {
             var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);

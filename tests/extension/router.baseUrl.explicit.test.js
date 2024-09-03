@@ -417,6 +417,16 @@ describe('app.navigate', () => {
         expect(cb).nthCalledWith(1, objectContaining({ type: 'navigate', pathname: '/base/test-1#a=1' }), _);
     });
 
+    it('should update state correctly when query and hash has escaped characters', async () => {
+        await app.navigate('/base/test-1')
+        await app.navigate('?r=/%2f "¥');
+        expect(app.path).toBe('/base/test-1?r=/%2f%20%22%C2%A5');
+
+        history.back();
+        await delay(100);
+        expect(app.path).toBe('/base/test-1');
+    });
+
     it('should not trigger navigation if pathname is the same', async () => {
         const cb = mockFn();
         bindEvent(app, 'navigate', cb);
@@ -869,6 +879,15 @@ describe('app.resolvePath', () => {
 
     it('should encode path properly', () => {
         expect(app.resolvePath('/baz/foo%2f ¥')).toBe('/baz/foo%2F%20%C2%A5');
+    });
+
+    it('should encode query and hash properly', () => {
+        expect(app.resolvePath('?r=/%2f "¥')).toBe('/base?r=/%2f%20%22%C2%A5');
+        expect(app.resolvePath('#r=/%2f "¥')).toBe('/base#r=/%2f%20%22%C2%A5');
+        expect(app.resolvePath('~/?r=/%2f "¥')).toBe('/base?r=/%2f%20%22%C2%A5');
+        expect(app.resolvePath('~/#r=/%2f "¥')).toBe('/base#r=/%2f%20%22%C2%A5');
+        expect(app.resolvePath('/base/baz/foo?r=/%2f "¥')).toBe('/base/baz/foo?r=/%2f%20%22%C2%A5');
+        expect(app.resolvePath('/base/baz/foo#r=/%2f "¥')).toBe('/base/baz/foo#r=/%2f%20%22%C2%A5');
     });
 
     it('should resolve parameters against current route', async () => {
