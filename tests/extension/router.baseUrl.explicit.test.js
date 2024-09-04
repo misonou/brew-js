@@ -1,4 +1,4 @@
-import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, initApp, mount, cleanupAfterTest, nativeHistoryBack } from "../testUtil";
+import { mockFn, root, bindEvent, _, delay, initBody, after, verifyCalls, defunctAfterTest, body, initApp, mount, cleanupAfterTest, nativeHistoryBack, muteRejection } from "../testUtil";
 import { matchRoute } from "src/extension/router";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
@@ -321,7 +321,7 @@ describe('app.navigate', () => {
         expect(app.path).toEqual('/base/test-2');
     });
 
-    it('should prevent infinite redirection loop in navigate event', async () => {
+    xit('should prevent infinite redirection loop in navigate event', async () => {
         var i = 0;
         bindEvent(app, 'navigate', e => {
             if (++i > 10) {
@@ -335,6 +335,66 @@ describe('app.navigate', () => {
         });
         await expect(app.navigate('/base/test-1')).resolves.toEqual(objectContaining({ path: '/base/test-1' }));
         expect(i).toEqual(2);
+    });
+
+    it('should prevent excessive navigation during navigate event', async () => {
+        var i = 1;
+        var promises = [];
+        bindEvent(app, 'navigate', e => {
+            if (++i <= 50) {
+                promises.push(muteRejection(app.navigate('/base/baz/' + i)));
+            }
+        });
+        promises.push(muteRejection(app.navigate('/base/baz/' + i)));
+        await delay(100);
+        expect(i).toBeLessThan(50);
+
+        const result = await Promise.allSettled(promises);
+        expect(result.at(-1)).toEqual({ status: 'rejected', reason: objectContaining({ code: 'brew/navigation-rejected' }) });
+        expect(result.at(-2)).toEqual({ status: 'fulfilled', value: objectContaining({ redirected: false }) });
+    });
+
+    it('should prevent excessive navigation during beforepageload event', async () => {
+        var i = 1;
+        var promises = [];
+        bindEvent(app, 'beforepageload', e => {
+            if (++i <= 50) {
+                promises.push(muteRejection(app.navigate('/base/baz/' + i)));
+            }
+        });
+        promises.push(muteRejection(app.navigate('/base/baz/' + i)));
+        await delay(100);
+        expect(i).toBeLessThan(50);
+
+        const result = await Promise.allSettled(promises);
+        expect(result.at(-1)).toEqual({ status: 'rejected', reason: objectContaining({ code: 'brew/navigation-rejected' }) });
+        expect(result.at(-2)).toEqual({ status: 'fulfilled', value: objectContaining({ redirected: false }) });
+    });
+
+    it('should prevent excessive redirection during navigate event', async () => {
+        var i = 1;
+        var lastPromise;
+        bindEvent(app, 'navigate', e => {
+            if (++i <= 50) {
+                lastPromise = app.navigate('/base/baz/' + i, true);
+            }
+        });
+        await expect(app.navigate('/base/baz/' + i)).resolves.toEqual(objectContaining({ redirected: true }));
+        await expect(lastPromise).rejects.toBeErrorWithCode('brew/navigation-rejected');
+        expect(i).toBeLessThan(50);
+    });
+
+    it('should prevent excessive redirection during beforepageload event', async () => {
+        var i = 1;
+        var lastPromise;
+        bindEvent(app, 'beforepageload', e => {
+            if (++i <= 50) {
+                lastPromise = app.navigate('/base/baz/' + i, true);
+            }
+        });
+        await expect(app.navigate('/base/baz/' + i)).resolves.toEqual(objectContaining({ redirected: true }));
+        await expect(lastPromise).rejects.toBeErrorWithCode('brew/navigation-rejected');
+        expect(i).toBeLessThan(50);
     });
 
     it('should cancel navigation when dom is locked', async () => {

@@ -113,6 +113,11 @@ export function nativeHistoryBack() {
     });
 }
 
+export function muteRejection(promise) {
+    promise.catch(() => { });
+    return promise;
+}
+
 beforeEach(() => {
     if (!body.childElementCount) {
         cleanup(() => $(body).empty())

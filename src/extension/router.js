@@ -305,7 +305,7 @@ function configureRouter(app, options) {
     var route;
     var basePath = '/';
     var currentPath = '';
-    var redirectSource = {};
+    var redirectCount = 0;
     var currentIndex = 0;
     var indexOffset = 0;
     var pendingState;
@@ -398,6 +398,7 @@ function configureRouter(app, options) {
                 resolved = result || createNavigateResult(id, state.path);
                 resolvePromise(resolved);
                 if (states[currentIndex] === state) {
+                    redirectCount = 0;
                     lastState = state;
                     page.last = state;
                     commitPath(state.path);
@@ -440,6 +441,7 @@ function configureRouter(app, options) {
     function applyState(state, replace, snapshot, previous, callback) {
         var currentState = states[currentIndex];
         if (currentState && currentState !== state && !currentState.done) {
+            redirectCount++;
             if (replace) {
                 currentState.forward(state);
             } else {
@@ -466,7 +468,7 @@ function configureRouter(app, options) {
 
     function pushState(path, replace, snapshot, data, storageMap) {
         path = resolvePath(path);
-        if (!isSubPathOf(path, basePath)) {
+        if (redirectCount > 30 || !isSubPathOf(path, basePath)) {
             return { promise: reject(errorWithCode(ErrorCode.navigationRejected)) };
         }
         var currentState = states[currentIndex];
@@ -587,7 +589,6 @@ function configureRouter(app, options) {
         always(deferred, function () {
             if (states[currentIndex] === state) {
                 pendingState = null;
-                redirectSource = {};
                 state.resolve();
             }
         });
@@ -603,14 +604,6 @@ function configureRouter(app, options) {
             state.resolve(createNavigateResult(lastState.page.id, newPath, null, false));
             return;
         }
-
-        // prevent infinite redirection loop
-        // redirectSource will not be reset until processPageChange is fired
-        if (redirectSource[newPath]) {
-            processPageChange(state);
-            return;
-        }
-        redirectSource[newPath] = true;
 
         console.log('Nagivate', newPath);
         var promise = resolve(emitNavigationEvent('navigate', state));
