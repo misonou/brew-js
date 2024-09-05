@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import { _, bindEvent, delay, initApp, mockFn, verifyCalls } from "../testUtil";
+import { _, bindEvent, delay, initApp, mockFn, root, verifyCalls } from "../testUtil";
 import viewport from "src/extension/viewport";
 
 /** @type {Brew.AppInstance<Brew.WithViewport>} */
@@ -7,8 +7,8 @@ var app;
 
 var screenWidth = 1024;
 var screenHeight = 768;
-jest.spyOn(document.body, 'offsetWidth', 'get').mockImplementation(() => screenWidth);
-jest.spyOn(document.body, 'offsetHeight', 'get').mockImplementation(() => screenHeight);
+jest.spyOn(root, 'clientWidth', 'get').mockImplementation(() => screenWidth);
+jest.spyOn(root, 'clientHeight', 'get').mockImplementation(() => screenHeight);
 
 function setViewportSize(w, h) {
     screenWidth = w;
