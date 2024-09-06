@@ -598,6 +598,17 @@ describe('context-method directive', () => {
         verifyCalls(app.testMethod, [[{ foo: 'test' }]]);
     });
 
+    it('should always evaluate method-args attribute if it exists', async () => {
+        const { button } = await mount(`
+            <form>
+                <input name="foo" value="test"/>
+                <button id="button" context-method="test-method" method-args></button>
+            </form>
+        `);
+        await after(() => fireEvent.click(button));
+        verifyCalls(app.testMethod, [[]]);
+    });
+
     it('should validate form by native method', async () => {
         const { form, button } = await mount(`
             <form id="form">

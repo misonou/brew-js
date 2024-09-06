@@ -271,11 +271,11 @@ export default addExtension(true, 'template', function (app) {
             var form = formSelector ? selectClosestRelative(formSelector, self) : self.form;
             var params;
             var valid = true;
-            if (form) {
+            if (hasAttr(self, 'method-args')) {
+                params = makeArray(evalAttr(self, 'method-args'));
+            } else if (form) {
                 valid = dom.emit('validate', form) || form.checkValidity();
                 params = [getFormValues(form)];
-            } else {
-                params = makeArray(evalAttr(self, 'method-args'));
             }
             return resolveAll(valid, function (valid) {
                 if (!valid) {
