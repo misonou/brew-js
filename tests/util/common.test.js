@@ -330,11 +330,11 @@ describe('api', () => {
     it('should reject with reason or message property if present', async () => {
         const api1 = api({ baseUrl: '/' });
         mockXHROnce(500, { error: 'error' });
-        await expect(api1.get('/')).rejects.toBeErrorWithCode('brew/api-error', 'error');
+        await expect(api1.get('/')).rejects.toBeErrorWithCode('brew/api-error', { message: 'error' });
 
         const api2 = api({ baseUrl: '/' });
         mockXHROnce(500, { message: 'error' });
-        await expect(api2.get('/')).rejects.toBeErrorWithCode('brew/api-error', 'error');
+        await expect(api2.get('/')).rejects.toBeErrorWithCode('brew/api-error', { message: 'error' });
     });
 });
 

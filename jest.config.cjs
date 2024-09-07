@@ -6,6 +6,7 @@ const config = {
         "geometry-polyfill",
         "@misonou/test-utils/mock/console",
         "@misonou/test-utils/mock/performance",
+        "@misonou/test-utils/mock/boxModel",
         "<rootDir>/tests/setup.cjs"
     ],
     "modulePathIgnorePatterns": [

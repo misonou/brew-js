@@ -1,5 +1,6 @@
 import { jest } from "@jest/globals";
 import { waitFor } from "@testing-library/dom";
+import { setScreenSize } from "@misonou/test-utils/mock/boxModel";
 import { _, after, bindEvent, delay, initApp, initBody, mockFn, nativeHistoryBack, verifyCalls } from "../testUtil";
 import { getContentRect, scrollBy } from "zeta-dom/domUtil";
 import { toPlainRect } from "zeta-dom/domUtil";
@@ -11,8 +12,6 @@ import router from "src/extension/router";
 import scrollable from "src/extension/scrollable";
 import template from "src/extension/template";
 import viewport from "src/extension/viewport";
-import { setViewportSize } from "../harness/visualViewport";
-import "../harness/boxModel";
 
 /** @type {Brew.AppInstance<Brew.WithScrollable & Brew.WithRouter & Brew.WithTemplate>} */
 var app;
@@ -271,8 +270,7 @@ describe('scroller-page directive', () => {
         await after(() => {
             setVar(root, 'index', 1);
         });
-        await delay(200);
-        expect(scrollable).toMatchObject({ scrollY: 100 });
+        await waitFor(() => expect(scrollable).toMatchObject({ scrollY: 100 }));
     });
 
     it('should not trigger change when directive is not present', async () => {
@@ -327,7 +325,7 @@ describe('scroller-snap-page directive', () => {
         scrollable.scrollTo(0, 75);
         expect(scrollable).toMatchObject({ scrollY: 75 });
 
-        setViewportSize(768, 1024);
+        setScreenSize(768, 1024);
         await waitFor(() => expect(scrollable).toMatchObject({ scrollY: 100 }));
     });
 });

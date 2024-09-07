@@ -1,4 +1,4 @@
-import { setViewportSize } from "../harness/visualViewport";
+import { setViewportSize } from "@misonou/test-utils/mock/visualViewport";
 import { _, bindEvent, initApp, mockFn, verifyCalls } from "../testUtil";
 import viewport from "src/extension/viewport";
 
