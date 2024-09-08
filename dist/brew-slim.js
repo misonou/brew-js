@@ -1,4 +1,4 @@
-/*! brew-js v0.6.10 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.11 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -819,11 +819,14 @@ function normalizePath(path, resolveDotDir, returnEmpty) {
   if (!path || path === '/') {
     return returnEmpty ? '' : '/';
   }
-  if (/(^(?:[a-z0-9]+:)?\/\/)|\?|#/.test(path)) {
+  path = String(path);
+  if (!returnEmpty && /(^(?:[a-z0-9]+:)?\/\/)|[^A-Za-z0-9-._~:/\[\]@!$&'()*+,;=]/.test(path)) {
     var a = parsePath(path);
     return ((RegExp.$1 && (a.origin || a.protocol + '//' + a.hostname + (a.port && +a.port !== defaultPort[a.protocol.slice(0, -1)] ? ':' + a.port : ''))) + normalizePath(a.pathname, resolveDotDir, true) || '/') + a.search + a.hash;
   }
-  path = String(path).replace(/\/+(\/|$)/g, '$1');
+  path = path.replace(/\/+(\/|$)|(%[0-9a-fA-F]{2})/g, function (v, a, b) {
+    return b ? b.toUpperCase() : a;
+  });
   if (resolveDotDir && /(^|\/)\.{1,2}(\/|$)/.test(path)) {
     var segments = path.split('/');
     for (var j = 0; j < segments.length;) {
@@ -2196,6 +2199,7 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
     tabThrough: hasAttr(element, 'tab-through'),
     modal: hasAttr(element, 'is-modal')
   }, options);
+  var scope = is(options.containment, Node) || jquery(element).closest(options.containment)[0] || domAction_root;
   var focusFriend = source;
   if (!focusFriend && !focusable(element)) {
     focusFriend = zeta_dom_dom.modalElement;
@@ -2241,17 +2245,23 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
   } else {
     setTabRoot(element);
   }
-  var closeHandler = function closeHandler(e) {
-    var swipeDismiss = element.getAttribute('swipe-dismiss');
-    if (e.type === 'focusout' ? !swipeDismiss && options.closeOnBlur !== false : e.data === camel('swipe-' + swipeDismiss)) {
-      closeFlyout(element);
-      if (zeta_dom_dom.event) {
-        zeta_dom_dom.event.preventDefault();
+  var createHandler = function createHandler(callback) {
+    return function (e) {
+      if (callback(e)) {
+        closeFlyout(element);
+        if (zeta_dom_dom.event) {
+          zeta_dom_dom.event.preventDefault();
+        }
+        e.handled();
       }
-      e.handled();
-    }
+    };
   };
-  always(promise, combineFn(zeta_dom_dom.on(source || element, 'focusout', closeHandler), zeta_dom_dom.on(element, 'gesture', closeHandler)));
+  var shouldCloseOnFocusEvent = function shouldCloseOnFocusEvent(e) {
+    return options.closeOnBlur !== false && !getAttr(element, 'swipe-dismiss') && (e.type === 'focusin' ? !containsOrEquals(element, zeta_dom_dom.activeElement) : containsOrEquals(scope, zeta_dom_dom.activeElement));
+  };
+  always(promise, combineFn(zeta_dom_dom.on(source || element, 'focusout', createHandler(shouldCloseOnFocusEvent)), zeta_dom_dom.on(scope, 'focusin', createHandler(shouldCloseOnFocusEvent)), zeta_dom_dom.on(element, 'gesture', createHandler(function (e) {
+    return e.data === camel('swipe-' + getAttr(element, 'swipe-dismiss'));
+  }))));
   zeta_dom_dom.emit('flyoutshow', element, {
     data: states
   });
@@ -2708,12 +2718,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
     }
   });
 }));
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/env.js
-
-var IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.IS_TOUCH;
-
 ;// CONCATENATED MODULE: ./src/extension/viewport.js
-
 
 
 
@@ -2722,19 +2727,12 @@ var IS_TOUCH = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
 /* harmony default export */ var viewport = (addExtension(true, 'viewport', function (app) {
   var setOrientation = defineObservableProperty(app, 'orientation', '', true);
   var visualViewport = window.visualViewport;
-  var useAvailOrInner = IS_TOUCH && navigator.platform !== 'MacIntel';
   var aspectRatio, viewportWidth, viewportHeight;
   function checkViewportSize(triggerEvent) {
-    if (visualViewport) {
-      viewportWidth = visualViewport.width;
-      viewportHeight = visualViewport.height;
-    } else {
-      var availWidth = screen.availWidth;
-      var availHeight = screen.availHeight;
-      viewportWidth = useAvailOrInner ? availWidth : document.body.offsetWidth;
-      viewportHeight = useAvailOrInner ? availWidth === window.innerWidth ? availHeight : window.innerHeight : document.body.offsetHeight;
-    }
     var previousAspectRatio = aspectRatio;
+    var rect = getRect();
+    viewportWidth = rect.width;
+    viewportHeight = rect.height;
     aspectRatio = viewportWidth / viewportHeight;
     setOrientation(aspectRatio >= 1 ? 'landscape' : 'portrait');
     if (triggerEvent !== false) {
@@ -2916,8 +2914,8 @@ function createRouteState(route, segments, params) {
   return {
     route: route,
     params: exclude(params, ['remainingSegments']),
-    minPath: normalizePath(segments.slice(0, route.minLength).join('/')),
-    maxPath: normalizePath(segments.slice(0, route.length).join('/'))
+    minPath: '/' + segments.slice(0, route.minLength).join('/'),
+    maxPath: '/' + segments.slice(0, route.length).join('/')
   };
 }
 function matchRouteByParams(routes, params, partial) {
@@ -3071,7 +3069,7 @@ function configureRouter(app, options) {
   var route;
   var basePath = '/';
   var currentPath = '';
-  var redirectSource = {};
+  var redirectCount = 0;
   var currentIndex = 0;
   var indexOffset = 0;
   var pendingState;
@@ -3164,6 +3162,7 @@ function configureRouter(app, options) {
         resolved = result || createNavigateResult(id, state.path);
         resolvePromise(resolved);
         if (states[currentIndex] === state) {
+          redirectCount = 0;
           lastState = state;
           page.last = state;
           commitPath(state.path);
@@ -3220,6 +3219,7 @@ function configureRouter(app, options) {
   function applyState(state, replace, snapshot, previous, callback) {
     var currentState = states[currentIndex];
     if (currentState && currentState !== state && !currentState.done) {
+      redirectCount++;
       if (replace) {
         currentState.forward(state);
       } else {
@@ -3245,7 +3245,7 @@ function configureRouter(app, options) {
   }
   function pushState(path, replace, snapshot, data, storageMap) {
     path = resolvePath(path);
-    if (!isSubPathOf(path, basePath)) {
+    if (redirectCount > 30 || !isSubPathOf(path, basePath)) {
       return {
         promise: reject(errorWithCode(navigationRejected))
       };
@@ -3326,8 +3326,9 @@ function configureRouter(app, options) {
     path = decodeURI(path) || '/';
     currentPath = currentPath || app.path;
     if (path[0] === '#' || path[0] === '?') {
-      var parts = parsePath(currentPath);
-      return parts.pathname + (path[0] === '#' ? parts.search + path : path);
+      var a = parsePath(currentPath);
+      var b = parsePath(path);
+      return a.pathname + (path[0] === '#' ? a.search : b.search) + b.hash;
     }
     if (path[0] === '~' || path.indexOf('{') >= 0) {
       var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
@@ -3366,7 +3367,6 @@ function configureRouter(app, options) {
     always(deferred, function () {
       if (states[currentIndex] === state) {
         pendingState = null;
-        redirectSource = {};
         state.resolve();
       }
     });
@@ -3381,14 +3381,6 @@ function configureRouter(app, options) {
       state.resolve(createNavigateResult(lastState.page.id, newPath, null, false));
       return;
     }
-
-    // prevent infinite redirection loop
-    // redirectSource will not be reset until processPageChange is fired
-    if (redirectSource[newPath]) {
-      processPageChange(state);
-      return;
-    }
-    redirectSource[newPath] = true;
     console.log('Nagivate', newPath);
     var promise = resolve(emitNavigationEvent('navigate', state));
     notifyAsync(router_root, promise);
