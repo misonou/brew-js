@@ -633,10 +633,10 @@ function configureRouter(app, options) {
         };
         fromPathname = function (path) {
             var parts = parsePath(path);
-            var value = getQueryParam(options.queryParam, parts.search);
-            var l = RegExp.leftContext;
-            var r = RegExp.rightContext;
-            return normalizePath(value || '') + (value === false ? parts.search : l + (l || !r ? r : '?' + r.slice(1))) + parts.hash;
+            var query = setQueryParam(options.queryParam, function (oldValue) {
+                path = normalizePath(oldValue || '');
+            }, parts.search);
+            return path + query + parts.hash;
         };
         toPathname = function (path) {
             path = parsePath(path);

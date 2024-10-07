@@ -109,6 +109,11 @@ describe('getQueryParam', () => {
         expect(getQueryParam('FOO', '?foo=baz')).toEqual('baz');
     });
 
+    it('should handle non-alphanumeric name', () => {
+        expect(getQueryParam('foo[bar]', '?foob=1&foo%5Bbar%5D=baz')).toEqual('baz');
+        expect(getQueryParam('foo[bar]', '?foob=1&foo[bar]=baz')).toEqual('baz');
+    });
+
     it('should decode URL-encoded characters', () => {
         history.replaceState(null, '', '?foo=%3F%25%3D%20');
         expect(getQueryParam('foo')).toEqual('?%= ');
@@ -152,7 +157,12 @@ describe('setQueryParam', () => {
         expect(setQueryParam('FOO', 'baz')).toBe('?FOO=baz');
     });
 
-    it('should decode URL-encoded characters', () => {
+    it('should handle non-alphanumeric name', () => {
+        expect(setQueryParam('foo[bar]', 'baz', '?foob=1&foo%5Bbar%5D=')).toEqual('?foob=1&foo%5Bbar%5D=baz');
+        expect(setQueryParam('foo[bar]', 'baz', '?foob=1&foo[bar]=')).toEqual('?foob=1&foo%5Bbar%5D=baz');
+    });
+
+    it('should encode URL-encoded characters', () => {
         history.replaceState(null, '', '');
         expect(setQueryParam('foo', '?%= ')).toEqual('?foo=%3F%25%3D%20');
     });
@@ -163,6 +173,7 @@ describe('setQueryParam', () => {
     });
 
     it('should remove specified param when value is false, null, or undefined', () => {
+        expect(setQueryParam('foo', '0', '?foo=bar')).toEqual('?foo=0');
         expect(setQueryParam('foo', '', '?foo=bar')).toEqual('?foo=');
         expect(setQueryParam('foo', false, '?foo=bar')).toEqual('');
         expect(setQueryParam('foo', null, '?foo=bar')).toEqual('');
@@ -204,13 +215,35 @@ describe('getCookie', () => {
     it('should return false if cookie does not exist', () => {
         expect(getCookie('xxx')).toEqual(false);
     });
+
+    it('should handle non-alphanumeric name', () => {
+        document.cookie = 'foo%5Bbar%5D%3D1=1';
+        document.cookie = 'foo[bar]=2';
+        expect(getCookie('foo[bar]=1')).toBe('1');
+        expect(getCookie('foo[bar]')).toBe('2');
+    });
+
+    it('should decode URL-encoded characters', () => {
+        document.cookie = 'foo=%3F%25%3D%20';
+        expect(getCookie('foo')).toEqual('?%= ');
+    });
 });
 
 describe('setCookie', () => {
     it('should set or update cookie of the given name', () => {
         setCookie('foo', 'bar');
         expect(document.cookie).toEqual(stringMatching(/(^|\s)foo=bar(;|$)/));
-    })
+    });
+
+    it('should handle non-alphanumeric name', () => {
+        setCookie('foo[bar]=1', '1');
+        expect(document.cookie).toEqual(stringMatching(/(^|\s)foo%5Bbar%5D%3D1=1(;|$)/));
+    });
+
+    it('should encode URL-encoded characters', () => {
+        setCookie('foo', '?%= ');
+        expect(document.cookie).toEqual(stringMatching(/(^|\s)foo=%3F%25%3D%20(;|$)/));
+    });
 });
 
 describe('deleteCookie', () => {
@@ -218,6 +251,12 @@ describe('deleteCookie', () => {
         setCookie('foo', 'bar');
         deleteCookie('foo');
         expect(document.cookie).not.toEqual(stringMatching(/(^|\s)foo=bar(;|$)/));
+    });
+
+    it('should handle non-alphanumeric name', () => {
+        setCookie('foo[bar]=1', '1');
+        deleteCookie('foo[bar]=1');
+        expect(document.cookie).not.toEqual(stringMatching(/(^|\s)foo%5Bbar%5D%3D1=1(;|$)/));
     });
 });
 

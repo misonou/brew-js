@@ -1,7 +1,7 @@
 import $ from "../include/jquery.js";
 import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { createNodeIterator, iterateNode, matchSelector } from "zeta-dom/domUtil";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, resolve, resolveAll, values, watchOnce } from "zeta-dom/util";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, iequal, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, pipe, resolve, resolveAll, single, values, watchOnce } from "zeta-dom/util";
 import { combinePath, withBaseUrl } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -14,6 +14,14 @@ const boolAttrMap = {};
 each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
     boolAttrMap[v.toLowerCase()] = v;
 });
+
+function encodeNameValue(name, value) {
+    return value || value === '' || value === 0 ? encodeURIComponent(name) + '=' + encodeURIComponent(value) : '';
+}
+
+function decodeValue(value) {
+    return value && value.indexOf('%') >= 0 ? decodeURIComponent(value) : value;
+}
 
 export function getAttrValues(element) {
     var values = {};
@@ -77,15 +85,31 @@ export function getFormValues(form) {
     return values;
 }
 
+function processQueryString(str, name, callback) {
+    if (isUndefinedOrNull(str)) {
+        str = location.search;
+    }
+    var getIndex = function (str, ch, from, until) {
+        var pos = str.indexOf(ch, from);
+        return pos < 0 || pos > until ? until : pos;
+    };
+    var e = getIndex(str, '#', 0, str.length);
+    var s = getIndex(str, '?', 0, e) + 1;
+    for (var i = s, j, k; i < e; i = j + 1) {
+        j = getIndex(str, '&', i, e);
+        k = getIndex(str, '=', i, j);
+        if (iequal(name, decodeValue(str.slice(i, k)))) {
+            return callback(str.slice(k + 1, j), str, i, j, s, e);
+        }
+    }
+    return callback(false, str, -1, -1, s, e);
+}
+
 /**
  * @param {string} name
  */
 export function getQueryParam(name, current) {
-    if (isUndefinedOrNull(current)) {
-        current = location.search;
-    }
-    var m = new RegExp('[?&]' + name + '=([^&#]*)|#', 'i').exec(current) || [];
-    return m[1] !== undefined && decodeURIComponent(m[1]);
+    return processQueryString(current, name, decodeValue);
 }
 
 /**
@@ -94,13 +118,17 @@ export function getQueryParam(name, current) {
  * @param {string=} current
  */
 export function setQueryParam(name, value, current) {
-    if (isUndefinedOrNull(current)) {
-        current = location.search;
-    }
-    var re = new RegExp('([?&])' + name + '=[^&#]*(&?)|(?=#)|(?:\\?)?$', 'i');
-    return current.replace(re, function (v, a, b, i, n) {
-        b = b || '';
-        return value || value === '' ? (a || (i && i >= (n.lastIndexOf('?', i) + 1 || n.length + 1) ? '&' : '?')) + name + '=' + encodeURIComponent(value) + b : b && a;
+    return processQueryString(current, name, function (cur, input, i, j, s, e) {
+        var replacement = encodeNameValue(name, isFunction(value) ? value(decodeValue(cur)) : value);
+        var splice = function (str, from, to, replace) {
+            return str.slice(0, from) + replace + str.slice(to);
+        };
+        if (cur !== false) {
+            return replacement ? splice(input, i, j, replacement) : splice(input, i - (j >= e - 1), j + (j < e), '');
+        } else {
+            var p = input[e - 1] === '?' ? '' : e > s ? '&' : '?';
+            return replacement ? splice(input, e, e, p + replacement) : p ? input : splice(input, e - 1, e, '');
+        }
     });
 }
 
@@ -108,7 +136,10 @@ export function setQueryParam(name, value, current) {
  * @param {string} name
  */
 export function getCookie(name) {
-    return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;
+    return single(document.cookie.split(/;\s?/), function (v) {
+        var pos = v.indexOf('=');
+        return name === decodeValue(v.slice(0, pos)) ? decodeValue(v.slice(pos + 1)) : false;
+    });
 }
 
 /**
@@ -117,7 +148,7 @@ export function getCookie(name) {
  * @param {number=} expiry
  */
 export function setCookie(name, value, expiry) {
-    document.cookie = name + '=' + value + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
+    document.cookie = encodeNameValue(name, String(value)) + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
     return value;
 }
 
@@ -125,7 +156,7 @@ export function setCookie(name, value, expiry) {
  * @param {string} name
  */
 export function deleteCookie(name) {
-    document.cookie = name + '=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    document.cookie = encodeNameValue(name, '') + ';path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
 }
 
 /**
