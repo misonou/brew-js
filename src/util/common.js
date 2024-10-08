@@ -1,7 +1,7 @@
 import $ from "../include/jquery.js";
 import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { createNodeIterator, iterateNode, matchSelector } from "zeta-dom/domUtil";
-import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, iequal, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, matchWord, pipe, resolve, resolveAll, single, values, watchOnce } from "zeta-dom/util";
+import { defineAliasProperty, defineGetterProperty, defineHiddenProperty, delay, each, errorWithCode, extend, iequal, isArray, isFunction, isPlainObject, isUndefinedOrNull, keys, kv, map, matchWord, pipe, resolve, resolveAll, single, values, watchOnce } from "zeta-dom/util";
 import { combinePath, withBaseUrl } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -130,6 +130,16 @@ export function setQueryParam(name, value, current) {
             return replacement ? splice(input, e, e, p + replacement) : p ? input : splice(input, e - 1, e, '');
         }
     });
+}
+
+/**
+ * @param {Zeta.Dictionary<string>} values
+ */
+export function toQueryString(values) {
+    var result = map(values, function (v, i) {
+        return encodeNameValue(i, v) || null;
+    });
+    return result[0] ? '?' + result.join('&') : '';
 }
 
 /**

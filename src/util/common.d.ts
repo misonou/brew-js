@@ -90,6 +90,12 @@ export function setQueryParam(name: string, value: string | false | null): strin
 export function setQueryParam(name: string, value: string | false | null, url: string): string;
 
 /**
+ * Returns a query string that includes the specific parameters
+ * @param values A dictionary containing parameter names and associated values. Values with `false`, `null` or `undefined` are ignored.
+ */
+export function toQueryString(values: Zeta.Dictionary<string | false | null | undefined>): string;
+
+/**
  * Gets the value of a cookie from the current document.
  * @param name Name of the cookie.
  */

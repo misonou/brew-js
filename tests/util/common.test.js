@@ -1,6 +1,6 @@
 import $ from "jquery";
 import { catchAsync } from "zeta-dom/util";
-import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, openDeferredURL, preloadImages, setAttr, setCookie, setQueryParam } from "src/util/common";
+import { addStyleSheet, api, cookie, copyAttr, deleteCookie, getAttrValues, getCookie, getJSON, getQueryParam, loadScript, openDeferredURL, preloadImages, setAttr, setCookie, setQueryParam, toQueryString } from "src/util/common";
 import { setBaseUrl } from "src/util/path";
 import { after, mockFn, mockXHROnce, verifyCalls, _ } from "../testUtil";
 import { jest } from "@jest/globals";
@@ -208,6 +208,20 @@ describe('setQueryParam', () => {
         expect(setQueryParam('foo', null, '?q=1#hash')).toEqual('?q=1#hash');
         expect(setQueryParam('foo', null, '#hash')).toEqual('#hash');
         expect(setQueryParam('foo', null, '#hash?foo=baz')).toEqual('#hash?foo=baz');
+    });
+});
+
+describe('toQueryString', () => {
+    it('should return empty string when there are no keys', () => {
+        expect(toQueryString({})).toBe('');
+    });
+
+    it('should return a valid query string containing all keys', () => {
+        expect(toQueryString({ foo: 'bar', 'foo[bar]': '?%= ' })).toBe('?foo=bar&foo%5Bbar%5D=%3F%25%3D%20');
+    });
+
+    it('should ignore false, null and undefined', () => {
+        expect(toQueryString({ foo: false, bar: null, baz: undefined })).toBe('');
     });
 });
 
