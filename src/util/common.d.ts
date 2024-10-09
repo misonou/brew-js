@@ -1,3 +1,28 @@
+export interface CookieAttributes {
+    /**
+     * Specifies the `Path` attribute for the cookie. Default is `/`.
+     */
+    path?: string;
+    /**
+     * Specifies the `Secure` attribute for the cookie.
+     */
+    secure?: boolean;
+    /**
+     * Specifies the `Expires` attribute for the cookie to be the number of milliseconds past the current time.
+     */
+    maxAge?: number;
+    /**
+     * Specifies the `SameSite` attribute for the cookie.
+     */
+    sameSite?: 'lax' | 'strict' | 'none';
+}
+
+export interface CookieAccessor {
+    get: () => string;
+    set: (value: any) => string;
+    delete: () => void;
+}
+
 /**
  * Gets all attributes present on an element.
  * @param element A DOM element.
@@ -110,6 +135,14 @@ export function getCookie(name: string): string;
 export function setCookie(name: string, value: string, expiry?: number): string;
 
 /**
+ * Sets a cookie to the current document.
+ * @param name Name of the cookie.
+ * @param value Value to set.
+ * @param options A dictionary containing cookie attributes.
+ */
+export function setCookie(name: string, value: string, options: CookieAttributes): string;
+
+/**
  * Deletes a cookie from the current document.
  * @param name Name of the cookie.
  */
@@ -118,11 +151,12 @@ export function deleteCookie(name: string): void;
 /**
  * Creates a collection of functions that read or write a specific cookie.
  */
-export function cookie(name: string, expiry?: number): {
-    get: () => string;
-    set: (value: any) => string;
-    delete: () => void;
-};
+export function cookie(name: string, expiry?: number): CookieAccessor;
+
+/**
+ * Creates a collection of functions that read or write a specific cookie.
+ */
+export function cookie(name: string, options: CookieAttributes): CookieAccessor;
 
 /**
  * Creates a collection of functions that executes HTTP requests.

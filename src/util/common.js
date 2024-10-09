@@ -155,10 +155,17 @@ export function getCookie(name) {
 /**
  * @param {string} name
  * @param {string} value
- * @param {number=} expiry
+ * @param {*} options
  */
-export function setCookie(name, value, expiry) {
-    document.cookie = encodeNameValue(name, String(value)) + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
+export function setCookie(name, value, options) {
+    options = options || {};
+    if (typeof options === 'number') {
+        options = { maxAge: options };
+    }
+    document.cookie = encodeNameValue(name, String(value)) + ';path=' + (options.path || '/') +
+        (options.sameSite ? ';samesite=' + options.sameSite : '') +
+        (options.maxAge ? ';expires=' + new Date(Date.now() + options.maxAge).toGMTString() : '') +
+        (options.secure ? ';secure' : '');
     return value;
 }
 

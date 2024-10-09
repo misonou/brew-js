@@ -9,11 +9,13 @@ const { stringMatching, objectContaining } = expect;
 const fetchSpy = mockFn();
 const windowOpen = jest.spyOn(window, 'open');
 const setAttribute = jest.spyOn(HTMLImageElement.prototype, 'setAttribute');
+const setCookieSpy = jest.spyOn(document, 'cookie', 'set');
 
 jest.spyOn($, 'ajax');
 window.__fetchSpy__ = fetchSpy;
 
 beforeEach(() => {
+    jest.useRealTimers();
     setBaseUrl('/');
     $('link, script').remove();
 });
@@ -257,6 +259,15 @@ describe('setCookie', () => {
     it('should encode URL-encoded characters', () => {
         setCookie('foo', '?%= ');
         expect(document.cookie).toEqual(stringMatching(/(^|\s)foo=%3F%25%3D%20(;|$)/));
+    });
+
+    it('should set cookie with correct attributes', () => {
+        jest.useFakeTimers("modern");
+        jest.setSystemTime(1728381461381);
+        setCookie('foo', 'bar', 1000000);
+        setCookie('foo', 'bar', { maxAge: 1000000, path: '/sub', secure: true, sameSite: 'strict' });
+        expect(setCookieSpy.mock.calls[0][0]).toBe('foo=bar;path=/;expires=Tue, 08 Oct 2024 10:14:21 GMT');
+        expect(setCookieSpy.mock.calls[1][0]).toBe('foo=bar;path=/sub;samesite=strict;expires=Tue, 08 Oct 2024 10:14:21 GMT;secure');
     });
 });
 
