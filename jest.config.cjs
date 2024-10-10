@@ -1,3 +1,5 @@
+const { resolveDependency } = require('@misonou/test-utils/setup');
+
 const config = {
     "testEnvironment": "./tests/environment",
     "transform": {},
@@ -22,11 +24,6 @@ const config = {
     }
 }
 
-if (process.env.CI !== 'true' && require('fs').existsSync('../zeta-dom')) {
-    config.moduleNameMapper = {
-        ...config.moduleNameMapper,
-        "^zeta-dom/(.*)$": "<rootDir>/../zeta-dom/src/$1"
-    };
-}
+resolveDependency(config, 'zeta-dom');
 
 module.exports = config;

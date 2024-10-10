@@ -1033,6 +1033,19 @@ describe('app.route', () => {
         expect(app.path).toEqual('/foo/baz/buzz');
     });
 
+    it('should cancel or replace previous navigation when parameter changes in observable callback [zeta-dom@>=0.5.10]', async () => {
+        app.route.watchOnce('id', () => {
+            app.route.id = 'baz';
+        });
+        await expect(app.navigate('/foo/bar')).rejects.toBeErrorWithCode('brew/navigation-cancelled');
+        await waitFor(() => expect(app.path).toBe('/foo/baz'));
+
+        app.route.watchOnce('id', () => {
+            app.route.replace('id', 'baz');
+        });
+        await expect(app.navigate('/foo/bar')).resolves.toMatchObject({ redirected: true, path: '/foo/baz' });
+    });
+
     it('should normalize route parameter', async () => {
         app.route.another = '';
         expect(app.route.another).toBeNull();

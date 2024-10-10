@@ -1,5 +1,6 @@
 const JSDOMEnvironment = require('jest-environment-jsdom');
 const { ResourceLoader } = require('jsdom');
+const { skipTestByVersion } = require('@misonou/test-utils/setup');
 
 class CustomResourceLoader extends ResourceLoader {
     fetch(url, options) {
@@ -26,5 +27,11 @@ module.exports = class extends JSDOMEnvironment {
             }
         };
         super(config, options);
+    }
+
+    async handleTestEvent(event) {
+        if (event.name === 'test_start') {
+            skipTestByVersion(event);
+        }
     }
 };
