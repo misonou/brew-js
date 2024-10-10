@@ -1,4 +1,4 @@
-/*! brew-js v0.6.11 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.12 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -670,7 +670,8 @@ __webpack_require__.d(common_namespaceObject, {
   selectorForAttr: function() { return selectorForAttr; },
   setAttr: function() { return setAttr; },
   setCookie: function() { return setCookie; },
-  setQueryParam: function() { return setQueryParam; }
+  setQueryParam: function() { return setQueryParam; },
+  toQueryString: function() { return toQueryString; }
 });
 
 // NAMESPACE OBJECT: ./src/util/storage.js
@@ -942,6 +943,12 @@ var boolAttrMap = {};
 each('allowFullscreen async autofocus autoplay checked controls default defer disabled formNoValidate isMap loop multiple muted noModule noValidate open playsInline readOnly required reversed selected trueSpeed', function (i, v) {
   boolAttrMap[v.toLowerCase()] = v;
 });
+function encodeNameValue(name, value) {
+  return value || value === '' || value === 0 ? encodeURIComponent(name) + '=' + encodeURIComponent(value) : '';
+}
+function decodeValue(value) {
+  return value && value.indexOf('%') >= 0 ? decodeURIComponent(value) : value;
+}
 function getAttrValues(element) {
   var values = {};
   each(element.attributes, function (i, v) {
@@ -997,16 +1004,31 @@ function getFormValues(form) {
   });
   return values;
 }
+function processQueryString(str, name, callback) {
+  if (isUndefinedOrNull(str)) {
+    str = location.search;
+  }
+  var getIndex = function getIndex(str, ch, from, until) {
+    var pos = str.indexOf(ch, from);
+    return pos < 0 || pos > until ? until : pos;
+  };
+  var e = getIndex(str, '#', 0, str.length);
+  var s = getIndex(str, '?', 0, e) + 1;
+  for (var i = s, j, k; i < e; i = j + 1) {
+    j = getIndex(str, '&', i, e);
+    k = getIndex(str, '=', i, j);
+    if (iequal(name, decodeValue(str.slice(i, k)))) {
+      return callback(str.slice(k + 1, j), str, i, j, s, e);
+    }
+  }
+  return callback(false, str, -1, -1, s, e);
+}
 
 /**
  * @param {string} name
  */
 function getQueryParam(name, current) {
-  if (isUndefinedOrNull(current)) {
-    current = location.search;
-  }
-  var m = new RegExp('[?&]' + name + '=([^&#]*)|#', 'i').exec(current) || [];
-  return m[1] !== undefined && decodeURIComponent(m[1]);
+  return processQueryString(current, name, decodeValue);
 }
 
 /**
@@ -1015,30 +1037,53 @@ function getQueryParam(name, current) {
  * @param {string=} current
  */
 function setQueryParam(name, value, current) {
-  if (isUndefinedOrNull(current)) {
-    current = location.search;
-  }
-  var re = new RegExp('([?&])' + name + '=[^&#]*(&?)|(?=#)|(?:\\?)?$', 'i');
-  return current.replace(re, function (v, a, b, i, n) {
-    b = b || '';
-    return value || value === '' ? (a || (i && i >= (n.lastIndexOf('?', i) + 1 || n.length + 1) ? '&' : '?')) + name + '=' + encodeURIComponent(value) + b : b && a;
+  return processQueryString(current, name, function (cur, input, i, j, s, e) {
+    var replacement = encodeNameValue(name, isFunction(value) ? value(decodeValue(cur)) : value);
+    var splice = function splice(str, from, to, replace) {
+      return str.slice(0, from) + replace + str.slice(to);
+    };
+    if (cur !== false) {
+      return replacement ? splice(input, i, j, replacement) : splice(input, i - (j >= e - 1), j + (j < e), '');
+    } else {
+      var p = input[e - 1] === '?' ? '' : e > s ? '&' : '?';
+      return replacement ? splice(input, e, e, p + replacement) : p ? input : splice(input, e - 1, e, '');
+    }
   });
+}
+
+/**
+ * @param {Zeta.Dictionary<string>} values
+ */
+function toQueryString(values) {
+  var result = map(values, function (v, i) {
+    return encodeNameValue(i, v) || null;
+  });
+  return result[0] ? '?' + result.join('&') : '';
 }
 
 /**
  * @param {string} name
  */
 function getCookie(name) {
-  return new RegExp('(?:^|\\s|;)' + name + '=([^;]+)').test(document.cookie) && RegExp.$1;
+  return single(document.cookie.split(/;\s?/), function (v) {
+    var pos = v.indexOf('=');
+    return name === decodeValue(v.slice(0, pos)) ? decodeValue(v.slice(pos + 1)) : false;
+  });
 }
 
 /**
  * @param {string} name
  * @param {string} value
- * @param {number=} expiry
+ * @param {*} options
  */
-function setCookie(name, value, expiry) {
-  document.cookie = name + '=' + value + ';path=/' + (expiry ? ';expires=' + new Date(Date.now() + expiry).toGMTString() : '');
+function setCookie(name, value, options) {
+  options = options || {};
+  if (typeof options === 'number') {
+    options = {
+      maxAge: options
+    };
+  }
+  document.cookie = encodeNameValue(name, String(value)) + ';path=' + (options.path || '/') + (options.sameSite ? ';samesite=' + options.sameSite : '') + (options.maxAge ? ';expires=' + new Date(Date.now() + options.maxAge).toGMTString() : '') + (options.secure ? ';secure' : '');
   return value;
 }
 
@@ -1046,7 +1091,7 @@ function setCookie(name, value, expiry) {
  * @param {string} name
  */
 function deleteCookie(name) {
-  document.cookie = name + '=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+  document.cookie = encodeNameValue(name, '') + ';path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
 }
 
 /**
@@ -4607,10 +4652,10 @@ function configureRouter(app, options) {
     };
     fromPathname = function fromPathname(path) {
       var parts = parsePath(path);
-      var value = getQueryParam(options.queryParam, parts.search);
-      var l = RegExp.leftContext;
-      var r = RegExp.rightContext;
-      return normalizePath(value || '') + (value === false ? parts.search : l + (l || !r ? r : '?' + r.slice(1))) + parts.hash;
+      var query = setQueryParam(options.queryParam, function (oldValue) {
+        path = normalizePath(oldValue || '');
+      }, parts.search);
+      return path + query + parts.hash;
     };
     toPathname = function toPathname(path) {
       path = parsePath(path);
