@@ -224,7 +224,7 @@ function Route(app, routes, initialPath) {
     Object.preventExtensions(self);
 }
 
-function routeCommitParams(self, state, matched, params, replace, force) {
+function routeCommitParams(self, state, matched, params, replace, keepQuery, force) {
     if (!matched) {
         params = extend({}, self, params);
         matched = matchRouteByParams(state, params) || updateRouteState(state.current, params.remainingSegments);
@@ -234,7 +234,7 @@ function routeCommitParams(self, state, matched, params, replace, force) {
     state.handleChanges(function () {
         extend(self, matched.params);
         if (result || force) {
-            result = state.app.navigate(matched.path + (result ? '' : getQueryAndHash(state.app.path)), replace);
+            result = state.app.navigate(matched.path + (result && !keepQuery ? '' : getQueryAndHash(state.app.path)), replace);
         }
     });
     return result;
@@ -244,19 +244,19 @@ definePrototype(Route, {
     parse: function (path) {
         return extend({}, matchRouteByPath(_(this), path).params);
     },
-    set: function (params) {
+    set: function (key, value, keepQuery, replace) {
         var self = this;
         var state = _(self);
-        if (typeof params === 'string') {
-            if (params !== self.toString()) {
-                catchAsync(routeCommitParams(self, state, matchRouteByPath(state, params)));
+        if (typeof key === 'string' && arguments.length === 1) {
+            if (key !== self.toString()) {
+                catchAsync(routeCommitParams(self, state, matchRouteByPath(state, key)));
             }
             return;
         }
-        catchAsync(routeCommitParams(self, state, null, params));
+        return routeCommitParams(self, state, null, isPlainObject(key) || kv(key, value), replace, (keepQuery || value) === true, true);
     },
-    replace: function (key, value) {
-        return routeCommitParams(this, _(this), null, isPlainObject(key) || kv(key, value), true, true);
+    replace: function (key, value, keepQuery) {
+        return this.set(key, value, keepQuery, true);
     },
     getPath: function (params) {
         var matched = matchRouteByParams(_(this), params);

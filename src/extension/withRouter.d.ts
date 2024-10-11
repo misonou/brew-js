@@ -382,11 +382,18 @@ declare namespace Brew {
          */
         parse(path: string): RouteParam;
         /**
-         * Sets multiple parameters at once, such that the app will navigate to
-         * the final path represented by the updated parameters.
-         * @param params A dictionary containing new parameter values. Unrecorgnized keys are omitted.
+         * Updates router and cause the app to navigate to the newly resolved path.
+         * @param key Name of route parameter.
+         * @param value New value.
+         * @param keepQuery Whether to keep current query string and hash.
          */
-        set(params: Zeta.Dictionary<string>): void;
+        set(key: string, value: string, keepQuery?: boolean): Promise<NavigateResult>;
+        /**
+         * Updates router and cause the app to navigate to the newly resolved path.
+         * @param params A dictionary containing new parameter values. Unrecorgnized keys are omitted.
+         * @param keepQuery Whether to keep current query string and hash.
+         */
+        set(params: Zeta.Dictionary<string>, keepQuery?: boolean): Promise<NavigateResult>;
         /**
          * Updates router and cause the app to navigate to the specified path.
          * @description It is similar to directly setting `App<T>.path` except that
@@ -396,18 +403,20 @@ declare namespace Brew {
          */
         set(path: string): void;
         /**
-         * Updates router and cause the app to redirect to the specified path.
+         * Updates router and cause the app to redirect to the newly resolved path.
          * Visit of current page in the history stack will be replaced.
          * @param key Name of route parameter.
          * @param value New value.
+         * @param keepQuery Whether to keep current query string and hash.
          */
-        replace(key: string, value: string): Promise<NavigateResult>;
+        replace(key: string, value: string, keepQuery?: boolean): Promise<NavigateResult>;
         /**
-         * Updates router and cause the app to redirect to the specified path.
+         * Updates router and cause the app to redirect to the newly resolved path.
          * Visit of current page in the history stack will be replaced.
          * @param params A dictionary containing new parameter values. Unrecorgnized keys are omitted.
+         * @param keepQuery Whether to keep current query string and hash.
          */
-        replace(params: Partial<RouteParam>): Promise<NavigateResult>;
+        replace(params: Partial<RouteParam>, keepQuery?: boolean): Promise<NavigateResult>;
         /**
          * Gets the path represented by specified route parameters.
          * If none of the routes matches, the root path `/` is returned.
