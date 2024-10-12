@@ -4,7 +4,7 @@ import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject } from "zeta-dom/util";
 import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
-import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath } from "../util/path.js";
+import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath, getQueryAndHash } from "../util/path.js";
 import { createObjectStorage } from "../util/storage.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -250,10 +250,11 @@ definePrototype(Route, {
     },
     replace: function (key, value) {
         var self = this;
+        var state = _(self);
         var result;
-        _(self).handleChanges(function () {
+        state.handleChanges(function () {
             var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-            result = _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
+            result = state.app.navigate(path + (path === self.toString() ? getQueryAndHash(state.app.path) : ''), true);
         });
         return result;
     },

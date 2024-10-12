@@ -251,6 +251,16 @@ describe('app.fromHref', () => {
     });
 });
 
+describe('Route.replace', () => {
+    it('should preserve query and hash if it does not trigger navigation', async () => {
+        await app.navigate('/test-1?foo=bar#baz');
+        expect(app.path).toBe('/test-1?foo=bar#baz');
+
+        await app.route.replace({ remainingSegments: 'test-1' });
+        expect(app.path).toBe('/test-1?foo=bar#baz');
+    });
+});
+
 describe('popstate event', () => {
     it('should handle invalid history state', async () => {
         await app.navigate('/test-1?a=1#b=1');
