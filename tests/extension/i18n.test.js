@@ -1,4 +1,4 @@
-import { _, initApp, waitForEvent } from "../testUtil";
+import { _, initApp, waitForEvent, delay } from "../testUtil";
 import router from "src/extension/router";
 import i18n from "src/extension/i18n";
 import { jest } from "@jest/globals";
@@ -114,6 +114,11 @@ describe('app.setLanguage', () => {
 
         const event = await promise;
         expect(event.pathname).toBe('/de/foo');
+        expect(app.previousPath).toBe('/en/foo');
+
+        await delay();
+        await app.back();
+        expect(app.path).toBe('/en/foo');
     });
 });
 
