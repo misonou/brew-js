@@ -73,6 +73,12 @@ describe('app.language', () => {
         expect(event.pathname).toBe('/de/foo');
     });
 
+    it('should keep current query and hash', async () => {
+        await app.navigate('/en?foo=bar#baz');
+        app.language = 'de';
+        await expect(app.watchOnce('path')).resolves.toBe('/de?foo=bar#baz');
+    });
+
     it('should set route parameter in lowercase', () => {
         app.language = 'es-ES';
         expect(app.route.language).toBe('es-es');
@@ -119,6 +125,12 @@ describe('app.setLanguage', () => {
         await delay();
         await app.back();
         expect(app.path).toBe('/en/foo');
+    });
+
+    it('should keep current query and hash', async () => {
+        await app.navigate('/en?foo=bar#baz');
+        app.setLanguage('de');
+        await expect(app.watchOnce('path')).resolves.toBe('/de?foo=bar#baz');
     });
 });
 

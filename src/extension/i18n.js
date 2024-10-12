@@ -52,7 +52,7 @@ export default addExtension('i18n', function (app, options) {
             cookie.set(newLangauge);
         }
         if (routeParam && appReady) {
-            app.route.set(routeParam, newLangauge.toLowerCase());
+            app.route.set(routeParam, newLangauge.toLowerCase(), true);
         }
         if (language !== newLangauge) {
             language = newLangauge;
@@ -70,13 +70,13 @@ export default addExtension('i18n', function (app, options) {
         app.route.watch(routeParam, function (newLangauge) {
             var normalized = (getCanonicalValue(languages, newLangauge) || language).toLowerCase();
             if (normalized !== newLangauge) {
-                app.route.replace(routeParam, normalized);
+                app.route.replace(routeParam, normalized, true);
             } else {
                 setLanguage(newLangauge);
             }
         });
         app.on('ready', function () {
-            app.route.replace(routeParam, language.toLowerCase());
+            app.route.replace(routeParam, language.toLowerCase(), true);
         });
     }
 });
