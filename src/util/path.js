@@ -5,6 +5,12 @@ const defaultPort = {
 
 export var baseUrl = '/';
 
+function getIndexOfQueryAndHash(path) {
+    var pos1 = path.indexOf('?') + 1;
+    var pos2 = path.indexOf('#') + 1;
+    return pos1 && pos2 ? Math.min(pos1, pos2) - 1 : (pos1 || pos2) - 1;
+}
+
 /**
  * @param {string} b
  */
@@ -70,13 +76,14 @@ export function normalizePath(path, resolveDotDir, returnEmpty) {
     return path[0] === '/' ? path : '/' + path;
 }
 
+export function getQueryAndHash(path) {
+    var pos = getIndexOfQueryAndHash(path);
+    return pos >= 0 ? path.slice(pos) : '';
+}
+
 export function removeQueryAndHash(path) {
-    var pos1 = path.indexOf('?') + 1;
-    var pos2 = path.indexOf('#') + 1;
-    if (!pos1 && !pos2) {
-        return path;
-    }
-    return path.slice(0, Math.min(pos1 || pos2, pos2 || pos1) - 1);
+    var pos = getIndexOfQueryAndHash(path);
+    return pos >= 0 ? path.slice(0, pos) : path;
 }
 
 /**

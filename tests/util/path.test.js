@@ -1,4 +1,4 @@
-import { baseUrl, combinePath, isSubPathOf, normalizePath, removeQueryAndHash, setBaseUrl, toAbsoluteUrl, toRelativeUrl, withBaseUrl } from "src/util/path";
+import { baseUrl, combinePath, getQueryAndHash, isSubPathOf, normalizePath, removeQueryAndHash, setBaseUrl, toAbsoluteUrl, toRelativeUrl, withBaseUrl } from "src/util/path";
 
 const initialBaseUrl = baseUrl;
 
@@ -115,6 +115,24 @@ describe('normalizePath', () => {
 
     it('should encode path properly', () => {
         expect(normalizePath('/foo%2f ¥/bar')).toBe('/foo%2F%20%C2%A5/bar');
+    });
+});
+
+describe('getQueryAndHash', () => {
+    it('should get query and hash from a path', () => {
+        expect(getQueryAndHash('/path?a=1&b=1')).toBe('?a=1&b=1');
+        expect(getQueryAndHash('/path#a=1&b=1')).toBe('#a=1&b=1');
+        expect(getQueryAndHash('/path?a=1#a=1&b=1')).toBe('?a=1#a=1&b=1');
+        expect(getQueryAndHash('/path?a=1#a=1?b=1')).toBe('?a=1#a=1?b=1');
+
+        expect(getQueryAndHash('?a=1&b=1')).toBe('?a=1&b=1');
+        expect(getQueryAndHash('#a=1&b=1')).toBe('#a=1&b=1');
+        expect(getQueryAndHash('?a=1#a=1&b=1')).toBe('?a=1#a=1&b=1');
+        expect(getQueryAndHash('?a=1#a=1?b=1')).toBe('?a=1#a=1?b=1');
+    });
+
+    it('should return empty string if there is no query or hash', () => {
+        expect(getQueryAndHash('/path')).toBe('');
     });
 });
 

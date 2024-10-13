@@ -34,6 +34,12 @@ export function parsePath(path: string): HTMLHyperlinkElementUtils;
 export function normalizePath(path: string, resolveDotDir?: boolean): string;
 
 /**
+ * Gets query string and hash from a path or URL.
+ * @param path An input path.
+ */
+export function getQueryAndHash(path: string): string;
+
+/**
  * Removes query string and hash from a path or URL.
  * @param path An input path.
  */
