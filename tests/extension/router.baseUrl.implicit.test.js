@@ -1151,6 +1151,12 @@ describe('app.route', () => {
             remainingSegments: '/',
         });
     });
+
+    it('should handle remainingSegments with encoded characters', () => {
+        expect(app.route.parse('/foo/baz/foo%2f%20%c2%a5bar')).toEqual(objectContaining({
+            remainingSegments: '/foo%2F%20%C2%A5bar'
+        }));
+    });
 });
 
 describe('app.isElementActive', () => {

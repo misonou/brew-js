@@ -232,7 +232,7 @@ definePrototype(Route, {
                 params[i] = segments[v];
             });
         }
-        params.remainingSegments = !matched || matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
+        params.remainingSegments = !matched || matched.exact ? '/' : normalizePath(segments.slice(matched.length).map(encodeURIComponent).join('/'));
         state.lastMatch = createRouteState(matched, segments, params);
         return params;
     },
