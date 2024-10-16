@@ -1,4 +1,4 @@
-/*! brew-js v0.6.12 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.13 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -623,6 +623,7 @@ __webpack_require__.r(path_namespaceObject);
 __webpack_require__.d(path_namespaceObject, {
   baseUrl: function() { return baseUrl; },
   combinePath: function() { return combinePath; },
+  getQueryAndHash: function() { return getQueryAndHash; },
   isSubPathOf: function() { return isSubPathOf; },
   normalizePath: function() { return normalizePath; },
   parsePath: function() { return parsePath; },
@@ -778,6 +779,11 @@ var defaultPort = {
   https: 443
 };
 var baseUrl = '/';
+function getIndexOfQueryAndHash(path) {
+  var pos1 = path.indexOf('?') + 1;
+  var pos2 = path.indexOf('#') + 1;
+  return pos1 && pos2 ? Math.min(pos1, pos2) - 1 : (pos1 || pos2) - 1;
+}
 
 /**
  * @param {string} b
@@ -843,13 +849,13 @@ function normalizePath(path, resolveDotDir, returnEmpty) {
   }
   return path[0] === '/' ? path : '/' + path;
 }
+function getQueryAndHash(path) {
+  var pos = getIndexOfQueryAndHash(path);
+  return pos >= 0 ? path.slice(pos) : '';
+}
 function removeQueryAndHash(path) {
-  var pos1 = path.indexOf('?') + 1;
-  var pos2 = path.indexOf('#') + 1;
-  if (!pos1 && !pos2) {
-    return path;
-  }
-  return path.slice(0, Math.min(pos1 || pos2, pos2 || pos1) - 1);
+  var pos = getIndexOfQueryAndHash(path);
+  return pos >= 0 ? path.slice(0, pos) : path;
 }
 
 /**
@@ -2472,7 +2478,7 @@ function detectLanguage(languages, defaultLanguage) {
       cookie.set(newLangauge);
     }
     if (routeParam && appReady) {
-      app.route.replace(routeParam, newLangauge.toLowerCase());
+      app.route.set(routeParam, newLangauge.toLowerCase(), true);
     }
     if (language !== newLangauge) {
       language = newLangauge;
@@ -2487,9 +2493,16 @@ function detectLanguage(languages, defaultLanguage) {
     detectLanguage: detectLanguage
   });
   if (routeParam) {
-    app.route.watch(routeParam, setLanguage);
+    app.route.watch(routeParam, function (newLangauge) {
+      var normalized = (getCanonicalValue(languages, newLangauge) || language).toLowerCase();
+      if (normalized !== newLangauge) {
+        app.route.replace(routeParam, normalized, true);
+      } else {
+        setLanguage(newLangauge);
+      }
+    });
     app.on('ready', function () {
-      app.route.replace(routeParam, language.toLowerCase());
+      app.route.replace(routeParam, language.toLowerCase(), true);
     });
   }
 }));
@@ -2953,18 +2966,24 @@ function parseRoute(path) {
   }
   return parsedRoutes[path];
 }
-function createRouteState(route, segments, params) {
-  route = route || [];
+function createRouteState(state, route, segments, params, remainingSegments) {
   segments = segments.map(encodeURIComponent);
-  return {
+  remainingSegments = remainingSegments || '/' + segments.slice(route.length).join('/');
+  return updateRouteState({
     route: route,
-    params: exclude(params, ['remainingSegments']),
+    params: extend({}, state.params, params),
     minPath: '/' + segments.slice(0, route.minLength).join('/'),
     maxPath: '/' + segments.slice(0, route.length).join('/')
-  };
+  }, remainingSegments);
 }
-function matchRouteByParams(routes, params, partial) {
-  var matched = single(routes, function (tokens) {
+function updateRouteState(matched, remainingSegments) {
+  remainingSegments = matched.route.exact !== false ? '/' : normalizePath(remainingSegments);
+  matched.params.remainingSegments = remainingSegments;
+  matched.path = fromRoutePath(combinePath(matched.maxPath, remainingSegments));
+  return matched;
+}
+function matchRouteByParams(state, params, partial) {
+  var matched = single(state.routes, function (tokens) {
     var valid = !tokens.hasParams || single(tokens.params, function (v, i) {
       return params[i] !== null;
     });
@@ -2987,14 +3006,24 @@ function matchRouteByParams(routes, params, partial) {
       }
       segments[i] = varname ? params[varname] : tokens[i];
     }
-    return createRouteState(tokens, segments, pick(params, util_keys(tokens.params)));
+    return createRouteState(state, tokens, segments, pick(params, util_keys(tokens.params)), params.remainingSegments);
   });
-  return matched || !partial && matchRouteByParams(routes, params, true);
+  return matched || !partial && matchRouteByParams(state, params, true);
+}
+function matchRouteByPath(state, path) {
+  var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
+  var matched = any(state.routes, function (tokens) {
+    return matchRoute(tokens, segments, true);
+  }) || [];
+  return createRouteState(state, matched, segments, mapObject(matched.params, function (v) {
+    return segments[v] || null;
+  }));
 }
 function Route(app, routes, initialPath) {
   var self = this;
   var params = {};
   var state = _(self, {
+    handleChanges: watch(self, true),
     routes: routes.map(parseRoute),
     params: params,
     app: app
@@ -3004,79 +3033,62 @@ function Route(app, routes, initialPath) {
       params[i] = null;
     });
   });
-  extend(self, params, self.parse(initialPath));
-  state.current = state.lastMatch;
-  state.handleChanges = watch(self, true);
-  Object.preventExtensions(self);
-  Object.getOwnPropertyNames(self).forEach(function (prop) {
-    defineObservableProperty(self, prop, null, function (v) {
+  var initial = matchRouteByPath(state, initialPath);
+  state.current = initial;
+  each(initial.params, function (i, v) {
+    defineObservableProperty(self, i, v, function (v) {
       return isUndefinedOrNull(v) || v === '' ? null : String(v);
     });
   });
   watch(self, function () {
-    var current = state.lastMatch;
-    if (!equal(current.params, exclude(self, ['remainingSegments']))) {
-      current = matchRouteByParams(state.routes, self) || state.current;
-    }
-    var remainingSegments = current.route.exact ? '/' : normalizePath(self.remainingSegments);
-    var newPath = fromRoutePath(combinePath(current.maxPath, remainingSegments));
-    state.current = current;
-    self.set(extend({}, state.params, current.params, {
-      remainingSegments: remainingSegments
-    }));
-    if (!iequal(newPath, removeQueryAndHash(app.path))) {
-      app.path = newPath;
+    if (!equal(state.current.params, self.toJSON())) {
+      catchAsync(routeCommitParams(self, state));
     }
   });
+  Object.preventExtensions(self);
+}
+function routeCommitParams(self, state, matched, params, replace, keepQuery, force) {
+  if (!matched) {
+    params = extend({}, self, params);
+    matched = matchRouteByParams(state, params) || updateRouteState(state.current, params.remainingSegments);
+  }
+  var result = matched.path !== removeQueryAndHash(state.app.path);
+  state.current = matched;
+  state.handleChanges(function () {
+    extend(self, matched.params);
+    if (result || force) {
+      result = state.app.navigate(matched.path + (result && !keepQuery ? '' : getQueryAndHash(state.app.path)), replace);
+    }
+  });
+  return result;
 }
 definePrototype(Route, {
   parse: function parse(path) {
+    return extend({}, matchRouteByPath(_(this), path).params);
+  },
+  set: function set(key, value, keepQuery, replace) {
     var self = this;
     var state = _(self);
-    var segments = toSegments(toRoutePath(removeQueryAndHash(path)));
-    var matched = any(state.routes, function (tokens) {
-      return matchRoute(tokens, segments, true);
-    });
-    var params = extend({}, state.params);
-    if (matched) {
-      each(matched.params, function (i, v) {
-        params[i] = segments[v];
-      });
-    }
-    params.remainingSegments = !matched || matched.exact ? '/' : normalizePath(segments.slice(matched.length).join('/'));
-    state.lastMatch = createRouteState(matched, segments, params);
-    return params;
-  },
-  set: function set(params) {
-    var self = this;
-    if (typeof params === 'string') {
-      if (iequal(params, self.toString())) {
-        return;
+    if (typeof key === 'string' && arguments.length === 1) {
+      if (key !== self.toString()) {
+        catchAsync(routeCommitParams(self, state, matchRouteByPath(state, key)));
       }
-      params = self.parse(params);
+      return;
     }
-    _(self).handleChanges(function () {
-      extend(self, params);
-    });
+    return routeCommitParams(self, state, null, isPlainObject(key) || kv(key, value), replace, (keepQuery || value) === true, true);
   },
-  replace: function replace(key, value) {
-    var self = this;
-    var result;
-    _(self).handleChanges(function () {
-      var path = self.getPath(extend(self, isPlainObject(key) || kv(key, value)));
-      result = _(self).app.navigate(path + (path === self.toString() ? getCurrentQuery() : ''), true);
-    });
-    return result;
+  replace: function replace(key, value, keepQuery) {
+    return this.set(key, value, keepQuery, true);
   },
   getPath: function getPath(params) {
-    var matched = matchRouteByParams(_(this).routes, params);
-    return fromRoutePath(matched ? combinePath(matched.maxPath || '/', matched.route.exact ? '/' : params.remainingSegments) : '/');
+    var matched = matchRouteByParams(_(this), params);
+    return matched ? matched.path : fromRoutePath('/');
   },
   toJSON: function toJSON() {
     return extend({}, this);
   },
   toString: function toString() {
-    return fromRoutePath(combinePath(_(this).current.maxPath || '/', this.remainingSegments));
+    return _(this).current.path;
   }
 });
 watchable(Route.prototype);
@@ -3377,7 +3389,7 @@ function configureRouter(app, options) {
     }
     if (path[0] === '~' || path.indexOf('{') >= 0) {
       var fullPath = (isRoutePath ? fromRoutePath : pipe)(currentPath);
-      parsedState = iequal(fullPath, route.toString()) ? _(route).current : route.parse(fullPath) && _(route).lastMatch;
+      parsedState = fullPath === route.toString() ? _(route).current : matchRouteByPath(_(route), fullPath);
       path = path.replace(/\{([^}?]+)(\??)\}/g, function (v, a, b, i) {
         return parsedState.params[a] || (b && i + v.length === path.length ? '' : 'null');
       });
