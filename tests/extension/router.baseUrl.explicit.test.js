@@ -978,6 +978,10 @@ describe('app.resolvePath', () => {
         expect(app.resolvePath('?foo')).toEqual('/base/foo?foo');
         expect(app.resolvePath('?foo#foo')).toEqual('/base/foo?foo#foo');
     });
+
+    it('should leave encoded braces as is', () => {
+        expect(app.resolvePath('/base/%7Bid%7D')).toEqual('/base/%7Bid%7D');
+    });
 });
 
 describe('app.isAppPath', () => {

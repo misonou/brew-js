@@ -548,7 +548,7 @@ function configureRouter(app, options) {
 
     function resolvePath(path, currentPath, isRoutePath) {
         var parsedState;
-        path = decodeURI(path) || '/';
+        path = path || '/';
         currentPath = currentPath || app.path;
         if (path[0] === '#' || path[0] === '?') {
             var a = parsePath(currentPath);

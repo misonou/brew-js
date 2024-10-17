@@ -972,6 +972,10 @@ describe('app.resolvePath', () => {
         expect(app.resolvePath('?foo')).toEqual('/foo?foo');
         expect(app.resolvePath('?foo#foo')).toEqual('/foo?foo#foo');
     });
+
+    it('should leave encoded braces as is', () => {
+        expect(app.resolvePath('/%7Bid%7D')).toEqual('/%7Bid%7D');
+    });
 });
 
 describe('app.isAppPath', () => {
