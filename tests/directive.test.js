@@ -1,5 +1,5 @@
 import { getDirectiveComponent, registerDirective, registerSimpleDirective } from "src/directive";
-import { after, initApp, initBody, mockFn, verifyCalls } from "./testUtil";
+import { after, initApp, initBody, mockFn, root, verifyCalls } from "./testUtil";
 
 const cbDestroy = mockFn();
 const cbInit = mockFn((_, context) => {
@@ -155,5 +155,12 @@ describe('registerSimpleDirective', () => {
         verifyCalls(cbDestoryBar, [[div]]);
         expect(cbInitFoo).toBeCalledTimes(1);
         expect(cbInitBar).toBeCalledTimes(1);
+    });
+
+    it('should invoke init with existing element', () => {
+        const cb = mockFn();
+        root.setAttribute('test-baz', '');
+        registerSimpleDirective('testBaz', 'test-baz', cb);
+        verifyCalls(cb, [[root]]);
     });
 });

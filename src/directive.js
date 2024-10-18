@@ -96,7 +96,7 @@ export function registerSimpleDirective(key, attr, init, dispose) {
     watchElements(root, '[' + attr + ']', function (added, removed) {
         removed.forEach(set.bind(0, false));
         added.forEach(set.bind(0, true));
-    });
+    }, true);
     defineGetterProperty(Component.prototype, key, function () {
         return getAttr(this.element, attr) !== null;
     }, function (v) {
