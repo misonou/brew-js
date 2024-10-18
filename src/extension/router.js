@@ -587,6 +587,7 @@ function configureRouter(app, options) {
         var deferred = deferrable();
         state.commit();
         emitNavigationEvent('beforepageload', state, { waitFor: deferred.waitFor }, { handleable: false });
+        notifyAsync(root, deferred);
         always(deferred, function () {
             if (states[currentIndex] === state) {
                 pendingState = null;
