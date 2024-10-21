@@ -9,6 +9,7 @@
   "scripts": {
     "build": "webpack",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "test:dts": "check-dts tests/**/*.ts",
     "version": "npm run build && git add -A dist",
     "release": "npx @misonou/build-utils publish"
   },
@@ -34,8 +35,11 @@
     "@misonou/test-utils": "^1.3.2",
     "@testing-library/dom": "^8.17.1",
     "@types/jest": "^27.5.2",
+    "@types/jquery": "^3.5.31",
     "babel-loader": "^9.1.3",
+    "check-dts": "^0.8.2",
     "cross-env": "^7.0.2",
+    "expect-type": "^1.1.0",
     "geometry-polyfill": "^1.0.7",
     "jest": "^27.5.1",
     "jest-environment-jsdom": "^27.5.1"

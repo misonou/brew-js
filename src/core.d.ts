@@ -14,10 +14,15 @@ import * as ErrorCode from "./errorCode.js";
 import { AppInit, isElementActive } from "./app";
 
 declare const SYMBOL_INTERFACE: unique symbol;
+declare const SYMBOL_EVENT: unique symbol;
 
 export interface Extension<T> {
     (): void;
     [SYMBOL_INTERFACE]: T;
+}
+
+export interface ExtensionEventMap<T> {
+    [SYMBOL_EVENT]: T;
 }
 
 type Util = typeof commonUtil & typeof storageUtil & typeof path & typeof animation & typeof domAction & {

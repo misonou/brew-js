@@ -1,0 +1,10 @@
+{
+    "extends": "./jsconfig",
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "types": [
+            "jquery",
+            "zeta-dom"
+        ]
+    }
+}

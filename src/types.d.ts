@@ -1,13 +1,15 @@
 declare namespace Brew {
     type Extension<T> = import("./core").Extension<T>;
+    type ExtensionEventMap<T> = import("./core").ExtensionEventMap<T>;
 
     /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */
     type HTTPMethod = 'get' | 'post' | 'put' | 'delete';
-    type EventHandler<E extends string, M> = Zeta.ZetaEventHandler<E, M>;
-    type EventHandlers<T extends string, M> = { [E in T]: EventHandler<E, M> }
-    type AppInstance<T = {}> = App<T> & T & Brew.EventDispatcher;
+    type EventHandler<E extends string, M, T = Element> = Zeta.ZetaEventHandler<E, M, T>;
+    type EventHandlers<E extends string, M, T = Element> = { [P in E]?: Zeta.ZetaEventHandler<P, M, T> };
+    type ExtendedEventMap<E extends string, M> = E extends keyof M ? M : { [P in E]: P extends keyof M ? M[P] : Zeta.ZetaEvent<Element> };
+    type AppInstance<T = {}> = App<T> & T & Zeta.ZetaEventDispatcher<T extends ExtensionEventMap<infer M> ? M : {}, any>;
     type PromiseOrEmpty<T = any> = Promise<T> | void;
     type DOMProcessorCallback = (element: Element, getState: (element: Element) => Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void;
 
@@ -45,14 +47,14 @@ declare namespace Brew {
         enableLoadingClass: boolean;
     }
 
-    interface EventDispatcher<T extends string = string, M = any> {
+    interface EventDispatcher<T extends string = string, M = {}> extends ExtensionEventMap<ExtendedEventMap<T, M>> {
         /**
          * Listens global events or events triggered from any elements.
          * @param event Event name.
          * @param handler Callack to be fired when such events are triggered.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on<E extends T>(event: E, handler: EventHandler<E, M>, noChildren?: true): Zeta.UnregisterCallback;
+        on<E extends T>(event: E, handler: EventHandler<E, M, this>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens events triggered from target elements.
@@ -61,14 +63,14 @@ declare namespace Brew {
          * @param handler Callack to be fired when such events are triggered.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on<E extends T>(target: string | Element, event: E, handler: EventHandler<E, M>, noChildren?: true): Zeta.UnregisterCallback;
+        on<E extends T, K extends Element | string>(target: K, event: E, handler: EventHandler<E, M, K extends string ? Zeta.ElementType<K> : K>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens multiple events.
          * @param handlers A dictionary which keys are event names and values are the associated handlers.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on(handlers: EventHandlers<T, M>, noChildren?: true): Zeta.UnregisterCallback;
+        on(handlers: EventHandlers<T, M, this>, noChildren?: true): Zeta.UnregisterCallback;
 
         /**
          * Listens multiple events.
@@ -76,7 +78,7 @@ declare namespace Brew {
          * @param handlers A dictionary which keys are event names and values are the associated handlers.
          * @param noChildren When set to true, events triggered from child elements will not be listened.
          */
-        on(target: string | Element, handlers: EventHandlers<T, M>, noChildren?: true): Zeta.UnregisterCallback;
+        on<K extends Element | string>(target: K, handlers: EventHandlers<T, M, K extends string ? Zeta.ElementType<K> : K>, noChildren?: true): Zeta.UnregisterCallback;
     }
 
     interface APIOptions {

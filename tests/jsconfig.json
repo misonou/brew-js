@@ -1,0 +1,7 @@
+{
+    "extends": "../jsconfig",
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "node",
+    }
+}
