@@ -570,15 +570,26 @@ describe('app.navigate', () => {
     });
 
     it('should pass data to navigate and beforepageload event', async () => {
+        const oldStateId = history.state;
         const data = {};
         const cb = mockFn();
         bindEvent(app, 'navigate', cb);
         bindEvent(app, 'beforepageload', cb);
+        bindEvent(app, 'pageload', cb);
 
-        await app.navigate('/test-1', false, data);
+        const { id: newStateId } = await app.navigate('/test-1', false, data);
+        const payload = {
+            navigationType: 'navigate',
+            pathname: '/test-1',
+            oldPathname: initialPath,
+            oldStateId,
+            newStateId,
+            data: sameObject(data)
+        };
         verifyCalls(cb, [
-            [objectContaining({ type: 'navigate', data: sameObject(data) }), _],
-            [objectContaining({ type: 'beforepageload', data: sameObject(data) }), _],
+            [objectContaining({ type: 'navigate', ...payload }), _],
+            [objectContaining({ type: 'beforepageload', ...payload }), _],
+            [objectContaining({ type: 'pageload', ...payload }), _],
         ]);
     });
 

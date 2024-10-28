@@ -2,7 +2,7 @@ declare namespace Brew {
     type RouterEventMap = {
         navigate: NavigateEvent;
         beforepageload: BeforePageLoadEvent;
-        pageload: PageEvent;
+        pageload: RouterEvent;
         pageenter: PageEvent;
         pageleave: PageEvent;
         hashchange: HashChangeEvent;
@@ -11,7 +11,7 @@ declare namespace Brew {
 
     type NavigationType = 'navigate' | 'reload' | 'back_forward' | 'resume';
 
-    interface RouterEvent {
+    interface RouterEvent extends Zeta.ZetaEventBase {
         /**
          * Gets the path where user is navigating to.
          */
@@ -19,11 +19,11 @@ declare namespace Brew {
         /**
          * Gets the path where user is navigating from.
          */
-        readonly oldPathname: string;
+        readonly oldPathname: string | undefined;
         /**
          * Gets the unique state ID for the page about to leave.
          */
-        readonly oldStateId: string;
+        readonly oldStateId: string | undefined;
         /**
          * Gets the unique state ID for the page going to navigate.
          */

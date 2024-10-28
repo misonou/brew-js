@@ -404,9 +404,9 @@ function configureRouter(app, options) {
                     page.last = state;
                     commitPath(state.path);
                     if (resolved.navigated) {
-                        app.emit('pageload', { pathname: state.path }, { handleable: false });
+                        emitNavigationEvent('pageload', state, previousState, null, { handleable: false });
                     } else if (state.type === 'back_forward') {
-                        app.emit('popstate', { oldStateId: previousState.id, newStateId: state.id }, { handleable: false });
+                        emitNavigationEvent('popstate', state, previousState, null, { handleable: false });
                     }
                 }
             },
@@ -570,7 +570,7 @@ function configureRouter(app, options) {
         return normalizePath(path, true);
     }
 
-    function emitNavigationEvent(eventName, state, data, options) {
+    function emitNavigationEvent(eventName, state, lastState, data, options) {
         data = extend({
             navigationType: state.type,
             pathname: state.path,
@@ -586,7 +586,7 @@ function configureRouter(app, options) {
     function processPageChange(state) {
         var deferred = deferrable();
         state.commit();
-        emitNavigationEvent('beforepageload', state, { waitFor: deferred.waitFor }, { handleable: false });
+        emitNavigationEvent('beforepageload', state, lastState, { waitFor: deferred.waitFor }, { handleable: false });
         notifyAsync(root, deferred);
         always(deferred, function () {
             if (states[currentIndex] === state) {
@@ -608,7 +608,7 @@ function configureRouter(app, options) {
         }
 
         console.log('Nagivate', newPath);
-        var promise = resolve(emitNavigationEvent('navigate', state));
+        var promise = resolve(emitNavigationEvent('navigate', state, lastState));
         notifyAsync(root, promise);
         always(promise, function () {
             if (states[currentIndex] === state) {
