@@ -17,6 +17,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }, defaultOptions);
 
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
+    var pendingRestore = [];
 
     function getOptions(context) {
         return {
@@ -153,11 +154,10 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             }
             var savedOffset = {};
             var hasAsync = false;
-            var restoreScroll = function () {
-                let offset = savedOffset[history.state];
-                if (offset) {
-                    scrollable.scrollTo(offset.x, offset.y, 0);
-                }
+            var restoreScrollAfter;
+            var restoreScroll = function (offset) {
+                scrollable.scrollTo(offset.x, offset.y, 0);
+                restoreScrollAfter = null;
             };
             cleanup.push(
                 dom.on('asyncStart', function () {
@@ -165,8 +165,8 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 }),
                 dom.on('asyncEnd', function () {
                     hasAsync = false;
-                    if (context.persistScroll) {
-                        restoreScroll();
+                    if (restoreScrollAfter) {
+                        restoreScrollAfter();
                     }
                 }),
                 app.on(container, 'scrollStart', function (e) {
@@ -174,16 +174,21 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                         delete savedOffset[history.state];
                     }
                 }, true),
-                app.on('navigate', function (e) {
+                app.on('beforepageload', function (e) {
                     savedOffset[e.oldStateId] = {
                         x: scrollable.scrollLeft(),
                         y: scrollable.scrollTop()
                     };
-                    setTimeout(function () {
-                        if (!hasAsync && context.persistScroll) {
-                            restoreScroll();
-                        }
-                    });
+                    var offset = context.persistScroll && savedOffset[e.newStateId];
+                    if (offset) {
+                        pendingRestore.push(container);
+                        restoreScrollAfter = restoreScroll.bind(0, offset);
+                        setTimeout(function () {
+                            if (!hasAsync) {
+                                restoreScrollAfter();
+                            }
+                        });
+                    }
                 })
             );
         }
@@ -244,7 +249,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         $scrollables.each(function (i, v) {
             getDirectiveComponent(v).scrollable.refresh();
         });
-        $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
+        $scrollables.filter(':not([keep-scroll-offset])').not(pendingRestore.splice(0)).scrollable('scrollTo', 0, 0);
     });
 
     // scroll-into-view animation trigger
