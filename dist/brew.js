@@ -1,4 +1,4 @@
-/*! brew-js v0.6.13 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.14 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -2732,7 +2732,7 @@ function registerSimpleDirective(key, attr, init, dispose) {
   watchElements(directive_root, '[' + attr + ']', function (added, removed) {
     removed.forEach(set.bind(0, false));
     added.forEach(set.bind(0, true));
-  });
+  }, true);
   defineGetterProperty(Component.prototype, key, function () {
     return getAttr(this.element, attr) !== null;
   }, function (v) {
@@ -4423,16 +4423,11 @@ function configureRouter(app, options) {
           page.last = state;
           commitPath(state.path);
           if (resolved.navigated) {
-            app.emit('pageload', {
-              pathname: state.path
-            }, {
+            emitNavigationEvent('pageload', state, previousState, null, {
               handleable: false
             });
           } else if (state.type === 'back_forward') {
-            app.emit('popstate', {
-              oldStateId: previousState.id,
-              newStateId: state.id
-            }, {
+            emitNavigationEvent('popstate', state, previousState, null, {
               handleable: false
             });
           }
@@ -4579,7 +4574,7 @@ function configureRouter(app, options) {
   }
   function resolvePath(path, currentPath, isRoutePath) {
     var parsedState;
-    path = decodeURI(path) || '/';
+    path = path || '/';
     currentPath = currentPath || app.path;
     if (path[0] === '#' || path[0] === '?') {
       var a = parsePath(currentPath);
@@ -4600,7 +4595,7 @@ function configureRouter(app, options) {
     }
     return normalizePath(path, true);
   }
-  function emitNavigationEvent(eventName, state, data, options) {
+  function emitNavigationEvent(eventName, state, lastState, data, options) {
     data = extend({
       navigationType: state.type,
       pathname: state.path,
@@ -4615,11 +4610,12 @@ function configureRouter(app, options) {
   function processPageChange(state) {
     var deferred = deferrable();
     state.commit();
-    emitNavigationEvent('beforepageload', state, {
+    emitNavigationEvent('beforepageload', state, lastState, {
       waitFor: deferred.waitFor
     }, {
       handleable: false
     });
+    notifyAsync(router_root, deferred);
     always(deferred, function () {
       if (states[currentIndex] === state) {
         pendingState = null;
@@ -4638,7 +4634,7 @@ function configureRouter(app, options) {
       return;
     }
     console.log('Nagivate', newPath);
-    var promise = resolve(emitNavigationEvent('navigate', state));
+    var promise = resolve(emitNavigationEvent('navigate', state, lastState));
     notifyAsync(router_root, promise);
     always(promise, function () {
       if (states[currentIndex] === state) {
