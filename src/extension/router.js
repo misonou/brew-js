@@ -455,6 +455,9 @@ function configureRouter(app, options) {
                     setImmediateOnce(handlePathChange);
                 }
             }, function () {
+                if (states[currentIndex] === currentState) {
+                    route.set(previous.pathname);
+                }
                 state.reject(errorWithCode(ErrorCode.navigationRejected));
             });
         } else if (callback() !== false) {

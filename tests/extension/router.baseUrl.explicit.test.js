@@ -4,7 +4,7 @@ import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
 import { getVar, resetVar, setVar } from "src/var";
 import { addAnimateIn, addAnimateOut } from "src/anim";
-import { catchAsync, resolve } from "zeta-dom/util";
+import { catchAsync, noop, resolve } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { createObjectStorage } from "src/util/storage";
@@ -1058,6 +1058,18 @@ describe('app.route', () => {
             app.route.replace('id', 'baz');
         });
         await expect(app.navigate('/base/foo/bar')).resolves.toMatchObject({ redirected: true, path: '/base/foo/baz' });
+    });
+
+    it('should revert parameter changes if navigation is cancelled', async () => {
+        const cb = mockFn(() => Promise.reject());
+        expect(app.route.baz).toBe(null);
+
+        dom.lock(root, new Promise(noop), cb);
+        app.route.baz = 'baz';
+
+        await waitFor(() => expect(cb).toBeCalled());
+        expect(app.path).toBe(initialPath);
+        expect(app.route.baz).toBe(null);
     });
 
     it('should normalize route parameter', async () => {
