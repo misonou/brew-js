@@ -42,23 +42,32 @@ export default addExtension('i18n', function (app, options) {
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
     var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || (options.detectLanguage !== false ? detectLanguage : getCanonicalValue)(languages, options.defaultLanguage);
-    var setLanguage = function (newLangauge) {
-        app.language = newLangauge;
-    };
 
-    defineObservableProperty(app, 'language', language, function (newLangauge) {
-        newLangauge = getCanonicalValue(languages, newLangauge) || language;
+    function commitLanguage(newLangauge) {
         if (cookie) {
             cookie.set(newLangauge);
         }
-        if (routeParam && appReady) {
-            app.route.set(routeParam, newLangauge.toLowerCase(), true);
-        }
         if (language !== newLangauge) {
             language = newLangauge;
+            app.language = language;
             if (options.reloadOnChange) {
                 location.reload();
             }
+        }
+    }
+
+    function setLanguage(newLangauge, replace) {
+        newLangauge = getCanonicalValue(languages, newLangauge) || language;
+        if (routeParam && appReady) {
+            app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true);
+        } else {
+            commitLanguage(newLangauge);
+        }
+    }
+
+    defineObservableProperty(app, 'language', language, function (newLangauge) {
+        if (newLangauge !== language) {
+            setLanguage(newLangauge);
         }
         return language;
     });
@@ -68,15 +77,13 @@ export default addExtension('i18n', function (app, options) {
     });
     if (routeParam) {
         app.route.watch(routeParam, function (newLangauge) {
-            var normalized = (getCanonicalValue(languages, newLangauge) || language).toLowerCase();
-            if (normalized !== newLangauge) {
-                app.route.replace(routeParam, normalized, true);
-            } else {
-                setLanguage(newLangauge);
-            }
+            setLanguage(newLangauge, true);
         });
         app.on('ready', function () {
-            app.route.replace(routeParam, language.toLowerCase(), true);
+            setLanguage(language, true);
+        });
+        app.on('beforepageload', function (e) {
+            commitLanguage(getCanonicalValue(languages, e.route[routeParam]) || language);
         });
     }
 });

@@ -1,4 +1,4 @@
-import { _, initApp, waitForEvent, delay } from "../testUtil";
+import { _, initApp, mockFn, cleanupAfterTest, delay } from "../testUtil";
 import router from "src/extension/router";
 import i18n from "src/extension/i18n";
 import { jest } from "@jest/globals";
@@ -6,49 +6,36 @@ import { jest } from "@jest/globals";
 const getLanguage = jest.spyOn(window.navigator, 'language', 'get').mockReturnValue('en-US');
 const getLanguages = jest.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['en-US', 'en', 'es', 'ja']);
 
-var initialPath;
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 var app;
 
 beforeAll(async () => {
     app = await initApp(router, i18n, app => {
         app.useRouter({
-            initialPath: '/fr',
+            initialPath: '/',
             baseUrl: '/',
             routes: [
-                '/{language}/*',
                 '/*'
             ]
         });
         app.useI18n({
-            languages: ['en', 'de', 'es-ES'],
-            routeParam: 'language'
-        });
-        app.on('ready', () => {
-            const unbind = app.on('navigate', (e) => {
-                initialPath = e.pathname;
-                unbind();
-            });
+            languages: ['en', 'de', 'es-ES']
         });
     });
 });
 
 beforeEach(async () => {
-    await app.navigate('/en');
+    app.language = 'en';
 });
 
 describe('i18n extension', () => {
-    it('should redirect to default language if initial language is not in option', () => {
-        expect(app.initialPath).toBe('/fr');
-        expect(initialPath).toBe('/en');
-    });
+    it('should not trigger in-app navigation when routeParam is not specified', async () => {
+        const cb = mockFn();
+        cleanupAfterTest(app.on('navigate', cb));
 
-    it('should redirect to path of current language if route paramter is invalid', async () => {
-        await app.navigate('/');
-        expect(app.path).toBe('/en');
-
-        await app.navigate('/fr/foo');
-        expect(app.path).toBe('/en/foo');
+        app.language = 'de';
+        await delay();
+        expect(cb).not.toBeCalled();
     });
 });
 
@@ -63,42 +50,6 @@ describe('app.language', () => {
         app.language = 'fr';
         expect(app.language).toBe(language);
     });
-
-    it('should navigate to path with specified language', async () => {
-        await app.navigate('/en/foo');
-        const promise = waitForEvent(app, 'navigate');
-        app.language = 'de';
-
-        const event = await promise;
-        expect(event.pathname).toBe('/de/foo');
-    });
-
-    it('should keep current query and hash', async () => {
-        await app.navigate('/en?foo=bar#baz');
-        app.language = 'de';
-        await expect(app.watchOnce('path')).resolves.toBe('/de?foo=bar#baz');
-    });
-
-    it('should set route parameter in lowercase', () => {
-        app.language = 'es-ES';
-        expect(app.route.language).toBe('es-es');
-    });
-
-    it('should be changed by route parameter', async () => {
-        const promise = waitForEvent(app, 'navigate');
-        app.route.language = 'de';
-
-        await promise;
-        expect(app.language).toEqual('de');
-    });
-
-    it('should be changed by route parameter and be set to canonical casing', async () => {
-        const promise = waitForEvent(app, 'navigate');
-        app.route.language = 'es-es';
-
-        await promise;
-        expect(app.language).toEqual('es-ES');
-    });
 });
 
 describe('app.setLanguage', () => {
@@ -111,26 +62,6 @@ describe('app.setLanguage', () => {
         const language = app.language;
         app.setLanguage('fr');
         expect(app.language).toBe(language);
-    });
-
-    it('should navigate to path with specified language', async () => {
-        await app.navigate('/en/foo');
-        const promise = waitForEvent(app, 'navigate');
-        app.setLanguage('de');
-
-        const event = await promise;
-        expect(event.pathname).toBe('/de/foo');
-        expect(app.previousPath).toBe('/en/foo');
-
-        await delay();
-        await app.back();
-        expect(app.path).toBe('/en/foo');
-    });
-
-    it('should keep current query and hash', async () => {
-        await app.navigate('/en?foo=bar#baz');
-        app.setLanguage('de');
-        await expect(app.watchOnce('path')).resolves.toBe('/de?foo=bar#baz');
     });
 });
 
