@@ -218,7 +218,7 @@ function Route(app, routes, initialPath) {
     });
     watch(self, function () {
         if (!equal(state.current.params, self.toJSON())) {
-            catchAsync(routeCommitParams(self, state));
+            routeCommitParams(self, state);
         }
     });
     Object.preventExtensions(self);
@@ -249,7 +249,7 @@ definePrototype(Route, {
         var state = _(self);
         if (typeof key === 'string' && arguments.length === 1) {
             if (key !== self.toString()) {
-                catchAsync(routeCommitParams(self, state, matchRouteByPath(state, key)));
+                routeCommitParams(self, state, matchRouteByPath(state, key));
             }
             return;
         }
@@ -363,10 +363,10 @@ function configureRouter(app, options) {
                 return resolved;
             },
             get promise() {
-                return promise || (promise = resolve(resolved || new Promise(function (resolve_, reject_) {
+                return promise || (promise = new Promise(function (resolve_, reject_) {
                     resolvePromise = resolve_;
                     rejectPromise = reject_;
-                })));
+                }));
             },
             get pageInfo() {
                 return page.info || (page.info = new PageInfo(page, pathNoQuery, freeze(route.parse(pathNoQuery))));
@@ -397,6 +397,7 @@ function configureRouter(app, options) {
             resolve: function (result) {
                 var previousState = lastState;
                 resolved = result || createNavigateResult(id, state.path);
+                promise = resolve(resolved);
                 resolvePromise(resolved);
                 if (states[currentIndex] === state) {
                     redirectCount = 0;
@@ -411,6 +412,7 @@ function configureRouter(app, options) {
                 }
             },
             reject: function (error) {
+                catchAsync(promise);
                 promise = null;
                 rejectPromise(error || errorWithCode(ErrorCode.navigationCancelled));
             },
@@ -459,6 +461,7 @@ function configureRouter(app, options) {
                     route.set(previous.pathname);
                 }
                 state.reject(errorWithCode(ErrorCode.navigationRejected));
+                console.warn('Navigation cancelled');
             });
         } else if (callback() !== false) {
             if (snapshot && previous.done) {

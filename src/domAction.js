@@ -284,18 +284,17 @@ dom.ready.then(function () {
         if (!isSameWindow(self.target)) {
             return;
         }
-        var oncancel = function () {
-            console.warn('Navigation cancelled');
-        };
         if ('navigate' in app && (dataHref || app.isAppPath(href))) {
             e.preventDefault();
-            app.navigate(dataHref || app.fromHref(href)).catch(oncancel);
+            app.navigate(dataHref || app.fromHref(href));
         } else if (locked(root)) {
             e.preventDefault();
             cancelLock(root).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
                 window.open(dataHref || href, '_self', features.join(','));
-            }, oncancel);
+            },  function () {
+                console.warn('Navigation cancelled');
+            });
         }
     });
 });
