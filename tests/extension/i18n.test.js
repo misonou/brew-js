@@ -53,15 +53,17 @@ describe('app.language', () => {
 });
 
 describe('app.setLanguage', () => {
-    it('should match language case insensitively', () => {
-        app.setLanguage('es-es');
+    it('should match language case insensitively', async () => {
+        const promise = app.setLanguage('es-es');
         expect(app.language).toBe('es-ES');
+        await expect(promise).resolves.toBe(true);
     });
 
     it('should not be changed if assigned invalid language', async () => {
         const language = app.language;
-        app.setLanguage('fr');
+        const promise = app.setLanguage('fr');
         expect(app.language).toBe(language);
+        await expect(promise).resolves.toBe(false);
     });
 });
 

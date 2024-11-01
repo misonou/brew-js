@@ -1,4 +1,4 @@
-import { defineObservableProperty, each, pipe, single } from "zeta-dom/util";
+import { always, combineFn, defineObservableProperty, each, pipe, resolve, single } from "zeta-dom/util";
 import { addExtension, appReady } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
@@ -32,6 +32,7 @@ export default addExtension('i18n', function (app, options) {
         return v && languages[v.toLowerCase()];
     };
     var language = getCanonicalValue(routeParam && app.route[routeParam]) || getCanonicalValue(cookie && cookie.get()) || (options.detectLanguage !== false && detectLanguage(languages)) || getCanonicalValue(options.defaultLanguage) || single(languages, pipe) || '';
+    var beforepageload = [];
 
     function commitLanguage(newLangauge) {
         if (cookie) {
@@ -49,9 +50,13 @@ export default addExtension('i18n', function (app, options) {
     function setLanguage(newLangauge, replace) {
         newLangauge = getCanonicalValue(newLangauge) || language;
         if (routeParam && appReady) {
-            app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true);
+            return new Promise(function (resolve) {
+                always(app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true), resolve);
+                beforepageload.push(resolve);
+            });
         } else {
             commitLanguage(newLangauge);
+            return resolve(true);
         }
     }
 
@@ -62,7 +67,11 @@ export default addExtension('i18n', function (app, options) {
         return language;
     });
     app.define({
-        setLanguage,
+        setLanguage: function (newLangauge) {
+            return setLanguage(newLangauge).then(function (resolved) {
+                return resolved && language === getCanonicalValue(newLangauge);
+            });
+        },
         detectLanguage: function (languages, defaultLanguage) {
             return languages ? detectLanguage(toDictionary(languages)) || defaultLanguage || languages[0] || '' : getBrowserLanguages()[0];
         }
@@ -76,6 +85,7 @@ export default addExtension('i18n', function (app, options) {
         });
         app.on('beforepageload', function (e) {
             commitLanguage(getCanonicalValue(e.route[routeParam]) || language);
+            combineFn(beforepageload.splice(0))(true);
         });
     }
 });

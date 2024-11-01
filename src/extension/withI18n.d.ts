@@ -12,8 +12,10 @@ declare namespace Brew {
         /**
          * Sets the language.
          * @param language Language to set. If the language is not on the specified list, the language will not be changed.
+         * @returns A promise that when resolved indicates whether the operation is successful. It will resolve to `false`, for example, when
+         * the language is not on the specified list, the operation is cancelled with subsequent calls, or navigation triggered is cancelled or rejected.
          */
-        setLanguage(language: string): void;
+        setLanguage(language: string): Promise<boolean>;
 
         /**
          * Detects preferred language from browser's settings.

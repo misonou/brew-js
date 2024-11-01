@@ -167,15 +167,13 @@ describe('app.language', () => {
 
 describe('app.setLanguage', () => {
     it('should match language case insensitively', async () => {
-        app.setLanguage('es-es');
-        await delay();
+        await expect(app.setLanguage('es-es')).resolves.toBe(true);
         expect(app.language).toBe('es-ES');
     });
 
     it('should not be changed if assigned invalid language', async () => {
         const language = app.language;
-        app.setLanguage('fr');
-        await delay();
+        await expect(app.setLanguage('fr')).resolves.toBe(false);
         expect(app.language).toBe(language);
     });
 
@@ -209,16 +207,23 @@ describe('app.setLanguage', () => {
         dom.lock(dom.root, new Promise(noop), onCancel);
         onCancel.mockImplementationOnce(() => Promise.reject());
 
-        app.setLanguage('de');
-        await waitFor(() => expect(onCancel).toBeCalled());
+        await expect(app.setLanguage('de')).resolves.toBe(false);
+        expect(onCancel).toBeCalled();
         expect(app.path).toBe('/en');
         expect(app.route.language).toBe('en');
         onCancel.mockClear();
 
-        app.setLanguage('de');
-        await waitForEvent(app, 'beforepageload');
+        await expect(app.setLanguage('de')).resolves.toBe(true);
         expect(onCancel).toBeCalled();
         expect(app.path).toBe('/de');
         expect(app.route.language).toBe('de');
+    });
+
+    it('should cancel previous request', async () => {
+        const promise1 = app.setLanguage('de');
+        const promise2 = app.setLanguage('es-ES');
+        await expect(promise1).resolves.toBe(false);
+        await expect(promise2).resolves.toBe(true);
+        expect(app.language).toBe('es-ES');
     });
 });

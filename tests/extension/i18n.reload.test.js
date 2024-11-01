@@ -1,10 +1,9 @@
-import { _, initApp, waitForEvent, mockFn } from "../testUtil";
+import { _, initApp, mockFn } from "../testUtil";
 import router from "src/extension/router";
 import i18n from "src/extension/i18n";
 import { jest } from "@jest/globals";
 import dom from "zeta-dom/dom";
 import { noop } from "zeta-dom/util";
-import { waitFor } from "@testing-library/dom";
 
 /** @type {Brew.AppInstance<Brew.WithRouter & Brew.WithI18n>} */
 var app;
@@ -44,15 +43,14 @@ describe('app.setLanguage', () => {
         dom.lock(dom.root, new Promise(noop), onCancel);
         onCancel.mockImplementationOnce(() => Promise.reject());
 
-        app.setLanguage('de');
-        await waitFor(() => expect(onCancel).toBeCalled());
+        await expect(app.setLanguage('de')).resolves.toBe(false);
+        expect(onCancel).toBeCalled();
         expect(app.path).toBe('/en');
         expect(app.route.language).toBe('en');
         expect(location.reload).not.toBeCalled();
         onCancel.mockClear();
 
-        app.setLanguage('de');
-        await waitForEvent(app, 'beforepageload');
+        await expect(app.setLanguage('de')).resolves.toBe(true);
         expect(onCancel).toBeCalled();
         expect(app.path).toBe('/de');
         expect(app.route.language).toBe('de');
