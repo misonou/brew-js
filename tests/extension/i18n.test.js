@@ -93,7 +93,7 @@ describe('app.detectLanguage', () => {
     });
 
     it('should return first language when none of the languages match', () => {
-        expect(app.detectLanguage(['fr'])).toBe('fr');
+        expect(app.detectLanguage(['pt-PT', 'fr'])).toBe('pt-PT');
     });
 
     it('should return default language when none of the languages match', () => {

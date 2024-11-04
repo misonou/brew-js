@@ -1,47 +1,37 @@
-import { defineObservableProperty, each, isArray, keys, single } from "zeta-dom/util";
+import { defineObservableProperty, each, pipe, single } from "zeta-dom/util";
 import { addExtension, appReady } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
 function toDictionary(languages) {
-    if (languages) {
-        var dict = {};
-        each(languages, function (i, v) {
-            var key = v.toLowerCase();
-            dict[key] = v;
-            if (key.indexOf('-') > 0) {
-                dict[key.split('-')[0]] = v;
-            }
-        });
-        return dict;
-    }
+    var dict = {};
+    each(languages, function (i, v) {
+        var key = v.toLowerCase();
+        dict[key] = v;
+        if (key.indexOf('-') > 0) {
+            dict[key.split('-')[0]] = v;
+        }
+    });
+    return dict;
 }
 
-function getCanonicalValue(languages, value) {
-    if (languages && value) {
-        return languages[value.toLowerCase()];
-    }
-    return value;
+function getBrowserLanguages() {
+    return navigator.languages || [navigator.language || ''];
 }
 
-function detectLanguage(languages, defaultLanguage) {
-    var userLanguages = navigator.languages || [navigator.language || ''];
-    if (!languages) {
-        return userLanguages[0];
-    }
-    userLanguages = toDictionary(userLanguages);
-    if (isArray(languages)) {
-        languages = toDictionary(languages);
-    }
-    return single(userLanguages, function (v, i) {
+function detectLanguage(languages) {
+    return single(toDictionary(getBrowserLanguages()), function (v, i) {
         return languages[i];
-    }) || defaultLanguage || keys(languages)[0];
+    });
 }
 
 export default addExtension('i18n', function (app, options) {
     var languages = toDictionary(options.languages);
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, 86400000);
-    var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || (options.detectLanguage !== false ? detectLanguage : getCanonicalValue)(languages, options.defaultLanguage);
+    var getCanonicalValue = function (v) {
+        return v && languages[v.toLowerCase()];
+    };
+    var language = getCanonicalValue(routeParam && app.route[routeParam]) || getCanonicalValue(cookie && cookie.get()) || (options.detectLanguage !== false && detectLanguage(languages)) || getCanonicalValue(options.defaultLanguage) || single(languages, pipe) || '';
 
     function commitLanguage(newLangauge) {
         if (cookie) {
@@ -57,7 +47,7 @@ export default addExtension('i18n', function (app, options) {
     }
 
     function setLanguage(newLangauge, replace) {
-        newLangauge = getCanonicalValue(languages, newLangauge) || language;
+        newLangauge = getCanonicalValue(newLangauge) || language;
         if (routeParam && appReady) {
             app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true);
         } else {
@@ -73,7 +63,9 @@ export default addExtension('i18n', function (app, options) {
     });
     app.define({
         setLanguage,
-        detectLanguage
+        detectLanguage: function (languages, defaultLanguage) {
+            return languages ? detectLanguage(toDictionary(languages)) || defaultLanguage || languages[0] || '' : getBrowserLanguages()[0];
+        }
     });
     if (routeParam) {
         app.route.watch(routeParam, function (newLangauge) {
@@ -83,7 +75,7 @@ export default addExtension('i18n', function (app, options) {
             setLanguage(language, true);
         });
         app.on('beforepageload', function (e) {
-            commitLanguage(getCanonicalValue(languages, e.route[routeParam]) || language);
+            commitLanguage(getCanonicalValue(e.route[routeParam]) || language);
         });
     }
 });
