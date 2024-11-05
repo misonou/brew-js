@@ -56,6 +56,11 @@ declare namespace Brew {
          */
         cookie?: string;
         /**
+         * Specifies options for cookie.
+         * Defaults to 1 year expiry with no additional flags.
+         */
+        cookieOptions?: CookieAttributes;
+        /**
          * Specifies whether to reload the page when language is changed.
          * This is used when content on the page cannot reflect the new language by an ad hoc way.
          */
