@@ -363,4 +363,58 @@ describe('animate-sequence directive', () => {
             [items[0], ''],
         ]);
     });
+
+    it('should reset state for all elements with intro animation for default trigger', async () => {
+        const elm = await mount(`
+            <div>
+                <div animate-in animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-out animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-on="custom" animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-out animate-on="custom" animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+            </div>
+        `);
+        await animateIn(elm, 'show');
+        await animateIn(elm, 'custom');
+        expect(customAnimateIn).toBeCalledTimes(4);
+        expect(elm.querySelectorAll('.item.tweening-in').length).toBe(4);
+
+        await animateOut(elm, 'show');
+        expect(customAnimateOut).toBeCalledTimes(1);
+        expect(elm.querySelectorAll('.item.tweening-in').length).toBe(0);
+    });
+
+    it('should reset state for animated elements only for custom trigger', async () => {
+        const elm = await mount(`
+            <div>
+                <div animate-in animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-out animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-on="custom" animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+                <div animate-in animate-out animate-on="custom" animate-sequence=".item" animate-sequence-type="custom-anim">
+                    <div custom-anim class="item"></div>
+                </div>
+            </div>
+        `);
+        await animateIn(elm, 'show');
+        await animateIn(elm, 'custom');
+        expect(customAnimateIn).toBeCalledTimes(4);
+        expect(elm.querySelectorAll('.item.tweening-in').length).toBe(4);
+
+        await animateOut(elm, 'custom');
+        expect(customAnimateOut).toBeCalledTimes(1);
+        expect(elm.querySelectorAll('.item.tweening-in').length).toBe(3);
+    });
 });

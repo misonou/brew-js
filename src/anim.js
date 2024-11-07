@@ -1,6 +1,6 @@
 import $ from "./include/jquery.js";
 import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "zeta-dom/domUtil";
-import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill } from "zeta-dom/util";
+import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill, makeArray } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import dom from "zeta-dom/dom";
@@ -29,6 +29,7 @@ function handleMutations(addNodes) {
 }
 
 function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+    var animated = new Set();
     var sequences = new WeakMap();
     var deferred = deferrable();
     var promise = setPromiseTimeout(deferred, 1500).catch(function () {
@@ -41,6 +42,7 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
         });
     });
     var animate = function (element) {
+        animated.add(element);
         // transform cannot apply on inline elements
         if ($(element).css('display') === 'inline') {
             $(element).css('display', 'inline-block');
@@ -57,7 +59,9 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
         });
     };
     return {
-        promise: promise.then(callback),
+        promise: promise.then(function () {
+            return callback(makeArray(animated));
+        }),
         animate: animate,
         sequence: function (element, filter, attr) {
             var queue = mapGet(sequences, element, Array);
@@ -105,7 +109,6 @@ export function animateIn(element, trigger, scope, filterCallback) {
         }
         anim.sequence(v, ':not(.tweening-in)', {
             'animate-in': getAttr(v, 'animate-sequence-type') || '',
-            'animate-on': trigger,
             'is-animate-sequence': ''
         });
     });
@@ -127,8 +130,8 @@ export function animateOut(element, trigger, scope, filterCallback, excludeSelf)
         elements.splice(0, 1);
     }
     var filtered = elements.filter(shouldAnimate);
-    var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function () {
-        $(trigger === 'show' ? elements : filtered).removeClass('tweening-in tweening-out');
+    var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function (animated) {
+        $(trigger === 'show' ? elements : filtered).add(animated).removeClass('tweening-in tweening-out');
     });
     $(filtered).filter('[animate-out]:not([is-animate-sequence],.tweening-out)').each(function (i, v) {
         anim.animate(v);
