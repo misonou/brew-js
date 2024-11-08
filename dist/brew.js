@@ -1,4 +1,4 @@
-/*! brew-js v0.6.14 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.15 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -757,7 +757,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   pipe = _lib$util.pipe,
   randomId = _lib$util.randomId,
   reject = _lib$util.reject,
-  resolve = _lib$util.resolve,
+  util_resolve = _lib$util.resolve,
   resolveAll = _lib$util.resolveAll,
   setImmediate = _lib$util.setImmediate,
   setImmediateOnce = _lib$util.setImmediateOnce,
@@ -1198,7 +1198,7 @@ function loadScript(url, options) {
       return v.then(function () {
         return loadScript(a, options);
       });
-    }, resolve());
+    }, util_resolve());
   }
   if (!loadScriptCache[url]) {
     loadScriptCache[url] = new Promise(function (resolve, reject) {
@@ -1277,7 +1277,7 @@ function preloadImages(urls, ms) {
   if (!promises.length || promises.every(function (v) {
     return v === true;
   })) {
-    return resolve();
+    return util_resolve();
   }
   if (preloadUrls.length) {
     console.log('Preload image', {
@@ -1289,7 +1289,7 @@ function preloadImages(urls, ms) {
 function openDeferredURL(promise, loadingUrl, target, features) {
   var win = window.open(loadingUrl || 'data:text/html;base64,TG9hZGluZy4uLg==', target || '_blank', features || '');
   if (!win) {
-    return resolve(false);
+    return util_resolve(false);
   }
   return promise.then(function (url) {
     if (win.closed) {
@@ -1592,6 +1592,7 @@ function handleMutations(addNodes) {
   }
 }
 function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+  var animated = new Set();
   var sequences = new WeakMap();
   var deferred = deferrable();
   var promise = setPromiseTimeout(deferred, 1500).catch(function () {
@@ -1614,6 +1615,7 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
     });
   });
   var animate = function animate(element) {
+    animated.add(element);
     // transform cannot apply on inline elements
     if (jquery(element).css('display') === 'inline') {
       jquery(element).css('display', 'inline-block');
@@ -1630,7 +1632,9 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
     });
   };
   return {
-    promise: promise.then(callback),
+    promise: promise.then(function () {
+      return callback(makeArray(animated));
+    }),
     animate: animate,
     sequence: function sequence(element, filter, attr) {
       var queue = mapGet(sequences, element, Array);
@@ -1678,7 +1682,6 @@ function animateIn(element, trigger, scope, filterCallback) {
     }
     anim.sequence(v, ':not(.tweening-in)', {
       'animate-in': getAttr(v, 'animate-sequence-type') || '',
-      'animate-on': trigger,
       'is-animate-sequence': ''
     });
   });
@@ -1700,8 +1703,8 @@ function animateOut(element, trigger, scope, filterCallback, excludeSelf) {
     elements.splice(0, 1);
   }
   var filtered = elements.filter(shouldAnimate);
-  var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function () {
-    jquery(trigger === 'show' ? elements : filtered).removeClass('tweening-in tweening-out');
+  var anim = handleAnimation(element, 'out', trigger, customAnimateOut, function (animated) {
+    jquery(trigger === 'show' ? elements : filtered).add(animated).removeClass('tweening-in tweening-out');
   });
   jquery(filtered).filter('[animate-out]:not([is-animate-sequence],.tweening-out)').each(function (i, v) {
     anim.animate(v);
@@ -2813,7 +2816,7 @@ function closeFlyout(flyout, value) {
   return resolveAll(elements.map(function (v) {
     var state = flyoutStates.get(v);
     if (!state) {
-      return resolve();
+      return util_resolve();
     }
     var promise = state.closePromise;
     if (!promise) {
@@ -3039,18 +3042,17 @@ zeta_dom_dom.ready.then(function () {
     if (!isSameWindow(self.target)) {
       return;
     }
-    var oncancel = function oncancel() {
-      console.warn('Navigation cancelled');
-    };
     if ("navigate" in app && (dataHref || app.isAppPath(href))) {
       e.preventDefault();
-      app.navigate(dataHref || app.fromHref(href)).catch(oncancel);
+      app.navigate(dataHref || app.fromHref(href));
     } else if (locked(domAction_root)) {
       e.preventDefault();
       cancelLock(domAction_root).then(function () {
         var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
         window.open(dataHref || href, '_self', features.join(','));
-      }, oncancel);
+      }, function () {
+        console.warn('Navigation cancelled');
+      });
     }
   });
 });
@@ -3350,7 +3352,7 @@ var template_root = zeta_dom_dom.root;
           state.resolve = resolve;
         });
         preventLeave(element, promise, function () {
-          return resolve(app.emit('preventLeave', element, null, true)).then(function (result) {
+          return util_resolve(app.emit('preventLeave', element, null, true)).then(function (result) {
             if (!result) {
               throw errorWithCode(navigationRejected);
             }
@@ -3516,76 +3518,83 @@ var template_root = zeta_dom_dom.root;
 
 
 function toDictionary(languages) {
-  if (languages) {
-    var dict = {};
-    each(languages, function (i, v) {
-      var key = v.toLowerCase();
-      dict[key] = v;
-      if (key.indexOf('-') > 0) {
-        dict[key.split('-')[0]] = v;
-      }
-    });
-    return dict;
-  }
+  var dict = {};
+  each(languages, function (i, v) {
+    var key = v.toLowerCase();
+    dict[key] = v;
+    if (key.indexOf('-') > 0) {
+      dict[key.split('-')[0]] = v;
+    }
+  });
+  return dict;
 }
-function getCanonicalValue(languages, value) {
-  if (languages && value) {
-    return languages[value.toLowerCase()];
-  }
-  return value;
+function getBrowserLanguages() {
+  return navigator.languages || [navigator.language || ''];
 }
-function detectLanguage(languages, defaultLanguage) {
-  var userLanguages = navigator.languages || [navigator.language || ''];
-  if (!languages) {
-    return userLanguages[0];
-  }
-  userLanguages = toDictionary(userLanguages);
-  if (isArray(languages)) {
-    languages = toDictionary(languages);
-  }
-  return single(userLanguages, function (v, i) {
+function _detectLanguage(languages) {
+  return single(toDictionary(getBrowserLanguages()), function (v, i) {
     return languages[i];
-  }) || defaultLanguage || util_keys(languages)[0];
+  });
 }
 /* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
   var languages = toDictionary(options.languages);
   var routeParam = app.route && options.routeParam;
-  var cookie = options.cookie && common_cookie(options.cookie, 86400000);
-  var language = getCanonicalValue(languages, routeParam && app.route[routeParam]) || getCanonicalValue(languages, cookie && cookie.get()) || (options.detectLanguage !== false ? detectLanguage : getCanonicalValue)(languages, options.defaultLanguage);
-  var setLanguage = function setLanguage(newLangauge) {
-    app.language = newLangauge;
+  var cookie = options.cookie && common_cookie(options.cookie, options.cookieOptions || 86400000);
+  var getCanonicalValue = function getCanonicalValue(v) {
+    return v && languages[v.toLowerCase()];
   };
-  defineObservableProperty(app, 'language', language, function (newLangauge) {
-    newLangauge = getCanonicalValue(languages, newLangauge) || language;
+  var language = getCanonicalValue(routeParam && app.route[routeParam]) || getCanonicalValue(cookie && cookie.get()) || options.detectLanguage !== false && _detectLanguage(languages) || getCanonicalValue(options.defaultLanguage) || single(languages, pipe) || '';
+  var beforepageload = [];
+  function commitLanguage(newLangauge) {
     if (cookie) {
       cookie.set(newLangauge);
     }
-    if (routeParam && appReady) {
-      app.route.set(routeParam, newLangauge.toLowerCase(), true);
-    }
     if (language !== newLangauge) {
       language = newLangauge;
+      app.language = language;
       if (options.reloadOnChange) {
         location.reload();
       }
     }
+  }
+  function _setLanguage(newLangauge, replace) {
+    newLangauge = getCanonicalValue(newLangauge) || language;
+    if (routeParam && appReady) {
+      return new Promise(function (resolve) {
+        always(app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true), resolve);
+        beforepageload.push(resolve);
+      });
+    } else {
+      commitLanguage(newLangauge);
+      return util_resolve(true);
+    }
+  }
+  defineObservableProperty(app, 'language', language, function (newLangauge) {
+    if (newLangauge !== language) {
+      _setLanguage(newLangauge);
+    }
     return language;
   });
   app.define({
-    setLanguage: setLanguage,
-    detectLanguage: detectLanguage
+    setLanguage: function setLanguage(newLangauge) {
+      return _setLanguage(newLangauge).then(function (resolved) {
+        return resolved && language === getCanonicalValue(newLangauge);
+      });
+    },
+    detectLanguage: function detectLanguage(languages, defaultLanguage) {
+      return languages ? _detectLanguage(toDictionary(languages)) || defaultLanguage || languages[0] || '' : getBrowserLanguages()[0];
+    }
   });
   if (routeParam) {
     app.route.watch(routeParam, function (newLangauge) {
-      var normalized = (getCanonicalValue(languages, newLangauge) || language).toLowerCase();
-      if (normalized !== newLangauge) {
-        app.route.replace(routeParam, normalized, true);
-      } else {
-        setLanguage(newLangauge);
-      }
+      _setLanguage(newLangauge, true);
     });
     app.on('ready', function () {
-      app.route.replace(routeParam, language.toLowerCase(), true);
+      _setLanguage(language, true);
+    });
+    app.on('beforepageload', function (e) {
+      commitLanguage(getCanonicalValue(e.route[routeParam]) || language);
+      combineFn(beforepageload.splice(0))(true);
     });
   }
 }));
@@ -3646,7 +3655,7 @@ function detectLanguage(languages, defaultLanguage) {
     },
     logout: function logout(nextPath, callback) {
       if (!app.loggedIn) {
-        return resolve();
+        return util_resolve();
       }
       callback = isFunction(callback || nextPath);
       nextPath = typeof nextPath === 'string' && nextPath;
@@ -3724,6 +3733,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
     bounce: false
   }, defaultOptions);
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
+  var pendingRestore = [];
   function getOptions(context) {
     return {
       handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
@@ -3846,33 +3856,37 @@ var SELECTOR_TARGET = '[scrollable-target]';
       }
       var savedOffset = {};
       var hasAsync = false;
-      var restoreScroll = function restoreScroll() {
-        var offset = savedOffset[history.state];
-        if (offset) {
-          scrollable.scrollTo(offset.x, offset.y, 0);
-        }
+      var restoreScrollAfter;
+      var restoreScroll = function restoreScroll(offset) {
+        scrollable.scrollTo(offset.x, offset.y, 0);
+        restoreScrollAfter = null;
       };
       cleanup.push(zeta_dom_dom.on('asyncStart', function () {
         hasAsync = true;
       }), zeta_dom_dom.on('asyncEnd', function () {
         hasAsync = false;
-        if (context.persistScroll) {
-          restoreScroll();
+        if (restoreScrollAfter) {
+          restoreScrollAfter();
         }
       }), app.on(container, 'scrollStart', function (e) {
         if (e.source !== 'script') {
           delete savedOffset[history.state];
         }
-      }, true), app.on('navigate', function (e) {
+      }, true), app.on('beforepageload', function (e) {
         savedOffset[e.oldStateId] = {
           x: scrollable.scrollLeft(),
           y: scrollable.scrollTop()
         };
-        setTimeout(function () {
-          if (!hasAsync && context.persistScroll) {
-            restoreScroll();
-          }
-        });
+        var offset = context.persistScroll && savedOffset[e.newStateId];
+        if (offset) {
+          pendingRestore.push(container);
+          restoreScrollAfter = restoreScroll.bind(0, offset);
+          setTimeout(function () {
+            if (!hasAsync) {
+              restoreScrollAfter();
+            }
+          });
+        }
       }));
     }
     initPageIndex.d = 0;
@@ -3940,7 +3954,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
     $scrollables.each(function (i, v) {
       getDirectiveComponent(v).scrollable.refresh();
     });
-    $scrollables.filter(':not([keep-scroll-offset])').scrollable('scrollTo', 0, 0);
+    $scrollables.filter(':not([keep-scroll-offset])').not(pendingRestore.splice(0)).scrollable('scrollTo', 0, 0);
   });
 
   // scroll-into-view animation trigger
@@ -4241,7 +4255,7 @@ function Route(app, routes, initialPath) {
   });
   watch(self, function () {
     if (!equal(state.current.params, self.toJSON())) {
-      catchAsync(routeCommitParams(self, state));
+      routeCommitParams(self, state);
     }
   });
   Object.preventExtensions(self);
@@ -4270,7 +4284,7 @@ definePrototype(Route, {
     var state = router_(self);
     if (typeof key === 'string' && arguments.length === 1) {
       if (key !== self.toString()) {
-        catchAsync(routeCommitParams(self, state, matchRouteByPath(state, key)));
+        routeCommitParams(self, state, matchRouteByPath(state, key));
       }
       return;
     }
@@ -4382,10 +4396,10 @@ function configureRouter(app, options) {
         return resolved;
       },
       get promise() {
-        return promise || (promise = resolve(resolved || new Promise(function (resolve_, reject_) {
+        return promise || (promise = new Promise(function (resolve_, reject_) {
           resolvePromise = resolve_;
           rejectPromise = reject_;
-        })));
+        }));
       },
       get pageInfo() {
         return page.info || (page.info = new PageInfo(page, pathNoQuery, freeze(route.parse(pathNoQuery))));
@@ -4416,6 +4430,7 @@ function configureRouter(app, options) {
       resolve: function resolve(result) {
         var previousState = lastState;
         resolved = result || createNavigateResult(id, state.path);
+        promise = util_resolve(resolved);
         resolvePromise(resolved);
         if (states[currentIndex] === state) {
           redirectCount = 0;
@@ -4434,6 +4449,7 @@ function configureRouter(app, options) {
         }
       },
       reject: function reject(error) {
+        catchAsync(promise);
         promise = null;
         rejectPromise(error || errorWithCode(navigationCancelled));
       },
@@ -4462,7 +4478,7 @@ function configureRouter(app, options) {
         });
       }
       return {
-        promise: resolve(createNavigateResult(state.page.id, newPath, null, false))
+        promise: util_resolve(createNavigateResult(state.page.id, newPath, null, false))
       };
     }
     return state;
@@ -4483,7 +4499,11 @@ function configureRouter(app, options) {
           setImmediateOnce(handlePathChange);
         }
       }, function () {
+        if (states[currentIndex] === currentState) {
+          route.set(previous.pathname);
+        }
         state.reject(errorWithCode(navigationRejected));
+        console.warn('Navigation cancelled');
       });
     } else if (callback() !== false) {
       if (snapshot && previous.done) {
@@ -4634,7 +4654,7 @@ function configureRouter(app, options) {
       return;
     }
     console.log('Nagivate', newPath);
-    var promise = resolve(emitNavigationEvent('navigate', state, lastState));
+    var promise = util_resolve(emitNavigationEvent('navigate', state, lastState));
     notifyAsync(router_root, promise);
     always(promise, function () {
       if (states[currentIndex] === state) {
