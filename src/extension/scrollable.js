@@ -23,7 +23,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     function getOptions(context) {
         return {
-            handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
+            handle: matchWord(context.dir, 'auto scrollbar content') || 'auto',
             hScroll: !matchWord(context.dir, 'y-only'),
             vScroll: !matchWord(context.dir, 'x-only'),
             pageItem: context.selector,
