@@ -19,6 +19,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
     var pendingRestore = new Set();
+    var currentTrack;
 
     function getOptions(context) {
         return {
@@ -37,7 +38,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
         cleanup.push(dom.on(container, {
             drag: function () {
-                beginDrag();
+                currentTrack = beginDrag();
             },
             getContentRect: function (e) {
                 if (e.target === container || containsOrEquals(container, $(e.target).closest(SELECTOR_TARGET)[0])) {
@@ -241,6 +242,9 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     $.scrollable.hook({
         scrollStart: function (e) {
+            if (currentTrack && e.trigger === 'gesture') {
+                currentTrack.preventScroll();
+            }
             app.emit('scrollStart', this, e, true);
         },
         scrollMove: function (e) {
