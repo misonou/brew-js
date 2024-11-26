@@ -304,16 +304,25 @@ describe('api', () => {
         expect(obj1.get).toBeInstanceOf(Function);
         expect(obj1.post).toBeInstanceOf(Function);
         expect(obj1.delete).toBeInstanceOf(Function);
+        expect(obj1.head).toBeInstanceOf(Function);
+        expect(obj1.patch).toBeInstanceOf(Function);
+        expect(obj1.put).toBeInstanceOf(Function);
 
         const obj2 = api({ methods: ['get', 'post'] });
         expect(obj2.get).toBeInstanceOf(Function);
         expect(obj2.post).toBeInstanceOf(Function);
         expect(obj2).not.toHaveProperty('delete');
+        expect(obj2).not.toHaveProperty('head');
+        expect(obj2).not.toHaveProperty('patch');
+        expect(obj2).not.toHaveProperty('put');
 
         const obj3 = api({ methods: 'get' });
         expect(obj3.get).toBeInstanceOf(Function);
         expect(obj3).not.toHaveProperty('post');
         expect(obj3).not.toHaveProperty('delete');
+        expect(obj3).not.toHaveProperty('head');
+        expect(obj3).not.toHaveProperty('patch');
+        expect(obj3).not.toHaveProperty('put');
     });
 
     it('should return a callback when first argument is a supported HTTP method', () => {

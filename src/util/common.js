@@ -199,7 +199,7 @@ export function cookie(name, expiry) {
  * @param {=} extra
  */
 export function api(options, extra) {
-    var httpMethods = 'get post put delete';
+    var httpMethods = 'get post put delete patch head';
     if (typeof options === 'string' && matchWord(options, httpMethods)) {
         extra = extend({}, typeof extra === 'string' ? { baseUrl: extra } : extra, { methods: options });
         return api(extra)[options];

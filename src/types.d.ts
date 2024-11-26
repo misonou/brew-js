@@ -9,7 +9,7 @@ declare namespace Brew {
     /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */
-    type HTTPMethod = 'get' | 'post' | 'put' | 'delete';
+    type HTTPMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head';
     type EventHandler<E extends string, M, T = Element> = Zeta.ZetaEventHandler<E, M, T>;
     type EventHandlers<E extends string, M, T = Element> = { [P in E]?: Zeta.ZetaEventHandler<P, M, T> };
     type ExtendedEventMap<E extends string, M> = E extends keyof M ? M : { [P in E]: P extends keyof M ? M[P] : Zeta.ZetaEvent<Element> };
