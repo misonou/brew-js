@@ -197,6 +197,9 @@ describe('app.navigate', () => {
         });
         expect(app.path).toEqual('/test-nested/default');
 
+        cleanupAfterTest(app.on('navigate', () => {
+            return app.navigate('/test-nested/default', true);
+        }));
         await expect(app.navigate('/test-nested')).resolves.toEqual({
             id: id,
             path: '/test-nested/default',

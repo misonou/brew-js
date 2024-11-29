@@ -4,7 +4,7 @@ import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import { notifyAsync } from "zeta-dom/domLock";
 import { watchElements } from "zeta-dom/observe";
-import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define } from "zeta-dom/util";
+import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define, any } from "zeta-dom/util";
 import { removeQueryAndHash, isSubPathOf, toSegments, withBaseUrl, toRelativeUrl } from "../util/path.js";
 import { groupLog } from "../util/console.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -55,7 +55,7 @@ function registerMatchPathElements(container) {
 function initHtmlRouter(app, options) {
     var newActiveElements;
 
-    app.on('navigate', function (e) {
+    app.on('beforepageload', function (e) {
         // find active elements i.e. with match-path that is equal to or is parent of the new path
         /** @type {HTMLElement[]} */
         newActiveElements = [root];
@@ -99,21 +99,21 @@ function initHtmlRouter(app, options) {
             }
         });
         // redirect to the default view if there is no match because every switch must have a match
-        $('[switch=""]').each(function (i, v) {
+        var bailOut = any(selectIncludeSelf('[switch=""]'), function (v) {
             if (isElementActive(v, newActiveElements)) {
                 var $children = $(v).children('[match-path]');
                 var currentMatched = $children.filter(function (i, v) {
                     return newActiveElements.indexOf(v) >= 0;
                 })[0];
                 if (!currentMatched) {
-                    app.navigate(fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path')), true);
-                    return false;
+                    return app.navigate(fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path')), true);
                 }
             }
         });
-    });
+        if (bailOut) {
+            return;
+        }
 
-    app.on('beforepageload', function (e) {
         var previousActiveElements = activeElements.slice(0);
         var oldPath = app.previousPath;
         var path = e.pathname;
