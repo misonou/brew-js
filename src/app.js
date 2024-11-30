@@ -1,5 +1,5 @@
 import $ from "./include/jquery.js";
-import dom from "zeta-dom/dom";
+import dom, { reportError } from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { bind } from "zeta-dom/domUtil";
 import { ZetaEventContainer } from "zeta-dom/events";
@@ -92,7 +92,7 @@ function App() {
             appReady = true;
             app.emit('ready');
         } else {
-            console.error(error);
+            reportError(error);
         }
     });
 }
