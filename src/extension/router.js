@@ -6,6 +6,7 @@ import { addExtension, appReady } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath, getQueryAndHash } from "../util/path.js";
 import { createObjectStorage } from "../util/storage.js";
+import { NavigationCancellationRequest } from "../domAction.js";
 import * as ErrorCode from "../errorCode.js";
 
 const _ = createPrivateStore();
@@ -450,7 +451,7 @@ function configureRouter(app, options) {
             }
         }
         if (appReady && !snapshot && locked(root)) {
-            cancelLock(root).then(function () {
+            cancelLock(root, new NavigationCancellationRequest(state.path)).then(function () {
                 if (states[currentIndex] === currentState && callback() !== false) {
                     setImmediateOnce(handlePathChange);
                 }

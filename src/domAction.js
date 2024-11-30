@@ -1,10 +1,10 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
-import { always, camel, catchAsync, combineFn, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
+import { always, camel, catchAsync, combineFn, definePrototype, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "zeta-dom/dom";
-import { cancelLock, locked, notifyAsync, subscribeAsync } from "zeta-dom/domLock";
+import { CancellationRequest, cancelLock, locked, notifyAsync, subscribeAsync } from "zeta-dom/domLock";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -20,6 +20,17 @@ const flyoutStates = createAutoCleanupMap(function (element, state) {
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 const asyncActions = {};
+
+export function NavigationCancellationRequest(path, external) {
+    CancellationRequest.call(this, 'navigate');
+    this.external = !!external;
+    this[external ? 'url' : 'path'] = path;
+}
+
+definePrototype(NavigationCancellationRequest, CancellationRequest, {
+    path: null,
+    url: null
+});
 
 function disableEvent(e) {
     e.preventDefault();
@@ -289,7 +300,7 @@ dom.ready.then(function () {
             app.navigate(dataHref || app.fromHref(href));
         } else if (locked(root)) {
             e.preventDefault();
-            cancelLock(root).then(function () {
+            cancelLock(root, new NavigationCancellationRequest(href, true)).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
                 window.open(dataHref || href, '_self', features.join(','));
             },  function () {

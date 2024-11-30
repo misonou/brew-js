@@ -1,7 +1,7 @@
 import { fireEvent } from "@testing-library/dom";
 import { jest } from "@jest/globals";
 import router from "src/extension/router";
-import { addAsyncAction, closeFlyout, isFlyoutOpen, openFlyout, toggleFlyout } from "src/domAction";
+import { addAsyncAction, closeFlyout, isFlyoutOpen, NavigationCancellationRequest, openFlyout, toggleFlyout } from "src/domAction";
 import dom from "zeta-dom/dom";
 import { lock } from "zeta-dom/domLock";
 import { catchAsync } from "zeta-dom/util";
@@ -606,6 +606,31 @@ describe('href directive', () => {
         });
         expect(app.path).toBe('/');
     });
+
+    it('should trigger lock cancellation with specific reason', async () => {
+        const cb = mockFn().mockRejectedValue(new Error());
+        const { link1, link2 } = await mount(`
+            <div>
+                <a id="link1" href="http://www.www.com/test"></a>
+                <a id="link2" href="/test"></a>
+            </div>
+        `);
+        catchAsync(lock(link1, new Promise(() => { }), cb));
+        catchAsync(lock(link2, new Promise(() => { }), cb));
+
+        await after(() => {
+            fireEvent.click(link1);
+        });
+        expect(cb).toBeCalledWith(expect.any(NavigationCancellationRequest));
+        expect(cb).toBeCalledWith(expect.objectContaining({ external: true, path: null, url: 'http://www.www.com/test' }));
+        cb.mockClear();
+
+        await after(() => {
+            fireEvent.click(link2);
+        });
+        expect(cb).toBeCalledWith(expect.any(NavigationCancellationRequest));
+        expect(cb).toBeCalledWith(expect.objectContaining({ external: false, path: '/test', url: null }));
+    });
 });
 
 describe('data-href directive', () => {
@@ -625,6 +650,20 @@ describe('data-href directive', () => {
         `);
         fireEvent.click(link);
         expect(app.fromHref).not.toBeCalled();
+    });
+
+    it('should trigger lock cancellation with specific reason', async () => {
+        const cb = mockFn().mockRejectedValue(new Error());
+        const { link } = await mount(`
+            <a id="link" data-href="/test"></a>
+        `);
+        catchAsync(lock(link, new Promise(() => { }), cb));
+
+        await after(() => {
+            fireEvent.click(link);
+        });
+        expect(cb).toBeCalledWith(expect.any(NavigationCancellationRequest));
+        expect(cb).toBeCalledWith(expect.objectContaining({ external: false, path: '/test', url: null }));
     });
 });
 

@@ -10,6 +10,7 @@ import dom from "zeta-dom/dom";
 import { createObjectStorage } from "src/util/storage";
 import { fireEvent, screen, waitFor } from "@testing-library/dom";
 import $ from "jquery";
+import { NavigationCancellationRequest } from "src/domAction";
 
 const { sameObject, stringMatching, objectContaining } = expect;
 const reStateId = /^[0-9a-z]{8}$/;
@@ -421,6 +422,8 @@ describe('app.navigate', () => {
         await expect(app.navigate('/base/test-1')).resolves.toBeTruthy();
         await expect(promise).rejects.toBeErrorWithCode('zeta/cancelled');
         expect(cb).toBeCalledTimes(1);
+        expect(cb).toBeCalledWith(expect.any(NavigationCancellationRequest));
+        expect(cb).toBeCalledWith(expect.objectContaining({ external: false, path: '/base/test-1', url: null }));
     });
 
     it('should cancel navigation when user prevented leaving', async () => {

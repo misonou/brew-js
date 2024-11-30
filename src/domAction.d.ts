@@ -1,3 +1,27 @@
+import { CancellationRequest } from "zeta-dom/domLock";
+
+export class NavigationCancellationRequest extends CancellationRequest {
+    /**
+     * Canonical string identifying type of the cancellation request.
+     */
+    readonly reason: 'navigate';
+    /**
+     * Gets whether user is navigating to another document that would cause
+     * current document to unload.
+     */
+    readonly external: boolean;
+    /**
+     * Gets the path user is navigating to within the single-page app.
+     * It always returns `null` when {@link NavigationCancellationRequest.external} is `true`.
+     */
+    readonly path: string | null;
+    /**
+     * Gets the URL of document user is navigating to.
+     * It always returns `null` when {@link NavigationCancellationRequest.external} is `false`.
+     */
+    readonly url: string | null;
+}
+
 /**
  * @param attr
  * @param callback
