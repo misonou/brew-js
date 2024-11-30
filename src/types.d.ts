@@ -37,7 +37,8 @@ declare namespace Brew {
         $$html?: string;
     }
 
-    interface VarContext extends Zeta.InheritedNode {
+    interface VarContext {
+        readonly element: HTMLElement;
         [s: string]: any;
     }
 

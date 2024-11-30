@@ -21,7 +21,7 @@ app.on(<HTMLDivElement>_, 'statechange', (_1: Brew.StateChangeEvent) => _);
 app.on('statechange', (e, self) => {
     expectTypeOf(self).toEqualTypeOf<Brew.AppInstance<{}>>();
     expectTypeOf(e.context).toEqualTypeOf<Brew.AppInstance<{}>>();
-    expectTypeOf(e.currentTarget).toEqualTypeOf<HTMLElement>();
+    expectTypeOf(e.currentTarget).toEqualTypeOf<Brew.AppInstance<{}>>();
 });
 app.on('div', 'statechange', (e, self) => {
     expectTypeOf(self).toEqualTypeOf<HTMLDivElement>();

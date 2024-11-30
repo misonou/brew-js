@@ -1,4 +1,4 @@
-import { bind } from "zeta-dom/domUtil";
+import { bind, bindOnce } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject, catchAsync } from "zeta-dom/util";
@@ -374,11 +374,12 @@ function configureRouter(app, options) {
             get storage() {
                 return storageMap || (storageMap = state.deleted ? new HistoryStorage() : getPersistedStorage(id, HistoryStorage));
             },
-            commit: function () {
+            commit: function (flag) {
                 pendingState = state;
                 page.last = state;
                 commitPath(state.path);
                 route.set(pathNoQuery);
+                return flag !== false && emitNavigationEvent('beforepageload', state, lastState, { deferrable: true });
             },
             reset: function () {
                 if (resolved) {
@@ -405,7 +406,7 @@ function configureRouter(app, options) {
                     lastState = state;
                     page.last = state;
                     commitPath(state.path);
-                    emitNavigationEvent(eventName, state, previousState, null, { handleable: false });
+                    emitNavigationEvent(eventName, state, previousState, { handleable: false });
                 }
             },
             reject: function (error) {
@@ -530,8 +531,7 @@ function configureRouter(app, options) {
             if (isLocked && isNative && history.state === state.id) {
                 // lock is cancelled before popstate event take place
                 // history.go has no effect until then
-                var unbind = bind(window, 'popstate', function () {
-                    unbind();
+                bindOnce(window, 'popstate', function () {
                     history.go(step);
                 });
                 return false;
@@ -573,8 +573,8 @@ function configureRouter(app, options) {
         return normalizePath(path, true);
     }
 
-    function emitNavigationEvent(eventName, state, lastState, data, options) {
-        data = extend({
+    function emitNavigationEvent(eventName, state, lastState, options) {
+        var data = {
             navigationType: state.type,
             pathname: state.path,
             oldPathname: lastState.path,
@@ -582,14 +582,12 @@ function configureRouter(app, options) {
             newStateId: state.id,
             route: state.pageInfo.params,
             data: state.page.data
-        }, data);
+        };
         return app.emit(eventName, data, options);
     }
 
     function processPageChange(state) {
-        var deferred = deferrable();
-        state.commit();
-        emitNavigationEvent('beforepageload', state, lastState, { waitFor: deferred.waitFor }, { handleable: false });
+        var deferred = state.commit();
         notifyAsync(root, deferred);
         always(deferred, function () {
             if (states[currentIndex] === state) {
@@ -779,7 +777,7 @@ function configureRouter(app, options) {
     if (initialState) {
         initialState = pushState(initialPath, true);
     }
-    states[currentIndex].commit();
+    states[currentIndex].commit(false);
 
     app.on('ready', function () {
         if (initialState && states[currentIndex] === initialState && includeQuery) {

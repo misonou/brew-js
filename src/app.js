@@ -40,7 +40,7 @@ function wrapEventHandlers(event, handler, noChildren) {
     if (noChildren) {
         handler = exactTargetWrapper(handler);
     }
-    return (event.indexOf(' ') >= 0 ? fill : kv)(event, handler);
+    return fill(event, handler);
 }
 
 function initExtension(app, name, deps, options, callback) {

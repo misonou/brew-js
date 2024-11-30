@@ -7,7 +7,7 @@ interface DirectiveTypeMap {
 }
 
 export interface ComponentContextEventMap {
-    destroy: Zeta.ZetaEvent;
+    destroy: Zeta.ZetaEvent<ComponentContext>;
 }
 
 export interface ComponentContext extends Zeta.ZetaEventDispatcher<ComponentContextEventMap, ComponentContext> {
