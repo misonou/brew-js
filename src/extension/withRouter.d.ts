@@ -6,6 +6,7 @@ declare namespace Brew {
         pageenter: PageEvent;
         pageleave: PageEvent;
         hashchange: HashChangeEvent;
+        pushstate: RouterEvent;
         popstate: PopStateEvent;
     }
 

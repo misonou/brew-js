@@ -603,6 +603,26 @@ describe('app.navigate', () => {
         ]);
     });
 
+    it('should emit pushstate event when only query string or hash has changed', async () => {
+        await app.navigate('/base/test-1');
+
+        const oldStateId = history.state;
+        const cb = mockFn();
+        bindEvent(app, 'pushstate', cb);
+
+        await app.navigate('/base/test-1?a=1');
+        const payload = {
+            navigationType: 'navigate',
+            pathname: '/base/test-1?a=1',
+            oldPathname: '/base/test-1',
+            oldStateId: oldStateId,
+            newStateId: history.state,
+        };
+        verifyCalls(cb, [
+            [objectContaining({ type: 'pushstate', ...payload }), _],
+        ]);
+    });
+
     it('should not emit pageload event when only query string or hash has changed', async () => {
         const cb = mockFn();
         await app.navigate('/base/test-1');

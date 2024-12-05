@@ -400,15 +400,12 @@ function configureRouter(app, options) {
                 promise = resolve(resolved);
                 resolvePromise(resolved);
                 if (states[currentIndex] === state) {
+                    var eventName = resolved.navigated ? 'pageload' : state.type === 'back_forward' ? 'popstate' : 'pushstate';
                     redirectCount = 0;
                     lastState = state;
                     page.last = state;
                     commitPath(state.path);
-                    if (resolved.navigated) {
-                        emitNavigationEvent('pageload', state, previousState, null, { handleable: false });
-                    } else if (state.type === 'back_forward') {
-                        emitNavigationEvent('popstate', state, previousState, null, { handleable: false });
-                    }
+                    emitNavigationEvent(eventName, state, previousState, null, { handleable: false });
                 }
             },
             reject: function (error) {
