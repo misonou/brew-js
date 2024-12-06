@@ -5,6 +5,7 @@ import { runCSSTransition } from "zeta-dom/cssUtil";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "zeta-dom/dom";
 import { CancellationRequest, cancelLock, locked, notifyAsync, subscribeAsync } from "zeta-dom/domLock";
+import { ZetaEventSource } from "zeta-dom/events";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import { app } from "./app.js";
 import { animateIn, animateOut } from "./anim.js";
@@ -61,6 +62,7 @@ export function isFlyoutOpen(selector) {
 export function closeFlyout(flyout, value) {
     /** @type {Element[]} */
     var elements = $(flyout || '[is-flyout].open').get();
+    var source = new ZetaEventSource();
     return resolveAll(elements.map(function (v) {
         var state = flyoutStates.get(v);
         if (!state) {
@@ -72,7 +74,7 @@ export function closeFlyout(flyout, value) {
                 if (flyoutStates.get(v) === state) {
                     flyoutStates.delete(v);
                     setClass(v, { open: false, closing: false, visible: false });
-                    dom.emit('flyouthide', v);
+                    dom.emit('flyouthide', v, null, { source });
                 }
             });
             state.closePromise = promise;
@@ -83,7 +85,7 @@ export function closeFlyout(flyout, value) {
             if (state.source) {
                 setClass(state.source, 'target-opened', false);
             }
-            dom.emit('flyoutclose', v);
+            dom.emit('flyoutclose', v, null, { source });
         }
         return promise;
     }));
@@ -303,7 +305,7 @@ dom.ready.then(function () {
             cancelLock(root, new NavigationCancellationRequest(href, true)).then(function () {
                 var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
                 window.open(dataHref || href, '_self', features.join(','));
-            },  function () {
+            }, function () {
                 console.warn('Navigation cancelled');
             });
         }

@@ -3,6 +3,7 @@ import _ from "jq-scrollable";
 import { combineFn, extend, makeArray, matchWord, setImmediate, setTimeoutOnce } from "zeta-dom/util";
 import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "zeta-dom/domUtil";
 import dom, { beginDrag, focusable } from "zeta-dom/dom";
+import { ZetaEventSource } from "zeta-dom/events";
 import { animateIn, animateOut } from "../anim.js";
 import { addExtension, isElementActive } from "../app.js";
 import { getDirectiveComponent, registerDirective } from "../directive.js";
@@ -20,6 +21,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
     var pendingRestore = new Set();
     var currentTrack;
+    var lastEventSource;
 
     function getOptions(context) {
         return {
@@ -240,21 +242,29 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         }
     });
 
+    function emitScrollableEvent(element, event, eventName) {
+        app.emit(eventName || event.type, element, event, {
+            bubbles: true,
+            source: lastEventSource
+        });
+    }
     $.scrollable.hook({
         scrollStart: function (e) {
             if (currentTrack && e.trigger === 'gesture') {
                 currentTrack.preventScroll();
             }
-            app.emit('scrollStart', this, e, true);
+            lastEventSource = new ZetaEventSource();
+            emitScrollableEvent(this, e);
         },
         scrollMove: function (e) {
-            app.emit('scrollMove', this, e, true);
+            emitScrollableEvent(this, e);
         },
         scrollEnd: function (e) {
-            app.emit('scrollStop', this, e, true);
+            emitScrollableEvent(this, e, 'scrollStop');
+            lastEventSource = null;
         },
         scrollProgressChange: function (e) {
-            app.emit('scrollProgressChange', this, e, true);
+            emitScrollableEvent(this, e);
         }
     });
 

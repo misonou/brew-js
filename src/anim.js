@@ -2,6 +2,7 @@ import $ from "./include/jquery.js";
 import { selectIncludeSelf, isVisible, matchSelector, containsOrEquals, getClass } from "zeta-dom/domUtil";
 import { each, throwNotFunction, setPromiseTimeout, noop, mapGet, delay, deferrable, executeOnce, isFunction, fill, makeArray } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
+import { ZetaEventSource } from "zeta-dom/events";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import dom from "zeta-dom/dom";
 import { getAttr, setAttr } from "./util/common.js";
@@ -29,6 +30,7 @@ function handleMutations(addNodes) {
 }
 
 function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+    var source = new ZetaEventSource();
     var animated = new Set();
     var sequences = new WeakMap();
     var deferred = deferrable();
@@ -36,9 +38,9 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
         console.warn('Animation might take longer than expected', { element, animationType, animationTrigger });
     });
     var fireEvent = executeOnce(function () {
-        dom.emit('animationstart', element, { animationType, animationTrigger }, true);
+        dom.emit('animationstart', element, { animationType, animationTrigger }, { bubbles: true, source });
         promise.then(function () {
-            dom.emit('animationcomplete', element, { animationType, animationTrigger }, true);
+            dom.emit('animationcomplete', element, { animationType, animationTrigger }, { bubbles: true, source });
         });
     });
     var animate = function (element) {
@@ -50,7 +52,7 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
         var effects = fill(getAttr(element, 'animate-in') || '', true);
         var ms = parseFloat($(element).css('transition-delay')) * 1000 || 0;
         fireEvent();
-        deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), dom.emit('animate' + animationType, element));
+        deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), dom.emit('animate' + animationType, element, null, { source }));
         each(customAnimation, function (i, v) {
             if (effects[i] || element.attributes[i]) {
                 var fn = v.bind(undefined, element, getAttr(element, i) || '');
