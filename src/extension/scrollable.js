@@ -9,6 +9,7 @@ import { getDirectiveComponent, registerDirective } from "../directive.js";
 
 const SELECTOR_SCROLLABLE = '[scrollable]';
 const SELECTOR_TARGET = '[scrollable-target]';
+const DATA_KEY = 'brew.scrollable';
 
 export default addExtension('scrollable', function (app, defaultOptions) {
     defaultOptions = extend({
@@ -32,6 +33,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     function initScrollable(container, context) {
         var scrollable = $.scrollable(container, extend({}, defaultOptions, getOptions(context)));
         var cleanup = [];
+        var persistKey;
 
         cleanup.push(dom.on(container, {
             drag: function () {
@@ -148,12 +150,23 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             );
         }
 
-        function initPersistScroll(enabled) {
-            if (!enabled || initPersistScroll.d++) {
+        function initPersistScroll(value) {
+            persistKey = value === '' ? DATA_KEY : value && (DATA_KEY + '.' + value);
+            if (!persistKey || !app.navigate || initPersistScroll.d++) {
                 return;
             }
-            var savedOffset = {};
             var timeout;
+
+            function getCurrentPosition() {
+                return {
+                    x: scrollable.scrollLeft(),
+                    y: scrollable.scrollTop()
+                };
+            }
+
+            function getPersistedPosition() {
+                return (app.navigationType === 'reload' ? app.cache : app.historyStorage.current).get(persistKey);
+            }
 
             function restoreScroll(offset) {
                 setImmediate(function retry(count) {
@@ -167,26 +180,37 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
             cleanup.push(
                 app.on(container, 'scrollStart', function (e) {
-                    if (e.source !== 'script') {
-                        delete savedOffset[history.state];
+                    if (persistKey && e.source !== 'script') {
+                        app.historyStorage.current.delete(persistKey);
                     }
                 }, true),
                 app.on('beforepageload', function (e) {
-                    savedOffset[e.oldStateId] = {
-                        x: scrollable.scrollLeft(),
-                        y: scrollable.scrollTop()
-                    };
+                    var previous = persistKey && e.oldStateId && app.historyStorage.for(e.oldStateId);
+                    if (previous) {
+                        previous.set(persistKey, getCurrentPosition());
+                    }
                 }),
-                app.on('pageload', function (e) {
-                    var offset = context.persistScroll && savedOffset[e.newStateId];
+                app.on('pageload', function () {
+                    var offset = persistKey && getPersistedPosition();
                     if (offset) {
                         restoreScroll(offset);
                     }
                     pendingRestore[offset ? 'add' : 'delete'](container);
                     clearInterval(timeout);
                 }),
+                app.on('unload', function () {
+                    if (persistKey) {
+                        var offset = getCurrentPosition();
+                        app.historyStorage.current.set(persistKey, offset);
+                        app.cache.set(persistKey, offset);
+                    }
+                }),
                 pendingRestore.delete.bind(pendingRestore, container)
             );
+            var initialOffset = persistKey && getPersistedPosition();
+            if (initialOffset) {
+                restoreScroll(initialOffset);
+            }
         }
 
         initPageIndex.d = 0;
@@ -211,7 +235,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             paged: { attribute: 'scroller-snap-page' },
             varname: { attribute: 'scroller-state' },
             selector: { attribute: 'scroller-page' },
-            persistScroll: { attribute: 'persist-scroll', type: 'boolean' }
+            persistScroll: { attribute: 'persist-scroll' }
         }
     });
 

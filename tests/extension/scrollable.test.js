@@ -212,6 +212,34 @@ describe('persist-scroll directive', () => {
         await delay();
         expect(scrollable).toMatchObject({ scrollX: 75, scrollY: 75 });
     });
+
+    it('should restore scroll position by persist key', async () => {
+        const { root1, root2 } = await initBody(`
+            <div scrollable persist-scroll="scroller1" id="root1" x-rect="0 0 100 100">
+                <div scrollable-target x-rect="0 0 200 200"></div>
+            </div>
+            <div scrollable persist-scroll="scroller2" id="root2" x-rect="0 0 100 100">
+                <div scrollable-target x-rect="0 0 200 200"></div>
+            </div>
+        `);
+        const scrollable1 = getDirectiveComponent(root1).scrollable;
+        const scrollable2 = getDirectiveComponent(root2).scrollable;
+        scrollable1.scrollTo(50, 50);
+        scrollable2.scrollTo(25, 25);
+        expect(scrollable1).toMatchObject({ scrollX: 50, scrollY: 50 });
+        expect(scrollable2).toMatchObject({ scrollX: 25, scrollY: 25 });
+
+        await app.navigate('/foo');
+        scrollable1.scrollTo(75, 75);
+        scrollable2.scrollTo(85, 85);
+        expect(scrollable1).toMatchObject({ scrollX: 75, scrollY: 75 });
+        expect(scrollable2).toMatchObject({ scrollX: 85, scrollY: 85 });
+
+        await nativeHistoryBack();
+        await delay();
+        expect(scrollable1).toMatchObject({ scrollX: 50, scrollY: 50 });
+        expect(scrollable2).toMatchObject({ scrollX: 25, scrollY: 25 });
+    });
 });
 
 describe('scroller-page directive', () => {
