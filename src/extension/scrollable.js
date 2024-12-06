@@ -1,6 +1,6 @@
 import $ from "../include/jquery.js";
 import _ from "jq-scrollable";
-import { combineFn, extend, matchWord, setTimeoutOnce } from "zeta-dom/util";
+import { combineFn, extend, makeArray, matchWord, setImmediate, setTimeoutOnce } from "zeta-dom/util";
 import { bind, containsOrEquals, getClass, getRect, isVisible, rectIntersects, selectIncludeSelf } from "zeta-dom/domUtil";
 import dom, { beginDrag, focusable } from "zeta-dom/dom";
 import { animateIn, animateOut } from "../anim.js";
@@ -17,7 +17,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
     }, defaultOptions);
 
     var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-    var pendingRestore = [];
+    var pendingRestore = new Set();
 
     function getOptions(context) {
         return {
@@ -153,22 +153,19 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 return;
             }
             var savedOffset = {};
-            var hasAsync = false;
-            var restoreScrollAfter;
-            var restoreScroll = function (offset) {
-                scrollable.scrollTo(offset.x, offset.y, 0);
-                restoreScrollAfter = null;
-            };
-            cleanup.push(
-                dom.on('asyncStart', function () {
-                    hasAsync = true;
-                }),
-                dom.on('asyncEnd', function () {
-                    hasAsync = false;
-                    if (restoreScrollAfter) {
-                        restoreScrollAfter();
+            var timeout;
+
+            function restoreScroll(offset) {
+                setImmediate(function retry(count) {
+                    if (count >= 20 || (scrollable.scrollMaxX >= offset.x && scrollable.scrollMaxY >= offset.y)) {
+                        scrollable.scrollTo(offset.x, offset.y, 0);
+                        return;
                     }
-                }),
+                    timeout = setTimeout(retry.bind(0, (count || 0) + 1), 100);
+                });
+            }
+
+            cleanup.push(
                 app.on(container, 'scrollStart', function (e) {
                     if (e.source !== 'script') {
                         delete savedOffset[history.state];
@@ -179,17 +176,16 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                         x: scrollable.scrollLeft(),
                         y: scrollable.scrollTop()
                     };
+                }),
+                app.on('pageload', function (e) {
                     var offset = context.persistScroll && savedOffset[e.newStateId];
                     if (offset) {
-                        pendingRestore.push(container);
-                        restoreScrollAfter = restoreScroll.bind(0, offset);
-                        setTimeout(function () {
-                            if (!hasAsync) {
-                                restoreScrollAfter();
-                            }
-                        });
+                        restoreScroll(offset);
                     }
-                })
+                    pendingRestore[offset ? 'add' : 'delete'](container);
+                    clearInterval(timeout);
+                }),
+                pendingRestore.delete.bind(pendingRestore, container)
             );
         }
 
@@ -249,7 +245,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         $scrollables.each(function (i, v) {
             getDirectiveComponent(v).scrollable.refresh();
         });
-        $scrollables.filter(':not([keep-scroll-offset])').not(pendingRestore.splice(0)).scrollable('scrollTo', 0, 0);
+        $scrollables.filter(':not([keep-scroll-offset])').not(makeArray(pendingRestore)).scrollable('scrollTo', 0, 0);
     });
 
     // scroll-into-view animation trigger
