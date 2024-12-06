@@ -193,6 +193,25 @@ describe('persist-scroll directive', () => {
         expect(scrollable).toMatchObject({ scrollX: 50, scrollY: 50 });
     });
 
+    it('should restore scroll position between snapshot', async () => {
+        const { root } = await initBody(`
+            <div scrollable persist-scroll id="root" x-rect="0 0 100 100">
+                <div scrollable-target x-rect="0 0 200 200"></div>
+            </div>
+        `);
+        const scrollable = getDirectiveComponent(root).scrollable;
+        scrollable.scrollTo(50, 50);
+        expect(scrollable).toMatchObject({ scrollX: 50, scrollY: 50 });
+
+        await app.snapshot();
+        scrollable.scrollTo(75, 75);
+        expect(scrollable).toMatchObject({ scrollX: 75, scrollY: 75 });
+
+        await nativeHistoryBack();
+        await delay();
+        expect(scrollable).toMatchObject({ scrollX: 50, scrollY: 50 });
+    });
+
     it('should not restore scroll position when directive is not present', async () => {
         const { root } = await initBody(`
             <div scrollable persist-scroll id="root" x-rect="0 0 100 100">

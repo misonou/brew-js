@@ -184,13 +184,13 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                         app.historyStorage.current.delete(persistKey);
                     }
                 }, true),
-                app.on('beforepageload', function (e) {
+                app.on('beforepageload popstate pushstate', function (e) {
                     var previous = persistKey && e.oldStateId && app.historyStorage.for(e.oldStateId);
                     if (previous) {
                         previous.set(persistKey, getCurrentPosition());
                     }
                 }),
-                app.on('pageload', function () {
+                app.on('pageload popstate', function () {
                     var offset = persistKey && getPersistedPosition();
                     if (offset) {
                         restoreScroll(offset);
