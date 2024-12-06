@@ -686,6 +686,9 @@ function configureRouter(app, options) {
         get previousPath() {
             return (states[currentIndex].previous || '').path || null;
         },
+        get navigationType() {
+            return (pendingState || lastState).type;
+        },
         get page() {
             return (pendingState || lastState).pageInfo;
         },

@@ -1497,6 +1497,40 @@ describe('app.page', () => {
     });
 });
 
+describe('app.navigationType', () => {
+    it('should return navigate after navigation', async () => {
+        await app.navigate('/foo');
+        expect(app.navigationType).toBe('navigate');
+
+        await app.navigate('/bar', true);
+        expect(app.navigationType).toBe('navigate');
+    });
+
+    it('should return back_forward after navigating back', async () => {
+        await app.navigate('/foo');
+        await app.back();
+        expect(app.navigationType).toBe('back_forward');
+    });
+
+    it('should update between navigate and beforepageload event', async () => {
+        await app.navigate('/test-1');
+
+        const cb = mockFn();
+        cleanupAfterTest(app.on('navigate', () => cb('navigate event', app.navigationType)));
+        cleanupAfterTest(app.on('beforepageload', () => cb('beforepageload event', app.navigationType)));
+
+        const promise = app.back();
+        cb('after app.navigate', app.navigationType);
+        await promise;
+
+        verifyCalls(cb, [
+            ['after app.navigate', 'navigate'],
+            ['navigate event', 'navigate'],
+            ['beforepageload event', 'back_forward']
+        ]);
+    });
+});
+
 describe('matchRoute', () => {
     it('should match path without optional segments', () => {
         expect(matchRoute('/foo/{id?}', '/foo')).toBeTruthy();

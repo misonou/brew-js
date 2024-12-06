@@ -209,6 +209,11 @@ declare namespace Brew {
          * Gets information of and performs actions on current page.
          */
         readonly page: PageInfo
+        /**
+         * Gets how the current page is navigated.
+         * @see {@link RouterEvent.navigationType}.
+         */
+        readonly navigationType: NavigationType;
 
         /**
          * Navigate to the specified path.

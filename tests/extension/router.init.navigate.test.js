@@ -39,6 +39,7 @@ describe('router', () => {
         expect(app.canNavigateForward).toBe(false);
         expect(app.canNavigateBack).toBe(false);
         expect(app.previousPath).toBeNull();
+        expect(app.navigationType).toBe('navigate');
         expect(history.state).not.toBe(stateId1);
         expect(cb).toBeCalledWith(expect.objectContaining({
             navigationType: 'navigate',
