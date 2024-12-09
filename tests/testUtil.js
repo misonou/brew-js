@@ -54,9 +54,9 @@ export async function mount(html, callback) {
     return elm;
 }
 
-export function waitForEvent(target, event) {
+export function waitForEvent(target, ...args) {
     return new Promise(resolve => {
-        cleanup(target.on(event, resolve));
+        cleanup(target.on(...args, resolve));
     });
 }
 

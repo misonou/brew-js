@@ -277,12 +277,19 @@ export default addExtension(true, 'template', function (app) {
                 valid = dom.emit('validate', form) || form.checkValidity();
                 params = [getFormValues(form)];
             }
-            return resolveAll(valid, function (valid) {
+            var promise = resolveAll(valid, function (valid) {
                 if (!valid) {
                     throw errorWithCode(ErrorCode.validationFailed);
                 }
                 return app[method].apply(app, params);
             });
+            var returnVar = getAttr(self, 'method-return');
+            if (returnVar) {
+                return promise.then(function (data) {
+                    setVar(self, returnVar, data);
+                });
+            }
+            return promise;
         }
     });
 

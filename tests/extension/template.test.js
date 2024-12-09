@@ -1,6 +1,6 @@
 import $ from "jquery";
 import { jest } from "@jest/globals";
-import { uniqueName, root, after, mount, initApp, mockFn, verifyCalls, delay } from "../testUtil";
+import { uniqueName, root, after, mount, initApp, mockFn, verifyCalls, delay, waitForEvent } from "../testUtil";
 import { getVar, setVar } from "src/var";
 import template from "src/extension/template";
 import { setBaseUrl } from "src/util/path";
@@ -607,6 +607,18 @@ describe('context-method directive', () => {
         `);
         await after(() => fireEvent.click(button));
         verifyCalls(app.testMethod, [[]]);
+    });
+
+    it('should set returned data to variable specified by method-return attribute', async () => {
+        const elm = await mount(`
+            <div var="{ foo: test bar: null }" context-method="test-method" method-return="bar"></div>
+        `);
+        expect(getVar(elm, 'bar')).toBeNull();
+
+        app.testMethod.mockReturnValueOnce(Promise.resolve(42));
+        fireEvent.click(elm);
+        await waitForEvent(app, elm, 'statechange');
+        expect(getVar(elm, 'bar')).toBe(42)
     });
 
     it('should validate form by native method', async () => {
