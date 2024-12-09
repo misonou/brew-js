@@ -4,7 +4,7 @@ import * as commonUtil from "./util/common.js";
 import * as storageUtil from "./util/storage.js";
 import * as animation from "./anim.js";
 import * as ErrorCode from "./errorCode.js";
-import { declareVar, evalAttr, getVar, setVar } from "./var.js";
+import { declareVar, evalAttr, getVar, setVar, resetVar, getVarScope } from "./var.js";
 import { addRenderer, addTemplate, addTransformer, handleAsync, preventLeave } from "./dom.js";
 import * as domAction from "./domAction.js";
 import brew, { addDetect, addExtension, install, isElementActive } from "./app.js";
@@ -21,8 +21,10 @@ const method = {
     ...domAction,
     getDirectiveComponent,
     registerDirective,
+    getVarScope,
     getVar,
     setVar,
+    resetVar,
     declareVar,
     evalAttr,
     isElementActive,
