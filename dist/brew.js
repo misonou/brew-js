@@ -1,4 +1,4 @@
-/*! brew-js v0.6.15 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.6.16 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1123,7 +1123,7 @@ function common_cookie(name, expiry) {
  * @param {=} extra
  */
 function api(options, extra) {
-  var httpMethods = 'get post put delete';
+  var httpMethods = 'get post put delete patch head';
   if (typeof options === 'string' && matchWord(options, httpMethods)) {
     extra = extend({}, typeof extra === 'string' ? {
       baseUrl: extra
@@ -3081,8 +3081,10 @@ var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpre
 }, common_namespaceObject), storage_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getDirectiveComponent: getDirectiveComponent,
   registerDirective: registerDirective,
+  getVarScope: getVarScope,
   getVar: getVar,
   setVar: setVar,
+  resetVar: resetVar,
   declareVar: declareVar,
   evalAttr: evalAttr,
   isElementActive: isElementActive,
@@ -3393,12 +3395,19 @@ var template_root = zeta_dom_dom.root;
         valid = zeta_dom_dom.emit('validate', form) || form.checkValidity();
         params = [getFormValues(form)];
       }
-      return resolveAll(valid, function (valid) {
+      var promise = resolveAll(valid, function (valid) {
         if (!valid) {
           throw errorWithCode(validationFailed);
         }
         return app[method].apply(app, params);
       });
+      var returnVar = getAttr(self, 'method-return');
+      if (returnVar) {
+        return promise.then(function (data) {
+          setVar(self, returnVar, data);
+        });
+      }
+      return promise;
     }
   });
   matchElement('form[form-var]', function (form) {
@@ -3727,13 +3736,14 @@ var external_jq_scrollable_ = __webpack_require__(649);
 
 var SELECTOR_SCROLLABLE = '[scrollable]';
 var SELECTOR_TARGET = '[scrollable-target]';
+var DATA_KEY = 'brew.scrollable';
 /* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     content: '[scrollable-target]:not(.disabled)',
     bounce: false
   }, defaultOptions);
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
-  var pendingRestore = [];
+  var pendingRestore = new Set();
   function getOptions(context) {
     return {
       handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
@@ -3746,6 +3756,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
   function initScrollable(container, context) {
     var scrollable = jquery.scrollable(container, extend({}, defaultOptions, getOptions(context)));
     var cleanup = [];
+    var persistKey;
     cleanup.push(zeta_dom_dom.on(container, {
       drag: function drag() {
         beginDrag();
@@ -3850,44 +3861,57 @@ var SELECTOR_TARGET = '[scrollable-target]';
         }
       }));
     }
-    function initPersistScroll(enabled) {
-      if (!enabled || initPersistScroll.d++) {
+    function initPersistScroll(value) {
+      persistKey = value === '' ? DATA_KEY : value && DATA_KEY + '.' + value;
+      if (!persistKey || !app.navigate || initPersistScroll.d++) {
         return;
       }
-      var savedOffset = {};
-      var hasAsync = false;
-      var restoreScrollAfter;
-      var restoreScroll = function restoreScroll(offset) {
-        scrollable.scrollTo(offset.x, offset.y, 0);
-        restoreScrollAfter = null;
-      };
-      cleanup.push(zeta_dom_dom.on('asyncStart', function () {
-        hasAsync = true;
-      }), zeta_dom_dom.on('asyncEnd', function () {
-        hasAsync = false;
-        if (restoreScrollAfter) {
-          restoreScrollAfter();
-        }
-      }), app.on(container, 'scrollStart', function (e) {
-        if (e.source !== 'script') {
-          delete savedOffset[history.state];
-        }
-      }, true), app.on('beforepageload', function (e) {
-        savedOffset[e.oldStateId] = {
+      var timeout;
+      function getCurrentPosition() {
+        return {
           x: scrollable.scrollLeft(),
           y: scrollable.scrollTop()
         };
-        var offset = context.persistScroll && savedOffset[e.newStateId];
-        if (offset) {
-          pendingRestore.push(container);
-          restoreScrollAfter = restoreScroll.bind(0, offset);
-          setTimeout(function () {
-            if (!hasAsync) {
-              restoreScrollAfter();
-            }
-          });
+      }
+      function getPersistedPosition() {
+        return (app.navigationType === 'reload' ? app.cache : app.historyStorage.current).get(persistKey);
+      }
+      function restoreScroll(offset) {
+        setImmediate(function retry(count) {
+          if (count >= 20 || scrollable.scrollMaxX >= offset.x && scrollable.scrollMaxY >= offset.y) {
+            scrollable.scrollTo(offset.x, offset.y, 0);
+            return;
+          }
+          timeout = setTimeout(retry.bind(0, (count || 0) + 1), 100);
+        });
+      }
+      cleanup.push(app.on(container, 'scrollStart', function (e) {
+        if (persistKey && e.source !== 'script') {
+          app.historyStorage.current.delete(persistKey);
         }
-      }));
+      }, true), app.on('beforepageload popstate pushstate', function (e) {
+        var previous = persistKey && e.oldStateId && app.historyStorage.for(e.oldStateId);
+        if (previous) {
+          previous.set(persistKey, getCurrentPosition());
+        }
+      }), app.on('pageload popstate', function () {
+        var offset = persistKey && getPersistedPosition();
+        if (offset) {
+          restoreScroll(offset);
+        }
+        pendingRestore[offset ? 'add' : 'delete'](container);
+        clearInterval(timeout);
+      }), app.on('unload', function () {
+        if (persistKey) {
+          var offset = getCurrentPosition();
+          app.historyStorage.current.set(persistKey, offset);
+          app.cache.set(persistKey, offset);
+        }
+      }), pendingRestore.delete.bind(pendingRestore, container));
+      var initialOffset = persistKey && getPersistedPosition();
+      if (initialOffset) {
+        restoreScroll(initialOffset);
+      }
     }
     initPageIndex.d = 0;
     initPersistScroll.d = 0;
@@ -3919,8 +3943,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
         attribute: 'scroller-page'
       },
       persistScroll: {
-        attribute: 'persist-scroll',
-        type: 'boolean'
+        attribute: 'persist-scroll'
       }
     }
   });
@@ -3954,7 +3977,7 @@ var SELECTOR_TARGET = '[scrollable-target]';
     $scrollables.each(function (i, v) {
       getDirectiveComponent(v).scrollable.refresh();
     });
-    $scrollables.filter(':not([keep-scroll-offset])').not(pendingRestore.splice(0)).scrollable('scrollTo', 0, 0);
+    $scrollables.filter(':not([keep-scroll-offset])').not(makeArray(pendingRestore)).scrollable('scrollTo', 0, 0);
   });
 
   // scroll-into-view animation trigger
@@ -4433,19 +4456,14 @@ function configureRouter(app, options) {
         promise = util_resolve(resolved);
         resolvePromise(resolved);
         if (states[currentIndex] === state) {
+          var eventName = resolved.navigated ? 'pageload' : state.type === 'back_forward' ? 'popstate' : 'pushstate';
           redirectCount = 0;
           lastState = state;
           page.last = state;
           commitPath(state.path);
-          if (resolved.navigated) {
-            emitNavigationEvent('pageload', state, previousState, null, {
-              handleable: false
-            });
-          } else if (state.type === 'back_forward') {
-            emitNavigationEvent('popstate', state, previousState, null, {
-              handleable: false
-            });
-          }
+          emitNavigationEvent(eventName, state, previousState, null, {
+            handleable: false
+          });
         }
       },
       reject: function reject(error) {
@@ -4729,6 +4747,9 @@ function configureRouter(app, options) {
     },
     get previousPath() {
       return (states[currentIndex].previous || '').path || null;
+    },
+    get navigationType() {
+      return (pendingState || lastState).type;
     },
     get page() {
       return (pendingState || lastState).pageInfo;
