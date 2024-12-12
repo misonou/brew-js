@@ -18,11 +18,11 @@
   "homepage": "https://misonou.github.io",
   "repository": "github:misonou/brew-js",
   "dependencies": {
-    "jq-scrollable": "^1.12.0",
+    "jq-scrollable": "^1.15.6",
     "jquery": "^3.0.0",
     "lz-string": "^1.5.0",
     "waterpipe": "^2.7.0",
-    "zeta-dom": ">=0.4.13"
+    "zeta-dom": ">=0.6.0"
   },
   "optionalDependencies": {
     "promise-polyfill": "^8.2.0"
