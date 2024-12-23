@@ -29,6 +29,14 @@ module.exports = class extends JSDOMEnvironment {
         super(config, options);
     }
 
+    async setup() {
+        await super.setup();
+        this.global.fetch = fetch;
+        this.global.Request = Request;
+        this.global.Response = Response;
+        this.global.__hostRealm__ = { FormData, Blob, ArrayBuffer, DOMException, SyntaxError };
+    }
+
     async handleTestEvent(event) {
         if (event.name === 'test_start') {
             skipTestByVersion(event);

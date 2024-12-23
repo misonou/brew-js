@@ -1,5 +1,6 @@
 import { define } from "zeta-dom/util";
 import * as path from "./util/path.js";
+import * as fetch from "./util/fetch.js";
 import * as commonUtil from "./util/common.js";
 import * as storageUtil from "./util/storage.js";
 import * as animation from "./anim.js";
@@ -17,6 +18,7 @@ const method = {
     ...commonUtil,
     ...storageUtil,
     ...path,
+    ...fetch,
     ...animation,
     ...domAction,
     getDirectiveComponent,

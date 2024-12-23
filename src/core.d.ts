@@ -5,6 +5,7 @@ import { getDirectiveComponent, registerDirective } from "./directive.js";
 import defaults from "./defaults";
 
 import * as path from "./util/path";
+import * as fetch from "./util/fetch";
 import * as commonUtil from "./util/common";
 import * as storageUtil from "./util/storage";
 import * as animation from "./anim";
@@ -25,7 +26,7 @@ export interface ExtensionEventMap<T> {
     [SYMBOL_EVENT]: T;
 }
 
-type Util = typeof commonUtil & typeof storageUtil & typeof path & typeof animation & typeof domAction & {
+type Util = typeof commonUtil & typeof storageUtil & typeof path & typeof fetch & typeof animation & typeof domAction & {
     ErrorCode: typeof ErrorCode,
     defaults: typeof defaults,
     getDirectiveComponent: typeof getDirectiveComponent,
