@@ -1,4 +1,4 @@
-/*! brew-js v0.6.16 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.0 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -648,6 +648,14 @@ __webpack_require__.d(errorCode_namespaceObject, {
   validationFailed: function() { return validationFailed; }
 });
 
+// NAMESPACE OBJECT: ./src/util/fetch.js
+var fetch_namespaceObject = {};
+__webpack_require__.r(fetch_namespaceObject);
+__webpack_require__.d(fetch_namespaceObject, {
+  createApiClient: function() { return createApiClient; },
+  peekBody: function() { return peekBody; }
+});
+
 // NAMESPACE OBJECT: ./src/util/common.js
 var common_namespaceObject = {};
 __webpack_require__.r(common_namespaceObject);
@@ -696,6 +704,7 @@ __webpack_require__.d(anim_namespaceObject, {
 var domAction_namespaceObject = {};
 __webpack_require__.r(domAction_namespaceObject);
 __webpack_require__.d(domAction_namespaceObject, {
+  NavigationCancellationRequest: function() { return NavigationCancellationRequest; },
   addAsyncAction: function() { return addAsyncAction; },
   closeFlyout: function() { return closeFlyout; },
   isFlyoutOpen: function() { return isFlyoutOpen; },
@@ -739,6 +748,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   iequal = _lib$util.iequal,
   is = _lib$util.is,
   isArray = _lib$util.isArray,
+  isError = _lib$util.isError,
   isFunction = _lib$util.isFunction,
   isPlainObject = _lib$util.isPlainObject,
   isThenable = _lib$util.isThenable,
@@ -896,6 +906,126 @@ function toSegments(path) {
   path = normalizePath(path);
   return path === '/' ? [] : path.slice(1).split('/').map(decodeURIComponent);
 }
+;// CONCATENATED MODULE: ./src/errorCode.js
+var networkError = 'brew/network-error';
+var resourceError = 'brew/resource-error';
+var apiError = 'brew/api-error';
+var validationFailed = 'brew/validation-failed';
+var navigationCancelled = 'brew/navigation-cancelled';
+var navigationRejected = 'brew/navigation-rejected';
+var timeout = "brew/timeout";
+;// CONCATENATED MODULE: ./src/util/fetch.js
+
+
+
+var HEADER_CONTENT_TYPE = 'content-type';
+function fetchImpl(request) {
+  return fetch(request).catch(function (e) {
+    if (isError(e) && e.name === 'TypeError') {
+      return Response.error();
+    }
+    throw e;
+  });
+}
+function readBody(input) {
+  var contentType = input.headers.get(HEADER_CONTENT_TYPE) || '';
+  var pos = contentType.indexOf(';');
+  if (pos > 0) {
+    contentType = contentType.slice(0, pos);
+  }
+  if (contentType === 'application/json') {
+    return input.json();
+  }
+  if (contentType === 'multipart/form-data' || contentType === 'application/x-www-form-urlencoded') {
+    return input.formData();
+  }
+  if (contentType.slice(0, 5) === 'text/') {
+    return input.text();
+  }
+  return input.blob();
+}
+function createRequest(baseUrl, method, path, body, init) {
+  if (typeof path === 'string') {
+    method = method.toUpperCase();
+    init = extend({
+      method: method,
+      body: body
+    }, init);
+    init.headers = extend({}, init.headers);
+    if (method !== 'GET' && method !== 'HEAD' && (isUndefinedOrNull(body) || isPlainObject(body) || isArray(body))) {
+      init.body = JSON.stringify(body || {});
+      init.headers[HEADER_CONTENT_TYPE] = 'application/json';
+    }
+  } else {
+    init = path;
+    path = method;
+  }
+  if (typeof path === 'string') {
+    path = combinePath(baseUrl, path);
+  }
+  return new Request(path, init);
+}
+function executeRequest(self, fetch, request, traps) {
+  return fetch(request.clone()).then(function (response) {
+    var status = response.status;
+    var handleError = function handleError(code, error, message, data) {
+      error = errorWithCode(code, message, {
+        data: data,
+        error: error,
+        status: status
+      });
+      data = (traps.error || noop)(error, response, request, self);
+      if (data !== undefined) {
+        return data;
+      }
+      throw error;
+    };
+    if (status === 0) {
+      return handleError(networkError, null, '');
+    }
+    if (status !== 204) {
+      return readBody(response).then(function (data) {
+        return response.ok ? (traps.data || pipe)(data, response, request, self) : handleError(apiError, null, response.statusText, data);
+      }, function (error) {
+        return handleError(apiError, error, error.message);
+      });
+    }
+  });
+}
+function createApiClient(baseUrl, traps) {
+  var fetch = fetchImpl;
+  var execute = function execute(request) {
+    return executeRequest(client, fetch, request, traps || {});
+  };
+  var client = function client(method, path, body, init) {
+    var request = createRequest(baseUrl, method, path, body, init);
+    return traps && traps.request ? makeAsync(traps.request)(request, execute) : execute(request);
+  };
+  client.use = function (callback) {
+    var next = fetch;
+    fetch = function fetch(req) {
+      return makeAsync(callback)(req, next);
+    };
+  };
+  each('head get post put patch delete', function (i, v) {
+    client[v] = function (path, body, options) {
+      if (i < 2) {
+        options = body;
+        body = undefined;
+      }
+      return client(v, path, body, options);
+    };
+  });
+  return client;
+}
+function peekBody(input) {
+  // Request.body was added relatively recently and not yet supported in Firefox
+  // therefore also need to check for Request.method
+  if (input.body === null || input.method === 'GET' || input.method === 'HEAD') {
+    return util_resolve();
+  }
+  return readBody(input.clone());
+}
 // EXTERNAL MODULE: external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"}
 var external_commonjs_jquery_commonjs2_jquery_amd_jquery_root_jQuery_ = __webpack_require__(914);
 ;// CONCATENATED MODULE: ./src/include/jquery.js
@@ -912,6 +1042,7 @@ var _lib$css = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_z
 
 var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.util,
   bind = domUtil_lib$util.bind,
+  bindOnce = domUtil_lib$util.bindOnce,
   containsOrEquals = domUtil_lib$util.containsOrEquals,
   createNodeIterator = domUtil_lib$util.createNodeIterator,
   dispatchDOMMouseEvent = domUtil_lib$util.dispatchDOMMouseEvent,
@@ -925,14 +1056,6 @@ var domUtil_lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_do
   selectIncludeSelf = domUtil_lib$util.selectIncludeSelf,
   setClass = domUtil_lib$util.setClass;
 
-;// CONCATENATED MODULE: ./src/errorCode.js
-var networkError = 'brew/network-error';
-var resourceError = 'brew/resource-error';
-var apiError = 'brew/api-error';
-var validationFailed = 'brew/validation-failed';
-var navigationCancelled = 'brew/navigation-cancelled';
-var navigationRejected = 'brew/navigation-rejected';
-var timeout = "brew/timeout";
 ;// CONCATENATED MODULE: ./src/util/common.js
 
 
@@ -1538,6 +1661,11 @@ function createObjectStorage(storage, key) {
     }
   };
 }
+;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
+
+var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer,
+  EventSource = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventSource;
+
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/observe.js
 
 var _lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
@@ -1558,6 +1686,7 @@ var beginDrag = dom.beginDrag,
   focused = dom.focused,
   releaseFocus = dom.releaseFocus,
   releaseModal = dom.releaseModal,
+  reportError = dom.reportError,
   retainFocus = dom.retainFocus,
   setModal = dom.setModal,
   setTabRoot = dom.setTabRoot,
@@ -1565,6 +1694,7 @@ var beginDrag = dom.beginDrag,
   unsetTabRoot = dom.unsetTabRoot;
 
 ;// CONCATENATED MODULE: ./src/anim.js
+
 
 
 
@@ -1592,6 +1722,7 @@ function handleMutations(addNodes) {
   }
 }
 function handleAnimation(element, animationType, animationTrigger, customAnimation, callback) {
+  var source = new EventSource();
   var animated = new Set();
   var sequences = new WeakMap();
   var deferred = deferrable();
@@ -1606,12 +1737,18 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
     zeta_dom_dom.emit('animationstart', element, {
       animationType: animationType,
       animationTrigger: animationTrigger
-    }, true);
+    }, {
+      bubbles: true,
+      source: source
+    });
     promise.then(function () {
       zeta_dom_dom.emit('animationcomplete', element, {
         animationType: animationType,
         animationTrigger: animationTrigger
-      }, true);
+      }, {
+        bubbles: true,
+        source: source
+      });
     });
   });
   var animate = function animate(element) {
@@ -1623,7 +1760,9 @@ function handleAnimation(element, animationType, animationTrigger, customAnimati
     var effects = fill(getAttr(element, 'animate-in') || '', true);
     var ms = parseFloat(jquery(element).css('transition-delay')) * 1000 || 0;
     fireEvent();
-    deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), zeta_dom_dom.emit('animate' + animationType, element));
+    deferred.waitFor(runCSSTransition(element, 'tweening-' + animationType), zeta_dom_dom.emit('animate' + animationType, element, null, {
+      source: source
+    }));
     each(customAnimation, function (i, v) {
       if (effects[i] || element.attributes[i]) {
         var fn = v.bind(undefined, element, getAttr(element, i) || '');
@@ -1758,15 +1897,12 @@ waterpipe_.pipes['{'].varargs = true;
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domLock.js
 
 var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
+  CancellationRequest = domLock_lib$dom.CancellationRequest,
   cancelLock = domLock_lib$dom.cancelLock,
   locked = domLock_lib$dom.locked,
   notifyAsync = domLock_lib$dom.notifyAsync,
   preventLeave = domLock_lib$dom.preventLeave,
   subscribeAsync = domLock_lib$dom.subscribeAsync;
-
-;// CONCATENATED MODULE: ./|umd|/zeta-dom/events.js
-
-var EventContainer = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.EventContainer;
 
 ;// CONCATENATED MODULE: ./src/libCheck.js
 
@@ -1820,7 +1956,7 @@ function wrapEventHandlers(event, handler, noChildren) {
   if (noChildren) {
     handler = exactTargetWrapper(handler);
   }
-  return (event.indexOf(' ') >= 0 ? fill : kv)(event, handler);
+  return fill(event, handler);
 }
 function initExtension(app, name, deps, options, callback) {
   if (extensions[name]) {
@@ -1869,7 +2005,7 @@ function App() {
       appReady = true;
       app.emit('ready');
     } else {
-      console.error(error);
+      reportError(error);
     }
   });
 }
@@ -2778,6 +2914,7 @@ function registerDirective(key, selector, options) {
 
 
 
+
 var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 var domAction_root = zeta_dom_dom.root;
 var flyoutStates = createAutoCleanupMap(function (element, state) {
@@ -2786,6 +2923,15 @@ var flyoutStates = createAutoCleanupMap(function (element, state) {
 var executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
 var asyncActions = {};
+function NavigationCancellationRequest(path, external) {
+  CancellationRequest.call(this, 'navigate');
+  this.external = !!external;
+  this[external ? 'url' : 'path'] = path;
+}
+definePrototype(NavigationCancellationRequest, CancellationRequest, {
+  path: null,
+  url: null
+});
 function disableEvent(e) {
   e.preventDefault();
   e.stopImmediatePropagation();
@@ -2813,6 +2959,7 @@ function isFlyoutOpen(selector) {
 function closeFlyout(flyout, value) {
   /** @type {Element[]} */
   var elements = jquery(flyout || '[is-flyout].open').get();
+  var source = new EventSource();
   return resolveAll(elements.map(function (v) {
     var state = flyoutStates.get(v);
     if (!state) {
@@ -2828,7 +2975,9 @@ function closeFlyout(flyout, value) {
             closing: false,
             visible: false
           });
-          zeta_dom_dom.emit('flyouthide', v);
+          zeta_dom_dom.emit('flyouthide', v, null, {
+            source: source
+          });
         }
       });
       state.closePromise = promise;
@@ -2839,7 +2988,9 @@ function closeFlyout(flyout, value) {
       if (state.source) {
         setClass(state.source, 'target-opened', false);
       }
-      zeta_dom_dom.emit('flyoutclose', v);
+      zeta_dom_dom.emit('flyoutclose', v, null, {
+        source: source
+      });
     }
     return promise;
   }));
@@ -3047,7 +3198,7 @@ zeta_dom_dom.ready.then(function () {
       app.navigate(dataHref || app.fromHref(href));
     } else if (locked(domAction_root)) {
       e.preventDefault();
-      cancelLock(domAction_root).then(function () {
+      cancelLock(domAction_root, new NavigationCancellationRequest(href, true)).then(function () {
         var features = grep([matchWord(self.rel, 'noreferrer'), matchWord(self.rel, 'noopener')], pipe);
         window.open(dataHref || href, '_self', features.join(','));
       }, function () {
@@ -3075,10 +3226,11 @@ function _toPrimitive(t, r) { if ("object" != core_typeof(t) || !t) return t; va
 
 
 
-var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+
+var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
   ErrorCode: errorCode_namespaceObject,
   defaults: src_defaults
-}, common_namespaceObject), storage_namespaceObject), path_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
+}, common_namespaceObject), storage_namespaceObject), path_namespaceObject), fetch_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
   getDirectiveComponent: getDirectiveComponent,
   registerDirective: registerDirective,
   getVarScope: getVarScope,
@@ -3734,6 +3886,7 @@ var external_jq_scrollable_ = __webpack_require__(649);
 
 
 
+
 var SELECTOR_SCROLLABLE = '[scrollable]';
 var SELECTOR_TARGET = '[scrollable-target]';
 var DATA_KEY = 'brew.scrollable';
@@ -3744,9 +3897,11 @@ var DATA_KEY = 'brew.scrollable';
   }, defaultOptions);
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
   var pendingRestore = new Set();
+  var currentTrack;
+  var lastEventSource;
   function getOptions(context) {
     return {
-      handle: matchWord(context.dir, 'auto scrollbar content') || 'content',
+      handle: matchWord(context.dir, 'auto scrollbar content') || 'auto',
       hScroll: !matchWord(context.dir, 'y-only'),
       vScroll: !matchWord(context.dir, 'x-only'),
       pageItem: context.selector,
@@ -3759,7 +3914,7 @@ var DATA_KEY = 'brew.scrollable';
     var persistKey;
     cleanup.push(zeta_dom_dom.on(container, {
       drag: function drag() {
-        beginDrag();
+        currentTrack = beginDrag();
       },
       getContentRect: function getContentRect(e) {
         if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
@@ -3947,18 +4102,29 @@ var DATA_KEY = 'brew.scrollable';
       }
     }
   });
+  function emitScrollableEvent(element, event, eventName) {
+    app.emit(eventName || event.type, element, event, {
+      bubbles: true,
+      source: lastEventSource
+    });
+  }
   jquery.scrollable.hook({
     scrollStart: function scrollStart(e) {
-      app.emit('scrollStart', this, e, true);
+      if (currentTrack && e.trigger === 'gesture') {
+        currentTrack.preventScroll();
+      }
+      lastEventSource = new EventSource();
+      emitScrollableEvent(this, e);
     },
     scrollMove: function scrollMove(e) {
-      app.emit('scrollMove', this, e, true);
+      emitScrollableEvent(this, e);
     },
     scrollEnd: function scrollEnd(e) {
-      app.emit('scrollStop', this, e, true);
+      emitScrollableEvent(this, e, 'scrollStop');
+      lastEventSource = null;
     },
     scrollProgressChange: function scrollProgressChange(e) {
-      app.emit('scrollProgressChange', this, e, true);
+      emitScrollableEvent(this, e);
     }
   });
 
@@ -4072,6 +4238,7 @@ var DATA_KEY = 'brew.scrollable';
 }));
 ;// CONCATENATED MODULE: ./src/extension/router.js
 function router_typeof(o) { "@babel/helpers - typeof"; return router_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, router_typeof(o); }
+
 
 
 
@@ -4430,11 +4597,14 @@ function configureRouter(app, options) {
       get storage() {
         return storageMap || (storageMap = state.deleted ? new HistoryStorage() : getPersistedStorage(id, HistoryStorage));
       },
-      commit: function commit() {
+      commit: function commit(flag) {
         pendingState = state;
         page.last = state;
         commitPath(state.path);
         route.set(pathNoQuery);
+        return flag !== false && emitNavigationEvent('beforepageload', state, lastState, {
+          deferrable: true
+        });
       },
       reset: function reset() {
         if (resolved) {
@@ -4461,7 +4631,7 @@ function configureRouter(app, options) {
           lastState = state;
           page.last = state;
           commitPath(state.path);
-          emitNavigationEvent(eventName, state, previousState, null, {
+          emitNavigationEvent(eventName, state, previousState, {
             handleable: false
           });
         }
@@ -4512,7 +4682,7 @@ function configureRouter(app, options) {
       }
     }
     if (appReady && !snapshot && locked(router_root)) {
-      cancelLock(router_root).then(function () {
+      cancelLock(router_root, new NavigationCancellationRequest(state.path)).then(function () {
         if (states[currentIndex] === currentState && callback() !== false) {
           setImmediateOnce(handlePathChange);
         }
@@ -4593,8 +4763,7 @@ function configureRouter(app, options) {
       if (isLocked && isNative && history.state === state.id) {
         // lock is cancelled before popstate event take place
         // history.go has no effect until then
-        var unbind = bind(window, 'popstate', function () {
-          unbind();
+        bindOnce(window, 'popstate', function () {
           history.go(step);
         });
         return false;
@@ -4633,8 +4802,8 @@ function configureRouter(app, options) {
     }
     return normalizePath(path, true);
   }
-  function emitNavigationEvent(eventName, state, lastState, data, options) {
-    data = extend({
+  function emitNavigationEvent(eventName, state, lastState, options) {
+    var data = {
       navigationType: state.type,
       pathname: state.path,
       oldPathname: lastState.path,
@@ -4642,17 +4811,11 @@ function configureRouter(app, options) {
       newStateId: state.id,
       route: state.pageInfo.params,
       data: state.page.data
-    }, data);
+    };
     return app.emit(eventName, data, options);
   }
   function processPageChange(state) {
-    var deferred = deferrable();
-    state.commit();
-    emitNavigationEvent('beforepageload', state, lastState, {
-      waitFor: deferred.waitFor
-    }, {
-      handleable: false
-    });
+    var deferred = state.commit();
     notifyAsync(router_root, deferred);
     always(deferred, function () {
       if (states[currentIndex] === state) {
@@ -4838,7 +5001,7 @@ function configureRouter(app, options) {
   if (initialState) {
     initialState = pushState(initialPath, true);
   }
-  states[currentIndex].commit();
+  states[currentIndex].commit(false);
   app.on('ready', function () {
     if (initialState && states[currentIndex] === initialState && includeQuery) {
       pushState(fromPathname(getCurrentPathAndQuery()), true);
@@ -4895,8 +5058,8 @@ function htmlRouter_isElementActive(v, arr) {
   var parent = jquery(v).closest('[match-path]')[0];
   return !parent || (arr || activeElements).indexOf(parent) >= 0;
 }
-function registerMatchPathElements(container) {
-  jquery('[match-path]', container).each(function (i, v) {
+function registerMatchPathElements(addedNodes) {
+  jquery(addedNodes).each(function (i, v) {
     if (!matchByPathElements.has(v)) {
       var placeholder = document.createElement('div');
       placeholder.setAttribute('style', 'display: none !important');
@@ -4919,11 +5082,12 @@ function registerMatchPathElements(container) {
  */
 function initHtmlRouter(app, options) {
   var newActiveElements;
-  app.on('navigate', function (e) {
+  var ensureMatchPathElements;
+  app.on('beforepageload', function (e) {
     // find active elements i.e. with match-path that is equal to or is parent of the new path
     /** @type {HTMLElement[]} */
     newActiveElements = [htmlRouter_root];
-    registerMatchPathElements();
+    ensureMatchPathElements();
     batch(true, function () {
       var newRoutePath = toRoutePath(removeQueryAndHash(e.pathname));
       var switchElements = jquery('[switch=""]').get();
@@ -4963,20 +5127,20 @@ function initHtmlRouter(app, options) {
       }
     });
     // redirect to the default view if there is no match because every switch must have a match
-    jquery('[switch=""]').each(function (i, v) {
+    var bailOut = any(selectIncludeSelf('[switch=""]'), function (v) {
       if (htmlRouter_isElementActive(v, newActiveElements)) {
         var $children = jquery(v).children('[match-path]');
         var currentMatched = $children.filter(function (i, v) {
           return newActiveElements.indexOf(v) >= 0;
         })[0];
         if (!currentMatched) {
-          app.navigate(fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path')), true);
-          return false;
+          return app.navigate(fromRoutePath(($children.filter('[default]')[0] || $children[0]).getAttribute('match-path')), true);
         }
       }
     });
-  });
-  app.on('beforepageload', function (e) {
+    if (bailOut) {
+      return;
+    }
     var previousActiveElements = activeElements.slice(0);
     var oldPath = app.previousPath;
     var path = e.pathname;
@@ -5084,7 +5248,7 @@ function initHtmlRouter(app, options) {
         v.style.backgroundImage = 'none';
       }
     });
-    registerMatchPathElements();
+    ensureMatchPathElements = watchElements(htmlRouter_root, '[match-path]', registerMatchPathElements, true);
   });
   watchElements(htmlRouter_root, 'video[autoplay], audio[autoplay]', function (addedNodes) {
     jquery(addedNodes).attr('x-autoplay', '').removeAttr('autoplay');
