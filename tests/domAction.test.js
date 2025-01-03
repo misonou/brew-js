@@ -326,7 +326,7 @@ describe('openFlyout', () => {
 describe('closeFlyout', () => {
     it('should return a resolved promise when flyout is not opened', async () => {
         const flyout = await mount(`<div is-flyout></div>`);
-        await expect(closeFlyout(flyout)).resolves.toBeDefined();
+        await expect(closeFlyout(flyout)).resolves.toBeUndefined();
     });
 
     it('should close all opened flyouts if first argument is undefined', async () => {

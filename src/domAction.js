@@ -1,6 +1,6 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
-import { always, camel, catchAsync, combineFn, definePrototype, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
+import { always, camel, catchAsync, combineFn, definePrototype, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, noop, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "zeta-dom/dom";
@@ -88,7 +88,7 @@ export function closeFlyout(flyout, value) {
             dom.emit('flyoutclose', v, null, { source });
         }
         return promise;
-    }));
+    })).then(noop);
 }
 
 export function toggleFlyout(selector, source, options) {
