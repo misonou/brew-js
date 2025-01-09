@@ -62,6 +62,11 @@ describe('openFlyout', () => {
         await expect(openFlyout('#nonexist')).rejects.toBeUndefined();
     });
 
+    it('should return a rejected promise if element is detached', async () => {
+        const div = document.createElement('div');
+        await expect(openFlyout(div)).rejects.toBeUndefined();
+    });
+
     it('should resolve the promise if flyout is detached without closing', async () => {
         const flyout = await mount(`<div is-flyout swipe-dismiss="left"></div>`);
         const promise = openFlyout(flyout);

@@ -104,7 +104,7 @@ export function toggleFlyout(selector, source, options) {
  */
 export function openFlyout(selector, states, source, options, closeIfOpened) {
     var element = $(selector)[0];
-    if (!element) {
+    if (!element || !containsOrEquals(root, element)) {
         return reject();
     }
     if (is(states, Node) || isPlainObject(source)) {
