@@ -153,7 +153,7 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     }
     setClass(element, { visible: true, closing: false });
     resolveAll([runCSSTransition(element, 'open'), animateIn(element, 'open')].map(catchAsync), function () {
-        if (options.focus && !focused(element)) {
+        if (options.focus && (dom.activeElement === element || !focused(element))) {
             var focusTarget = options.focus === true ? element : $(element).find(options.focus)[0];
             if (focusTarget) {
                 focus(focusTarget);

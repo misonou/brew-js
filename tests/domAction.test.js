@@ -106,6 +106,19 @@ describe('openFlyout', () => {
         expect(dom.activeElement).toBe(button);
     });
 
+    it('should focus to first focusable element in flyout if modal is set', async () => {
+        const { flyout, button } = await mount(`
+            <div id="flyout" is-flyout>
+                <div id="child"></div>
+                <button id="button"></button>
+            </div>
+        `);
+        jest.spyOn(button, 'offsetWidth', 'get').mockReturnValue(100);
+        openFlyout(flyout, null, { modal: true });
+        await delay(10);
+        expect(dom.activeElement).toBe(button);
+    });
+
     it('should focus to first matched element in flyout', async () => {
         const { flyout, child } = await mount(`
             <div id="flyout" is-flyout>
