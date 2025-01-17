@@ -3,7 +3,7 @@ import { jest } from "@jest/globals";
 import router from "src/extension/router";
 import { addAsyncAction, closeFlyout, isFlyoutOpen, NavigationCancellationRequest, openFlyout, toggleFlyout } from "src/domAction";
 import dom from "zeta-dom/dom";
-import { lock } from "zeta-dom/domLock";
+import { CancellationRequest, cancelLock, lock, locked } from "zeta-dom/domLock";
 import { catchAsync } from "zeta-dom/util";
 import { initApp, delay, mount, root, mockFn, after, bindEvent, verifyCalls, _, initBody } from "./testUtil";
 
@@ -195,6 +195,15 @@ describe('openFlyout', () => {
         expect(flyout).not.toHaveClassName('open');
     });
 
+    it('should not have flyout closed upon navigation if closeOnNavigate is false', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { closeOnNavigate: false });
+        openFlyout(flyout, null, { closeOnNavigate: false }); // explicit test
+        await app.navigate('/foo');
+        await delay(10);
+        expect(flyout).toHaveClassName('open');
+    });
+
     it('should have flyout closed upon focus leaving by default', async () => {
         const flyout = await mount(`<div is-flyout></div>`);
         openFlyout(flyout);
@@ -310,6 +319,45 @@ describe('openFlyout', () => {
         expect(input).not.toHaveAttribute('tabindex', '-1');
     });
 
+    it('should cancel page unload if preventLeave is true', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { preventLeave: true });
+        expect(flyout).toHaveClassName('open');
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false);
+
+        closeFlyout(flyout);
+        await delay(10);
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
+    });
+
+    it('should lock element if preventNavigation is true', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { preventNavigation: true });
+        expect(flyout).toHaveClassName('open');
+        expect(locked(flyout)).toBe(true);
+        await expect(cancelLock()).rejects.toBeErrorWithCode('zeta/cancellation-rejected');
+
+        closeFlyout(flyout);
+        await delay(10);
+        expect(locked(flyout)).toBe(false);
+    });
+
+    it('should lock element with cancallation callback supplied to preventNavigation', async () => {
+        const cb = mockFn(() => true);
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout, null, { preventNavigation: cb });
+        expect(flyout).toHaveClassName('open');
+
+        const reason = new CancellationRequest('reason');
+        const promise = cancelLock(flyout, reason);
+        await delay();
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0]).toBe(reason);
+
+        await expect(promise).resolves.toBeUndefined();
+        expect(locked(flyout)).toBe(false);
+    });
+
     it('should start intro animation', async () => {
         const cb = mockFn();
         const flyout = await mount(`<div is-flyout animate-in animate-on="open"></div>`);
@@ -338,6 +386,47 @@ describe('openFlyout', () => {
         bindEvent(flyout, 'flyoutshow', cb);
         openFlyout(flyout);
         expect(cb).not.toBeCalled();
+    });
+
+    it('should close other flyouts with popover option being set to true', async () => {
+        const { flyout1, flyout2 } = await mount(`
+            <div>
+                <div id="flyout1" is-flyout></div>
+                <div id="flyout2" is-flyout></div>
+            </div>
+        `);
+        dom.retainFocus(flyout1, flyout2);
+
+        openFlyout(flyout1, null, { popover: true });
+        openFlyout(flyout2);
+        expect(isFlyoutOpen(flyout1)).toBe(false);
+    });
+
+    it('should not close parent flyouts with popover option being set to true', async () => {
+        const { flyout1, flyout2 } = await mount(`
+            <div id="flyout1" is-flyout>
+                <div id="flyout2" is-flyout></div>
+            </div>
+        `);
+        dom.retainFocus(flyout1, flyout2);
+
+        openFlyout(flyout1, null, { popover: true });
+        openFlyout(flyout2);
+        expect(isFlyoutOpen(flyout1)).toBe(true);
+    });
+
+    it('should not close another flyouts with popover option being set to true', async () => {
+        const { flyout1, flyout2 } = await mount(`
+            <div>
+                <div id="flyout1" is-flyout></div>
+                <div id="flyout2" is-flyout></div>
+            </div>
+        `);
+        dom.retainFocus(flyout1, flyout2);
+
+        openFlyout(flyout1, null, { popover: true });
+        openFlyout(flyout2, null, { popover: true });
+        expect(isFlyoutOpen(flyout1)).toBe(true);
     });
 });
 

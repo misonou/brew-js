@@ -53,6 +53,11 @@ export interface FlyoutOptions {
      */
     closeOnBlur?: boolean;
     /**
+     * Whether flyout should be kept open when in-app navigation is performed.
+     * Default is `true`.
+     */
+    closeOnNavigate?: boolean;
+    /**
      * Specifies that the flyout should remain its state unless user is interacting
      * within the specified element.
      *
@@ -74,10 +79,26 @@ export interface FlyoutOptions {
      */
     modal?: boolean;
     /**
+     * Whether the flyout should act as a popover. Flyout will be automatically closed when another non-popover flyout is opened.
+     * Default is `false`.
+     */
+    popover?: boolean;
+    /**
      * Whether element outside flyout can be focused by pressing tab key.
      * Default is `false`.
      */
     tabThrough?: boolean;
+    /**
+     * Whether confirmation should be prompted when user leaves the page.
+     */
+    preventLeave?: boolean;
+    /**
+     * Whether navigation within single-paged app should be prevented.
+     *
+     * If callback is specified, it will be invoked when user try to navigate, and navigation
+     * will be prevented when the callback returns a rejected promise.
+     */
+    preventNavigation?: boolean | ((reason: CancellationRequest) => any);
 }
 
 /**

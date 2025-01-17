@@ -1,10 +1,10 @@
 import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
-import { always, camel, catchAsync, combineFn, definePrototype, each, extend, grep, is, isPlainObject, isThenable, mapGet, mapRemove, matchWord, noop, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
+import { always, camel, catchAsync, combineFn, definePrototype, each, extend, grep, is, isFunction, isPlainObject, isThenable, map, mapGet, mapRemove, matchWord, noop, pipe, reject, resolve, resolveAll, throwNotFunction } from "zeta-dom/util";
 import { runCSSTransition } from "zeta-dom/cssUtil";
 import { setClass, dispatchDOMMouseEvent, matchSelector, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import dom, { blur, focus, focusable, focused, releaseFocus, releaseModal, retainFocus, setModal, setTabRoot, textInputAllowed, unsetTabRoot } from "zeta-dom/dom";
-import { CancellationRequest, cancelLock, locked, notifyAsync, subscribeAsync } from "zeta-dom/domLock";
+import { CancellationRequest, cancelLock, lock, locked, notifyAsync, preventLeave, subscribeAsync } from "zeta-dom/domLock";
 import { ZetaEventSource } from "zeta-dom/events";
 import { createAutoCleanupMap, watchElements } from "zeta-dom/observe";
 import { app } from "./app.js";
@@ -56,7 +56,7 @@ export function isFlyoutOpen(selector) {
 }
 
 /**
- * @param {Element | string=} flyout
+ * @param {Element | Element[] | string=} flyout
  * @param {any=} value
  */
 export function closeFlyout(flyout, value) {
@@ -116,7 +116,7 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     if (prev && !prev.closePromise) {
         if ((closeIfOpened || options) === true) {
             closeFlyout(element, source && waterpipe.eval('`' + source.value));
-        } else {
+        } else if (prev.path !== false) {
             prev.path = app.path;
         }
         return prev.promise;
@@ -124,27 +124,28 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
     options = extend({
         focus: !source || !textInputAllowed(source),
         tabThrough: hasAttr(element, 'tab-through'),
+        popover: hasAttr(element, 'is-popover'),
         modal: hasAttr(element, 'is-modal')
     }, options);
 
     var scope = is(options.containment, Node) || $(element).closest(options.containment)[0] || root;
-    var focusFriend = source;
-    if (!focusFriend && !focusable(element)) {
-        focusFriend = dom.modalElement;
-    }
     var resolve;
     var promise = new Promise(function (resolve_) {
         resolve = resolve_;
     });
+    if (!options.popover) {
+        closeFlyout(map(flyoutStates, function (v, i) {
+            return v.popover && !containsOrEquals(i, element) ? i : null;
+        }));
+    }
     flyoutStates.set(element, {
         source: source,
         promise: promise,
         resolve: resolve,
-        path: app.path
+        path: options.closeOnNavigate !== false ? app.path : false,
+        popover: options.popover
     });
-    if (focusFriend) {
-        retainFocus(focusFriend, element);
-    }
+    retainFocus(source || dom.activeElement, element);
     if (source) {
         setClass(source, 'target-opened', true);
     }
@@ -169,6 +170,12 @@ export function openFlyout(selector, states, source, options, closeIfOpened) {
         unsetTabRoot(element);
     } else {
         setTabRoot(element);
+    }
+    if (options.preventLeave) {
+        preventLeave(promise);
+    }
+    if (options.preventNavigation) {
+        catchAsync(lock(element, promise, isFunction(options.preventNavigation)));
     }
     var createHandler = function (callback) {
         return function (e) {
