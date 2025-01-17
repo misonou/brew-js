@@ -1,4 +1,4 @@
-/*! brew-js v0.7.0 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.1 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1899,6 +1899,7 @@ waterpipe_.pipes['{'].varargs = true;
 var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
   CancellationRequest = domLock_lib$dom.CancellationRequest,
   cancelLock = domLock_lib$dom.cancelLock,
+  lock = domLock_lib$dom.lock,
   locked = domLock_lib$dom.locked,
   notifyAsync = domLock_lib$dom.notifyAsync,
   preventLeave = domLock_lib$dom.preventLeave,
@@ -2953,7 +2954,7 @@ function isFlyoutOpen(selector) {
 }
 
 /**
- * @param {Element | string=} flyout
+ * @param {Element | Element[] | string=} flyout
  * @param {any=} value
  */
 function closeFlyout(flyout, value) {
@@ -2993,7 +2994,7 @@ function closeFlyout(flyout, value) {
       });
     }
     return promise;
-  }));
+  })).then(noop);
 }
 function toggleFlyout(selector, source, options) {
   return openFlyout(selector, null, source, options, true);
@@ -3008,7 +3009,7 @@ function toggleFlyout(selector, source, options) {
  */
 function openFlyout(selector, states, source, options, closeIfOpened) {
   var element = jquery(selector)[0];
-  if (!element) {
+  if (!element || !containsOrEquals(domAction_root, element)) {
     return reject();
   }
   if (is(states, Node) || isPlainObject(source)) {
@@ -3020,7 +3021,7 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
   if (prev && !prev.closePromise) {
     if ((closeIfOpened || options) === true) {
       closeFlyout(element, source && waterpipe.eval('`' + source.value));
-    } else {
+    } else if (prev.path !== false) {
       prev.path = app.path;
     }
     return prev.promise;
@@ -3028,26 +3029,27 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
   options = extend({
     focus: !source || !textInputAllowed(source),
     tabThrough: hasAttr(element, 'tab-through'),
+    popover: hasAttr(element, 'is-popover'),
     modal: hasAttr(element, 'is-modal')
   }, options);
   var scope = is(options.containment, Node) || jquery(element).closest(options.containment)[0] || domAction_root;
-  var focusFriend = source;
-  if (!focusFriend && !focusable(element)) {
-    focusFriend = zeta_dom_dom.modalElement;
-  }
   var resolve;
   var promise = new Promise(function (resolve_) {
     resolve = resolve_;
   });
+  if (!options.popover) {
+    closeFlyout(map(flyoutStates, function (v, i) {
+      return v.popover && !containsOrEquals(i, element) ? i : null;
+    }));
+  }
   flyoutStates.set(element, {
     source: source,
     promise: promise,
     resolve: resolve,
-    path: app.path
+    path: options.closeOnNavigate !== false ? app.path : false,
+    popover: options.popover
   });
-  if (focusFriend) {
-    retainFocus(focusFriend, element);
-  }
+  retainFocus(source || zeta_dom_dom.activeElement, element);
   if (source) {
     setClass(source, 'target-opened', true);
   }
@@ -3059,7 +3061,7 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
     closing: false
   });
   resolveAll([runCSSTransition(element, 'open'), animateIn(element, 'open')].map(catchAsync), function () {
-    if (options.focus && !focused(element)) {
+    if (options.focus && (zeta_dom_dom.activeElement === element || !focused(element))) {
       var focusTarget = options.focus === true ? element : jquery(element).find(options.focus)[0];
       if (focusTarget) {
         dom_focus(focusTarget);
@@ -3075,6 +3077,12 @@ function openFlyout(selector, states, source, options, closeIfOpened) {
     unsetTabRoot(element);
   } else {
     setTabRoot(element);
+  }
+  if (options.preventLeave) {
+    preventLeave(promise);
+  }
+  if (options.preventNavigation) {
+    catchAsync(lock(element, promise, isFunction(options.preventNavigation)));
   }
   var createHandler = function createHandler(callback) {
     return function (e) {
