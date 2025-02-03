@@ -33,7 +33,7 @@ declare namespace Brew {
          * Enables auto scrollable area initialization and scrolling events.
          * Requires the scrollable plugin https://github.com/misonou/jquery-scrollable.
          */
-        useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'handle' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd' | 'scrollProgressChange'>>): void;
+        useScrollable(defaultOptions?: Partial<Omit<JQueryScrollableOptions, 'content' | 'hScroll' | 'vScroll' | 'pageItem' | 'snapToPage' | 'scrollStart' | 'scrollMove' | 'scrollEnd' | 'scrollProgressChange'>>): void;
     }
 
     interface DirectiveComponent {
