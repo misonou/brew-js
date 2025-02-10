@@ -228,7 +228,6 @@ export default addExtension('scrollable', function (app, defaultOptions) {
             combineFn(cleanup)();
             scrollable.destroy();
         });
-        scrollable[focusable(container) ? 'enable' : 'disable']();
         return scrollable;
     }
 
@@ -250,6 +249,11 @@ export default addExtension('scrollable', function (app, defaultOptions) {
         });
     }
     $.scrollable.hook({
+        beforeScrollStart: function (e) {
+            if (!focusable(this)) {
+                e.cancelScroll();
+            }
+        },
         scrollStart: function (e) {
             if (currentTrack && e.trigger === 'gesture') {
                 currentTrack.preventScroll();
@@ -302,12 +306,6 @@ export default addExtension('scrollable', function (app, defaultOptions) {
 
     app.on('resize pageenter statechange scrollMove orientationchange', function () {
         setTimeoutOnce(updateScrollIntoView);
-    });
-
-    dom.on('modalchange', function () {
-        $(SELECTOR_SCROLLABLE).each(function (i, v) {
-            $(v).scrollable(focusable(v) ? 'enable' : 'disable');
-        });
     });
 
     dom.on('keystroke', function (e) {
