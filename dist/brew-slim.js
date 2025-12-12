@@ -1,4 +1,4 @@
-/*! brew-js v0.7.1 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.2 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1878,22 +1878,24 @@ var external_waterpipe_ = __webpack_require__(87);
 
 // assign to a new variable to avoid incompatble declaration issue by typescript compiler
 var waterpipe_ = external_waterpipe_;
-waterpipe_.pipes['{'] = function (_, varargs) {
-  var globals = varargs.globals;
-  var prev = globals.new;
-  var o = {};
-  globals.new = o;
-  while (varargs.hasArgs()) {
-    var key = varargs.raw();
-    if (key === '}') {
-      break;
+if (!waterpipe_.pipes['{']) {
+  waterpipe_.pipes['{'] = function (_, varargs) {
+    var globals = varargs.globals;
+    var prev = globals.new;
+    var o = {};
+    globals.new = o;
+    while (varargs.hasArgs()) {
+      var key = varargs.raw();
+      if (key === '}') {
+        break;
+      }
+      o[String(key).replace(/:$/, '')] = varargs.next();
     }
-    o[String(key).replace(/:$/, '')] = varargs.next();
-  }
-  globals.new = prev;
-  return o;
-};
-waterpipe_.pipes['{'].varargs = true;
+    globals.new = prev;
+    return o;
+  };
+  waterpipe_.pipes['{'].varargs = true;
+}
 ;// CONCATENATED MODULE: ./|umd|/zeta-dom/domLock.js
 
 var domLock_lib$dom = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_zeta_.dom,
@@ -2692,6 +2694,7 @@ var DATA_KEY = 'brew.scrollable';
 /* harmony default export */ var scrollable = (addExtension('scrollable', function (app, defaultOptions) {
   defaultOptions = extend({
     content: '[scrollable-target]:not(.disabled)',
+    handle: 'auto',
     bounce: false
   }, defaultOptions);
   var DOMMatrix = window.DOMMatrix || window.WebKitCSSMatrix || window.MSCSSMatrix;
@@ -2700,7 +2703,7 @@ var DATA_KEY = 'brew.scrollable';
   var lastEventSource;
   function getOptions(context) {
     return {
-      handle: matchWord(context.dir, 'auto scrollbar content') || 'auto',
+      handle: matchWord(context.dir, 'auto scrollbar content') || defaultOptions.handle,
       hScroll: !matchWord(context.dir, 'y-only'),
       vScroll: !matchWord(context.dir, 'x-only'),
       pageItem: context.selector,
@@ -2878,7 +2881,6 @@ var DATA_KEY = 'brew.scrollable';
       combineFn(cleanup)();
       scrollable.destroy();
     });
-    scrollable[focusable(container) ? 'enable' : 'disable']();
     return scrollable;
   }
   registerDirective('scrollable', SELECTOR_SCROLLABLE, {
@@ -2908,6 +2910,11 @@ var DATA_KEY = 'brew.scrollable';
     });
   }
   jquery.scrollable.hook({
+    beforeScrollStart: function beforeScrollStart(e) {
+      if (!focusable(this)) {
+        e.cancelScroll();
+      }
+    },
     scrollStart: function scrollStart(e) {
       if (currentTrack && e.trigger === 'gesture') {
         currentTrack.preventScroll();
@@ -2959,11 +2966,6 @@ var DATA_KEY = 'brew.scrollable';
   }
   app.on('resize pageenter statechange scrollMove orientationchange', function () {
     setTimeoutOnce(updateScrollIntoView);
-  });
-  zeta_dom_dom.on('modalchange', function () {
-    jquery(SELECTOR_SCROLLABLE).each(function (i, v) {
-      jquery(v).scrollable(focusable(v) ? 'enable' : 'disable');
-    });
   });
   zeta_dom_dom.on('keystroke', function (e) {
     var originalEvent = zeta_dom_dom.event;
