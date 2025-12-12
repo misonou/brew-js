@@ -62,6 +62,7 @@
     "errorCode": "lib.ErrorCode",
     "var": "lib",
     "util/common": "lib",
+    "util/fetch": "lib",
     "util/path": "lib",
     "util/storage": "lib"
   },
