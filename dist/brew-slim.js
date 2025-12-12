@@ -1,4 +1,4 @@
-/*! brew-js v0.7.2 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.3 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
