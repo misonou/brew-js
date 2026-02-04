@@ -106,17 +106,21 @@ export function registerSimpleDirective(key, attr, init, dispose) {
 
 export function registerDirective(key, selector, options) {
     var Context = createContextClass(options);
+    var ensureInit = function (entry) {
+        return entry.component || (entry.component = options.component(entry.context.element, entry.context) || {});
+    };
     var map = new WeakMap();
     var collect = watchElements(root, selector, function (added, removed) {
         each(removed, function (i, v) {
             emitter.emit('destroy', mapRemove(map, v).context);
         });
         each(added, function (i, v) {
-            var context = new Context(v);
             map.set(v, {
-                component: options.component(v, context),
-                context: context
+                context: new Context(v)
             });
+        });
+        each(added, function (i, v) {
+            ensureInit(map.get(v));
         });
     }, true);
     defineGetterProperty(Component.prototype, key, function () {
@@ -124,6 +128,6 @@ export function registerDirective(key, selector, options) {
         if (!map.has(element) && matchSelector(element, selector)) {
             collect();
         }
-        return (map.get(element) || '').component || null;
+        return ensureInit(map.get(element));
     });
 }

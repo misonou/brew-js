@@ -11,6 +11,10 @@ export interface ComponentContextEventMap {
 }
 
 export interface ComponentContext extends Zeta.ZetaEventDispatcher<ComponentContextEventMap, ComponentContext> {
+    /**
+     * Gets the element the directive is associated with.
+     */
+    readonly element: Element;
 }
 
 export interface DirectiveInit<T extends Zeta.Dictionary<Directive> = {}> {

@@ -60,6 +60,22 @@ describe('registerDirective', () => {
         expect(cbInit).toBeCalledTimes(2);
     });
 
+    it('should initialize other component within init callback', async () => {
+        const { div1, div2 } = initBody(`
+            <div>
+                <div id="div1" class="test"></div>
+                <div id="div2" class="test"></div>
+            </div>
+        `);
+        cbInit.mockImplementationOnce(() => {
+            expect(getDirectiveComponent(div2).test).not.toBeNull();
+            return {};
+        });
+        getDirectiveComponent(div1).test;
+        expect(cbInit).toBeCalledTimes(2);
+        expect.assertions(2);
+    });
+
     it('should map attribute value to properties', async () => {
         const { div } = initBody(`<div id="div" class="test" str-value="foo" num-value="1" bool-value></div>`);
         getDirectiveComponent(div).test;
