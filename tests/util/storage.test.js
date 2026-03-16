@@ -232,6 +232,32 @@ describe('ObjectStorage.set', () => {
         store4.set('bar', { foo: 'baz' });
         expect(store4.get('foo')).toEqual(data);
     });
+
+    it('should persist correctly for references to objects with toJSON defined', async () => {
+        class Foo {
+            constructor(props) {
+                Object.assign(this, props);
+            }
+            toJSON() {
+                return { foo: 'baz' };
+            }
+        }
+        const data = new Foo();
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, () => { });
+        store.set('foo', {
+            bar: data,
+            baz: data
+        });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        store2.registerType('Foo', Foo, () => { });
+        const restored = store2.get('foo');
+        expect(restored.bar).toBeInstanceOf(Foo);
+        expect(restored.bar).toEqual({ foo: 'baz' });
+        expect(restored.bar).toBe(restored.baz);
+    });
 });
 
 describe('ObjectStorage.revive', () => {

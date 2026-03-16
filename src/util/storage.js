@@ -58,7 +58,7 @@ export function createObjectStorage(storage, key) {
         delete objectCache[id];
     }
 
-    function serialize(obj, visited) {
+    function serialize(obj, visited, ctor) {
         var counter = 0;
         var str = JSON.stringify(obj, function (k, v) {
             if (!isObject(v)) {
@@ -70,16 +70,20 @@ export function createObjectStorage(storage, key) {
             if (!counter++) {
                 return v;
             }
-            var id = objectMap.get(v) || getNextId();
-            cacheObject(id, v);
+            var o = this[k];
+            if (o !== v && !isObject(o)) {
+                o = v;
+            }
+            var id = objectMap.get(o) || getNextId();
+            cacheObject(id, o);
             if (!visited[id]) {
                 visited[id] = true;
-                serialized[id] = serialize(v, visited);
-                dirty.delete(v);
+                serialized[id] = serialize(v, visited, o.constructor);
+                dirty.delete(o);
             }
             return '#' + id;
         });
-        var prefix = obj && typeof obj === 'object' && types.get(obj.constructor);
+        var prefix = obj && typeof obj === 'object' && types.get(ctor || obj.constructor);
         return (prefix || '') + str;
     }
 
