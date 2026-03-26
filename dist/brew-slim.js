@@ -1,4 +1,4 @@
-/*! brew-js v0.7.3 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.4 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1480,7 +1480,7 @@ function createObjectStorage(storage, key) {
     objectMap.delete(objectCache[id]);
     delete objectCache[id];
   }
-  function serialize(obj, visited) {
+  function serialize(obj, visited, ctor) {
     var counter = 0;
     var str = JSON.stringify(obj, function (k, v) {
       if (!isObject(v)) {
@@ -1492,16 +1492,20 @@ function createObjectStorage(storage, key) {
       if (!counter++) {
         return v;
       }
-      var id = objectMap.get(v) || getNextId();
-      cacheObject(id, v);
+      var o = this[k];
+      if (o !== v && !isObject(o)) {
+        o = v;
+      }
+      var id = objectMap.get(o) || getNextId();
+      cacheObject(id, o);
       if (!visited[id]) {
         visited[id] = true;
-        serialized[id] = serialize(v, visited);
-        dirty.delete(v);
+        serialized[id] = serialize(v, visited, o.constructor);
+        dirty.delete(o);
       }
       return '#' + id;
     });
-    var prefix = obj && _typeof(obj) === 'object' && types.get(obj.constructor);
+    var prefix = obj && _typeof(obj) === 'object' && types.get(ctor || obj.constructor);
     return (prefix || '') + str;
   }
   function deserialize(str, refs) {
@@ -2257,17 +2261,21 @@ function registerSimpleDirective(key, attr, init, dispose) {
 }
 function registerDirective(key, selector, options) {
   var Context = createContextClass(options);
+  var ensureInit = function ensureInit(entry) {
+    return entry.component || (entry.component = options.component(entry.context.element, entry.context) || {});
+  };
   var map = new WeakMap();
   var collect = watchElements(directive_root, selector, function (added, removed) {
     each(removed, function (i, v) {
       directive_emitter.emit('destroy', mapRemove(map, v).context);
     });
     each(added, function (i, v) {
-      var context = new Context(v);
       map.set(v, {
-        component: options.component(v, context),
-        context: context
+        context: new Context(v)
       });
+    });
+    each(added, function (i, v) {
+      ensureInit(map.get(v));
     });
   }, true);
   defineGetterProperty(Component.prototype, key, function () {
@@ -2275,7 +2283,7 @@ function registerDirective(key, selector, options) {
     if (!map.has(element) && matchSelector(element, selector)) {
       collect();
     }
-    return (map.get(element) || '').component || null;
+    return ensureInit(map.get(element));
   });
 }
 ;// CONCATENATED MODULE: ./src/domAction.js
