@@ -233,6 +233,42 @@ describe('ObjectStorage.set', () => {
         expect(store4.get('foo')).toEqual(data);
     });
 
+    it('should persist correctly when replaced object is still being referenced', async () => {
+        class Foo { }
+        const foo = new Foo();
+        const bar = {};
+        const baz = [];
+
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, () => { });
+        store.set('foo', foo);
+        store.set('bar', bar);
+        store.set('baz', baz);
+        store.set('key', { foo, bar, baz });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        store2.set('foo', 'not foo');
+        store2.set('bar', 'not bar');
+        store2.set('baz', 'not baz');
+        await delay();
+
+        const store3 = createObjectStorage(sessionStorage, TEST_KEY);
+        store3.registerType('Foo', Foo, () => { });
+        expect(store3.get('foo')).toBe('not foo');
+        expect(store3.get('bar')).toBe('not bar');
+        expect(store3.get('baz')).toBe('not baz');
+        expect(store3.get('key')).toEqual({
+            foo: expect.any(Foo),
+            bar: {},
+            baz: [],
+        });
+
+        store3.set('key', 'not key');
+        await delay();
+        expect(sessionStorage.getItem(TEST_KEY)).toMatchSnapshot();
+    });
+
     it('should persist correctly for references to objects with toJSON defined', async () => {
         class Foo {
             constructor(props) {

@@ -39,7 +39,7 @@ export function createObjectStorage(storage, key) {
 
     function getNextIdForKey(key) {
         var id = entries[key];
-        if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[\[\{]/.test(serialized[id]))) {
+        if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[#\[\{]/.test(serialized[id]))) {
             // reuse existing index only if target is not an object as it may still be referenced
             return id;
         }

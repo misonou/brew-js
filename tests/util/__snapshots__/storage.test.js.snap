@@ -16,3 +16,15 @@ exports[`ObjectStorage.delete should remove all unreachable objects from backing
 {\\"a\\":\\"#3\\"}
 {\\"a\\":\\"__this_should_still_exist_\\"}"
 `;
+
+exports[`ObjectStorage.set should persist correctly when replaced object is still being referenced 1`] = `
+"{\\"foo\\":5,\\"bar\\":6,\\"baz\\":7,\\"key\\":8}
+
+
+
+
+\\"not foo\\"
+\\"not bar\\"
+\\"not baz\\"
+\\"not key\\""
+`;
