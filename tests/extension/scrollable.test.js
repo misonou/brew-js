@@ -50,6 +50,8 @@ describe('Scrollable extension', () => {
                 <div scrollable-target x-rect="0 0 200 200"></div>
             </div>
         `);
+        const scrollable = getDirectiveComponent(root).scrollable;
+        scrollable.refresh();
         expect(root).toHaveClassName('scrollable-x-r');
 
         await after(() => {
@@ -58,7 +60,7 @@ describe('Scrollable extension', () => {
         expect(root).not.toHaveClassName('scrollable-x-r');
     });
 
-    it('should disable scrollable when element is not focusable', async () => {
+    it('should cancel scroll when element is not focusable', async () => {
         const { root, modal } = await initBody(`
             <div scrollable id="root" x-rect="0 0 100 100">
                 <div scrollable-target x-rect="0 0 200 200"></div>
@@ -68,18 +70,25 @@ describe('Scrollable extension', () => {
         const scrollable = getDirectiveComponent(root).scrollable;
         const disable = jest.spyOn(scrollable, 'disable');
         const enable = jest.spyOn(scrollable, 'enable');
+        const cb = mockFn();
+        bindEvent(root, 'scrollStart', cb);
+
         await after(() => {
             dom.setModal(modal);
             dom.focus(modal);
         });
         expect(focusable(root)).toBe(false);
-        expect(disable).toBeCalledTimes(1);
+        expect(disable).not.toBeCalled();
+        root.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));
+        expect(cb).not.toBeCalled();
 
         await after(() => {
             dom.releaseModal(modal);
         });
         expect(focusable(root)).toBeTruthy();
-        expect(enable).toBeCalledTimes(1);
+        expect(enable).not.toBeCalled();
+        root.dispatchEvent(new WheelEvent('wheel', { deltaY: 100 }));
+        expect(cb).toBeCalled();
     });
 
     it('should emit scroll related events', async () => {
@@ -90,6 +99,7 @@ describe('Scrollable extension', () => {
         `);
         const scrollable = getDirectiveComponent(root).scrollable;
         const cb = mockFn();
+        scrollable.refresh();
         bindEvent(root, {
             scrollStart: cb,
             scrollMove: cb,

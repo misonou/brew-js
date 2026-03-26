@@ -34,7 +34,7 @@ module.exports = class extends JSDOMEnvironment {
         this.global.fetch = fetch;
         this.global.Request = Request;
         this.global.Response = Response;
-        this.global.__hostRealm__ = { FormData, Blob, ArrayBuffer, DOMException, SyntaxError };
+        this.global.__hostRealm__ = { AbortController, FormData, Blob, ArrayBuffer, DOMException, SyntaxError };
     }
 
     async handleTestEvent(event) {

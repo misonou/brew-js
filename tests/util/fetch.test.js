@@ -4,7 +4,7 @@ import { mockFn, verifyCalls } from "@misonou/test-utils";
 import * as ErrorCode from "src/errorCode";
 
 /** @type {typeof globalThis} */
-const { Blob, FormData, DOMException, SyntaxError } = __hostRealm__;
+const { AbortController, Blob, FormData, DOMException, SyntaxError } = __hostRealm__;
 const fetch = jest.spyOn(window, 'fetch');
 
 let requestBody;
