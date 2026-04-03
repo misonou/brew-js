@@ -294,6 +294,29 @@ describe('ObjectStorage.set', () => {
         expect(restored.bar).toEqual({ foo: 'baz' });
         expect(restored.bar).toBe(restored.baz);
     });
+
+    it('should persist boolean, number and string object as primitive by default', async () => {
+        const bool = new Boolean(false);
+        const num = new Number(0);
+        const str = new String('str');
+        const mynum = new (class extends Number { })(1);
+
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('bool', bool);
+        store.set('num', num);
+        store.set('str', str);
+        store.set('mynum', mynum);
+        store.set('obj', { bool, num, str, mynum });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('bool')).toBe(false);
+        expect(store2.get('num')).toBe(0);
+        expect(store2.get('str')).toBe('str');
+        expect(store2.get('mynum')).toBe(1);
+        expect(store2.get('obj')).toEqual({ bool: false, num: 0, str: 'str', mynum: 1 });
+        expect(sessionStorage.getItem(TEST_KEY)).toMatchSnapshot();
+    });
 });
 
 describe('ObjectStorage.revive', () => {

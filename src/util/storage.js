@@ -7,6 +7,10 @@ function isObject(value) {
     return value && typeof value === 'object';
 }
 
+function isPrimitiveObject(value) {
+    return is(value, Number) || is(value, Boolean) || is(value, String);
+}
+
 function shouldIgnore(obj) {
     return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
 }
@@ -71,8 +75,8 @@ export function createObjectStorage(storage, key) {
                 return v;
             }
             var o = this[k];
-            if (o !== v && !isObject(o)) {
-                o = v;
+            if (isPrimitiveObject(o) && !types.has(o.constructor)) {
+                return v;
             }
             var id = objectMap.get(o) || getNextId();
             cacheObject(id, o);
