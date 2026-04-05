@@ -1,5 +1,5 @@
 import { compressToUTF16, decompressFromUTF16 } from "../include/lz-string.js";
-import { each, extend, hasOwnProperty, is, keys, map, noop, setImmediateOnce, throws } from "zeta-dom/util";
+import { each, extend, hasOwnProperty, is, isArray, keys, map, noop, setImmediateOnce, throws } from "zeta-dom/util";
 
 const UNDEFINED = 'undefined';
 
@@ -7,12 +7,26 @@ function isObject(value) {
     return value && typeof value === 'object';
 }
 
-function isPrimitiveObject(value) {
-    return is(value, Number) || is(value, Boolean) || is(value, String);
-}
-
-function shouldIgnore(obj) {
-    return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
+function normalizeValue(value, nested, skipToJSON) {
+    switch (typeof value) {
+        case 'string':
+            return value[0] === '#' ? '#' + value : value;
+        case 'function':
+            return;
+        case 'object':
+            if (value) {
+                if (!skipToJSON && typeof value.toJSON === 'function') {
+                    return normalizeValue(value.toJSON(), nested, true);
+                }
+                if (is(value, Number) || is(value, Boolean) || is(value, String)) {
+                    return normalizeValue(value.valueOf(), nested, true);
+                }
+                if (value === window || is(value, RegExp) || is(value, Blob) || is(value, Node)) {
+                    return nested ? undefined : {};
+                }
+            }
+    }
+    return value;
 }
 
 export function createObjectStorage(storage, key) {
@@ -50,6 +64,10 @@ export function createObjectStorage(storage, key) {
         return getNextId();
     }
 
+    function getPrefix(obj) {
+        return (isObject(obj) && types.get(obj.constructor)) || '';
+    }
+
     function cacheObject(id, obj) {
         objectCache[id] = obj;
         if (isObject(obj)) {
@@ -62,33 +80,35 @@ export function createObjectStorage(storage, key) {
         delete objectCache[id];
     }
 
-    function serialize(obj, visited, ctor) {
-        var counter = 0;
-        var str = JSON.stringify(obj, function (k, v) {
-            if (!isObject(v)) {
-                return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
-            }
-            if (shouldIgnore(v)) {
-                return counter ? undefined : {};
-            }
-            if (!counter++) {
-                return v;
-            }
-            var o = this[k];
-            if (isPrimitiveObject(o) && !types.has(o.constructor)) {
-                return v;
-            }
-            var id = objectMap.get(o) || getNextId();
-            cacheObject(id, o);
+    function serialize(obj, visited, prefix) {
+        if (prefix === undefined) {
+            prefix = getPrefix(obj);
+            obj = normalizeValue(obj);
+        }
+        var callback = function (v) {
+            var id = objectMap.get(v);
             if (!visited[id]) {
+                var prefix = getPrefix(v);
+                var data = normalizeValue(v, !prefix);
+                if (!prefix && !isObject(data)) {
+                    return data;
+                }
+                id = id || getNextId();
+                cacheObject(id, v);
                 visited[id] = true;
-                serialized[id] = serialize(v, visited, o.constructor);
-                dirty.delete(o);
+                serialized[id] = serialize(data, visited, prefix);
+                dirty.delete(v);
             }
             return '#' + id;
-        });
-        var prefix = obj && typeof obj === 'object' && types.get(ctor || obj.constructor);
-        return (prefix || '') + str;
+        };
+        if (isObject(obj)) {
+            var clone = isArray(obj) ? new Array(obj.length) : {};
+            for (var i in obj) {
+                clone[i] = callback(obj[i]);
+            }
+            obj = clone;
+        }
+        return prefix + JSON.stringify(obj);
     }
 
     function deserialize(str, refs) {

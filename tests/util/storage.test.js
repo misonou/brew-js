@@ -152,6 +152,31 @@ describe('ObjectStorage.set', () => {
         expect(bar.a).toBe(bar.a.b.a);
     });
 
+    it('should serialize arrays', async () => {
+        const arr1 = [1, null, undefined, , 5];
+        const arr2 = new (class extends Array { })(6, 7, 8);
+        const arr3 = [9, 10];
+        Object.setPrototypeOf(arr3, null);
+
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('arr1', arr1);
+        store.set('arr2', arr2);
+        store.set('arr3', arr3);
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        const restored = {
+            arr1: store2.get('arr1'),
+            arr2: store2.get('arr2'),
+            arr3: store2.get('arr3'),
+        };
+        expect(restored.arr1).toEqual([1, null, null, null, 5]);
+        expect(restored.arr2).toBeInstanceOf(Array);
+        expect(restored.arr2).toEqual(arr2);
+        expect(restored.arr3).toBeInstanceOf(Array);
+        expect(restored.arr3).toEqual(arr3);
+    });
+
     it('should serialize primitive value except symbol', async () => {
         const store = createObjectStorage(sessionStorage, TEST_KEY);
         store.set('string', '#foo\nbar');
@@ -191,6 +216,20 @@ describe('ObjectStorage.set', () => {
         expect(store2.get('node')).toEqual({});
     });
 
+    it('should not serialize symbol and function', async () => {
+        const sym = Symbol('foo');
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('sym', sym);
+        store.set('func', () => { });
+        store.set('obj', { sym, func: () => { } });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('sym')).toBeUndefined();
+        expect(store2.get('func')).toBeUndefined();
+        expect(store2.get('obj')).toEqual({});
+    });
+
     it('should call toJSON on object', async () => {
         const toJSON = mockFn().mockReturnValue({ a: 1 });
         const store = createObjectStorage(sessionStorage, TEST_KEY);
@@ -200,6 +239,57 @@ describe('ObjectStorage.set', () => {
         const store2 = createObjectStorage(sessionStorage, TEST_KEY);
         expect(store2.get('test')).toEqual({ a: 1 });
         expect(toJSON).toBeCalledTimes(1);
+    });
+
+    it('should persist correctly for objects with toJSON defined', async () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('bar', {
+            foo: {
+                toJSON() {
+                    return '#foo';
+                }
+            },
+            bar: {
+                toJSON() {
+                    return {
+                        a: 1,
+                        toJSON() {
+                            return { a: 2 };
+                        }
+                    };
+                }
+            }
+        });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('bar')).toEqual({
+            foo: '#foo',
+            bar: { a: 1 }
+        });
+    });
+
+    it('should persist correctly for custom type objects with toJSON returning primitive values', async () => {
+        class Foo {
+            constructor(value) {
+                this.value = value;
+            }
+            toJSON() {
+                return this.value;
+            }
+        }
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.registerType('Foo', Foo, () => { });
+        store.set('foo', new Foo('#foo'));
+        store.set('bar', { bar: new Foo('#bar') });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        store2.registerType('Foo', Foo, () => { });
+        expect(store2.get('foo')).toBeInstanceOf(Foo);
+        expect(store2.get('foo').value).toBe('#foo');
+        expect(store2.get('bar')).toEqual({ bar: expect.any(Foo) });
+        expect(store2.get('bar').bar.value).toBe('#bar');
     });
 
     it('should persist correctly when multiple keys references the same object', async () => {
@@ -278,21 +368,34 @@ describe('ObjectStorage.set', () => {
                 return { foo: 'baz' };
             }
         }
-        const data = new Foo();
+        const foo = new Foo();
+        const bar = {
+            toJSON() {
+                return '#bar';
+            }
+        };
         const store = createObjectStorage(sessionStorage, TEST_KEY);
         store.registerType('Foo', Foo, () => { });
-        store.set('foo', {
-            bar: data,
-            baz: data
-        });
+        store.set('foo', foo);
+        store.set('bar', bar);
+        store.set('o', { foo, bar });
         await delay();
 
         const store2 = createObjectStorage(sessionStorage, TEST_KEY);
         store2.registerType('Foo', Foo, () => { });
-        const restored = store2.get('foo');
-        expect(restored.bar).toBeInstanceOf(Foo);
-        expect(restored.bar).toEqual({ foo: 'baz' });
-        expect(restored.bar).toBe(restored.baz);
+        const restored = store2.get('o');
+        expect(restored.foo).toBeInstanceOf(Foo);
+        expect(restored.foo).toEqual({ foo: 'baz' });
+        expect(restored.foo).toBe(store2.get('foo'));
+        expect(restored.bar).toBe('#bar');
+
+        store2.set('bar', '#bar 2');
+        await delay();
+
+        const store3 = createObjectStorage(sessionStorage, TEST_KEY);
+        store3.registerType('Foo', Foo, () => { });
+        expect(store3.get('bar')).toBe('#bar 2');
+        expect(store3.get('o').bar).toBe('#bar');
     });
 
     it('should persist boolean, number and string object as primitive by default', async () => {
