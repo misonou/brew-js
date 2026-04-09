@@ -9,6 +9,8 @@ function isObject(value) {
 
 function normalizeValue(value, nested, skipToJSON) {
     switch (typeof value) {
+        case 'undefined':
+            return nested ? '#' : undefined;
         case 'string':
             return value[0] === '#' ? '#' + value : value;
         case 'function':
@@ -101,8 +103,13 @@ export function createObjectStorage(storage, key) {
             }
             return '#' + id;
         };
-        if (isObject(obj)) {
-            var clone = isArray(obj) ? new Array(obj.length) : {};
+        if (isArray(obj)) {
+            obj = Array.prototype.slice.call(obj);
+            for (var i = 0, len = obj.length; i < len; i++) {
+                obj[i] = obj[i] !== undefined || i in obj ? callback(obj[i]) : '#u';
+            }
+        } else if (isObject(obj)) {
+            var clone = {};
             for (var i in obj) {
                 clone[i] = callback(obj[i]);
             }
@@ -135,6 +142,12 @@ export function createObjectStorage(storage, key) {
             if (typeof v === 'string' && v[0] === '#') {
                 v = v.slice(1);
                 if (v[0] !== '#') {
+                    if (v === '' || v === 'u') {
+                        if (!v) {
+                            refs.push({ o: this, k, v });
+                        }
+                        return;
+                    }
                     if (!(v in objectCache)) {
                         objectCache[v] = undefined;
                         cacheObject(v, deserialize(serialized[v], refs));

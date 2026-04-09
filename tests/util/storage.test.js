@@ -152,6 +152,16 @@ describe('ObjectStorage.set', () => {
         expect(bar.a).toBe(bar.a.b.a);
     });
 
+    it('should serialize property with undefined value', async () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('o', { e: undefined });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('o')).toEqual({ e: undefined });
+        expect(store2.get('o')).toHaveProperty('e');
+    });
+
     it('should serialize arrays', async () => {
         const arr1 = [1, null, undefined, , 5];
         const arr2 = new (class extends Array { })(6, 7, 8);
@@ -170,7 +180,9 @@ describe('ObjectStorage.set', () => {
             arr2: store2.get('arr2'),
             arr3: store2.get('arr3'),
         };
-        expect(restored.arr1).toEqual([1, null, null, null, 5]);
+        expect(restored.arr1).toEqual([1, null, undefined, undefined, 5]);
+        expect(restored.arr1).toHaveProperty('2');
+        expect(restored.arr1).not.toHaveProperty('3');
         expect(restored.arr2).toBeInstanceOf(Array);
         expect(restored.arr2).toEqual(arr2);
         expect(restored.arr3).toBeInstanceOf(Array);
