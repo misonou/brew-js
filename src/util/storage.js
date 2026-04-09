@@ -3,6 +3,15 @@ import { each, extend, hasOwnProperty, is, isArray, keys, map, noop, setImmediat
 
 const UNDEFINED = 'undefined';
 
+const specialValues = {
+    '': undefined,
+    'u': undefined,
+    '-0': -0,
+    'NaN': NaN,
+    'Infinity': Infinity,
+    '-Infinity': -Infinity
+};
+
 function isObject(value) {
     return value && typeof value === 'object';
 }
@@ -11,8 +20,12 @@ function normalizeValue(value, nested, skipToJSON) {
     switch (typeof value) {
         case 'undefined':
             return nested ? '#' : undefined;
+        case 'bigint':
+            return '#n' + value;
         case 'string':
             return value[0] === '#' ? '#' + value : value;
+        case 'number':
+            return value !== value || value === Infinity || value === -Infinity ? '#' + value : value === 0 && 1 / value < 0 ? '#-0' : value;
         case 'function':
             return;
         case 'object':
@@ -142,11 +155,14 @@ export function createObjectStorage(storage, key) {
             if (typeof v === 'string' && v[0] === '#') {
                 v = v.slice(1);
                 if (v[0] !== '#') {
-                    if (v === '' || v === 'u') {
+                    if (hasOwnProperty(specialValues, v)) {
                         if (!v) {
                             refs.push({ o: this, k, v });
                         }
-                        return;
+                        return specialValues[v];
+                    }
+                    if (v[0] === 'n') {
+                        return BigInt(v.slice(1));
                     }
                     if (!(v in objectCache)) {
                         objectCache[v] = undefined;

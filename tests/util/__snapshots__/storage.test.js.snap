@@ -20,10 +20,10 @@ exports[`ObjectStorage.delete should remove all unreachable objects from backing
 exports[`ObjectStorage.set should persist boolean, number and string object as primitive by default 1`] = `
 "{\\"bool\\":1,\\"num\\":2,\\"str\\":3,\\"mynum\\":4,\\"obj\\":5}
 false
-0
+\\"#Infinity\\"
 \\"str\\"
 1
-{\\"bool\\":false,\\"num\\":0,\\"str\\":\\"str\\",\\"mynum\\":1}"
+{\\"bool\\":false,\\"num\\":\\"#Infinity\\",\\"str\\":\\"str\\",\\"mynum\\":1}"
 `;
 
 exports[`ObjectStorage.set should persist correctly when replaced object is still being referenced 1`] = `

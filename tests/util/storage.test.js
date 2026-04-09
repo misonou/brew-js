@@ -193,10 +193,11 @@ describe('ObjectStorage.set', () => {
         const store = createObjectStorage(sessionStorage, TEST_KEY);
         store.set('string', '#foo\nbar');
         store.set('number', 1);
+        store.set('bigint', BigInt('12345678901234567890'));
         store.set('boolean', true);
         store.set('null', null);
         store.set('undefined', undefined);
-        expect(store.keys().length).toBe(5);
+        expect(store.keys().length).toBe(6);
         await delay();
 
         const store2 = createObjectStorage(sessionStorage, TEST_KEY);
@@ -205,7 +206,25 @@ describe('ObjectStorage.set', () => {
         expect(store2.get('boolean')).toBe(true);
         expect(store2.get('null')).toBe(null);
         expect(store2.get('undefined')).toBe(undefined);
-        expect(store.keys().length).toBe(5);
+        expect(store2.get('bigint')).toBe(BigInt('12345678901234567890'));
+        expect(store.keys().length).toBe(6);
+    });
+
+    it('should serialize NaN, Infinity and -0', async () => {
+        const store = createObjectStorage(sessionStorage, TEST_KEY);
+        store.set('nan', NaN);
+        store.set('infinity', Infinity);
+        store.set('-infinity', -Infinity);
+        store.set('-0', -0);
+        store.set('o', { a: NaN, b: Infinity, c: -Infinity, d: -0 });
+        await delay();
+
+        const store2 = createObjectStorage(sessionStorage, TEST_KEY);
+        expect(store2.get('nan')).toBeNaN();
+        expect(store2.get('infinity')).toBe(Infinity);
+        expect(store2.get('-infinity')).toBe(-Infinity);
+        expect(store2.get('-0')).toBe(-0);
+        expect(store2.get('o')).toEqual({ a: NaN, b: Infinity, c: -Infinity, d: -0 });
     });
 
     it('should not serialize certain non-trival objects', async () => {
@@ -412,7 +431,7 @@ describe('ObjectStorage.set', () => {
 
     it('should persist boolean, number and string object as primitive by default', async () => {
         const bool = new Boolean(false);
-        const num = new Number(0);
+        const num = new Number(Infinity);
         const str = new String('str');
         const mynum = new (class extends Number { })(1);
 
@@ -426,10 +445,10 @@ describe('ObjectStorage.set', () => {
 
         const store2 = createObjectStorage(sessionStorage, TEST_KEY);
         expect(store2.get('bool')).toBe(false);
-        expect(store2.get('num')).toBe(0);
+        expect(store2.get('num')).toBe(Infinity);
         expect(store2.get('str')).toBe('str');
         expect(store2.get('mynum')).toBe(1);
-        expect(store2.get('obj')).toEqual({ bool: false, num: 0, str: 'str', mynum: 1 });
+        expect(store2.get('obj')).toEqual({ bool: false, num: Infinity, str: 'str', mynum: 1 });
         expect(sessionStorage.getItem(TEST_KEY)).toMatchSnapshot();
     });
 });
