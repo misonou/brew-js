@@ -1,4 +1,4 @@
-/*! brew-js v0.7.4 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.5 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1436,11 +1436,43 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
 
 var UNDEFINED = 'undefined';
+var specialValues = {
+  '': undefined,
+  'u': undefined,
+  '-0': -0,
+  'NaN': NaN,
+  'Infinity': Infinity,
+  '-Infinity': -Infinity
+};
 function isObject(value) {
   return value && _typeof(value) === 'object';
 }
-function shouldIgnore(obj) {
-  return obj === window || is(obj, RegExp) || is(obj, Blob) || is(obj, Node);
+function normalizeValue(value, nested, skipToJSON) {
+  switch (_typeof(value)) {
+    case 'undefined':
+      return nested ? '#' : undefined;
+    case 'bigint':
+      return '#n' + value;
+    case 'string':
+      return value[0] === '#' ? '#' + value : value;
+    case 'number':
+      return value !== value || value === Infinity || value === -Infinity ? '#' + value : value === 0 && 1 / value < 0 ? '#-0' : value;
+    case 'function':
+      return;
+    case 'object':
+      if (value) {
+        if (!skipToJSON && typeof value.toJSON === 'function') {
+          return normalizeValue(value.toJSON(), nested, true);
+        }
+        if (is(value, Number) || is(value, Boolean) || is(value, String)) {
+          return normalizeValue(value.valueOf(), nested, true);
+        }
+        if (value === window || is(value, RegExp) || is(value, Blob) || is(value, Node)) {
+          return nested ? undefined : {};
+        }
+      }
+  }
+  return value;
 }
 function createObjectStorage(storage, key) {
   var types = new Map([[Date, '#Date '], ['Date', [Date, noop]]]);
@@ -1464,11 +1496,14 @@ function createObjectStorage(storage, key) {
   }
   function getNextIdForKey(key) {
     var id = entries[key];
-    if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[\[\{]/.test(serialized[id]))) {
+    if (id && !(id in objectCache ? isObject(objectCache[id]) : /^[#\[\{]/.test(serialized[id]))) {
       // reuse existing index only if target is not an object as it may still be referenced
       return id;
     }
     return getNextId();
+  }
+  function getPrefix(obj) {
+    return isObject(obj) && types.get(obj.constructor) || '';
   }
   function cacheObject(id, obj) {
     objectCache[id] = obj;
@@ -1480,33 +1515,40 @@ function createObjectStorage(storage, key) {
     objectMap.delete(objectCache[id]);
     delete objectCache[id];
   }
-  function serialize(obj, visited, ctor) {
-    var counter = 0;
-    var str = JSON.stringify(obj, function (k, v) {
-      if (!isObject(v)) {
-        return typeof v === 'string' && v[0] === '#' ? '#' + v : v;
-      }
-      if (shouldIgnore(v)) {
-        return counter ? undefined : {};
-      }
-      if (!counter++) {
-        return v;
-      }
-      var o = this[k];
-      if (o !== v && !isObject(o)) {
-        o = v;
-      }
-      var id = objectMap.get(o) || getNextId();
-      cacheObject(id, o);
+  function serialize(obj, visited, prefix) {
+    if (prefix === undefined) {
+      prefix = getPrefix(obj);
+      obj = normalizeValue(obj);
+    }
+    var callback = function callback(v) {
+      var id = objectMap.get(v);
       if (!visited[id]) {
+        var prefix = getPrefix(v);
+        var data = normalizeValue(v, !prefix);
+        if (!prefix && !isObject(data)) {
+          return data;
+        }
+        id = id || getNextId();
+        cacheObject(id, v);
         visited[id] = true;
-        serialized[id] = serialize(v, visited, o.constructor);
-        dirty.delete(o);
+        serialized[id] = serialize(data, visited, prefix);
+        dirty.delete(v);
       }
       return '#' + id;
-    });
-    var prefix = obj && _typeof(obj) === 'object' && types.get(ctor || obj.constructor);
-    return (prefix || '') + str;
+    };
+    if (isArray(obj)) {
+      obj = Array.prototype.slice.call(obj);
+      for (var i = 0, len = obj.length; i < len; i++) {
+        obj[i] = obj[i] !== undefined || i in obj ? callback(obj[i]) : '#u';
+      }
+    } else if (isObject(obj)) {
+      var clone = {};
+      for (var i in obj) {
+        clone[i] = callback(obj[i]);
+      }
+      obj = clone;
+    }
+    return prefix + JSON.stringify(obj);
   }
   function deserialize(str, refs) {
     if (!str || str === UNDEFINED) {
@@ -1534,6 +1576,19 @@ function createObjectStorage(storage, key) {
       if (typeof v === 'string' && v[0] === '#') {
         v = v.slice(1);
         if (v[0] !== '#') {
+          if (util_hasOwnProperty(specialValues, v)) {
+            if (!v) {
+              refs.push({
+                o: this,
+                k: k,
+                v: v
+              });
+            }
+            return specialValues[v];
+          }
+          if (v[0] === 'n') {
+            return BigInt(v.slice(1));
+          }
           if (!(v in objectCache)) {
             objectCache[v] = undefined;
             cacheObject(v, deserialize(serialized[v], refs));
