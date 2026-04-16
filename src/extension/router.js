@@ -721,6 +721,9 @@ function configureRouter(app, options) {
             for: function (stateId) {
                 var state = states[getHistoryIndex(stateId)];
                 return state ? state.storage : null;
+            },
+            registerType: function (name, ctor, reviver) {
+                storage.registerType(name, ctor, reviver);
             }
         }
     });

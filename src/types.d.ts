@@ -5,6 +5,7 @@ declare namespace Brew {
     type Extension<T> = import("./core").Extension<T>;
     type ExtensionEventMap<T> = import("./core").ExtensionEventMap<T>;
     type CookieAttributes = import("./util").CookieAttributes;
+    type ObjectStorage = import("./util").ObjectStorage;
 
     /* -------------------------------------------------------------
      * Helper interfaces

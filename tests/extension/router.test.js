@@ -1335,6 +1335,21 @@ describe('app.historyStorage', () => {
             ['beforepageload event', undefined]
         ]);
     });
+
+    it('should support registering custom types', async () => {
+        class CustomType {
+            constructor(value) {
+                this.value = value;
+            }
+        }
+        app.historyStorage.registerType('CustomType', CustomType, () => { });
+        app.historyStorage.current.set('custom', new CustomType('test'));
+        await window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false }));
+
+        const store = createObjectStorage(sessionStorage, 'brew.router./');
+        store.registerType('CustomType', CustomType, () => { });
+        expect(store.get(history.state).custom).toBeInstanceOf(CustomType);
+    });
 });
 
 describe('app.page', () => {

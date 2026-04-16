@@ -307,6 +307,20 @@ declare namespace Brew {
              * @returns The storage instance associated to the specific page step; or `null` if `stateId` is invalid.
              */
             for(stateId: string): HistoryStorage | null;
+            /**
+             * Enables deserialization of object as custom class.
+             *
+             * Note that the constructor should instantiate with or without deserialized data, depending on whether data is fully deserialized.
+             * Also inherited classes must be registered explicitly.
+             *
+             * It also applies to {@link WithRouter.sessionStorage} and {@link WithRouter.cache} as they share the same backing object storage.
+             * See {@link Brew.ObjectStorage.registerType} for more details.
+             *
+             * @param key A key identifying the class. It should be unique and contain only alphanumeric characters.
+             * @param ctor A constructible function or class.
+             * @param callback A callback to initialize object with deserialized data when data is not available during instantiation.
+             */
+            registerType<T>(key: string, ctor: new (data?: any) => T, callback: (target: T, data: any) => void): void;
         };
 
         /**
