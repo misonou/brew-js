@@ -3,16 +3,14 @@ import dom, { reportError } from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { bind } from "zeta-dom/domUtil";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always } from "zeta-dom/util";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always, createPrivateStore } from "zeta-dom/util";
 import { } from "./libCheck.js";
 import defaults from "./defaults.js";
 
+const _ = createPrivateStore();
 const emitter = new ZetaEventContainer();
 const root = dom.root;
 const featureDetections = {};
-const dependencies = {};
-const extensions = {};
-const initList = [];
 
 /** @type {Brew.AppInstance} */
 export var app;
@@ -20,10 +18,6 @@ export var app;
 export var appReady;
 /** @type {boolean} */
 export var appInited;
-/** @type {Promise<void> & Zeta.Deferrable} */
-var appInit;
-var appReadyResolve;
-var appReadyReject;
 
 function exactTargetWrapper(handler) {
     return function (e) {
@@ -44,6 +38,9 @@ function wrapEventHandlers(event, handler, noChildren) {
 }
 
 function initExtension(app, name, deps, options, callback) {
+    var state = _(app);
+    var extensions = state.extensions;
+    var dependencies = state.dependencies;
     if (extensions[name]) {
         throw new Error('Extension' + name + 'is already initiated');
     }
@@ -80,6 +77,19 @@ function defineUseMethod(name, deps, callback) {
 
 function App() {
     var self = this;
+    var appReadyResolve, appReadyReject;
+    var state = _(self, {
+        dependencies: {},
+        extensions: {},
+        initList: [],
+        init: function () {
+            var deferred = deferrable(dom.ready);
+            state.waitFor = function (promise) {
+                deferred.waitFor(promise.then(null, appReadyReject));
+            };
+            return deferred.then(appReadyResolve);
+        }
+    });
     var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
     defineOwnProperty(self, 'element', root, true);
     defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
@@ -90,7 +100,7 @@ function App() {
         setReadyState(resolved ? 'ready' : 'error');
         if (resolved) {
             appReady = true;
-            app.emit('ready');
+            self.emit('ready');
         } else {
             reportError(error);
         }
@@ -119,10 +129,10 @@ definePrototype(App, {
         if (isFunction(promise)) {
             promise = makeAsync(promise).call(this);
         }
-        appInit.waitFor(promise.then(null, appReadyReject));
+        _(this).waitFor(promise);
     },
     halt: function () {
-        appInit.waitFor(new Promise(noop));
+        _(this).waitFor(new Promise(noop));
     },
     isElementActive: function () {
         return true;
@@ -175,10 +185,11 @@ app = {
 
 function init(callback) {
     throwNotFunction(callback);
-    if (appInit) {
+    if (app === defaultApp) {
         throw new Error('brew() can only be called once');
     }
-    appInit = deferrable(dom.ready);
+    var state = _(defaultApp);
+    var appInit = state.init();
     app = defaultApp;
     each(defaults, function (i, v) {
         var fn = v && isFunction(app[camel('use-' + i)]);
@@ -186,7 +197,7 @@ function init(callback) {
             fn.call(app, v);
         }
     });
-    each(initList, function (i, v) {
+    each(state.initList, function (i, v) {
         if (isPlainObject(v)) {
             define(app, v);
         } else {
@@ -194,13 +205,12 @@ function init(callback) {
         }
     });
     app.beforeInit(makeAsync(callback)(app));
-    each(dependencies, function (i, v) {
+    each(state.dependencies, function (i, v) {
         combineFn(v)();
     });
 
     appInited = true;
     notifyAsync(root, appInit);
-    appInit.then(appReadyResolve);
     bind(window, 'pagehide', function (e) {
         app.emit('unload', { persisted: e.persisted }, { handleable: false });
     });
@@ -209,6 +219,7 @@ function init(callback) {
 
 define(init, {
     with: function () {
+        var initList = _(defaultApp).initList;
         initList.push.apply(initList, arguments);
         return this;
     }
