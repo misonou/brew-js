@@ -191,6 +191,33 @@ describe('ApiClient', () => {
         expect(cb.mock.calls[0][2].bodyUsed).toBe(false);
     });
 
+    it('should call error trap with error from fetch', async () => {
+        const cb = mockFn();
+        const client = createApiClient('http://localhost/api', { error: cb });
+        fetch.mockImplementationOnce(async () => {
+            throw new TypeError('Failed to fetch');
+        });
+
+        await expect(client('/endpoint')).rejects.toBeErrorWithCode(ErrorCode.networkError);
+        expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0]).toBeErrorWithCode(ErrorCode.networkError, {
+            data: undefined,
+            error: expect.any(TypeError),
+            cause: expect.any(TypeError),
+            status: 0
+        });
+    });
+
+    it('should not call error trap when request is aborted', async () => {
+        const cb = mockFn();
+        const client = createApiClient('http://localhost/api', { error: cb });
+        const controller = new AbortController();
+        controller.abort();
+
+        await expect(client('/endpoint', { signal: controller.signal })).rejects.toBeInstanceOf(DOMException);
+        expect(cb).not.toBeCalled();
+    });
+
     it('should not call error trap when error is not resulted by actual request', async () => {
         const mw = mockFn((req, next) => next(req));
         const cb = mockFn();
@@ -202,11 +229,6 @@ describe('ApiClient', () => {
             throw error;
         });
         await expect(client('/endpoint')).rejects.toBe(error);
-        expect(cb).not.toBeCalled();
-
-        const controller = new AbortController();
-        controller.abort();
-        await expect(client('/endpoint', { signal: controller.signal })).rejects.toBeInstanceOf(DOMException);
         expect(cb).not.toBeCalled();
     });
 

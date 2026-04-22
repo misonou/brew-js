@@ -1,4 +1,4 @@
-import { each, errorWithCode, extend, isArray, isError, isPlainObject, isUndefinedOrNull, makeAsync, noop, pipe, resolve } from "zeta-dom/util";
+import { each, errorWithCode, extend, isArray, isPlainObject, isUndefinedOrNull, makeAsync, noop, pipe, resolve, throwIfAborted } from "zeta-dom/util";
 import { combinePath } from "./path.js";
 import * as ErrorCode from "../errorCode.js";
 
@@ -6,10 +6,8 @@ const HEADER_CONTENT_TYPE = 'content-type';
 
 function fetchImpl(request) {
     return fetch(request).catch(function (e) {
-        if (isError(e) && e.name === 'TypeError') {
-            return Response.error();
-        }
-        throw e;
+        throwIfAborted(request.signal);
+        return extend(Response.error(), { cause: e });
     });
 }
 
@@ -54,7 +52,7 @@ function executeRequest(self, fetch, request, traps) {
     return fetch(request.clone()).then(function (response) {
         var status = response.status;
         var handleError = function (code, error, message, data) {
-            error = errorWithCode(code, message, { data, error, status });
+            error = errorWithCode(code, message || error, { data, error, status });
             data = (traps.error || noop)(error, response, request, self);
             if (data !== undefined) {
                 return data;
@@ -62,13 +60,13 @@ function executeRequest(self, fetch, request, traps) {
             throw error;
         };
         if (status === 0) {
-            return handleError(ErrorCode.networkError, null, '');
+            return handleError(ErrorCode.networkError, response.cause || null);
         }
         if (status !== 204) {
             return readBody(response).then(function (data) {
                 return response.ok ? (traps.data || pipe)(data, response, request, self) : handleError(ErrorCode.apiError, null, response.statusText, data);
             }, function (error) {
-                return handleError(ErrorCode.apiError, error, error.message);
+                return handleError(ErrorCode.apiError, error);
             });
         }
     });
