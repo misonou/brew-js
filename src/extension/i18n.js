@@ -24,7 +24,7 @@ function detectLanguage(languages) {
     });
 }
 
-export default addExtension('i18n', function (app, options) {
+export default addExtension('i18n', ['?router'], function (app, options) {
     var languages = toDictionary(options.languages);
     var routeParam = app.route && options.routeParam;
     var cookie = options.cookie && _cookie(options.cookie, options.cookieOptions || 86400000);
