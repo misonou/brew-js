@@ -44,7 +44,7 @@ export default addExtension('scrollable', function (app, defaultOptions) {
                 currentTrack = beginDrag();
             },
             getContentRect: function (e) {
-                if (e.target === container || containsOrEquals(container, $(e.target).closest(SELECTOR_TARGET)[0])) {
+                if (e.target === container || $(e.target).closest(SELECTOR_TARGET)[0] === scrollable.scrollTarget) {
                     var padding = scrollable.scrollPadding(e.target);
                     return getRect(container).expand(padding, -1);
                 }
