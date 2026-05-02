@@ -1,4 +1,4 @@
-/*! brew-js v0.7.5 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.6 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -748,7 +748,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   iequal = _lib$util.iequal,
   is = _lib$util.is,
   isArray = _lib$util.isArray,
-  isError = _lib$util.isError,
   isFunction = _lib$util.isFunction,
   isPlainObject = _lib$util.isPlainObject,
   isThenable = _lib$util.isThenable,
@@ -775,6 +774,7 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   setPromiseTimeout = _lib$util.setPromiseTimeout,
   setTimeoutOnce = _lib$util.setTimeoutOnce,
   single = _lib$util.single,
+  throwIfAborted = _lib$util.throwIfAborted,
   throwNotFunction = _lib$util.throwNotFunction,
   util_throws = _lib$util.throws,
   trim = _lib$util.trim,
@@ -921,10 +921,10 @@ var timeout = "brew/timeout";
 var HEADER_CONTENT_TYPE = 'content-type';
 function fetchImpl(request) {
   return fetch(request).catch(function (e) {
-    if (isError(e) && e.name === 'TypeError') {
-      return Response.error();
-    }
-    throw e;
+    throwIfAborted(request.signal);
+    return extend(Response.error(), {
+      cause: e
+    });
   });
 }
 function readBody(input) {
@@ -969,7 +969,7 @@ function executeRequest(self, fetch, request, traps) {
   return fetch(request.clone()).then(function (response) {
     var status = response.status;
     var handleError = function handleError(code, error, message, data) {
-      error = errorWithCode(code, message, {
+      error = errorWithCode(code, message || error, {
         data: data,
         error: error,
         status: status
@@ -981,13 +981,13 @@ function executeRequest(self, fetch, request, traps) {
       throw error;
     };
     if (status === 0) {
-      return handleError(networkError, null, '');
+      return handleError(networkError, response.cause || null);
     }
     if (status !== 204) {
       return readBody(response).then(function (data) {
         return response.ok ? (traps.data || pipe)(data, response, request, self) : handleError(apiError, null, response.statusText, data);
       }, function (error) {
-        return handleError(apiError, error, error.message);
+        return handleError(apiError, error);
       });
     }
   });
@@ -3770,7 +3770,7 @@ function _detectLanguage(languages) {
     return languages[i];
   });
 }
-/* harmony default export */ var i18n = (addExtension('i18n', function (app, options) {
+/* harmony default export */ var i18n = (addExtension('i18n', ['?router'], function (app, options) {
   var languages = toDictionary(options.languages);
   var routeParam = app.route && options.routeParam;
   var cookie = options.cookie && common_cookie(options.cookie, options.cookieOptions || 86400000);
@@ -3991,7 +3991,7 @@ var DATA_KEY = 'brew.scrollable';
         currentTrack = beginDrag();
       },
       getContentRect: function getContentRect(e) {
-        if (e.target === container || containsOrEquals(container, jquery(e.target).closest(SELECTOR_TARGET)[0])) {
+        if (e.target === container || jquery(e.target).closest(SELECTOR_TARGET)[0] === scrollable.scrollTarget) {
           var padding = scrollable.scrollPadding(e.target);
           return getRect(container).expand(padding, -1);
         }
@@ -5020,6 +5020,9 @@ function configureRouter(app, options) {
       for: function _for(stateId) {
         var state = states[getHistoryIndex(stateId)];
         return state ? state.storage : null;
+      },
+      registerType: function registerType(name, ctor, reviver) {
+        storage.registerType(name, ctor, reviver);
       }
     }
   });
