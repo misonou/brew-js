@@ -4,7 +4,7 @@ import { isCssUrlValue } from "zeta-dom/cssUtil";
 import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil";
 import { notifyAsync } from "zeta-dom/domLock";
 import { watchElements } from "zeta-dom/observe";
-import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define, any } from "zeta-dom/util";
+import { each, mapGet, single, resolveAll, isFunction, throwNotFunction, define, any, combineFn } from "zeta-dom/util";
 import { removeQueryAndHash, isSubPathOf, toSegments, withBaseUrl, toRelativeUrl } from "../util/path.js";
 import { groupLog } from "../util/console.js";
 import { animateIn, animateOut } from "../anim.js";
@@ -259,8 +259,7 @@ function initHtmlRouter(app, options) {
     });
 }
 
-export default addExtension('htmlRouter', function (app, options) {
-    Router();
+export default combineFn(Router, addExtension('htmlRouter', function (app, options) {
     app.useRouter(options);
     initHtmlRouter(app, options);
-});
+}));

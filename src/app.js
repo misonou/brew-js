@@ -37,6 +37,10 @@ function wrapEventHandlers(event, handler, noChildren) {
     return fill(event, handler);
 }
 
+function resolveDependency(callbacks, loaded) {
+    return callbacks && callbacks[0] && combineFn(callbacks.splice(0))(loaded);
+}
+
 function initExtension(app, name, deps, options, callback) {
     var state = _(app);
     var extensions = state.extensions;
@@ -45,16 +49,18 @@ function initExtension(app, name, deps, options, callback) {
         throw new Error('Extension' + name + 'is already initiated');
     }
     deps = grep(deps, function (v) {
-        return !extensions[v.replace(/^\?/, '')];
+        if (v[0] !== '?' && extensions[v] === undefined) {
+            resolveDependency(dependencies[name], false);
+            return true;
+        }
+        return extensions[v.replace(/^\?/, '')] === 0;
     });
     var counter = deps.length || 1;
     var wrapper = function (loaded) {
         if (loaded && !--counter) {
             extensions[name] = true;
             callback(app, options || {});
-            if (dependencies[name]) {
-                combineFn(dependencies[name].splice(0))(true);
-            }
+            resolveDependency(dependencies[name], true);
         }
     };
     if (deps[0]) {
@@ -79,8 +85,8 @@ function App() {
     var self = this;
     var appReadyResolve, appReadyReject;
     var state = _(self, {
-        dependencies: {},
-        extensions: {},
+        dependencies: Object.create(null),
+        extensions: Object.create(null),
         initList: [],
         init: function () {
             var deferred = deferrable(dom.ready);
@@ -197,16 +203,18 @@ function init(callback) {
             fn.call(app, v);
         }
     });
-    each(state.initList, function (i, v) {
+    while (state.initList.length) {
+        var v = state.initList.shift();
         if (isPlainObject(v)) {
             define(app, v);
         } else {
             throwNotFunction(v)(app);
         }
-    });
+    }
+    state.initComplete = true;
     app.beforeInit(makeAsync(callback)(app));
     each(state.dependencies, function (i, v) {
-        combineFn(v)();
+        resolveDependency(v, false);
     });
 
     appInited = true;
@@ -232,11 +240,18 @@ export function install(name, callback) {
 export function addExtension(autoInit, name, deps, callback) {
     callback = throwNotFunction(callback || deps || name);
     deps = isArray(deps) || isArray(name) || [];
+    name = autoInit === true ? name : autoInit;
     return function (app) {
-        if (autoInit === true) {
+        var state = _(app);
+        state.extensions[name] |= 0;
+        if (autoInit !== true) {
+            defineUseMethod(name, deps, callback);
+        } else if (state.initComplete) {
             initExtension(app, name, deps, {}, callback);
         } else {
-            defineUseMethod(autoInit, deps, callback);
+            state.initList.push(function (app) {
+                initExtension(app, name, deps, {}, callback);
+            });
         }
     };
 }
