@@ -200,27 +200,29 @@ function init(callback) {
     }
     var state = _(defaultApp);
     var appInit = state.init();
-    app = defaultApp;
-    each(defaults, function (i, v) {
-        var fn = v && isFunction(app[camel('use-' + i)]);
-        if (fn) {
-            fn.call(app, v);
+    var init = function () {
+        app = defaultApp;
+        each(defaults, function (i, v) {
+            var fn = v && isFunction(app[camel('use-' + i)]);
+            if (fn) {
+                fn.call(app, v);
+            }
+        });
+        while (state.initList.length) {
+            var v = state.initList.shift();
+            if (isPlainObject(v)) {
+                define(app, v);
+            } else {
+                throwNotFunction(v)(app);
+            }
         }
-    });
-    while (state.initList.length) {
-        var v = state.initList.shift();
-        if (isPlainObject(v)) {
-            define(app, v);
-        } else {
-            throwNotFunction(v)(app);
-        }
-    }
-    state.initComplete = true;
-    app.beforeInit(makeAsync(callback)(app));
-    each(state.dependencies, function (i, v) {
-        resolveDependency(v, false);
-    });
-
+        state.initComplete = true;
+        callback(app);
+        each(state.dependencies, function (i, v) {
+            resolveDependency(v, false);
+        });
+    };
+    state.waitFor(makeAsync(init)());
     appInited = true;
     notifyAsync(root, appInit);
     bind(window, 'pagehide', function (e) {
