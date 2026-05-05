@@ -46,7 +46,7 @@ function initExtension(app, name, deps, options, callback) {
     var extensions = state.extensions;
     var dependencies = state.dependencies;
     if (extensions[name]) {
-        throw new Error('Extension' + name + 'is already initiated');
+        throw new Error('Extension ' + name + ' is already initiated');
     }
     deps = grep(deps, function (v) {
         if (v[0] !== '?' && extensions[v] === undefined) {
@@ -56,8 +56,10 @@ function initExtension(app, name, deps, options, callback) {
         return extensions[v.replace(/^\?/, '')] === 0;
     });
     var counter = deps.length || 1;
-    var wrapper = function (loaded) {
-        if (loaded && !--counter) {
+    var wrapper = function (dep, optional, loaded) {
+        if (!loaded && !optional) {
+            state.reject(new Error('Extension ' + name + ' requires ' + dep));
+        } else if (!--counter) {
             extensions[name] = true;
             callback(app, options || {});
             resolveDependency(dependencies[name], true);
@@ -67,10 +69,10 @@ function initExtension(app, name, deps, options, callback) {
         each(deps, function (i, v) {
             var key = v.replace(/^\?/, '');
             var arr = dependencies[key] || (dependencies[key] = []);
-            arr.push(key === v ? wrapper : wrapper.bind(0, true));
+            arr.push(wrapper.bind(0, key, v[0] === '?'));
         });
     } else {
-        wrapper(true);
+        wrapper('', true);
     }
 }
 

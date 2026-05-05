@@ -43,7 +43,7 @@ describe('brew', () => {
             expect(app.ruxInited).toBeUndefined();
             expect(app.ruzInited).toBe(true);
         });
-        await app.ready;
+        await expect(app.ready).rejects.toBeInstanceOf(Error);
         expect(app.quxInited).toBeUndefined();
         expect(app.ruxInited).toBeUndefined();
 
@@ -54,5 +54,9 @@ describe('brew', () => {
             ['baz'],
             ['ruz'],
         ]);
+
+        expect(console.error).toHaveBeenCalledTimes(2);
+        expect(console.error.mock.calls[0][0]).toMatchObject({ message: 'Extension rux requires qux' });
+        expect(console.error.mock.calls[1][0]).toMatchObject({ message: 'Extension qux requires fake' });
     });
 });
