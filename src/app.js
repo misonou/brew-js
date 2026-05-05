@@ -91,9 +91,13 @@ function App() {
         init: function () {
             var deferred = deferrable(dom.ready);
             state.waitFor = function (promise) {
-                deferred.waitFor(promise.then(null, appReadyReject));
+                deferred.waitFor(promise.then(null, state.reject));
             };
             return deferred.then(appReadyResolve);
+        },
+        reject: function (error) {
+            appReadyReject(error);
+            reportError(error);
         }
     });
     var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
@@ -102,13 +106,11 @@ function App() {
         appReadyResolve = resolve.bind(0, self);
         appReadyReject = reject;
     }), true);
-    always(self.ready, function (resolved, error) {
+    always(self.ready, function (resolved) {
         setReadyState(resolved ? 'ready' : 'error');
         if (resolved) {
             appReady = true;
             self.emit('ready');
-        } else {
-            reportError(error);
         }
     });
 }
