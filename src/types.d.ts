@@ -15,6 +15,7 @@ declare namespace Brew {
     type EventHandlers<E extends string, M, T = Element> = { [P in E]?: Zeta.ZetaEventHandler<P, M, T> };
     type ExtendedEventMap<E extends string, M> = E extends keyof M ? M : { [P in E]: P extends keyof M ? M[P] : Zeta.ZetaEvent<Element> };
     type AppInstance<T = {}> = App<T> & T & Zeta.ZetaEventDispatcher<T extends ExtensionEventMap<infer M> ? M : {}, any>;
+    type DisposableAppInstance<T = {}> = AppInstance<T & WithDispose>;
     type PromiseOrEmpty<T = any> = Promise<T> | void;
     type DOMProcessorCallback = (element: Element, getState: (element: Element) => Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void;
 
@@ -133,6 +134,10 @@ declare namespace Brew {
          * Gets or sets the bearer authorization token to be sent with the requests.
          */
         token?: string;
+    }
+
+    interface Disposable {
+        dispose(): void;
     }
 
     /* -------------------------------------------------------------
@@ -261,5 +266,18 @@ declare namespace Brew {
          * @param element A DOM element.
          */
         isElementActive(element: Element): boolean;
+    }
+
+    interface WithDispose extends Disposable {
+        /**
+         * Gets whether the instance has been disposed.
+         */
+        readonly disposed: boolean;
+        /**
+         * Registers callback to be fired when the instance is disposed.
+         * If the instance has already been disposed, the callback will be fired immediately.
+         * @param callback A callback to be fired.
+         */
+        onDispose(callback: Zeta.UnregisterCallback): void;
     }
 }

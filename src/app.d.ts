@@ -1,7 +1,6 @@
 import brew, { Extension } from "./core";
 
-type WithExport<T> = T extends Extension<infer P> ? P : T;
-type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? WithExport<U> & WithExtension<TRest> : {};
+export type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? (U extends Extension<infer P> ? P : U) & WithExtension<TRest> : {};
 
 export interface AppInit<U = {}> {
     /**
@@ -32,11 +31,13 @@ export var app: Brew.AppInstance;
 
 /**
  * Gets whether the app has started.
+ * @deprecated This property is only for global app instance and should be avoided in extensions.
  */
 export var appReady: boolean;
 
 /**
  * Gets whether the app initialization callback has been execute.
+ * @deprecated This property is only for global app instance and should be avoided in extensions.
  */
 export var appInited: boolean;
 
@@ -96,3 +97,5 @@ export function emitAppEvent(event: string, data?: any, options?: boolean | Zeta
 export function emitAppEvent(event: string, target: Element, data?: any, options?: boolean | Zeta.EventEmitOptions): Brew.PromiseOrEmpty;
 
 export function isElementActive(element: Element): boolean;
+
+export function installDisposable(): void;

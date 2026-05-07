@@ -3,9 +3,9 @@ import dom, { reportError } from "zeta-dom/dom";
 import { notifyAsync } from "zeta-dom/domLock";
 import { bind } from "zeta-dom/domUtil";
 import { ZetaEventContainer } from "zeta-dom/events";
-import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always, createPrivateStore } from "zeta-dom/util";
+import { resolveAll, each, is, isFunction, camel, defineOwnProperty, define, definePrototype, extend, kv, throwNotFunction, watchable, combineFn, deferrable, grep, isArray, isPlainObject, defineObservableProperty, makeAsync, mapObject, fill, noop, always, createPrivateStore, makeArray, hasOwnProperty, isObservableProperty, watch, sameValue } from "zeta-dom/util";
 import { } from "./libCheck.js";
-import defaults from "./defaults.js";
+import { initDefaults } from "./defaults.js";
 
 const _ = createPrivateStore();
 const emitter = new ZetaEventContainer();
@@ -76,20 +76,20 @@ function initExtension(app, name, deps, options, callback) {
     }
 }
 
-function defineUseMethod(name, deps, callback) {
+function defineUseMethod(app, name, deps, callback) {
     var method = camel('use-' + name);
-    definePrototype(App, kv(method, function (options) {
+    define(app, kv(method, function (options) {
         initExtension(this, name, deps, options, callback);
     }));
 }
 
-function App() {
+function App(initList) {
     var self = this;
     var appReadyResolve, appReadyReject;
     var state = _(self, {
         dependencies: Object.create(null),
         extensions: Object.create(null),
-        initList: [],
+        initList: makeArray(initList),
         init: function () {
             var deferred = deferrable(dom.ready);
             state.waitFor = function (promise) {
@@ -111,7 +111,9 @@ function App() {
     always(self.ready, function (resolved) {
         setReadyState(resolved ? 'ready' : 'error');
         if (resolved) {
-            appReady = true;
+            if (app === defaultApp) {
+                appReady = true;
+            }
             self.emit('ready');
         }
     });
@@ -188,26 +190,15 @@ definePrototype(App, {
 });
 watchable(App.prototype);
 
-const defaultApp = new App();
+const defaultApp = new App(initDefaults);
 app = {
     on: defaultApp.on.bind(defaultApp)
 };
 
-function init(callback) {
-    throwNotFunction(callback);
-    if (app === defaultApp) {
-        throw new Error('brew() can only be called once');
-    }
-    var state = _(defaultApp);
+function initApp(app, callback) {
+    var state = _(app);
     var appInit = state.init();
     var init = function () {
-        app = defaultApp;
-        each(defaults, function (i, v) {
-            var fn = v && isFunction(app[camel('use-' + i)]);
-            if (fn) {
-                fn.call(app, v);
-            }
-        });
         while (state.initList.length) {
             var v = state.initList.shift();
             if (isPlainObject(v)) {
@@ -223,8 +214,17 @@ function init(callback) {
         });
     };
     state.waitFor(makeAsync(init)());
+    return appInit;
+}
+
+function init(callback) {
+    throwNotFunction(callback);
+    if (app === defaultApp) {
+        throw new Error('brew() can only be called once');
+    }
+    app = defaultApp;
+    notifyAsync(root, initApp(app, callback));
     appInited = true;
-    notifyAsync(root, appInit);
     bind(window, 'pagehide', function (e) {
         app.emit('unload', { persisted: e.persisted }, { handleable: false });
     });
@@ -239,8 +239,114 @@ define(init, {
     }
 });
 
+function createProxyConstructor(baseApp) {
+    function AppProxy(initList) {
+        var setters, handleChanges;
+        var self = new Proxy(this, {
+            get: function (t, p, r) {
+                return p in t ? Reflect.get(t, p, r) : baseApp[p];
+            },
+            set: function (t, p, v, r) {
+                if (hasOwnProperty(t, p) || !(p in baseApp)) {
+                    Reflect.set(t, p, v, r);
+                } else if (!t.disposed) {
+                    baseApp[p] = v;
+                }
+                return true;
+            },
+            has: function (t, p) {
+                return p in t || p in baseApp;
+            },
+            getOwnPropertyDescriptor: function (t, p) {
+                var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+                var desc = getOwnPropertyDescriptor(t, p);
+                if (desc || !isObservableProperty(baseApp, p)) {
+                    return desc;
+                }
+                if (!setters) {
+                    setters = {};
+                    self.onDispose(watch(baseApp, function (e) {
+                        each(e.newValues, function (i, v) {
+                            if (hasOwnProperty(setters, i)) {
+                                setters[i](v);
+                            }
+                        });
+                        handleChanges();
+                    }));
+                }
+                var readonly = !getOwnPropertyDescriptor(baseApp, p).set;
+                defineOwnProperty(t, p, baseApp[p]);
+                setters[p] = defineObservableProperty(self, p, t[p], readonly || function (newValue) {
+                    if (!self.disposed && !sameValue(baseApp[p], newValue)) {
+                        baseApp[p] = newValue;
+                    }
+                    return baseApp[p];
+                });
+                return getOwnPropertyDescriptor(t, p);
+            }
+        });
+        handleChanges = watch(self, false);
+        defineOwnProperty(self, 'readyState', 'init');
+        App.call(self, initList);
+        Object.setPrototypeOf(_(self).extensions, _(baseApp).extensions);
+        return self;
+    }
+    definePrototype(AppProxy, App, {
+        on: function () {
+            var cb1 = App.prototype.on.apply(this, arguments);
+            if (this.disposed) {
+                return cb1;
+            }
+            var cb2 = baseApp.on.apply(baseApp, arguments);
+            this.onDispose(cb2);
+            return combineFn(cb1, cb2);
+        }
+    });
+    return AppProxy;
+}
+
+function createDisposableApp(ctor, initList, callback) {
+    var disposed = false;
+    var handlers = [];
+    var app = new ctor(initList.slice());
+    define(app, {
+        get disposed() {
+            return disposed;
+        },
+        onDispose: function (callback) {
+            if (disposed) {
+                return callback();
+            }
+            handlers.push(throwNotFunction(callback));
+        },
+        dispose: function () {
+            if (!disposed) {
+                disposed = true;
+                combineFn(handlers.splice(0))();
+            }
+        }
+    });
+    initApp(app, callback);
+    return app;
+}
+
+export function installDisposable() {
+    define(init, {
+        disposableWith: function () {
+            var initList = makeArray(arguments);
+            var baseApp = is(initList[0], App) && initList.shift();
+            var state = _(baseApp) || {
+                ctor: App
+            };
+            var AppProxy = state.ctor || (state.ctor = createProxyConstructor(baseApp));
+            return createDisposableApp.bind(null, AppProxy, initList);
+        }
+    });
+    return init;
+}
+
 export function install(name, callback) {
-    defineUseMethod(name, [], throwNotFunction(callback));
+    defineUseMethod(defaultApp, name, [], throwNotFunction(callback));
 }
 
 export function addExtension(autoInit, name, deps, callback) {
@@ -251,7 +357,7 @@ export function addExtension(autoInit, name, deps, callback) {
         var state = _(app);
         state.extensions[name] |= 0;
         if (autoInit !== true) {
-            defineUseMethod(name, deps, callback);
+            defineUseMethod(app, name, deps, callback);
         } else if (state.initComplete) {
             initExtension(app, name, deps, {}, callback);
         } else {

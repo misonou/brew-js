@@ -1,6 +1,7 @@
 /// <reference path="../src/types.d.ts" />
 
 import { expectTypeOf } from "expect-type";
+import brew from "src/disposable";
 
 declare const _: unknown;
 declare const app: Brew.AppInstance<{}>;
@@ -8,6 +9,9 @@ declare const app: Brew.AppInstance<{}>;
 type Ext1 = Brew.EventDispatcher<'e1', { e1: Zeta.ZetaEventBase }>;
 type Ext2 = Brew.EventDispatcher<'e2', { e2: Zeta.ZetaEventBase }>;
 type ExtractEventMap<T> = T extends Zeta.ZetaEventDispatcher<infer M, any> ? M : unknown;
+
+// -------------------------------------
+// events
 
 expectTypeOf<ExtractEventMap<Brew.AppInstance<Ext1 & Ext2>>>().toMatchTypeOf<{
     e1: Zeta.ZetaEventBase;
@@ -58,4 +62,29 @@ app.on(<HTMLDivElement>_, {
     statechange(...args) {
         expectTypeOf(args).toEqualTypeOf<[Brew.StateChangeEvent & Zeta.ZetaEventContext<HTMLDivElement>, HTMLDivElement]>();
     }
+});
+
+// -------------------------------------
+// brew.disposableWith
+
+expectTypeOf(brew.disposableWith(app)(() => { })).toEqualTypeOf<Brew.DisposableAppInstance<{}>>();
+expectTypeOf(brew.disposableWith(app, <Ext1>_)(() => { })).toEqualTypeOf<Brew.DisposableAppInstance<Ext1>>();
+expectTypeOf(brew.disposableWith(app, <Ext1>_, <Ext2>_)(() => { })).toEqualTypeOf<Brew.DisposableAppInstance<Ext1 & Ext2>>();
+expectTypeOf(brew.disposableWith(<Brew.AppInstance<Ext1>>_, <Ext2>_)(() => { })).toEqualTypeOf<Brew.DisposableAppInstance<Ext1 & Ext2>>();
+
+brew.disposableWith(app)((app) => {
+    expectTypeOf(app).toEqualTypeOf<Brew.DisposableAppInstance<{}>>();
+});
+brew.disposableWith(app, <Ext1>_)((app) => {
+    expectTypeOf(app).toEqualTypeOf<Brew.DisposableAppInstance<Ext1>>();
+    expectTypeOf<ExtractEventMap<typeof app>>().toMatchTypeOf<{
+        e1: Zeta.ZetaEventBase;
+    }>();
+});
+brew.disposableWith(<Brew.AppInstance<Ext1>>_, <Ext2>_)((app) => {
+    expectTypeOf(app).toEqualTypeOf<Brew.DisposableAppInstance<Ext1 & Ext2>>();
+    expectTypeOf<ExtractEventMap<typeof app>>().toMatchTypeOf<{
+        e1: Zeta.ZetaEventBase;
+        e2: Zeta.ZetaEventBase;
+    }>();
 });

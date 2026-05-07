@@ -1,17 +1,17 @@
 import { addDetect, addExtension, app, install } from "src/app";
 import router from "src/extension/htmlRouter";
 import template from "src/extension/template";
-import { resolve } from "zeta-dom/util";
+import { defineObservableProperty, resolve } from "zeta-dom/util";
 import { after, bindEvent, delay, initApp, initBody, mockFn, mount, root, uniqueName, verifyCalls, _ } from "./testUtil";
-import brew from "src/core";
+import brew from "src/disposable";
 
 const { objectContaining } = expect;
 
 const initAutoCb = [];
 const initDepCb = [];
-const ext0 = addExtension(true, 'ext0', (_, options) => initAutoCb.push(['ext0', options]));
-const ext1 = addExtension('ext1', ['ext2'], (_, options) => initDepCb.push(['ext1', options]));
-const ext2 = addExtension('ext2', ['?ext3'], (_, options) => initDepCb.push(['ext2', options]));
+const ext0 = addExtension(true, 'ext0', (app, options) => initAutoCb.push(['ext0', options]) && app.define({ ext0Inited: true }));
+const ext1 = addExtension('ext1', ['ext2'], (app, options) => initDepCb.push(['ext1', options]) && app.define({ ext1Inited: true }));
+const ext2 = addExtension('ext2', ['?ext3'], (app, options) => initDepCb.push(['ext2', options]) && app.define({ ext2Inited: true }));
 
 beforeAll(() => initApp(router, template, ext0, ext1, ext2, function (app) {
     app.useHtmlRouter({
@@ -20,7 +20,13 @@ beforeAll(() => initApp(router, template, ext0, ext1, ext2, function (app) {
     });
     app.useExt1({ key1: true });
     app.useExt2({ key2: true });
+    defineObservableProperty(app, 'testProp', 1, (value) => (value * 2) || 1);
 }));
+
+beforeEach(async () => {
+    app.testProp = 0;
+    await delay();
+});
 
 describe('brew', () => {
     it('should throw when called second time', () => {
@@ -252,5 +258,211 @@ describe('addExtension', () => {
 describe('addDetect', () => {
     it('should throw if callback is not callable', () => {
         expect(() => addDetect(uniqueName(), 1)).toThrow();
+    });
+});
+
+describe('brew.disposableWith', () => {
+    it('should create a disposable app instance', async () => {
+        const childApp = brew.disposableWith(app)(() => { });
+        expect(childApp).not.toBe(app);
+        expect(childApp).toBeInstanceOf(app.constructor);
+        expect(childApp.readyState).toBe('init');
+
+        await childApp.ready;
+        expect(childApp.readyState).toBe('ready');
+
+        const isolatedApp = brew.disposableWith()(() => { });
+        expect(isolatedApp).not.toBe(app);
+        expect(isolatedApp).not.toBe(childApp);
+        expect(isolatedApp).toBeInstanceOf(app.constructor);
+        expect(isolatedApp.readyState).toBe('init');
+
+        await isolatedApp.ready;
+        expect(isolatedApp.readyState).toBe('ready');
+    });
+
+    it('should not inflict with global app instance when does not extend from it', async () => {
+        const isolatedApp = brew.disposableWith(ext2)((app) => {
+            app.useExt2();
+        });
+        await isolatedApp.ready;
+        expect(isolatedApp.ext2Inited).toBe(true);
+
+        expect(isolatedApp).not.toHaveProperty('useExt0');
+        expect(isolatedApp).not.toHaveProperty('useExt1');
+        expect(isolatedApp).not.toHaveProperty('ext0Inited');
+        expect(isolatedApp).not.toHaveProperty('ext1Inited');
+
+        const cb = mockFn();
+        isolatedApp.on('testEvent', cb);
+        app.emit('testEvent');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should throw if extension is already initialized on global app instance', () => {
+        brew.disposableWith(app, ext1)((app) => {
+            expect(() => app.useExt1()).toThrow();
+        });
+        expect.assertions(1);
+    });
+
+    it('should invoke dispose handler on disposal', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.onDispose(cb);
+        childApp.dispose();
+        expect(cb).toHaveBeenCalledTimes(1);
+        cb.mockClear();
+
+        childApp.dispose();
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should access properties defined on global app instance', () => {
+        const childApp = brew.disposableWith(app)(() => { });
+        expect(childApp.ext0Inited).toBe(true);
+        expect(childApp.ext1Inited).toBe(true);
+        expect(childApp.ext2Inited).toBe(true);
+    });
+
+    it('should delete own properties', () => {
+        const childApp = brew.disposableWith(app, { childProp: 2 })(() => { });
+        expect(childApp.childProp).toBe(2);
+
+        delete childApp.childProp;
+        expect(childApp).not.toHaveProperty('childProp');
+
+        delete childApp.ext0Inited;
+        expect(childApp).toHaveProperty('ext0Inited', true);
+        expect(app).toHaveProperty('ext0Inited', true);
+    });
+
+    it('should emit event to self app instance', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.on('testEvent', cb);
+
+        childApp.emit('testEvent');
+        expect(cb).toBeCalled();
+    });
+
+    it('shoult not emit event to global app instance', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        app.on('testEvent', cb);
+
+        childApp.emit('testEvent');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should receive event from global app instance', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.on('testEvent', cb);
+
+        app.emit('testEvent');
+        expect(cb).toBeCalled();
+        cb.mockClear();
+
+        childApp.dispose();
+        app.emit('testEvent');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should not receive event from global app instance after disposal', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.on('testEvent', cb);
+        childApp.dispose();
+
+        app.emit('testEvent');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should not add event listener to global app instance after disposal', () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.dispose();
+        childApp.on('testEvent', cb);
+
+        app.emit('testEvent');
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should observe own properties', async () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app, { childProp: 1 })(() => { });
+        defineObservableProperty(childApp, 'childProp', 1);
+        childApp.watch('childProp', cb);
+
+        expect(childApp.childProp).toBe(1);
+        await after(() => {
+            childApp.childProp = 2;
+        });
+        expect(childApp.childProp).toBe(2);
+        verifyCalls(cb, [
+            [2, 1, 'childProp', expect.sameObject(childApp)]
+        ]);
+    });
+
+    it('should observe properties defined on global app instance', async () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        childApp.watch('testProp', cb);
+
+        expect(childApp.testProp).toBe(1);
+        await after(() => {
+            childApp.testProp = 2;
+        });
+        expect(childApp.testProp).toBe(4);
+        verifyCalls(cb, [
+            [4, 1, 'testProp', expect.sameObject(childApp)]
+        ]);
+        cb.mockClear();
+
+        await after(() => {
+            app.testProp = 3;
+        });
+        expect(childApp.testProp).toBe(6);
+        verifyCalls(cb, [
+            [6, 4, 'testProp', expect.sameObject(childApp)]
+        ]);
+    });
+
+    it('should not observe properties defined on global app instance after disposal', async () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        const currentTestProp = childApp.testProp;
+        childApp.watch('testProp', cb);
+        childApp.dispose();
+
+        await after(() => {
+            app.testProp = 4;
+        });
+        expect(childApp.testProp).toBe(currentTestProp);
+        expect(app.testProp).toBe(8);
+        expect(cb).not.toBeCalled();
+    });
+
+    it('should not update properties defined on global app instance after disposal', async () => {
+        const childApp = brew.disposableWith(app)(() => { });
+        const currentTestProp = childApp.testProp;
+        childApp.dispose();
+
+        childApp.testProp = 4;
+        expect(childApp.testProp).toBe(currentTestProp);
+        expect(app.testProp).toBe(currentTestProp);
+    });
+
+    it('should not update observed properties defined on global app instance after disposal', async () => {
+        const cb = mockFn();
+        const childApp = brew.disposableWith(app)(() => { });
+        const currentTestProp = childApp.testProp;
+        childApp.watch('testProp', cb);
+        childApp.dispose();
+
+        childApp.testProp = 4;
+        expect(childApp.testProp).toBe(currentTestProp);
+        expect(app.testProp).toBe(currentTestProp);
     });
 });
