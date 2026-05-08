@@ -1,4 +1,4 @@
-/*! brew-js v0.7.6 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.7 | (c) misonou | https://misonou.github.io */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -1987,12 +1987,10 @@ var defaults = {};
 
 
 
+var _ = createPrivateStore();
 var emitter = new EventContainer();
 var root = zeta_dom_dom.root;
 var featureDetections = {};
-var dependencies = {};
-var extensions = {};
-var initList = [];
 
 /** @type {Brew.AppInstance} */
 var app;
@@ -2000,10 +1998,6 @@ var app;
 var appReady;
 /** @type {boolean} */
 var appInited;
-/** @type {Promise<void> & Zeta.Deferrable} */
-var appInit;
-var appReadyResolve;
-var appReadyReject;
 function exactTargetWrapper(handler) {
   return function (e) {
     if (e.target === e.context) {
@@ -2020,21 +2014,29 @@ function wrapEventHandlers(event, handler, noChildren) {
   }
   return fill(event, handler);
 }
+function resolveDependency(callbacks, loaded) {
+  return callbacks && callbacks[0] && combineFn(callbacks.splice(0))(loaded);
+}
 function initExtension(app, name, deps, options, callback) {
+  var state = _(app);
+  var extensions = state.extensions;
+  var dependencies = state.dependencies;
   if (extensions[name]) {
     throw new Error('Extension' + name + 'is already initiated');
   }
   deps = grep(deps, function (v) {
-    return !extensions[v.replace(/^\?/, '')];
+    if (v[0] !== '?' && extensions[v] === undefined) {
+      resolveDependency(dependencies[name], false);
+      return true;
+    }
+    return extensions[v.replace(/^\?/, '')] === 0;
   });
   var counter = deps.length || 1;
   var wrapper = function wrapper(loaded) {
     if (loaded && ! --counter) {
       extensions[name] = true;
       callback(app, options || {});
-      if (dependencies[name]) {
-        combineFn(dependencies[name].splice(0))(true);
-      }
+      resolveDependency(dependencies[name], true);
     }
   };
   if (deps[0]) {
@@ -2055,6 +2057,19 @@ function defineUseMethod(name, deps, callback) {
 }
 function App() {
   var self = this;
+  var appReadyResolve, appReadyReject;
+  var state = _(self, {
+    dependencies: Object.create(null),
+    extensions: Object.create(null),
+    initList: [],
+    init: function init() {
+      var deferred = deferrable(zeta_dom_dom.ready);
+      state.waitFor = function (promise) {
+        deferred.waitFor(promise.then(null, appReadyReject));
+      };
+      return deferred.then(appReadyResolve);
+    }
+  });
   var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
   defineOwnProperty(self, 'element', root, true);
   defineOwnProperty(self, 'ready', new Promise(function (resolve, reject) {
@@ -2065,7 +2080,7 @@ function App() {
     setReadyState(resolved ? 'ready' : 'error');
     if (resolved) {
       appReady = true;
-      app.emit('ready');
+      self.emit('ready');
     } else {
       reportError(error);
     }
@@ -2095,10 +2110,10 @@ definePrototype(App, {
     if (isFunction(promise)) {
       promise = makeAsync(promise).call(this);
     }
-    appInit.waitFor(promise.then(null, appReadyReject));
+    _(this).waitFor(promise);
   },
   halt: function halt() {
-    appInit.waitFor(new Promise(noop));
+    _(this).waitFor(new Promise(noop));
   },
   isElementActive: function isElementActive() {
     return true;
@@ -2151,10 +2166,11 @@ app = {
 };
 function init(callback) {
   throwNotFunction(callback);
-  if (appInit) {
+  if (app === defaultApp) {
     throw new Error('brew() can only be called once');
   }
-  appInit = deferrable(zeta_dom_dom.ready);
+  var state = _(defaultApp);
+  var appInit = state.init();
   app = defaultApp;
   each(src_defaults, function (i, v) {
     var fn = v && isFunction(app[camel('use-' + i)]);
@@ -2162,20 +2178,21 @@ function init(callback) {
       fn.call(app, v);
     }
   });
-  each(initList, function (i, v) {
+  while (state.initList.length) {
+    var v = state.initList.shift();
     if (isPlainObject(v)) {
       util_define(app, v);
     } else {
       throwNotFunction(v)(app);
     }
-  });
+  }
+  state.initComplete = true;
   app.beforeInit(makeAsync(callback)(app));
-  each(dependencies, function (i, v) {
-    combineFn(v)();
+  each(state.dependencies, function (i, v) {
+    resolveDependency(v, false);
   });
   appInited = true;
   notifyAsync(root, appInit);
-  appInit.then(appReadyResolve);
   bind(window, 'pagehide', function (e) {
     app.emit('unload', {
       persisted: e.persisted
@@ -2187,6 +2204,7 @@ function init(callback) {
 }
 util_define(init, {
   with: function _with() {
+    var initList = _(defaultApp).initList;
     initList.push.apply(initList, arguments);
     return this;
   }
@@ -2197,11 +2215,18 @@ function install(name, callback) {
 function addExtension(autoInit, name, deps, callback) {
   callback = throwNotFunction(callback || deps || name);
   deps = isArray(deps) || isArray(name) || [];
+  name = autoInit === true ? name : autoInit;
   return function (app) {
-    if (autoInit === true) {
+    var state = _(app);
+    state.extensions[name] |= 0;
+    if (autoInit !== true) {
+      defineUseMethod(name, deps, callback);
+    } else if (state.initComplete) {
       initExtension(app, name, deps, {}, callback);
     } else {
-      defineUseMethod(autoInit, deps, callback);
+      state.initList.push(function (app) {
+        initExtension(app, name, deps, {}, callback);
+      });
     }
   };
 }
@@ -2271,7 +2296,7 @@ function groupLog(eventSource, message, callback) {
 
 
 
-var _ = createPrivateStore();
+var dom_ = createPrivateStore();
 var dom_root = zeta_dom_dom.root;
 var updatedElements = new Set();
 var pendingDOMUpdates = new Map();
@@ -2285,7 +2310,7 @@ var renderHandlers = {};
 var batchCounter = 0;
 var stateChangeLock = false;
 function getComponentState(ns, element) {
-  var obj = _(element) || _(element, {});
+  var obj = dom_(element) || dom_(element, {});
   return obj[ns] || (obj[ns] = {});
 }
 function updateDOM(element, props, suppressEvent) {
@@ -3991,7 +4016,7 @@ var DATA_KEY = 'brew.scrollable';
         currentTrack = beginDrag();
       },
       getContentRect: function getContentRect(e) {
-        if (e.target === container || jquery(e.target).closest(SELECTOR_TARGET)[0] === scrollable.scrollTarget) {
+        if (e.target === container || scrollable.scrollTarget && containsOrEquals(scrollable.scrollTarget, e.target)) {
           var padding = scrollable.scrollPadding(e.target);
           return getRect(container).expand(padding, -1);
         }
@@ -5355,11 +5380,10 @@ function initHtmlRouter(app, options) {
     }
   });
 }
-/* harmony default export */ var htmlRouter = (addExtension('htmlRouter', function (app, options) {
-  router();
+/* harmony default export */ var htmlRouter = (combineFn(router, addExtension('htmlRouter', function (app, options) {
   app.useRouter(options);
   initHtmlRouter(app, options);
-}));
+})));
 ;// CONCATENATED MODULE: ./src/extension/idleTimeout.js
 
 
