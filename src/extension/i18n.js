@@ -1,5 +1,5 @@
 import { always, combineFn, defineObservableProperty, each, pipe, resolve, single } from "zeta-dom/util";
-import { addExtension, appReady } from "../app.js";
+import { addExtension } from "../app.js";
 import { cookie as _cookie } from "../util/common.js";
 
 function toDictionary(languages) {
@@ -49,7 +49,7 @@ export default addExtension('i18n', ['?router'], function (app, options) {
 
     function setLanguage(newLangauge, replace) {
         newLangauge = getCanonicalValue(newLangauge) || language;
-        if (routeParam && appReady) {
+        if (routeParam && app.readyState === 'ready') {
             return new Promise(function (resolve) {
                 always(app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true), resolve);
                 beforepageload.push(resolve);

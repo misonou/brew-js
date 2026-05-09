@@ -3,7 +3,7 @@ import { setClass, selectIncludeSelf, containsOrEquals } from "zeta-dom/domUtil"
 import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
 import dom from "zeta-dom/dom";
 import { each, extend, makeArray, mapGet, resolveAll, any, noop, setImmediate, throwNotFunction, isThenable, createPrivateStore, mapRemove, grep, makeAsync, setImmediateOnce, arrRemove, matchWord, combineFn } from "zeta-dom/util";
-import { app, appReady, emitAppEvent } from "./app.js";
+import { app, emitAppEvent } from "./app.js";
 import { animateOut, animateIn } from "./anim.js";
 import { groupLog } from "./util/console.js";
 import { getVar, resetVar } from "./var.js";
@@ -141,7 +141,7 @@ export function matchElement(selector, handler) {
         });
     };
     matchElementHandlers.push(callback);
-    if (appReady) {
+    if (app.readyState === 'ready') {
         callback(root);
     }
 }

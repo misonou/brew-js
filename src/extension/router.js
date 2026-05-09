@@ -2,7 +2,7 @@ import { bind, bindOnce } from "zeta-dom/domUtil";
 import dom from "zeta-dom/dom";
 import { cancelLock, locked, notifyAsync } from "zeta-dom/domLock";
 import { extend, watch, defineObservableProperty, any, definePrototype, iequal, watchable, each, defineOwnProperty, resolve, createPrivateStore, setImmediateOnce, exclude, equal, isArray, single, randomId, always, noop, pick, keys, isPlainObject, kv, errorWithCode, deepFreeze, freeze, isUndefinedOrNull, deferrable, reject, pipe, mapGet, mapObject, catchAsync } from "zeta-dom/util";
-import { addExtension, appReady } from "../app.js";
+import { addExtension } from "../app.js";
 import { getQueryParam, setQueryParam } from "../util/common.js";
 import { normalizePath, combinePath, isSubPathOf, setBaseUrl, removeQueryAndHash, toSegments, parsePath, getQueryAndHash } from "../util/path.js";
 import { createObjectStorage } from "../util/storage.js";
@@ -450,7 +450,7 @@ function configureRouter(app, options) {
                 currentState.reject();
             }
         }
-        if (appReady && !snapshot && locked(root)) {
+        if (app.readyState === 'ready' && !snapshot && locked(root)) {
             cancelLock(root, new NavigationCancellationRequest(state.path)).then(function () {
                 if (states[currentIndex] === currentState && callback() !== false) {
                     setImmediateOnce(handlePathChange);
@@ -599,7 +599,7 @@ function configureRouter(app, options) {
     }
 
     function handlePathChange() {
-        if (!appReady) {
+        if (app.readyState !== 'ready') {
             return;
         }
         var state = states[currentIndex];

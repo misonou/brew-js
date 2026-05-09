@@ -2,7 +2,7 @@ import $ from "./include/jquery.js";
 import waterpipe from "./include/waterpipe.js"
 import { defineGetterProperty, defineOwnProperty, each, extend, hasOwnProperty, isFunction, isPlainObject, kv, noop, pick, setImmediateOnce, trim } from "zeta-dom/util";
 import dom from "zeta-dom/dom";
-import { app, appReady } from "./app.js";
+import { app } from "./app.js";
 import { batch, markUpdated, processStateChange } from "./dom.js";
 import { InheritedNodeTree } from "zeta-dom/tree";
 import { getAttr, selectorForAttr } from "./util/common.js";
@@ -111,7 +111,7 @@ export function setVar(element, name, value) {
                 markUpdated(node.element);
             }
         });
-        if (hasUpdated && appReady) {
+        if (hasUpdated && app.readyState === 'ready') {
             setImmediateOnce(processStateChange);
         }
     }
