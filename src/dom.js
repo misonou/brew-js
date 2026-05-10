@@ -109,12 +109,13 @@ export function isDirective(name) {
 }
 
 export function addSelectHandlers(target, event, handler, noChildren) {
+    var instance = this || app;
     var unbindHandlers = [];
     var obj = {
         target: target,
         doMount: event.mounted || matchWord(event, 'mounted'),
         add: function (elements) {
-            unbindHandlers.push(app.on(elements, event, handler, noChildren));
+            unbindHandlers.push(instance.on(elements, event, handler, noChildren));
         }
     };
     selectorHandlers.push(obj);

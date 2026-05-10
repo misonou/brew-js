@@ -20,18 +20,18 @@ const templates = {};
 const root = dom.root;
 
 export default addExtension(true, 'template', function (app) {
-    var addListener = app.on.bind(app);
+    var addListener = app.on;
     app.define({
         getVar: getVar,
         setVar: setVar,
         matchElement: matchElement,
         beforeUpdate: hookBeforeUpdate,
         on: function (target, event, handler, noChildren) {
-            var unbind = addListener(target, event, handler, noChildren);
+            var unbind = addListener.call(this, target, event, handler, noChildren);
             if (isFunction(event) || typeof target !== 'string') {
                 return unbind;
             }
-            return combineFn(unbind, addSelectHandlers(target, event, handler, noChildren));
+            return combineFn(unbind, addSelectHandlers.call(this, target, event, handler, noChildren));
         }
     });
 
