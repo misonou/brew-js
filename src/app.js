@@ -114,6 +114,7 @@ function App(initList) {
             if (app === defaultApp) {
                 appReady = true;
             }
+            defineOwnProperty(self, 'readyState', 'ready', true);
             self.emit('ready');
         }
     });
