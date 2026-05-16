@@ -1,6 +1,6 @@
 /// <reference path="./types.d.ts" />
 
-import brew, { Extension } from "./core";
+import { Extension } from "./core";
 
 export type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? (U extends Extension<infer P> ? P : U) & WithExtension<TRest> : {};
 
@@ -22,9 +22,9 @@ export interface AppInit<U = {}> {
     with<T extends any[]>(...args: T): AppInit<WithExtension<T>>;
 }
 
-declare const init: AppInit;
+declare const brew: AppInit;
 
-export default init;
+export default brew;
 
 /**
  * Gets the app instance.

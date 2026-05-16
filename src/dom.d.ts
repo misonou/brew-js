@@ -1,5 +1,27 @@
 /// <reference path="./types.d.ts" />
 
+export type DOMProcessorCallback = (element: Element, getState: (element: Element) => Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: DOMUpdateState) => void) => void;
+
+export interface DOMUpdateState extends Zeta.Dictionary {
+    /**
+     * Gets the new style being applied to the element.
+     */
+    style?: Zeta.Dictionary<string>;
+    /**
+     * Gets the new computed values from `set-class` attribute of the element.
+     * These values will be passed to `zeta.util.setClass`.
+     */
+    $$class?: Zeta.Dictionary<string>;
+    /**
+     * Gets the new inline text content.
+     */
+    $$text?: string;
+    /**
+     * Gets the new inline HTML content.
+     */
+    $$html?: string;
+}
+
 /**
  * @private
  */
@@ -19,7 +41,7 @@ export function matchElement(selector: string, handler: (ele: Element) => void):
 /**
  * @param callback
  */
-export function hookBeforeUpdate(callback: (domChanges: Map<Element, Brew.DOMUpdateState>) => Brew.PromiseOrEmpty): void;
+export function hookBeforeUpdate(callback: (domChanges: Map<Element, DOMUpdateState>) => Brew.PromiseOrEmpty): void;
 
 /**
  * @param promise
@@ -77,6 +99,6 @@ export function preventLeave(suppressPrompt?: boolean): Brew.PromiseOrEmpty;
  */
 export function addTemplate(name: string, template: Node | JQuery.htmlString): void;
 
-export function addTransformer(name: string, callback: Brew.DOMProcessorCallback): void;
+export function addTransformer(name: string, callback: DOMProcessorCallback): void;
 
-export function addRenderer(name: string, callback: Brew.DOMProcessorCallback): void;
+export function addRenderer(name: string, callback: DOMProcessorCallback): void;

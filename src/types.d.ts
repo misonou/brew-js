@@ -2,44 +2,16 @@
 
 declare namespace Brew {
     /* -------------------------------------------------------------
-     * Re-exports from module
-     * ------------------------------------------------------------- */
-    type Extension<T> = import("./core").Extension<T>;
-    type ExtensionEventMap<T> = import("./core").ExtensionEventMap<T>;
-    type CookieAttributes = import("./util").CookieAttributes;
-    type ObjectStorage = import("./util").ObjectStorage;
-
-    /* -------------------------------------------------------------
      * Helper interfaces
      * ------------------------------------------------------------- */
     type HTTPMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head';
+    type Watchable = Zeta.Watchable;
     type EventHandler<E extends string, M, T = Element> = Zeta.ZetaEventHandler<E, M, T>;
     type EventHandlers<E extends string, M, T = Element> = { [P in E]?: Zeta.ZetaEventHandler<P, M, T> };
     type ExtendedEventMap<E extends string, M> = E extends keyof M ? M : { [P in E]: P extends keyof M ? M[P] : Zeta.ZetaEvent<Element> };
     type AppInstance<T = {}> = App<T> & T & Zeta.ZetaEventDispatcher<T extends ExtensionEventMap<infer M> ? M : {}, any>;
     type DisposableAppInstance<T = {}> = AppInstance<T & WithDispose>;
     type PromiseOrEmpty<T = any> = Promise<T> | void;
-    type DOMProcessorCallback = (element: Element, getState: (element: Element) => Zeta.Dictionary, applyDOMUpdates: (element: Element, updates: Brew.DOMUpdateState) => void) => void;
-
-    interface DOMUpdateState extends Zeta.Dictionary {
-        /**
-         * Gets the new style being applied to the element.
-         */
-        style?: Zeta.Dictionary<string>;
-        /**
-         * Gets the new computed values from `set-class` attribute of the element.
-         * These values will be passed to `zeta.util.setClass`.
-         */
-        $$class?: Zeta.Dictionary<string>;
-        /**
-         * Gets the new inline text content.
-         */
-        $$text?: string;
-        /**
-         * Gets the new inline HTML content.
-         */
-        $$html?: string;
-    }
 
     interface VarContext {
         readonly element: HTMLElement;
@@ -90,54 +62,6 @@ declare namespace Brew {
         on<K extends Element | string>(target: K, handlers: EventHandlers<T, M, K extends string ? Zeta.ElementType<K> : K>, noChildren?: true): Zeta.UnregisterCallback;
     }
 
-    interface APIOptions {
-        /**
-         * Specifies the types of requests the factory should generate functions for.
-         * @deprecated
-         */
-        methods?: HTTPMethod | HTTPMethod[];
-        /**
-         * Specifies the base URL prepended to the request path.
-         */
-        baseUrl?: string;
-        /**
-         * Specifies the bearer authorization token to be sent with the requests.
-         */
-        token?: string;
-        /**
-         * Gets the new token which will replace the current authorization token.
-         * If the token remains unchanged, i.e. same as `currentToken`,
-         * the function must still return the current token.
-         */
-        getTokenFromResponse?: (response: any, currentToken: string) => string;
-    }
-
-    interface APIMethod {
-        /**
-         * Performs request to the specified path with parameters.
-         */
-        (path: string, params?: any): Promise<any>;
-        /**
-         * Gets or sets the base URL prepended to the request path.
-         */
-        baseUrl?: string;
-        /**
-         * Gets or sets the bearer authorization token to be sent with the requests.
-         */
-        token?: string;
-    }
-
-    interface API extends Record<HTTPMethod, APIMethod> {
-        /**
-         * Gets or sets the base URL prepended to the request path.
-         */
-        baseUrl?: string;
-        /**
-         * Gets or sets the bearer authorization token to be sent with the requests.
-         */
-        token?: string;
-    }
-
     interface Disposable {
         dispose(): void;
     }
@@ -178,22 +102,6 @@ declare namespace Brew {
     }
 
     interface ValidateEvent extends Zeta.ZetaAsyncHandleableEvent<boolean> {
-    }
-
-    interface Watchable {
-        /**
-         * Watches a property on the object.
-         * @param prop Property name.
-         * @param handler Callback to be fired and the property is changed.
-         * @param fireInit Optionally fire the handler immediately.
-         */
-        watch<P extends keyof this>(prop: P, handler?: (this: this, newValue: Zeta.PropertyTypeOrAny<this, P>, oldValue: Zeta.PropertyTypeOrAny<this, P>, prop: P, obj: this) => void, fireInit?: boolean): Zeta.UnregisterCallback;
-        /**
-         * Watches a property and resolves when the property is changed.
-         * @param prop Property name.
-         * @param handler Callback to be fired when the property is changed.
-         */
-        watchOnce<P extends keyof this>(prop: P, handler?: (this: this, newValue: Zeta.PropertyTypeOrAny<this, P>, oldValue: Zeta.PropertyTypeOrAny<this, P>, prop: P, obj: this) => void): Promise<Zeta.PropertyTypeOrAny<this, P>>;
     }
 
     interface App<T = {}> extends EventDispatcher<BrewEventName, BrewEventMap>, Watchable {
@@ -282,4 +190,30 @@ declare namespace Brew {
          */
         onDispose(callback: Zeta.UnregisterCallback): void;
     }
+
+    /* -------------------------------------------------------------
+     * Re-exports from module
+     * ------------------------------------------------------------- */
+    type AppInit<T = {}> = import("./app").AppInit<T>;
+    type Extension<T> = import("./core").Extension<T>;
+    type ExtensionEventMap<T> = import("./core").ExtensionEventMap<T>;
+    type DisposableAppInit<T = {}> = import("./disposable").DisposableAppInit<T>;
+    type ComponentContext = import("./directive").ComponentContext;
+    type Directive = import("./directive").Directive;
+    type DirectiveInit<T extends Zeta.Dictionary<Directive> = {}> = import("./directive").DirectiveInit<T>;
+    type DOMProcessorCallback = import("./dom").DOMProcessorCallback;
+    type DOMUpdateState = import("./dom").DOMUpdateState;
+    type FlyoutOptions = import("./domAction").FlyoutOptions;
+    type API = import("./util").API;
+    type APIMethod = import("./util").APIMethod;
+    type APIOptions = import("./util").APIOptions;
+    type CookieAccessor = import("./util").CookieAccessor;
+    type CookieAttributes = import("./util").CookieAttributes;
+    type ApiClient = import("./util").ApiClient;
+    type ApiClientError = import("./util").ApiClientError;
+    type ApiClientTraps = import("./util").ApiClientTraps;
+    type FetchMiddleware = import("./util").FetchMiddleware;
+    type FetchLayer = import("./util").FetchLayer;
+    type RequestOptions = import("./util").RequestOptions;
+    type ObjectStorage = import("./util").ObjectStorage;
 }

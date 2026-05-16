@@ -1,5 +1,53 @@
 /// <reference path="../types.d.ts" />
 
+export interface APIOptions {
+    /**
+     * Specifies the types of requests the factory should generate functions for.
+     * @deprecated
+     */
+    methods?: Brew.HTTPMethod | Brew.HTTPMethod[];
+    /**
+     * Specifies the base URL prepended to the request path.
+     */
+    baseUrl?: string;
+    /**
+     * Specifies the bearer authorization token to be sent with the requests.
+     */
+    token?: string;
+    /**
+     * Gets the new token which will replace the current authorization token.
+     * If the token remains unchanged, i.e. same as `currentToken`,
+     * the function must still return the current token.
+     */
+    getTokenFromResponse?: (response: any, currentToken: string) => string;
+}
+
+export interface APIMethod {
+    /**
+     * Performs request to the specified path with parameters.
+     */
+    (path: string, params?: any): Promise<any>;
+    /**
+     * Gets or sets the base URL prepended to the request path.
+     */
+    baseUrl?: string;
+    /**
+     * Gets or sets the bearer authorization token to be sent with the requests.
+     */
+    token?: string;
+}
+
+export interface API extends Record<Brew.HTTPMethod, APIMethod> {
+    /**
+     * Gets or sets the base URL prepended to the request path.
+     */
+    baseUrl?: string;
+    /**
+     * Gets or sets the bearer authorization token to be sent with the requests.
+     */
+    token?: string;
+}
+
 export interface CookieAttributes {
     /**
      * Specifies the `Path` attribute for the cookie. Default is `/`.
@@ -163,17 +211,17 @@ export function cookie(name: string, options: CookieAttributes): CookieAccessor;
 /**
  * Creates a collection of functions that executes HTTP requests.
  */
-export function api(options?: Brew.APIOptions): Brew.API;
+export function api(options?: APIOptions): API;
 
 /**
  * Creates a function that executes a specific type of HTTP requests.
  */
-export function api(method: Brew.HTTPMethod, baseUrl: string): Brew.APIMethod;
+export function api(method: Brew.HTTPMethod, baseUrl: string): APIMethod;
 
 /**
  * Creates a function that executes a specific type of HTTP requests.
  */
-export function api(method: Brew.HTTPMethod, options?: Omit<Brew.APIOptions, 'methods'>): Brew.APIMethod;
+export function api(method: Brew.HTTPMethod, options?: Omit<APIOptions, 'methods'>): APIMethod;
 
 /**
  * @deprecated
