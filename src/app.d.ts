@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 import brew, { Extension } from "./core";
 
 export type WithExtension<T extends any[]> = T extends [infer U, ...infer TRest] ? (U extends Extension<infer P> ? P : U) & WithExtension<TRest> : {};

@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 import { declareVar, evalAttr, getVar, getVarScope, resetVar, setVar } from "./var";
 import { addRenderer, addTemplate, addTransformer, handleAsync, preventLeave } from "./dom";
 import { addDetect, addExtension, install } from "./app";

@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 import { CancellationRequest } from "zeta-dom/domLock";
 
 export class NavigationCancellationRequest extends CancellationRequest {

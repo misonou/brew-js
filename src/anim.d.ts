@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 /**
  * Starts intro animation for contents within the specified element.
  * @param element A DOM element.

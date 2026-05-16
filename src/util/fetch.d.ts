@@ -1,3 +1,5 @@
+/// <reference path="../types.d.ts" />
+
 import * as ErrorCode from "../errorCode.js";
 
 export type FetchLayer = (req: Request) => Promise<Response>;

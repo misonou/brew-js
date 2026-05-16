@@ -1,3 +1,5 @@
+/// <reference types="zeta-dom" />
+
 declare namespace Brew {
     /* -------------------------------------------------------------
      * Re-exports from module

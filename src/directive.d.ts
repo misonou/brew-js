@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 type DirectiveType<T extends Directive> = DirectiveTypeMap[T['type'] extends keyof DirectiveTypeMap ? T['type'] : 'string'];
 
 interface DirectiveTypeMap {

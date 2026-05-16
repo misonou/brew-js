@@ -1,3 +1,5 @@
+/// <reference path="../types.d.ts" />
+
 declare namespace Brew {
     /* -------------------------------------------------------------
      * useI18n

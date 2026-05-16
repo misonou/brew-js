@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 import { AppInit, WithExtension } from "./app";
 
 export interface DisposableAppInit<U = {}> {

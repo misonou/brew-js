@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 /**
  * Gets the element of which the specified variable is declared on.
  * @param element A string containing the variable name.

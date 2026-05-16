@@ -1,3 +1,5 @@
+/// <reference path="../types.d.ts" />
+
 export interface CookieAttributes {
     /**
      * Specifies the `Path` attribute for the cookie. Default is `/`.
