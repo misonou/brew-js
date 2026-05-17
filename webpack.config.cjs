@@ -1,9 +1,11 @@
 const { createBaseWebpackConfig, createUMDExternal, createUMDLibraryDefinition, getPaths } = require('@misonou/build-utils');
+const { transformObjectSpread } = require('@misonou/build-utils/plugins/babel');
 const paths = getPaths();
 
 module.exports = {
     ...createBaseWebpackConfig({
-        remapImports: ['zeta-dom']
+        remapImports: ['zeta-dom'],
+        babelPlugins: [transformObjectSpread]
     }),
     entry: {
         'brew': './src/entry.js',
