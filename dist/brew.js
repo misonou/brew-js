@@ -1,4 +1,4 @@
-/*! brew-js v0.7.7 | (c) misonou | https://misonou.github.io */
+/*! brew-js v0.7.8 | (c) misonou | https://misonou.pages.dev */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -738,7 +738,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   either = _lib$util.either,
   equal = _lib$util.equal,
   errorWithCode = _lib$util.errorWithCode,
-  exclude = _lib$util.exclude,
   executeOnce = _lib$util.executeOnce,
   extend = _lib$util.extend,
   fill = _lib$util.fill,
@@ -1975,9 +1974,19 @@ if (window[BREW_KEY]) {
 defineHiddenProperty(window, BREW_KEY, true, true);
 /* harmony default export */ var libCheck = (null);
 ;// CONCATENATED MODULE: ./src/defaults.js
+
+
 /** @deprecated @type {Zeta.Dictionary} */
 var defaults = {};
 /* harmony default export */ var src_defaults = (defaults);
+function initDefaults(app) {
+  each(defaults, function (i, v) {
+    var fn = v && isFunction(app[camel('use-' + i)]);
+    if (fn) {
+      fn.call(app, v);
+    }
+  });
+}
 ;// CONCATENATED MODULE: ./src/app.js
 
 
@@ -2022,7 +2031,7 @@ function initExtension(app, name, deps, options, callback) {
   var extensions = state.extensions;
   var dependencies = state.dependencies;
   if (extensions[name]) {
-    throw new Error('Extension' + name + 'is already initiated');
+    throw new Error('Extension ' + name + ' is already initiated');
   }
   deps = grep(deps, function (v) {
     if (v[0] !== '?' && extensions[v] === undefined) {
@@ -2032,8 +2041,10 @@ function initExtension(app, name, deps, options, callback) {
     return extensions[v.replace(/^\?/, '')] === 0;
   });
   var counter = deps.length || 1;
-  var wrapper = function wrapper(loaded) {
-    if (loaded && ! --counter) {
+  var wrapper = function wrapper(dep, optional, loaded) {
+    if (!loaded && !optional) {
+      state.reject(new Error('Extension ' + name + ' requires ' + dep));
+    } else if (! --counter) {
       extensions[name] = true;
       callback(app, options || {});
       resolveDependency(dependencies[name], true);
@@ -2043,31 +2054,35 @@ function initExtension(app, name, deps, options, callback) {
     each(deps, function (i, v) {
       var key = v.replace(/^\?/, '');
       var arr = dependencies[key] || (dependencies[key] = []);
-      arr.push(key === v ? wrapper : wrapper.bind(0, true));
+      arr.push(wrapper.bind(0, key, v[0] === '?'));
     });
   } else {
-    wrapper(true);
+    wrapper('', true);
   }
 }
-function defineUseMethod(name, deps, callback) {
+function defineUseMethod(app, name, deps, callback) {
   var method = camel('use-' + name);
-  definePrototype(App, kv(method, function (options) {
+  util_define(app, kv(method, function (options) {
     initExtension(this, name, deps, options, callback);
   }));
 }
-function App() {
+function App(initList) {
   var self = this;
   var appReadyResolve, appReadyReject;
   var state = _(self, {
     dependencies: Object.create(null),
     extensions: Object.create(null),
-    initList: [],
+    initList: makeArray(initList),
     init: function init() {
       var deferred = deferrable(zeta_dom_dom.ready);
       state.waitFor = function (promise) {
-        deferred.waitFor(promise.then(null, appReadyReject));
+        deferred.waitFor(promise.then(null, state.reject));
       };
       return deferred.then(appReadyResolve);
+    },
+    reject: function reject(error) {
+      appReadyReject(error);
+      reportError(error);
     }
   });
   var setReadyState = defineObservableProperty(self, 'readyState', 'init', true);
@@ -2076,13 +2091,14 @@ function App() {
     appReadyResolve = resolve.bind(0, self);
     appReadyReject = reject;
   }), true);
-  always(self.ready, function (resolved, error) {
+  always(self.ready, function (resolved) {
     setReadyState(resolved ? 'ready' : 'error');
     if (resolved) {
-      appReady = true;
+      if (app === defaultApp) {
+        appReady = true;
+      }
+      defineOwnProperty(self, 'readyState', 'ready', true);
       self.emit('ready');
-    } else {
-      reportError(error);
     }
   });
 }
@@ -2160,39 +2176,39 @@ definePrototype(App, {
   beforeUpdate: noop
 });
 watchable(App.prototype);
-var defaultApp = new App();
+var defaultApp = new App(initDefaults);
 app = {
   on: defaultApp.on.bind(defaultApp)
 };
+function initApp(app, callback) {
+  var state = _(app);
+  var appInit = state.init();
+  var init = function init() {
+    while (state.initList.length) {
+      var v = state.initList.shift();
+      if (isPlainObject(v)) {
+        util_define(app, v);
+      } else {
+        throwNotFunction(v)(app);
+      }
+    }
+    state.initComplete = true;
+    callback(app);
+    each(state.dependencies, function (i, v) {
+      resolveDependency(v, false);
+    });
+  };
+  state.waitFor(makeAsync(init)());
+  return appInit;
+}
 function init(callback) {
   throwNotFunction(callback);
   if (app === defaultApp) {
     throw new Error('brew() can only be called once');
   }
-  var state = _(defaultApp);
-  var appInit = state.init();
   app = defaultApp;
-  each(src_defaults, function (i, v) {
-    var fn = v && isFunction(app[camel('use-' + i)]);
-    if (fn) {
-      fn.call(app, v);
-    }
-  });
-  while (state.initList.length) {
-    var v = state.initList.shift();
-    if (isPlainObject(v)) {
-      util_define(app, v);
-    } else {
-      throwNotFunction(v)(app);
-    }
-  }
-  state.initComplete = true;
-  app.beforeInit(makeAsync(callback)(app));
-  each(state.dependencies, function (i, v) {
-    resolveDependency(v, false);
-  });
+  notifyAsync(root, initApp(app, callback));
   appInited = true;
-  notifyAsync(root, appInit);
   bind(window, 'pagehide', function (e) {
     app.emit('unload', {
       persisted: e.persisted
@@ -2210,7 +2226,7 @@ util_define(init, {
   }
 });
 function install(name, callback) {
-  defineUseMethod(name, [], throwNotFunction(callback));
+  defineUseMethod(defaultApp, name, [], throwNotFunction(callback));
 }
 function addExtension(autoInit, name, deps, callback) {
   callback = throwNotFunction(callback || deps || name);
@@ -2220,7 +2236,7 @@ function addExtension(autoInit, name, deps, callback) {
     var state = _(app);
     state.extensions[name] |= 0;
     if (autoInit !== true) {
-      defineUseMethod(name, deps, callback);
+      defineUseMethod(app, name, deps, callback);
     } else if (state.initComplete) {
       initExtension(app, name, deps, {}, callback);
     } else {
@@ -2388,12 +2404,13 @@ function isDirective(name) {
   return !!(transformationHandlers[name] || renderHandlers[name]);
 }
 function addSelectHandlers(target, event, handler, noChildren) {
+  var instance = this || app;
   var unbindHandlers = [];
   var obj = {
     target: target,
     doMount: event.mounted || matchWord(event, 'mounted'),
     add: function add(elements) {
-      unbindHandlers.push(app.on(elements, event, handler, noChildren));
+      unbindHandlers.push(instance.on(elements, event, handler, noChildren));
     }
   };
   selectorHandlers.push(obj);
@@ -2419,7 +2436,7 @@ function matchElement(selector, handler) {
     });
   };
   matchElementHandlers.push(callback);
-  if (appReady) {
+  if (app.readyState === 'ready') {
     callback(dom_root);
   }
 }
@@ -2774,7 +2791,7 @@ function setVar(element, name, value) {
         markUpdated(node.element);
       }
     });
-    if (hasUpdated && appReady) {
+    if (hasUpdated && app.readyState === 'ready') {
       setImmediateOnce(processStateChange);
     }
   }
@@ -3306,12 +3323,6 @@ zeta_dom_dom.ready.then(function () {
   });
 });
 ;// CONCATENATED MODULE: ./src/core.js
-function core_typeof(o) { "@babel/helpers - typeof"; return core_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, core_typeof(o); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == core_typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != core_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != core_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -3325,10 +3336,10 @@ function _toPrimitive(t, r) { if ("object" != core_typeof(t) || !t) return t; va
 
 
 
-var method = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({
+var method = extend({
   ErrorCode: errorCode_namespaceObject,
   defaults: src_defaults
-}, common_namespaceObject), storage_namespaceObject), path_namespaceObject), fetch_namespaceObject), anim_namespaceObject), domAction_namespaceObject), {}, {
+}, common_namespaceObject, storage_namespaceObject, path_namespaceObject, fetch_namespaceObject, anim_namespaceObject, domAction_namespaceObject, {
   getDirectiveComponent: getDirectiveComponent,
   registerDirective: registerDirective,
   getVarScope: getVarScope,
@@ -3386,18 +3397,18 @@ var IMAGE_STYLE_PROPS = 'background-image';
 var templates = {};
 var template_root = zeta_dom_dom.root;
 /* harmony default export */ var template = (addExtension(true, 'template', function (app) {
-  var addListener = app.on.bind(app);
+  var addListener = app.on;
   app.define({
     getVar: getVar,
     setVar: setVar,
     matchElement: matchElement,
     beforeUpdate: hookBeforeUpdate,
     on: function on(target, event, handler, noChildren) {
-      var unbind = addListener(target, event, handler, noChildren);
+      var unbind = addListener.call(this, target, event, handler, noChildren);
       if (isFunction(event) || typeof target !== 'string') {
         return unbind;
       }
-      return combineFn(unbind, addSelectHandlers(target, event, handler, noChildren));
+      return combineFn(unbind, addSelectHandlers.call(this, target, event, handler, noChildren));
     }
   });
   app.on('ready', function () {
@@ -3818,7 +3829,7 @@ function _detectLanguage(languages) {
   }
   function _setLanguage(newLangauge, replace) {
     newLangauge = getCanonicalValue(newLangauge) || language;
-    if (routeParam && appReady) {
+    if (routeParam && app.readyState === 'ready') {
       return new Promise(function (resolve) {
         always(app.route[replace ? 'replace' : 'set'](routeParam, newLangauge.toLowerCase(), true), resolve);
         beforepageload.push(resolve);
@@ -4779,7 +4790,7 @@ function configureRouter(app, options) {
         currentState.reject();
       }
     }
-    if (appReady && !snapshot && locked(router_root)) {
+    if (app.readyState === 'ready' && !snapshot && locked(router_root)) {
       cancelLock(router_root, new NavigationCancellationRequest(state.path)).then(function () {
         if (states[currentIndex] === currentState && callback() !== false) {
           setImmediateOnce(handlePathChange);
@@ -4923,7 +4934,7 @@ function configureRouter(app, options) {
     });
   }
   function handlePathChange() {
-    if (!appReady) {
+    if (app.readyState !== 'ready') {
       return;
     }
     var state = states[currentIndex];
