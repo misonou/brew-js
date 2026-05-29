@@ -20,9 +20,10 @@ export default addExtension('idleTimeout', function (app, options) {
         if (options.crossFrame) {
             timestamp = +localStorage[key] || timestamp;
         }
-        if (Date.now() - timestamp > options.timeout) {
+        var elapsed = Date.now() - timestamp;
+        if (elapsed > options.timeout) {
             setTimestamp('');
-            return app.emit('idle');
+            return app.emit('idle', { elapsed });
         }
     }, 10000);
 });

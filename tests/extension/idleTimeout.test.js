@@ -34,6 +34,7 @@ describe('IdleTimeout extension', () => {
 
         jest.advanceTimersByTime(10000);
         expect(cb).toBeCalledTimes(1);
+        expect(cb.mock.calls[0][0].elapsed).toBeGreaterThan(10000);
     });
 
     it('should not fire idle event again until there is interaction event again', async () => {

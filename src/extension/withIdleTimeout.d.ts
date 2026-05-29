@@ -2,7 +2,14 @@
 
 declare namespace Brew {
     interface IdleTimeoutEventMap {
-        idle: Zeta.ZetaEvent;
+        idle: IdleEvent;
+    }
+
+    interface IdleEvent extends Zeta.ZetaAsyncHandleableEvent {
+        /**
+         * Get the elapsed time in milliseconds since the user becomes idle.
+         */
+        readonly elapsed: number;
     }
 
     interface WithIdleTimeout extends EventDispatcher<keyof IdleTimeoutEventMap, IdleTimeoutEventMap> {
