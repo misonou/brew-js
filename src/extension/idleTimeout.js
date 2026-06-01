@@ -30,6 +30,7 @@ export default addExtension('idleTimeout', function (app, options) {
         }, options.timeout);
     }
 
-    resetTimer();
+    app.on('ready', resetTimer);
+    setTimestamp();
     bind(window, 'keydown mousedown touchstart wheel', setTimestamp);
 });

@@ -6,6 +6,7 @@ import dom from "zeta-dom/dom";
 
 /** @type {Brew.AppInstance<Brew.WithIdleTimeout>} */
 var app;
+var originalLocalStorage;
 
 beforeAll(async () => {
     // jQuery ready event does not work with fake timer
@@ -20,10 +21,16 @@ beforeAll(async () => {
             crossFrame: true,
             timeout: 10000
         });
+        originalLocalStorage = { ...localStorage };
+        jest.advanceTimersByTime(10);
     });
 });
 
 describe('IdleTimeout extension', () => {
+    it('should update local storage on init', () => {
+        expect(originalLocalStorage['app.lastInteract']).toBe(String(Date.now() - 10));
+    });
+
     it('should update local storage on ready', () => {
         expect(localStorage.getItem('app.lastInteract')).toBe(String(Date.now()));
     });
