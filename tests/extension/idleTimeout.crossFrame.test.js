@@ -24,9 +24,17 @@ beforeAll(async () => {
 });
 
 describe('IdleTimeout extension', () => {
-    it('should update local storage', async () => {
-        fireEvent.keyDown(window);
+    it('should update local storage on ready', () => {
         expect(localStorage.getItem('app.lastInteract')).toBe(String(Date.now()));
+    });
+
+    it('should update local storage on interaction', async () => {
+        const ts = Date.now();
+        expect(localStorage.getItem('app.lastInteract')).toBe(String(ts));
+
+        jest.advanceTimersByTime(10);
+        fireEvent.keyDown(window);
+        expect(localStorage.getItem('app.lastInteract')).toBe(String(ts + 10));
     });
 
     it('should update timer from local storage when crossFrame is false', async () => {

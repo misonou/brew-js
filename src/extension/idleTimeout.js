@@ -4,7 +4,7 @@ import { addExtension } from "../app.js";
 
 export default addExtension('idleTimeout', function (app, options) {
     var key = options.key || 'app.lastInteract';
-    var timestamp = Date.now();
+    var timestamp;
 
     function setTimestamp(value) {
         timestamp = value || undefined;
@@ -13,6 +13,7 @@ export default addExtension('idleTimeout', function (app, options) {
         }
     }
 
+    setTimestamp(Date.now());
     bind(window, 'keydown mousedown touchstart wheel', function () {
         setTimestamp(Date.now());
     });
