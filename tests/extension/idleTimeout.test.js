@@ -92,7 +92,11 @@ describe('IdleTimeout extension', () => {
         resolve();
         await 0;
 
-        // event fired after promise is resolved
+        // timer reset after promise is resolved
+        jest.advanceTimersByTime(10000);
+        expect(cb).not.toBeCalled();
+        await 0;
+
         jest.advanceTimersByTime(10000);
         expect(cb).toBeCalledTimes(1);
     });

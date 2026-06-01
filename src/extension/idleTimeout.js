@@ -1,4 +1,4 @@
-import { setIntervalSafe } from "zeta-dom/util";
+import { always, setIntervalSafe } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import { addExtension } from "../app.js";
 
@@ -24,7 +24,9 @@ export default addExtension('idleTimeout', function (app, options) {
         var elapsed = Date.now() - timestamp;
         if (elapsed > options.timeout) {
             setTimestamp('');
-            return app.emit('idle', { elapsed });
+            return always(app.emit('idle', { elapsed }), function () {
+                setTimestamp(Date.now());
+            });
         }
     }, 10000);
 });
