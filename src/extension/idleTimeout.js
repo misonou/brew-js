@@ -1,4 +1,4 @@
-import { always, setIntervalSafe } from "zeta-dom/util";
+import { always } from "zeta-dom/util";
 import { bind } from "zeta-dom/domUtil";
 import { addExtension } from "../app.js";
 
@@ -6,27 +6,30 @@ export default addExtension('idleTimeout', function (app, options) {
     var key = options.key || 'app.lastInteract';
     var timestamp;
 
-    function setTimestamp(value) {
-        timestamp = value || undefined;
+    function setTimestamp() {
+        timestamp = Date.now();
         if (options.crossFrame) {
-            localStorage[key] = value;
+            localStorage[key] = timestamp;
         }
     }
 
-    setTimestamp(Date.now());
-    bind(window, 'keydown mousedown touchstart wheel', function () {
-        setTimestamp(Date.now());
-    });
-    setIntervalSafe(function () {
-        if (options.crossFrame) {
-            timestamp = +localStorage[key] || timestamp;
-        }
-        var elapsed = Date.now() - timestamp;
-        if (elapsed > options.timeout) {
-            setTimestamp('');
-            return always(app.emit('idle', { elapsed }), function () {
-                setTimestamp(Date.now());
-            });
-        }
-    }, 10000);
+    function resetTimer() {
+        setTimestamp();
+        setTimeout(function next() {
+            if (options.crossFrame) {
+                timestamp = +localStorage[key] || timestamp;
+            }
+            var elapsed = Date.now() - timestamp;
+            var ms = options.timeout - elapsed;
+            if (ms >= 0) {
+                setTimeout(next, ms);
+            } else {
+                var promise = app.emit('idle', { elapsed });
+                always(promise, resetTimer);
+            }
+        }, options.timeout);
+    }
+
+    resetTimer();
+    bind(window, 'keydown mousedown touchstart wheel', setTimestamp);
 });
