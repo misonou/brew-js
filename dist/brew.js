@@ -1,4 +1,4 @@
-/*! brew-js v0.7.8 | (c) misonou | https://misonou.pages.dev */
+/*! brew-js v0.7.9 | (c) misonou | https://misonou.pages.dev */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -769,7 +769,6 @@ var _lib$util = external_commonjs_zeta_dom_commonjs2_zeta_dom_amd_zeta_dom_root_
   resolveAll = _lib$util.resolveAll,
   setImmediate = _lib$util.setImmediate,
   setImmediateOnce = _lib$util.setImmediateOnce,
-  setIntervalSafe = _lib$util.setIntervalSafe,
   setPromiseTimeout = _lib$util.setPromiseTimeout,
   setTimeoutOnce = _lib$util.setTimeoutOnce,
   single = _lib$util.single,
@@ -5401,25 +5400,34 @@ function initHtmlRouter(app, options) {
 
 /* harmony default export */ var idleTimeout = (addExtension('idleTimeout', function (app, options) {
   var key = options.key || 'app.lastInteract';
-  var timestamp = Date.now();
-  function setTimestamp(value) {
-    timestamp = value || undefined;
+  var timestamp;
+  function setTimestamp() {
+    timestamp = Date.now();
     if (options.crossFrame) {
-      localStorage[key] = value;
+      localStorage[key] = timestamp;
     }
   }
-  bind(window, 'keydown mousedown touchstart wheel', function () {
-    setTimestamp(Date.now());
-  });
-  setIntervalSafe(function () {
-    if (options.crossFrame) {
-      timestamp = +localStorage[key] || timestamp;
-    }
-    if (Date.now() - timestamp > options.timeout) {
-      setTimestamp('');
-      return app.emit('idle');
-    }
-  }, 10000);
+  function resetTimer() {
+    setTimestamp();
+    setTimeout(function next() {
+      if (options.crossFrame) {
+        timestamp = +localStorage[key] || timestamp;
+      }
+      var elapsed = Date.now() - timestamp;
+      var ms = options.timeout - elapsed;
+      if (ms >= 0) {
+        setTimeout(next, ms);
+      } else {
+        var promise = app.emit('idle', {
+          elapsed: elapsed
+        });
+        always(promise, resetTimer);
+      }
+    }, options.timeout);
+  }
+  app.on('ready', resetTimer);
+  setTimestamp();
+  bind(window, 'keydown mousedown touchstart wheel', setTimestamp);
 }));
 ;// CONCATENATED MODULE: ./src/entry.js
 
