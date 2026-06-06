@@ -2,6 +2,9 @@
     "extends": "../jsconfig",
     "compilerOptions": {
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "types": [
+            "jest"
+        ]
     }
 }
