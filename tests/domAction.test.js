@@ -74,6 +74,20 @@ describe('openFlyout', () => {
         await expect(promise).resolves.toBeUndefined();
     });
 
+    it('should reset and emit flyouthide event if flyout is detached without closing', async () => {
+        const flyout = await mount(`<div is-flyout></div>`);
+        openFlyout(flyout);
+        expect(flyout).toHaveClassName('open');
+
+        const cb = mockFn();
+        bindEvent(flyout, 'flyouthide', cb);
+        flyout.remove();
+
+        await delay(10);
+        expect(cb).toHaveBeenCalled();
+        expect(flyout).not.toHaveClassName('open');
+    });
+
     it('should set modal if is-modal is present', async () => {
         const flyout = await mount(`<div is-flyout is-modal></div>`);
         openFlyout(flyout);

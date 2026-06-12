@@ -17,6 +17,7 @@ const SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 const root = dom.root;
 const flyoutStates = createAutoCleanupMap(function (element, state) {
     state.resolve();
+    resetFlyoutElement(element);
 });
 const executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
@@ -55,6 +56,11 @@ export function isFlyoutOpen(selector) {
     return !!state && !state.closePromise;
 }
 
+function resetFlyoutElement(element, source) {
+    setClass(element, { open: false, closing: false, visible: false });
+    dom.emit('flyouthide', element, null, { source });
+}
+
 /**
  * @param {Element | Element[] | string=} flyout
  * @param {any=} value
@@ -73,8 +79,7 @@ export function closeFlyout(flyout, value) {
             promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
                 if (flyoutStates.get(v) === state) {
                     flyoutStates.delete(v);
-                    setClass(v, { open: false, closing: false, visible: false });
-                    dom.emit('flyouthide', v, null, { source });
+                    resetFlyoutElement(v, source);
                 }
             });
             state.closePromise = promise;
