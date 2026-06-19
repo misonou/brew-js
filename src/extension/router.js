@@ -181,7 +181,7 @@ function matchRouteByParams(state, params, partial) {
             }
             segments[i] = varname ? params[varname] : tokens[i];
         }
-        return createRouteState(state, tokens, segments, pick(params, keys(tokens.params)), params.remainingSegments);
+        return createRouteState(state, tokens, segments, pick(params, keys(tokens.params)), i < len ? '/' : params.remainingSegments);
     });
     return matched || (!partial && matchRouteByParams(state, params, true));
 }

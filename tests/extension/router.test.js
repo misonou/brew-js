@@ -34,6 +34,7 @@ beforeAll(async () => {
                 '/{bar:bar}/{id?:[a-z]+}',
                 '/{bar:bar}/{optional?:[a-z]+}',
                 '/baz/{another?}',
+                '/{test:quz}/{optional?:[a-z]+}/*',
                 '/{test:test-.+}/*',
                 '/'
             ]
@@ -1154,6 +1155,8 @@ describe('app.route', () => {
         expect(app.route.getPath({ baz: 'baz' })).toEqual('/foo/baz');
         expect(app.route.getPath({ baz: 'baz', remainingSegments: '/' })).toEqual('/foo/baz');
         expect(app.route.getPath({ baz: 'baz', remainingSegments: '/baz' })).toEqual('/foo/baz/baz');
+        expect(app.route.getPath({ test: 'quz', optional: 'another', remainingSegments: '/remaining' })).toEqual('/quz/another/remaining');
+        expect(app.route.getPath({ test: 'quz', remainingSegments: '/000' })).toEqual('/quz');
     });
 
     it('should discard parameter changes if there is no matching route', async () => {
