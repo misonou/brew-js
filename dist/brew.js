@@ -1,4 +1,4 @@
-/*! brew-js v0.7.9 | (c) misonou | https://misonou.pages.dev */
+/*! brew-js v0.7.10 | (c) misonou | https://misonou.pages.dev */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory(require("zeta-dom"), require("jquery"), require("waterpipe"), require("jq-scrollable"));
@@ -3026,6 +3026,7 @@ var SELECTOR_DISABLED = '[disabled],.disabled,:disabled';
 var domAction_root = zeta_dom_dom.root;
 var flyoutStates = createAutoCleanupMap(function (element, state) {
   state.resolve();
+  resetFlyoutElement(element);
 });
 var executedAsyncActions = new Map();
 /** @type {Zeta.Dictionary<Zeta.AnyFunction>} */
@@ -3058,6 +3059,16 @@ function isFlyoutOpen(selector) {
   var state = flyoutStates.get(jquery(selector)[0]);
   return !!state && !state.closePromise;
 }
+function resetFlyoutElement(element, source) {
+  setClass(element, {
+    open: false,
+    closing: false,
+    visible: false
+  });
+  zeta_dom_dom.emit('flyouthide', element, null, {
+    source: source
+  });
+}
 
 /**
  * @param {Element | Element[] | string=} flyout
@@ -3077,14 +3088,7 @@ function closeFlyout(flyout, value) {
       promise = resolveAll([runCSSTransition(v, 'closing'), animateOut(v, 'open')].map(catchAsync), function () {
         if (flyoutStates.get(v) === state) {
           flyoutStates.delete(v);
-          setClass(v, {
-            open: false,
-            closing: false,
-            visible: false
-          });
-          zeta_dom_dom.emit('flyouthide', v, null, {
-            source: source
-          });
+          resetFlyoutElement(v, source);
         }
       });
       state.closePromise = promise;
@@ -4517,7 +4521,7 @@ function matchRouteByParams(state, params, partial) {
       }
       segments[i] = varname ? params[varname] : tokens[i];
     }
-    return createRouteState(state, tokens, segments, pick(params, util_keys(tokens.params)), params.remainingSegments);
+    return createRouteState(state, tokens, segments, pick(params, util_keys(tokens.params)), i < len ? '/' : params.remainingSegments);
   });
   return matched || !partial && matchRouteByParams(state, params, true);
 }
